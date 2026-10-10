@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.31.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.32.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.31 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.32 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -414,6 +414,16 @@ The \emph{multiplexer} runs the programs of the desktop in windows, each with it
 time slices; the desktop is task 0. By default the programs take turns on the first processor core
 (\cmd{cores all} lets them run on every core). Shared work --- drawing windows, the SUB-GPU,
 Photon --- is spread over all cores.
+
+\subsection{The screen split (v3.0.32)}
+
+The programs function takes one more number, \texttt{0x0F}: 4 or 9 parts, or 0 for the whole
+screen. While the screen is split, the multiplexer's own idea of the screen is moved to a block
+of memory, so everything is drawn as always but not seen; \texttt{split\_show} draws the
+picture of every running task (the desk is task 0) into its part of the real screen, scaled
+down in its shape, about 25 times a second. \texttt{split\_step} stands in for the function
+that hands keys and the mouse to the programs: a click picks a part --- the screen becomes
+whole and that task gets the keys --- and ESC makes it whole as it was.
 
 \subsection{Devices}
 

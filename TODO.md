@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.31 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.32 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -70,7 +70,7 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 |---|---|---|
 | 22 | **[v3.0.31: Desk2 also has the system's own menu on an object (clone, rename, hide, lock, erase, share ...) - what is left is the owner's word to let `desktop` run it; all five steps have a first form, v3.0.30 (Desk2: a bag's panel over the desk, the curtain, more desktops); what is left: the system's own actions on an object, the taskbar as a page, then Desk2 in the place of the old one; steps 1-4, v3.0.29: Desk2 also has the card, the menus (with data dump), moving icons, the start menu; steps 1 and 2, v3.0.28: the new desktop Desk2 (apps/Desk2.asmo, 230 lines of PyTon) runs beside the old one - `desk desk2`; step 1 partly, v3.0.27: pictures, clip, the kept rectangle, power, calling a socket are in py2asm; begun, v3.0.26: the object read through and named - docs/DESKTOP.md has its parts and the five steps of the rewriting; no line of the new one is written yet]** Desktop rewritten as source meant to be read (PyTon + pages) | L |
 | 23 | **[v3.0.30, in Desk2: up to nine desktops - `< 1/2 >`, PgUp / PgDn, an icon let go at the edge moves over; no sliding picture, no film strip yet]** More desktops: slide for a new one as on a phone; or one endless desktop that scrolls like a film strip, a column a frame, more added when needed | M after 22 |
-| 24 | The desktop split in 4 or 9 instances at once (multiboxing) | L |
+| 24 | **[written and seen in QEMU, v3.0.32: "All at once: 4 / 9" in the menus of Desk2 - the desk and every program that runs, each in a part of the screen, made small, live; a click picks one]** The desktop split in 4 or 9 instances at once (multiboxing) | L |
 
 **Step 5 - machines and the world**
 
@@ -267,6 +267,24 @@ Not written blind: it changes what happens at every start and end of the desktop
 - [ ] `backup get` puts the save over the object of that name; "as another name" is not there.
 - [ ] Puffus does not know of the pool: writing a new system to the stick leaves the pool where
       it is (the image is 23 MB), which is right - but nothing tells the user it is there.
+
+### 24, the screen split in 4 or 9: what is there and what is not (v3.0.32)
+
+- [x] In the multiplexer (`split_service`, `split_step`, `split_show`): while the screen is split
+      the multiplexer draws as always, but into memory of its own; 25 times a second every
+      task's picture is drawn into its part of the real screen, made small to fit and in its
+      shape (never bigger than it is). The programs go on running and are seen live. A click
+      on a part makes the screen whole with that program in front; ESC makes it whole as it
+      was. Asked for by the programs function, number 0x0F; `split(4)`, `split(9)`, `split(0)`
+      in PyTon; "All at once: 4 / 9" in the menus of Desk2.
+- [ ] One cannot *work* in a part: keys and the mouse do not reach the programs while the
+      screen is split - it is for looking and picking. Working in a part needs the mouse's
+      place turned back into the place in the program's own window.
+- [ ] At most eight parts are ever filled (the desk and seven programs): the multiplexer has
+      eight places. More instances - nine camera pictures, say - need more places.
+- [ ] A part shows a program's window, not a desktop of its own: "each on its own desktop,
+      full screen" (the owner's example) would be programs that take the whole screen each.
+- [ ] No name under a part; the mouse is a plain square there.
 
 ## If the disk is lost again - where everything is
 

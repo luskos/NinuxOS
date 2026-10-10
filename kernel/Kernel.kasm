@@ -18915,7 +18915,11 @@ L_53e5a:
         cmp qword [rax],0x1
         jnz short L_53e76
         call mux_reap
+%ifdef PLAIN_KERNEL
         call fn_55604
+%else
+        call near split_step            ; v3.0.32: the screen split in 4 or 9 (else: fn_55604, as before)
+%endif
         jmp short L_53e23
 
 L_53e76:
@@ -21147,8 +21151,13 @@ L_55a96:
         jz short L_55b39
 
 L_55b31:
+%ifdef PLAIN_KERNEL
         mov rax,0xffffffffffffffff
         retq
+%else
+        jmp near split_service          ; v3.0.32: one more number for the programs function (the same 8 bytes)
+        times 3 nop
+%endif
 
 L_55b39:
         push rbx
@@ -50267,6 +50276,7 @@ display_dark:
 ; has the screen. The next `desktop` takes them up again where they were.
 ; Three places of the old code call in here; each call is as long as what it stands for.
 mux_leave:                              ; the desktop has ended. Stands for: mov ebx,0x1
+        call split_off                  ; (v3.0.32: the screen is whole again)
         xor ecx,ecx
         mov ebx,0x1
 mux_leave_count:
@@ -50765,6 +50775,414 @@ kb_names:                               ; the key, the length of its name, the n
         db 0x80, 2, 'Up', 0
         db 0x81, 4, 'Down', 0
         db 0
+; ---- v3.0.32: the screen split in 4 or 9 --------------------------------------------------
+; Every program that runs, and the desk, each in a part of the screen, all at once, made small
+; to fit (never bigger than it is). A click on one makes the screen whole again with that one in
+; front; ESC makes it whole as it was.
+; How: while the screen is split the multiplexer draws as always - but into memory of its own
+; instead of the screen (its "screen" is moved there). split_show then draws every task's
+; picture, made small, onto the real screen, about 25 times a second. Keys and the mouse do
+; not reach the programs meanwhile: split_step takes them.
+;   programs function, number 0x0F: rsi = 0 whole, 4 or 9 parts
+split_service:                          ; stands for the end of the programs function: "no such number: -1"
+        cmp rdi,0xf
+        jne split_service_no
+        cmp byte [rel mux_on],0x0
+        jz split_service_no
+        test rsi,rsi
+        jz split_service_off
+        cmp byte [rel split_parts],0x0
+        jnz split_service_done          ; already split
+        push rbx
+        mov rbx,rsi
+        mov rdi,[rel d_564d0]           ; memory as big as the screen
+        imul rdi,[rel d_564e0]
+        call api_memory
+        test rax,rax
+        jz split_service_none
+        mov rcx,[rel d_564c8]
+        mov [rel split_screen],rcx      ; the real screen
+        mov [rel split_memory],rax
+        mov [rel d_564c8],rax           ; the multiplexer's screen is that memory now
+        cmp [rel d_11810],rcx
+        jne split_service_on
+        mov [rel d_11810],rax
+split_service_on:
+        mov eax,0x2
+        cmp rbx,0x4
+        je split_service_side
+        mov eax,0x3
+split_service_side:
+        mov [rel split_parts],al        ; the parts along one side: 2 or 3
+        xor edi,edi
+        call mux_focus                  ; the desk has the keys
+        pop rbx
+split_service_done:
+        xor eax,eax
+        retq
+split_service_none:
+        pop rbx
+split_service_no:
+        mov rax,0xffffffffffffffff
+        retq
+split_service_off:
+        call split_off
+        xor eax,eax
+        retq
+
+split_off:                              ; the screen whole again; keeps every register
+        cmp byte [rel split_parts],0x0
+        jz split_off_not
+        push rax
+        push rcx
+        push rdx
+        push rsi
+        push rdi
+        push r8
+        push r9
+        push r10
+        push r11
+        mov byte [rel split_parts],0x0
+        mov rax,[rel split_screen]
+        mov rcx,[rel split_memory]
+        mov [rel d_564c8],rax
+        cmp [rel d_11810],rcx
+        jne split_off_free
+        mov [rel d_11810],rax
+split_off_free:
+        mov rdi,rcx
+        call mem_free
+        xor edi,edi                     ; everything is drawn again
+        xor esi,esi
+        mov rdx,[rel d_564d8]
+        mov rcx,[rel d_564e0]
+        call fn_545df
+        pop r11
+        pop r10
+        pop r9
+        pop r8
+        pop rdi
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rax
+split_off_not:
+        retq
+
+split_step:                             ; stands for: call fn_55604 (keys and the mouse, once round the loop)
+        cmp byte [rel split_parts],0x0
+        jz near fn_55604
+        push rbx
+        push r12
+        push r13
+        call api_poll
+        cmp rax,0x1
+        jne split_step_mouse
+        cmp edx,27                      ; ESC: whole again, as it was
+        jne split_step_show
+        call split_off
+        jmp split_step_out
+split_step_mouse:
+        cmp rax,0x2
+        jne split_step_show
+        mov [rel split_x],rdx
+        mov [rel split_y],rcx
+        mov rbx,r8
+        and ebx,0x1
+        mov al,[rel split_button]
+        mov [rel split_button],bl
+        test ebx,ebx
+        jz split_step_show
+        test al,al
+        jnz split_step_show
+        movzx r12d,byte [rel split_parts]       ; a click: which part, and whose it is
+        mov rax,[rel split_y]
+        imul rax,r12
+        xor edx,edx
+        div qword [rel d_564e0]
+        mov r13,rax
+        imul r13,r12
+        mov rax,[rel split_x]
+        imul rax,r12
+        xor edx,edx
+        div qword [rel d_564d8]
+        add r13,rax                             ; the number of the part
+        xor ebx,ebx
+split_step_whose:
+        cmp rbx,0x8
+        jae split_step_show                     ; an empty part
+        mov rdi,rbx
+        call mux_task
+        cmp qword [rax],0x1
+        jne split_step_next
+        cmp qword [rax+0x68],0x0
+        je split_step_next
+        test r13,r13
+        jz split_step_pick
+        dec r13
+split_step_next:
+        inc rbx
+        jmp split_step_whose
+split_step_pick:
+        call split_off
+        mov rdi,rbx
+        call mux_focus
+        jmp split_step_out
+split_step_show:
+        mov rax,[rel d_14eea]           ; the clock: 100 ticks a second
+        sub rax,[rel split_shown]
+        cmp rax,0x4
+        jb split_step_out
+        mov rax,[rel d_14eea]
+        mov [rel split_shown],rax
+        call split_show
+split_step_out:
+        pop r13
+        pop r12
+        pop rbx
+        retq
+
+split_show:                             ; every task's picture, made small, in its part of the real screen
+        push rbx
+        push rbp
+        push r12
+        push r13
+        push r14
+        push r15
+        movzx r12d,byte [rel split_parts]
+        xor r13d,r13d                   ; the part
+        xor ebx,ebx                     ; the task
+split_show_task:
+        mov rax,r12
+        imul rax,r12
+        cmp r13,rax
+        jae split_show_arrow
+        cmp rbx,0x8
+        jae split_show_empty
+        mov rdi,rbx
+        call mux_task
+        inc rbx
+        cmp qword [rax],0x1
+        jne split_show_task
+        mov r14,[rax+0x68]              ; its picture, and how big it is
+        test r14,r14
+        jz split_show_task
+        mov r15,[rax+0x70]
+        mov rbp,[rax+0x78]
+        test r15,r15
+        jz split_show_task
+        test rbp,rbp
+        jz split_show_task
+        call split_part
+        inc r13
+        jmp split_show_task
+split_show_empty:
+        xor r14d,r14d                   ; a part nothing is in
+        call split_part
+        inc r13
+        jmp split_show_task
+split_show_arrow:                       ; the mouse: a small white square with a dark edge
+        mov rdi,[rel split_x]
+        mov rsi,[rel split_y]
+        mov edx,10
+        mov ecx,10
+        xor r8d,r8d
+        call split_fill
+        mov rdi,[rel split_x]
+        mov rsi,[rel split_y]
+        inc rdi
+        inc rsi
+        mov edx,8
+        mov ecx,8
+        mov r8d,0xFFFFFF
+        call split_fill
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbp
+        pop rbx
+        retq
+
+split_fill:                             ; rdi, rsi, rdx, rcx = x, y, width, height, r8d = colour: on the real screen
+        mov rax,rdi
+        add rax,rdx
+        cmp rax,[rel d_564d8]
+        ja split_fill_out
+        mov rax,rsi
+        add rax,rcx
+        cmp rax,[rel d_564e0]
+        ja split_fill_out
+        mov r9,rsi
+        imul r9,[rel d_564d0]
+        add r9,[rel split_screen]
+        lea r9,[r9+rdi*4]
+        mov eax,r8d
+split_fill_row:
+        test rcx,rcx
+        jz split_fill_out
+        mov rdi,r9
+        push rcx
+        mov rcx,rdx
+        rep stosd
+        pop rcx
+        add r9,[rel d_564d0]
+        dec rcx
+        jmp split_fill_row
+split_fill_out:
+        retq
+
+split_part:                             ; the part r13 of r12 x r12: r14 = a picture (0: none), r15 x rbp its size
+        push rbx
+        push r12
+        push r13
+        push r14
+        push r15
+        push rbp
+        sub rsp,0x40
+        mov rax,[rel d_564d8]           ; the part: [rsp] x, +8 y, +16 width, +24 height
+        xor edx,edx
+        div r12
+        mov [rsp+16],rax
+        mov rax,[rel d_564e0]
+        xor edx,edx
+        div r12
+        mov [rsp+24],rax
+        mov rax,r13
+        xor edx,edx
+        div r12                         ; rax the row, rdx the column
+        imul rdx,[rsp+16]
+        mov [rsp],rdx
+        imul rax,[rsp+24]
+        mov [rsp+8],rax
+        mov rdi,[rsp]                   ; its ground, with a dark line round it
+        mov rsi,[rsp+8]
+        mov rdx,[rsp+16]
+        mov rcx,[rsp+24]
+        mov r8d,0x05050A
+        call split_fill
+        mov rdi,[rsp]
+        mov rsi,[rsp+8]
+        add rdi,2
+        add rsi,2
+        mov rdx,[rsp+16]
+        mov rcx,[rsp+24]
+        sub rdx,4
+        sub rcx,4
+        mov r8d,0x16151F
+        call split_fill
+        test r14,r14
+        jz split_part_out
+        mov rbx,[rsp+16]                ; how big it is shown: never bigger than it is, and in its shape
+        sub rbx,8                       ; rbx the room's width, r12 its height
+        mov r12,[rsp+24]
+        sub r12,8
+        cmp r15,rbx
+        ja split_part_small
+        cmp rbp,r12
+        ja split_part_small
+        mov rbx,r15
+        mov r12,rbp
+        jmp split_part_place
+split_part_small:
+        mov rax,r15                     ; width * room's height against height * room's width
+        imul rax,r12
+        mov rcx,rbp
+        imul rcx,rbx
+        cmp rax,rcx
+        jb split_part_tall
+        mov rax,rbp                     ; as wide as the room
+        imul rax,rbx
+        xor edx,edx
+        div r15
+        mov r12,rax
+        jmp split_part_place
+split_part_tall:
+        mov rax,r15                     ; as high as the room
+        imul rax,r12
+        xor edx,edx
+        div rbp
+        mov rbx,rax
+split_part_place:
+        test rbx,rbx
+        jz split_part_out
+        test r12,r12
+        jz split_part_out
+        mov rax,[rsp+16]                ; in the middle of the part
+        sub rax,rbx
+        shr rax,1
+        add [rsp],rax
+        mov rax,[rsp+24]
+        sub rax,r12
+        shr rax,1
+        add [rsp+8],rax
+        mov rax,r15                     ; how far to step in the picture for a dot of the screen (16 bits behind the point)
+        shl rax,16
+        xor edx,edx
+        div rbx
+        mov [rsp+32],rax
+        mov rax,rbp
+        shl rax,16
+        xor edx,edx
+        div r12
+        mov [rsp+40],rax
+        xor r13d,r13d                   ; the row
+split_part_row:
+        cmp r13,r12
+        jae split_part_out
+        mov rax,r13
+        imul rax,[rsp+40]
+        shr rax,16
+        imul rax,r15
+        lea rsi,[r14+rax*4]             ; the row of the picture
+        mov rdi,[rsp+8]
+        add rdi,r13
+        imul rdi,[rel d_564d0]
+        add rdi,[rel split_screen]
+        mov rax,[rsp]
+        lea rdi,[rdi+rax*4]
+        xor ecx,ecx
+        xor r8d,r8d
+        mov r9,[rsp+32]
+split_part_dot:
+        cmp rcx,rbx
+        jae split_part_next
+        mov rax,r8
+        shr rax,16
+        mov eax,[rsi+rax*4]
+        mov [rdi+rcx*4],eax
+        add r8,r9
+        inc rcx
+        jmp split_part_dot
+split_part_next:
+        inc r13
+        jmp split_part_row
+split_part_out:
+        add rsp,0x40
+        pop rbp
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbx
+        retq
+
+split_parts:
+        db 0x00
+split_button:
+        db 0x00
+        align 8, db 0
+split_screen:
+        dq 0
+split_memory:
+        dq 0
+split_x:
+        dq 0
+split_y:
+        dq 0
+split_shown:
+        dq 0
+
 ; ---- v3.0.28: `desk NAME` - another object as the desktop -----------------------------------
 ; The shell runs an object under the multiplexer (as task 0, with programs in windows) only when
 ; the word typed is "desktop". So that a desktop written anew can be tried beside the old one:

@@ -1,0 +1,45 @@
+# q_v3_split.txt - v3.0.32: the screen split in 4: everything that runs at once
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type desk desk2
+wait 8
+# three programs: Chronos, Calc, Files
+moveto 64 500
+click
+wait 4
+moveto 900 60
+click
+wait 1
+moveto 64 410
+click
+wait 4
+moveto 900 60
+click
+wait 1
+moveto 447 232
+click
+wait 4
+moveto 900 60
+click
+wait 1
+# the right button on the empty desk -> "All at once: 4"
+moveto 800 100
+rclick
+wait 2
+snap s01_menu
+moveto 840 160
+click
+wait 3
+snap s02_split4
+wait 2
+snap s03_split4_later
+# a click on the second part (top right): that one to the front, the screen whole
+moveto 760 200
+click
+wait 3
+snap s04_whole
+esc
+wait 2
+esc
+wait 3

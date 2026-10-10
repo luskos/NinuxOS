@@ -15,6 +15,8 @@
 #   the top edge of the screen the curtain: settings, files, the shell, power, what the machine is
 #   < 1/2 > on the taskbar,    more desktops: an icon let go at the left or right edge of the
 #   PgUp / PgDn                screen goes to the desktop on that side (a new one, if there is none)
+#   "All at once" in the menus the screen split in 4 or 9: everything that runs, each in its part,
+#                              made small; a click on one brings it to the front, ESC the screen back
 #   ESC                        back to the shell
 #
 # What the old desktop does and this one does not yet: the taskbar as a page, hidden objects
@@ -563,6 +565,13 @@ def _do(act):
     elif act == "files":
         if spawn("files") < 0:
             _say("Files is not in the cabinet.")
+    elif act == "split4" or act == "split9":
+        parts = 4
+        if act == "split9":
+            parts = 9
+        cursor_hide()
+        if split(parts) != 0:
+            _say("The screen could not be split (no memory, or the kernel is an older one).")
     elif act == "tidy":
         while len(PN) > 0:
             PN.pop()
@@ -661,8 +670,8 @@ def _click(mx, my):
                 _turn(page + 1)
             return 0
         if mx < 40:
-            _menu(8, sh - TB - 140, ["Settings", "Files", "The shell", "Restart", "Shut down"],
-                  ["settings", "files", "shell", "restart", "off"], -1)
+            _menu(8, sh - TB - 190, ["Settings", "Files", "All at once: 4", "All at once: 9", "The shell", "Restart", "Shut down"],
+                  ["settings", "files", "split4", "split9", "shell", "restart", "off"], -1)
             return 0
         if mx < 72:
             return 1
@@ -687,8 +696,8 @@ def _right(mx, my):
         _menu(mx, my, ["Back to the cabinet", "Settings", "Files", "The shell"],
               ["root", "settings", "files", "shell"], -1)
     else:
-        _menu(mx, my, ["Settings", "Files", "Tidy the icons", "The shell", "The system's menu ..."],
-              ["settings", "files", "tidy", "shell", "system"], -1)
+        _menu(mx, my, ["Settings", "Files", "All at once: 4", "All at once: 9", "Tidy the icons", "The shell", "The system's menu ..."],
+              ["settings", "files", "split4", "split9", "tidy", "shell", "system"], -1)
     return 0
 
 

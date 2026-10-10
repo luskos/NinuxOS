@@ -603,6 +603,10 @@ sys_ob_text:                            ; (a program, one of its sockets) -> the
         xor eax, eax
 ninux_text_ok:
         ret
+sys_split:                              ; (0, 4 or 9): the screen whole, or split so that everything that runs is seen at once
+        mov rsi, rdi
+        mov edi, 0x0F
+        NINUX_API 0x118
 sys_cabinet_top:                        ; how many objects the cabinet itself has (the drawers' ones follow them)
         xor edi, edi
         NINUX_API 0x110

@@ -3,6 +3,11 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.32** (11 October 2026) - seen in QEMU
+  - **The screen split in 4 or 9**: the desk and every program that runs, each in its part of
+    the screen, made small, all live at once. A click on one makes the screen whole again with
+    that one in front; ESC brings the screen back as it was. In the multiplexer of the kernel;
+    "All at once: 4 / 9" in the menus of Desk2; `split(n)` in PyTon.
 - **v3.0.31** (11 October 2026) - seen in QEMU
   - **Desk2 has the system's own menu on an object**: clone, rename, hide, inject, lock, park,
     drop, clean, erase, share, transfer, broadcast, subscribe - the same page the old desktop
