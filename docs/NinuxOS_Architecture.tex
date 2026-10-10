@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.02.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.03.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.02 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.03 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -549,8 +549,13 @@ Windows has.
 \subsection{Versions}
 
 The project is \texttt{v3.x.xx}: a small update raises \texttt{xx}, a big one raises \texttt{x}.
-The number the kernel itself says (v2.9.59) changes only when a changed kernel can be built and
-accepted by its own checks.
+The number is always seven letters (\texttt{v3.0.03}). The build writes it over \texttt{v2.9.59} in
+the texts of the kernel's core --- the line of the loader, the line at the top of the shell,
+\cmd{info}, the first line of the log --- in place, so nothing in the kernel moves. The extension
+is checked by SHA-256 and keeps its bytes: \cmd{machine} and Setup still say v2.9.59. The
+Sentinel's list was signed for the old bytes of the kernel, so \cmd{sentinel} is expected to list
+\texttt{@kernel} as changed. \texttt{python tools/build\_disk.py -{}-keep-version} builds without the
+new number.
 
 % ------------------------------------------------------------------------------------------
 \section{What is not known yet}\label{sec:open}

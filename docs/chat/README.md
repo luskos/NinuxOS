@@ -1,9 +1,9 @@
 # The conversation
 
-`2026-10-10_recovery_to_v3.0.02.zip` is the export of the Claude Code session in which NinuxOS
+`2026-10-10_recovery_to_v3.0.03.zip` is the export of the Claude Code session in which NinuxOS
 v2.9.59 was brought back and v3 was started: the whole transcript with every command that was
 run and its output. It is the record of how each file of this project was made. It ends shortly
-before v3.0.02 was committed. One file holds the whole conversation; a later export replaces it
+before v3.0.03 was committed. One file holds the whole conversation; a later export replaces it
 (the older ones stay in the history of git).
 
 In short, in the order it happened:
@@ -31,6 +31,7 @@ In short, in the order it happened:
 8. v3.0.01: the folder NinuxOS_v3 and DIRECTIVE.md; the system's functions found in the old
    runtime and connected in py2asm; Calc and ASMONCRAFT compile for NinuxOS.
 9. v3.0.02: the rest of the system's functions; 16 of the 20 programs compile.
+10. v3.0.03: the build writes the version into the kernel's texts; Socials goes on the list.
 
 The transcript holds what was on the screen of this PC during the work (paths, the account name,
 the identity of the test machine). Keep the repository private.

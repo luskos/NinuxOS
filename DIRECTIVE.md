@@ -32,13 +32,18 @@ it stands until the owner changes it. Set on 10 October 2026.
 3. `docs/NinuxOS_Architecture.tex` - whatever became known or changed: formats, the start, the
    kernel, the shell and its commands, PyTon, the tools. It is the one full description.
 4. `docs/chat/` - a copy of the conversation.
-5. `VERSION`, a commit, a tag, a push to https://github.com/luskos/NinuxOS (private).
+5. `VERSION` goes up - **every time**: it is what the system itself shows when it starts. The
+   build (`tools/build_disk.py`, run by Puffus) writes it into the kernel's texts, so a stick with
+   an old number is a stick with an old build. Then build `disk.img`, a commit, a tag, a push to
+   https://github.com/luskos/NinuxOS (private).
 
 ## Versions
 
 `v3.x.xx`. A small update raises `xx` (v3.0.01, v3.0.02 ...); a big one raises `x` and starts
-`xx` again (v3.1.00). The number the kernel itself says changes only when the kernel can be
-rebuilt (TODO.md, part 1).
+`xx` again (v3.1.00). The number is always seven letters (`v3.0.03`): the build puts it in the
+place of `v2.9.59` in the core of the kernel, byte for byte. The extension of the kernel is
+checked by SHA-256 and cannot be touched yet, so `machine` and Setup still say v2.9.59
+(TODO.md, part 1).
 
 ## Where the work is
 

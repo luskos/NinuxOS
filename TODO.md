@@ -1,6 +1,7 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.02 (the system on the disk is still the v2.9.59 kernel).
+State on 10 October 2026, project v3.0.03 (the system on the disk is the v2.9.59 kernel; the build
+writes the project's version into its texts).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
 
@@ -45,7 +46,10 @@ Order inside a part = importance.
       can only replace an object by one of the same size.
 - [ ] **580 KB between the objects** that belong to none of the 165 (pixels, an old Desktop v1.7).
       Find out whether the system uses them or the old build left them.
-- [ ] The version the kernel says (v2.9.59 -> v3.x.xx) once the two checks above are solved.
+- [x] v3.0.03: the build writes VERSION over `v2.9.59` in the texts of the core (same length,
+      in place). To check on the machine: does the system start as before, and what does
+      `sentinel` say about @kernel. If it refuses more than listing it CHANGED: `--keep-version`.
+- [ ] The same in the extension (`machine`, Setup still say v2.9.59) - needs the SHA-256 check solved.
 
 ## 2. PyTon: py2asm (pyton/)
 
@@ -131,6 +135,19 @@ a suit that reads, a command and a program that show).
       dates and size), or straight to another stick.
 - [ ] This is also the tool that would have saved the old project: a lost NTFS partition read
       from NinuxOS.
+
+## 5a. New: Socials
+
+The social network that comes with the system - a program of the desktop, written in PyTon.
+Nothing is decided yet beyond that it must be made.
+
+- [ ] What it is: people (the system already has users: `user add NAME LEVEL`), what they post,
+      who sees it. Over Meta Net (`share`, `send`, `subscribe`, `broadcast` are there) or over
+      a server of its own?
+- [ ] What a post is: an object (DATA = the text or the picture, META = who, when, for whom,
+      rating) - so that it is signed, rated and kept like everything else.
+- [ ] Needs first: the network functions connected in py2asm (net_ask, net_answer, net_state),
+      and Mail and Phone looked at - they already send things between machines.
 
 ## 6. New: the names of files - Greek letters
 

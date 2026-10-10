@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # build_disk.py - make disk.img from the project (NinuxOS v3.0.0).
 #
 #   python tools/build_disk.py [--out disk.img] [--base build/base/disk_v2.9.59.img]
@@ -33,6 +33,8 @@ WORK = os.path.join(ROOT, 'build', 'work')
 SECTOR = 512
 KERNEL_SECTORS = 480                    # boot/Boot.kasm: kernel_sectors
 KERNEL_ROOM = KERNEL_SECTORS * SECTOR
+CORE_SIZE = 61968                       # the core; the extension (checked by SHA-256) follows it
+KERNEL_SAYS = b'v2.9.59'                # the version written in the kernel's texts
 
 
 def find_nasm():
@@ -60,6 +62,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', default=os.path.join(ROOT, 'disk.img'))
     ap.add_argument('--base', default=os.path.join(ROOT, 'build', 'base', 'disk_v2.9.59.img'))
+    ap.add_argument('--keep-version', action='store_true', help='leave v2.9.59 in the texts of the kernel')
     a = ap.parse_args()
 
     if not os.path.exists(a.base):
@@ -80,9 +83,23 @@ def main():
     kernel = assemble(nasm, os.path.join('kernel', 'Kernel.kasm'), 'Kernel.bin')
     if len(kernel) > KERNEL_ROOM:
         sys.exit('build: the kernel is %d bytes, the boot sector reads only %d' % (len(kernel), KERNEL_ROOM))
+    # the version of the project (the file VERSION) goes into the texts of the core: the line the
+    # loader shows, the line at the top of the shell, 'info'. Only the core: the extension has a
+    # SHA-256 check and keeps its bytes (so 'machine' and Setup still say v2.9.59).
+    stamped = 0
     kernel_changed = kernel != base[SECTOR:SECTOR + len(kernel)]
+    version = ('v' + open(os.path.join(ROOT, 'VERSION')).read().strip()).encode()
+    if not a.keep_version and not kernel_changed:
+        if len(version) != len(KERNEL_SAYS):
+            print('build: VERSION must be as long as %s (3.0.03) - the version is not stamped' % KERNEL_SAYS.decode())
+        elif version != KERNEL_SAYS:
+            core = kernel[:CORE_SIZE]
+            stamped = core.count(KERNEL_SAYS)
+            kernel = core.replace(KERNEL_SAYS, version) + kernel[CORE_SIZE:]
     if kernel_changed:
         changed.append('the kernel')
+    elif stamped:
+        changed.append('the version in the kernel (%s, %d places)' % (version.decode(), stamped))
     img[SECTOR:SECTOR + len(kernel)] = kernel
 
     table = os.path.join(ROOT, 'docs', 'cabinet_objects.csv')
@@ -113,6 +130,9 @@ def main():
         print('build: the source container was not made (%s)' % e)
     print('build: boot sector %d bytes, kernel %d bytes, %d objects' % (len(boot), len(kernel), count))
     print('build: %s  %d bytes  SHA-256 %s' % (a.out, len(img), hashlib.sha256(img).hexdigest()))
+    if stamped:
+        print('build: the system says %s now. The Sentinel will list @kernel as CHANGED (its list was' % version.decode())
+        print('       signed for v2.9.59); if the system refuses more than that, build with --keep-version.')
     if not changed:
         print('build: the same as the base image (v2.9.59)')
     else:
@@ -120,7 +140,8 @@ def main():
         if kernel_changed:
             print('build: WARNING - the kernel has other bytes. Nothing signs it yet: it will fail its own')
             print('       SHA-256 check (system operations off) and the Sentinel will call it CHANGED.')
-        if len(changed) > (2 if kernel_changed else 1) or (changed and not kernel_changed and changed != ['the boot sector']):
+        objects_changed = [c for c in changed if c.endswith('.asmo') or c.endswith('.kasm')]
+        if objects_changed:
             print('build: WARNING - a changed system object is CHANGED for the Sentinel until it is accepted')
             print("       on the machine ('sentinel trust NAME', administrator).")
     return 0

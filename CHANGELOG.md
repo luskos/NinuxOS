@@ -3,6 +3,16 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.03** (10 October 2026)
+  - The system shows the version of the project: the build writes `VERSION` over `v2.9.59` in the
+    texts of the kernel's core (the line of the loader, the top of the shell, `info`, the log) -
+    four places, the same length, nothing moves. The extension is left as it is (its SHA-256 check),
+    so `machine` and Setup still say v2.9.59. `--keep-version` builds without it. Not tried:
+    the Sentinel will probably list @kernel as CHANGED.
+  - `Puffus.exe` in the folder is still the one of v2.9.60 (it was open and could not be replaced):
+    close it and run `tools\puffus\make_puffus.cmd`. It builds before it writes, so the stick gets
+    the new number either way; only the source container on the stick needs the new Puffus.
+  - DIRECTIVE.md: VERSION goes up with every update. TODO.md: Socials, the social network of the system.
 - **v3.0.02** (10 October 2026)
   - py2asm: the rest of the system's functions found in the old runtime and connected
     (`pyton/ninux_system.inc`): save_text, save_page, load_text, ob_count, ob_meta, meta_of,
