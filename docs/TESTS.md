@@ -171,6 +171,15 @@ Shell, по една команда; очаква се същото поведе
 - [ ] **K11. Шрифтът.** `python tools\make_font.py Exo-Medium` -> виж `build\font\preview.txt`. Ако ти харесва: същото с `--use`, билд,
   и кажи: смени ли се шрифтът в shell, или само на десктопа? Връщане: `python tools\make_font.py --back`.
 
+## L. v3.0.12: проектът вътре в системата
+
+- [ ] **L1.** Билдът казва `the drawer project: 5 texts (changelog, todo, directive, protocols, tests), 2 program sources`.
+- [ ] **L2.** В shell: `ls` - има ли `project`? Как се влиза в чекмедже от shell (както в `archive`)? `view todo`, `view changelog` -
+  чете ли се, върти ли се (42 KB текст)? На десктопа: чекмеджето `project` отваря ли се?
+- [ ] **L3.** `sources` - показва ли `files` и `socials` и какво казва за тях.
+- [ ] **L4. (по желание)** `python tools\build_disk.py --source-inside` - целият сорс и разговорите като обект `nxsource` (19 MB).
+  Тръгва ли системата, колко се бави стартът, `mem` преди и след. Ако е наред - ще стане правило за всеки билд.
+
 ---
 
 ## Какво да ми пратиш

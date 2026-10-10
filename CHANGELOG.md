@@ -3,6 +3,15 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.12** (11 October 2026) - not run in the system
+  - **The project inside the system.** Every build makes a drawer `project` in the cabinet:
+    the texts `changelog`, `todo`, `directive`, `protocols`, `tests` (read with `view`), and
+    the sources of Files and Socials as source objects (Bags' source was there already). The
+    last build carries the last state even if git is out of reach. `--source-inside` also puts
+    the whole source with the conversations in as the object `nxsource` (19 MB; to be tried
+    once before it is the rule); `--nothing-inside` builds without the drawer.
+  - TODO.md, part 2a: the other dialects - c2asm, c++2asm, c#2asm, java2asm, js2asm - over the
+    one back end of py2asm; plain code only, no classes, no OOP. An idea for now.
 - **v3.0.11** (10 October 2026) - written to the owner's order; none of it has run in the system
   - **The boot sector** no longer looks like a FAT12 diskette: it says "no FAT" and carries a
     partition table with one partition of a kind no other system opens (0x7F). Windows should

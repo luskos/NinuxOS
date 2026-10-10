@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.11 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.12 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -92,6 +92,7 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 | 33 | An instance of the system on every disk; the governor (`swap`, `sync`) | L |
 | 34 | The vDNA constructor: a universal one from the demo in the repository vDNA; closed programs as chains it builds into an ASMO object; an AI checks them | XL |
 | 35 | **[the empty program is there, v3.0.11]** Socials | L |
+| 36 | The other dialects over the one back end: c2asm, c++2asm, c#2asm, java2asm, js2asm - plain code only, no OOP (part 2a) | XL |
 
 ### Where the order stands after v3.0.11 (10 October 2026)
 
@@ -121,6 +122,16 @@ Not done, and why - said plainly, so that the list does not lie:
   cabinet (NAME_data). Should they (also) go out to a stick as a file?
 
 ## If the disk is lost again - where everything is
+
+- **Inside the system itself (v3.0.12):** every build puts a drawer `project` into the cabinet
+  with the texts `changelog`, `todo`, `directive`, `protocols`, `tests` (`view todo`) and the
+  sources of the programs written since the recovery. So the last stick always holds the last
+  state, even without git.
+  The whole source and the conversations (19 MB) go in as the object `nxsource` only with
+  `python tools/build_disk.py --source-inside`: it is not known whether the system reads every
+  object into memory when it starts - an object that big has to be tried once (does it start,
+  how long does it take) before it becomes the rule. Until then the whole source is on every
+  stick where Puffus writes it: 1 GiB from the start.
 
 - GitHub, private: https://github.com/luskos/NinuxOS (every version has a tag).
 - On every stick Puffus writes: the system from sector 0, and the whole source 1 GiB from the
@@ -200,6 +211,41 @@ No class, on purpose: a program is made of objects (ASMO), not of classes.
 - [ ] A def inside a def keeps the outer names as they were when it was made (Python: as they
       are when it runs). Decide whether this stays.
 - [ ] More examples in `pyton/examples` - one for every place where PyTon may differ from Python.
+
+## 2a. New: the other dialects - c2asm, c++2asm, c#2asm, java2asm, js2asm (the owner, 11 October 2026)
+
+An idea for now: to be in the list, not to be written yet.
+
+Back-end languages only. Each is supported the way PyTon is: **as a dialect** - the way of
+writing - and not as that language's own machinery. If `2 + 2` is written in any of them the
+way that language expects, the assembly underneath is the same that py2asm gives. Not the
+language's runtime, not its libraries, not its way of talking to the processor.
+
+And only the plain way of writing code: values, names, arithmetic, conditions, loops, functions,
+lists and tables, texts. **No classes, no interfaces, no abstractions, no polymorphism** - none
+of the machinery of OOP. This is object programming (the ASMO object: DATA + META + sockets),
+not object-oriented programming. The same rule py2asm already keeps ("no `class`", DIRECTIVE.md).
+
+What that means for the work (Claude):
+
+- [ ] One back end for all. Today py2asm goes Python text -> Python's own tree (`ast`) -> NASM
+      in one file. To be split: a front end a dialect (text -> a small common tree of
+      statements and expressions), and the one back end that exists (the tree -> NASM, the
+      prelude, the runtime, the Windows and NinuxOS targets). The common tree is what py2asm
+      already handles: assignment, the operators, `if`, `while`, `for`, functions, calls,
+      lists, dicts, texts, `try`.
+- [ ] A front end is then a parser only: `c2asm`, `c++2asm`, `c#2asm`, `java2asm`, `js2asm`.
+      Each needs its own parser written by hand (Python's `ast` reads only Python).
+- [ ] To decide a dialect: what the types written in C, C#, Java mean (`int x = 2;`) - a note
+      that is checked, or nothing (values stay as they are in PyTon: whole numbers of any use,
+      floats, texts)? What `{ }` objects of JavaScript are - the dict. What a C pointer or
+      array is - probably the list, and no address arithmetic.
+- [ ] What is refused, with a clear message, as `class` is today: `class`, `struct` with
+      methods, `interface`, `template`, `new` of a class, inheritance, `this`.
+- [ ] The system functions (fill, text, window, poll ...) and META are the same names in every
+      dialect; a program's sockets are its functions, as in PyTon.
+- [ ] A test like pyton/test.py: the same small program written in every dialect must give
+      the same assembly, or at least the same output.
 
 ## 3. Testing
 

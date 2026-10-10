@@ -3,6 +3,7 @@
 #
 #   python tools/build_disk.py [--out disk.img] [--base build/base/disk_v2.9.59.img]
 #                              [--keep-version] [--no-seal] [--old-boot] [--plain-kernel]
+#                              [--nothing-inside] [--source-inside]
 #
 # What it does:
 #   1. assembles boot/Boot.kasm (the boot sector) and kernel/Kernel.kasm (core + extension) with nasm
@@ -19,6 +20,11 @@
 #        every object of build/add/*.asmo as a new object of the cabinet (or in the place of the
 #        one with the same name) - this is how a program made by py2asm gets into the system
 #        An object that grew is moved behind the last one; its place in the table follows it.
+#        the project itself, to be read inside the system (v3.0.12), in a drawer `project`:
+#          changelog, todo, directive, protocols, tests   the texts (`view todo`)
+#          the sources of the programs of apps/py2asm.txt  as source objects
+#          with --source-inside: the whole source container (with the conversations) as the
+#          object `nxsource` - 19 MB; see TODO.md before using it
 #   4. seals it, so that the system takes it for its own:
 #        the SHA-256 the core keeps of the extension
 #        the Sentinel's list: the SHA-256 of every system object and of the kernel, signed with
@@ -351,7 +357,64 @@ def put(img, tables, e, data):
     return lba
 
 
-def add_object(img, tables, data, name=None):
+INSIDE = [('changelog', 'CHANGELOG.md'), ('todo', 'TODO.md'), ('directive', 'DIRECTIVE.md'),
+          ('protocols', 'docs/PROTOCOLS.md'), ('tests', 'docs/TESTS.md')]
+
+
+def project_drawer(img, tables):
+    """a new, empty drawer `project`, made as the empty drawer `samples` is; returns its table"""
+    for e, n, lba, sectors, ident in tables[0].entries(img):
+        if n == 'samples' and type_at(img, lba) == 'cabinet':
+            off = lba * SECTOR
+            old = bytes(img[off:off + object_size(img, off)])
+            if object_data(old)[:6] != b'DRWR\0\0' or old.count(b'samples') != 2:
+                break
+            new = bytearray(old.replace(b'samples', b'project'))
+            struct.pack_into('<I', new, 0x4C, 0)
+            said, (line, place) = add_object(img, tables, bytes(new), 'project')
+            t = Table(img, struct.unpack_from('<I', img, place + 16)[0] * SECTOR + 0x68)
+            tables.append(t)
+            return t
+    sys.exit('build: the empty drawer `samples` is not as expected - the drawer `project` cannot be made from it')
+
+
+def project_inside(img, tables, drawer, changed, whole):
+    """the project's own papers and sources as objects, so that the last build always carries them"""
+    for name, path in INSIDE:
+        text = open(os.path.join(ROOT, path), encoding='utf-8').read().replace('\r\n', '\n')
+        obj = make_object(text.encode('cp1251', 'replace'),
+                          ['type:text', 'name:' + name, 'label:' + name, 'kind:text',
+                           'data:%s of the project, as of this build' % path, 'desktop:no', 'made:build_disk.py'], level=0)
+        add_object(img, tables, obj, name, drawer)
+    listing = os.path.join(ROOT, 'apps', 'py2asm.txt')
+    sources = 0
+    for line in open(listing) if os.path.exists(listing) else []:
+        parts = line.split('#')[0].split()
+        if len(parts) != 2:
+            continue
+        have = any(n == parts[1] and type_at(img, lba) == 'source'
+                   for t in tables for e, n, lba, sectors, ident in t.entries(img))
+        if have:
+            continue                            # (Bags: its source object is the old one, with the new text)
+        obj = make_object(open(os.path.join(ROOT, 'apps', parts[0]), 'rb').read(),
+                          ['type:source', 'name:' + parts[1], 'lang:pyton', 'target:' + parts[1],
+                           'data:PyTon program text', 'made:build_disk.py'], level=0)
+        add_object(img, tables, obj, parts[1], drawer)
+        sources += 1
+    said = 'the drawer project: %d texts (%s), %d program sources' % (len(INSIDE), ', '.join(n for n, p in INSIDE), sources)
+    if whole:
+        import source_container
+        source_container.pack()
+        data = open(source_container.OUT, 'rb').read()
+        obj = make_object(data, ['type:data', 'name:nxsource', 'label:nxsource', 'kind:data',
+                                 'data:the whole source of the project and the conversations (.nxc: a zip from byte 512)',
+                                 'desktop:no', 'made:build_disk.py'], level=0)
+        add_object(img, tables, obj, 'nxsource', drawer)
+        said += '; the whole source as the object nxsource (%d bytes)' % len(data)
+    changed.append(said)
+
+
+def add_object(img, tables, data, name=None, into=None):
     """a new object of the cabinet, or a new one in the place of the object with its name;
     returns what it did, and the name of its line in the Sentinel's list with its place in the table"""
     data = bytes(data)
@@ -367,15 +430,15 @@ def add_object(img, tables, data, name=None):
     what = 'in the place of the old one'
     if place is None:
         what = 'new'
-        top = tables[0]
+        top = into or tables[0]
         for i in range(TABLE_PLACES):
             if not img[top.at + 16 + 32 * i]:
                 place = top.at + 16 + 32 * i
                 break
         if place is None:
-            sys.exit('build: the cabinet has no free place for %s (63 objects; put it in a drawer)' % name)
+            sys.exit('build: no free place for %s (63 objects in the cabinet and in a drawer)' % name)
         top.count += 1
-        struct.pack_into('<H', img, top.at + 6, top.count)
+        struct.pack_into('<H', img, top.at + (6 if top.magic == b'CABN' else 4), top.count)
         img[place:place + 32] = name.encode('latin-1').ljust(16, b'\0') + bytes(16)
     # the identity: an object and its place carry the same one. A new object made outside the
     # system has none (0, which is not checked); one that takes the place of another takes its
@@ -525,6 +588,8 @@ def main():
     ap.add_argument('--no-seal', action='store_true', help='do not sign: the Sentinel will call what changed CHANGED')
     ap.add_argument('--plain-kernel', action='store_true',
                     help='the kernel without the code written after the recovery (Alt + *): the 220000 bytes of v2.9.59')
+    ap.add_argument('--nothing-inside', action='store_true', help='without the drawer project (the texts and sources of the project)')
+    ap.add_argument('--source-inside', action='store_true', help='also the whole source container as the object nxsource (19 MB)')
     ap.add_argument('--old-boot', action='store_true', help='the boot sector of v2.9.59 (a FAT12 diskette to Windows)')
     a = ap.parse_args()
 
@@ -627,6 +692,9 @@ def main():
 
     # the two places the build fills in are found by what the source still holds there - the key
     # and the hash of v2.9.59 - so they are found wherever a changed kernel has them
+    if not a.nothing_inside:
+        project_inside(img, tables, project_drawer(img, tables), changed, a.source_inside)
+
     base_k = base[SECTOR:SECTOR + BASE_KERNEL]
     old_public = base_k[PUBLIC_KEY_AT:PUBLIC_KEY_AT + 32]
     old_hash = hashlib.sha256(base_k[CORE_SIZE:]).digest()
