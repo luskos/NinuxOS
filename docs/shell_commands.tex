@@ -1,0 +1,77 @@
+% shell_commands.tex - the help text of the shell, taken out of the v2.9.59 kernel by a script.
+\begin{longtable}{@{}p{5.2cm} p{9.8cm}@{}}
+\toprule
+command & what it does (the system's own words) \\ \midrule
+\endhead
+\texttt{help} & this list, a page at a time \\
+\texttt{NAME} & (v2.9) an object's name alone runs it; an app (NET, calc ...) opens \\
+\texttt{kill NAME} & close a program in a window by its name (v2.9) \\
+\texttt{sentinel} & check every system object against the build's signed list (v2.9) \\
+\texttt{sentinel trust NAME} & run a CHANGED system object anyway, until the next start (admin) \\
+\texttt{whoami} & this machine's identity: ID, role, generation, parent (v2.9.2) \\
+\texttt{ls [all|DRAWER]} & objects in the cabinet / everything / one drawer \\
+\texttt{room [free]} & the storage room: cabinet + drawers; free = unload idle ones \\
+\texttt{drawer NAME} & a new drawer for 63 more objects (maint) \\
+\texttt{stow NAME DRAWER / unstow NAME} & move an object into / out of a drawer (maint) \\
+\texttt{id NAME} & the object's RGBA identity \\
+\texttt{cores [test]} & the CPU cores; test = a picture drawn by one core, then all \\
+\texttt{update [GO]} & what is new on a USB stick with a newer disk.img; GO = back up, then write it (maint) \\
+\texttt{update back} & the system as it was before the last update (maint; then it restarts) \\
+\texttt{puffer [GO|CLONE]} & make a USB stick that starts NinuxOS: GO = a fresh system, CLONE = this one \\
+\texttt{files [cd NAME|get NAME]} & a Windows / Mac / Linux pen drive (FAT32): list, folder, bring a file in \\
+\texttt{spaces} & META: the full-screen programs on this machine (Photon ...), pick one to start \\
+\texttt{bench} & one performance test of everything: processor, memory, screen, disk, cores (8 s) \\
+\texttt{cores one|all} & programs on the first core only (the default) / on every core \\
+\texttt{cores solo} & shared drawing work on the first core alone, on / off \\
+\texttt{cores beat} & three 'alive' squares at the top right, on / off \\
+\texttt{pci} & the devices on the PCI bus \\
+\texttt{usb [on]} & USB controllers; on = USB keyboard and mouse (xHCI) \\
+\texttt{usb boot on|off} & start USB at every boot (maint) \\
+\texttt{mnt} & look at the USB ports again: a stick put in after the start \\
+\texttt{shot} & keep the screen as a picture object (the PrtSc key does it anywhere) \\
+\texttt{away} & lock the screen until the administrator password (Ctrl + Alt + L anywhere) \\
+\texttt{login on|off} & ask the password at every start \\
+\texttt{user [add NAME LEVEL | del NAME]} & people: each a password and a level (maint) \\
+\texttt{tune [auto|max|safe|min|off]} & the processor's clock: charts, turbo, a governor ('tune x' = help) \\
+\texttt{uproot / root} & move this whole system to another machine by a stick ('uproot' explains) \\
+\texttt{build refresh keep media | discard media} & back to a new build's state (maint) \\
+\texttt{colors [matrix|amber|paper|classic]} & the shell's colour scheme \\
+\texttt{level [18|16|12|7|0]} & ratings: the highest rating that opens on this machine (password) \\
+\texttt{rate NAME N} & an object's rating: 0, 7, 12, 16, 18 (maint) \\
+\texttt{gpu [on|cursor]} & virtio-gpu: the GPU shows the screen; cursor = hardware pointer \\
+\texttt{gpu trace on|off|save} & record what the GPU driver does (the GPU lab) \\
+\texttt{gpu probe} & read-only: each display device, NVIDIA chip ID, engines, clock \\
+\texttt{sgpu [test|bench|demo|photon|ptest|wc on|off]} & the SUB-GPU: every core draws like a GPU \\
+\texttt{machine} & the processor, cores, memory, screen, graphics and disk \\
+\texttt{sound / play [HZ MS | NAME]} & the sound device / a tune, a tone, a sound object screen [W H|auto] the screen modes; W H = use that size from the next start (maint) \\
+\texttt{net [on|ip A.B.C.D [MASK [GW]]]} & the network (e1000; DHCP); ping A.B.C.D \\
+\texttt{serve [on|off] / get A.B.C.D NAME [AS]} & Meta Net: give / fetch shared objects \\
+\texttt{share [NAME] / unshare NAME / look A.B.C.D} & the public directory here / there \\
+\texttt{send A.B.C.D NAME / serve inbox on|off} & transfer an object / accept transfers \\
+\texttt{subscribe / unsubscribe A.B.C.D / broadcast NAME} & broadcasts to subscribers install [N ERASE] put NinuxOS on SATA disk N (erases it) - boot from it after \\
+\texttt{meta NAME} & show an object's metadata \\
+\texttt{view NAME} & ASMO viewer: META, then DATA as text or hex \\
+\texttt{NAME/TYPE} & same name, pick by META type: view calc/source \\
+\texttt{run NAME [SOCK]} & call an object's socket (default: first) \\
+\texttt{desktop} & the desktop; programs open side by side in windows (v1.14) \\
+\texttt{echo TEXT} & print text \\
+\texttt{mem / memtest} & memory map and allocator self-test \\
+\texttt{uptime} & time since boot \\
+\texttt{log TEXT} & write text to the serial log \\
+\texttt{crash} & test the crash screen \\
+\texttt{sources} & PyTon source objects and whether they are compiled \\
+\texttt{build [NAME]} & compile programs (type:script) to native objects (maint) \\
+\texttt{maint} & maintenance mode on/off (the cabinet can be changed) \\
+\texttt{copy / rename / delete NAME ...} & change the cabinet (maint) \\
+\texttt{disk} & boot disk, slots, gaps and free space \\
+\texttt{scan [fix]} & find every object by reading the disk; fix = list them again (maint) recover LBA NAME bring back a deleted object found by scan (maint) \\
+\texttt{compact} & close the gaps between objects (maint) hide / show NAME STATE 2: hidden from the desktop; show asks the admin password \\
+\texttt{erase NAME} & zero the object on disk and remove it - for good (maint) \\
+\texttt{dropdata / cleandata / cleansockets NAME} & empty or zero parts (maint) \\
+\texttt{inject NAME SRC} & put the DATA of SRC into NAME (maint) \\
+\texttt{passwd} & set or change the administrator password \\
+\texttt{lock / unlock NAME} & encrypt the DATA with a passphrase / decrypt it (maint) \\
+\texttt{shutdown / restart} & power off or restart (also the power button on the desktop) \\
+\texttt{shield on|off|test} & run objects in ring 3, protected from the kernel (v1.8) cls / info / version \\
+\bottomrule
+\end{longtable}

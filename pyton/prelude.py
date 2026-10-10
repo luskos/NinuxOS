@@ -1559,3 +1559,44 @@ def _bitop(a, b, op):
             return r == 1
         return r
     _raise("TypeError", "& | ^ need whole numbers or sets")
+
+# ---------------------------------------------------------------- from the PyTon of v2.9
+# (the programs of apps/ use these; in new programs chr(), ord() and .split() do the same)
+
+def char(n):
+    return _chr(n)
+
+
+def code(s, i=0):
+    if _type(s) != 1 or i < 0 or i >= len(s):
+        return 0
+    return _sget(s, i)
+
+
+def field(s, sep, index):
+    # the part number index of s, cut at the letter with the code sep
+    n = len(s)
+    start = 0
+    k = 0
+    i = 0
+    while i < n:
+        if _sget(s, i) == sep:
+            if k == index:
+                return _slice(s, start, i, 1)
+            k = k + 1
+            start = i + 1
+        i = i + 1
+    if k == index:
+        return _slice(s, start, n, 1)
+    return ""
+
+
+def textof(codes):
+    # a list of letter codes -> a text (the programs of v2.9 keep typed text as such a list)
+    n = len(codes)
+    r = _str_new(n)
+    i = 0
+    while i < n:
+        _sset(r, i, _lget(codes, i))
+        i = i + 1
+    return r

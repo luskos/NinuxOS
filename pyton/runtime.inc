@@ -277,7 +277,7 @@ rt_add:
         RT_BOTH_INT .slow
         lea rax, [rdi + rsi - 1]
         ret
-.slow:  RT_SLOW2 f__add
+.slow:  RT_SLOW2 p__add
 
 rt_sub:
         RT_BOTH_INT .slow
@@ -285,7 +285,7 @@ rt_sub:
         sub rax, rsi
         inc rax
         ret
-.slow:  RT_SLOW2 f__sub
+.slow:  RT_SLOW2 p__sub
 
 rt_mul:
         RT_BOTH_INT .slow
@@ -295,13 +295,13 @@ rt_mul:
         imul rax, rcx
         inc rax
         ret
-.slow:  RT_SLOW2 f__mul
+.slow:  RT_SLOW2 p__mul
 
 rt_div:
-        RT_SLOW2 f__truediv
+        RT_SLOW2 p__truediv
 
 rt_pow:
-        RT_SLOW2 f__pow
+        RT_SLOW2 p__pow
 
 rt_floordiv:                            ; as in Python: rounds down, towards minus infinity
         RT_BOTH_INT .slow
@@ -322,7 +322,7 @@ rt_floordiv:                            ; as in Python: rounds down, towards min
 .done:
         lea rax, [rax*2 + 1]
         ret
-.slow:  RT_SLOW2 f__floordiv
+.slow:  RT_SLOW2 p__floordiv
 
 rt_mod:                                 ; as in Python: the sign of the divisor
         RT_BOTH_INT .slow
@@ -343,7 +343,7 @@ rt_mod:                                 ; as in Python: the sign of the divisor
 .done:
         lea rax, [rdx*2 + 1]
         ret
-.slow:  RT_SLOW2 f__mod
+.slow:  RT_SLOW2 p__mod
 
 rt_neg:
         test dil, 1
@@ -353,7 +353,7 @@ rt_neg:
         ret
 .slow:
         push rdi
-        call f__neg
+        call p__neg
         add rsp, 8
         ret
 
@@ -388,7 +388,7 @@ rt_bits_%1:
         push rdi
         push rsi
         push %2
-        call f__bitop
+        call p__bitop
         add rsp, 24
         ret
 %endmacro
@@ -425,7 +425,7 @@ rt_eq:
 .yes:
         lea rax, [rel rt_true]
         ret
-.slow:  RT_SLOW2 f__eq
+.slow:  RT_SLOW2 p__eq
 
 rt_ne:
         call rt_eq
@@ -440,14 +440,14 @@ rt_lt:
         cmp rdi, rsi
         setl al
         RT_BOOL
-.slow:  RT_SLOW2 f__lt
+.slow:  RT_SLOW2 p__lt
 
 rt_le:
         RT_BOTH_INT .slow
         cmp rdi, rsi
         setle al
         RT_BOOL
-.slow:  RT_SLOW2 f__le
+.slow:  RT_SLOW2 p__le
 
 rt_gt:
         xchg rdi, rsi
@@ -470,7 +470,7 @@ rt_isnot:
 rt_in:                                  ; rdi = what is looked for, rsi = where
         push rsi
         push rdi
-        call f__contains
+        call p__contains
         add rsp, 16
         ret
 
@@ -509,6 +509,28 @@ rt_str_new:                             ; rdi = length (a plain number) -> a tex
         mov [rax + 8], rcx
         ret
 
+rt_cstr:                                ; rdi = a zero-ended text (0: none) -> a text value
+        test rdi, rdi
+        jnz .count
+        lea rdi, [rel rt_msg_nl + 1]    ; an empty text
+.count:
+        push rdi
+        xor ecx, ecx
+.next:
+        cmp byte [rdi + rcx], 0
+        je .make
+        inc rcx
+        jmp .next
+.make:
+        push rcx
+        mov rdi, rcx
+        call rt_str_new
+        pop rcx
+        pop rsi
+        lea rdi, [rax + 16]
+        rep movsb
+        ret
+
 rt_getitem:                             ; rdi = the thing, rsi = the index or the key
         test dil, 1
         jnz rt_err_type
@@ -544,7 +566,7 @@ rt_getitem:                             ; rdi = the thing, rsi = the index or th
         pop r8
         mov [rax + 16], r8b
         ret
-.dict:  RT_SLOW2 f__dict_get
+.dict:  RT_SLOW2 p__dict_get
 
 rt_setitem:                             ; rdi = the thing, rsi = the index or the key, rdx = the value
         test dil, 1
@@ -573,7 +595,7 @@ rt_setitem:                             ; rdi = the thing, rsi = the index or th
         push rdi
         push rsi
         push rdx
-        call f__dict_set
+        call p__dict_set
         add rsp, 24
         ret
 
@@ -822,7 +844,7 @@ rt_heap_ptr:    dq 0
 rt_heap_end:    dq 0
 rt_msg_error:   db 'PyTon: '
 rt_msg_error_len equ $ - rt_msg_error
-rt_msg_nl:      db 10
+rt_msg_nl:      db 10, 0
 rt_msg_colon:   db ': '
 rt_msg_memory:  db 'no memory left', 0
 rt_handler:     dq 0

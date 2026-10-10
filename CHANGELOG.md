@@ -3,6 +3,19 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.01** (10 October 2026)
+  - The project moved to the folder `NinuxOS_v3`; `DIRECTIVE.md` says how the work goes.
+  - py2asm reaches NinuxOS: fill, fill_round, text, window, poll, key, the mouse, the cursor, ticks,
+    log and meta are connected - their places in the system's table were read from the runtime of
+    the old programs. Calc and ASMONCRAFT compile with the new py2asm; the other 18 programs wait
+    for save_text, load_text, ob_meta, system and the rest (TODO.md).
+  - prelude.py has names of its own now: a program may have a `_helper` with the same name.
+    `char`, `code`, `field`, `textof` of the v2.9 PyTon are there for the old programs.
+  - `test/try`: pyhello and pycalc as objects, to find out whether `files get` takes them.
+  - The architecture document: the shell and all its commands (the help text taken out of the
+    kernel), PyTon and py2asm in full, the formats (kernel on the disk, the source container, the
+    QEMU scripts), versions.
+  - Nothing of this was run: by the directive the owner tests.
 - **v3.0.0** (10 October 2026) - versions are v3.x.xx from here. The system on the disk is still the
   v2.9.59 kernel (TODO.md, part 1).
   - PyTon: `pyton/py2asm.py` written anew. The program is read with Python's own parser and compiled

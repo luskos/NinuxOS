@@ -1,7 +1,22 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.0 (the system on the disk is still the v2.9.59 kernel).
-Versions from now on: v3.x.xx. Order inside a part = importance.
+State on 10 October 2026, project v3.0.01 (the system on the disk is still the v2.9.59 kernel).
+Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
+Order inside a part = importance.
+
+## To try now (the owner)
+
+1. **Does a program made on the PC get into the system?** Copy `test/try/pyhello.asmo` and
+   `test/try/pycalc.asmo` onto a FAT32 stick. In NinuxOS: `usb on`, `mnt`, `files`,
+   `files get pyhello.asmo` (try also the short name the stick shows), then `ls`, `meta pyhello`,
+   `run pyhello`, `run pyhello numbers`; for pycalc: start it from the desktop.
+   Write down every answer of the system - each one says what the build must do.
+   Expected problems: the identity in the header is 0; the system may want another ending or
+   refuse a file that is already an object.
+2. **Puffus:** close the one that is open, run `tools\puffus\make_puffus.cmd`, write a stick,
+   start a PC from it. Then `python tools/source_container.py check \\.\PhysicalDriveN`.
+3. `python pyton/test.py` - after the last change (prelude.py got its own names) the two
+   examples were only assembled, not run.
 
 ## If the disk is lost again - where everything is
 
@@ -38,12 +53,19 @@ Done in v3.0.0: the transpiler written anew; `python pyton/test.py` runs every p
 `pyton/examples` under real Python and compiled, and compares - both examples give the same output.
 No class, on purpose: a program is made of objects (ASMO), not of classes.
 
-- [ ] **The system's functions for NinuxOS.** The old programs reach the system through a table of
-      functions; 8 places are known, 13 are not (`pyton/platform_ninux.inc`). fill, fill_round,
-      window, poll, key, mouse_x/y/buttons, load_text, save_text, ticks, system, ob_meta ... must be
-      found in the old runtime (it is the same ~8 KB in every compiled program) before a program
-      with a window can be compiled. Then: compile the 20 programs of `apps/` with the new py2asm
-      and compare them on the screen with the old ones.
+- [x] v3.0.01: fill, fill_round, text, window, poll, key, key_mods, mouse_x/y/buttons,
+      cursor_show/hide, ticks, log, meta are connected (`pyton/platform_ninux.inc`, py2asm: SYSTEM).
+      Calc and ASMONCRAFT go through the new py2asm; nothing has run in the system yet.
+- [ ] **The rest of the system's functions**, in the order the programs need them: save_text and
+      load_text (9 programs), ob_count / ob_meta (5), system (7), textl, spawn, kill, key_send,
+      load_image / save_image, save_rating, save_page, random, time, play / sound_play / sound_stop,
+      logline, meta_of, net_ask / net_answer / net_state. Method that worked: count the calls of a
+      name in each program's source and the call sites of each runtime function in its object -
+      equal counts name the function; then read its few lines for the place in the table.
+      Likely but not sure: ticks (+0x10), cursor_show (+0x48), key_mods (the third value of poll),
+      memory (+0xB0).
+- [ ] Compile all 20 programs of `apps/` with the new py2asm and compare them on the screen
+      with the old ones.
 - [ ] A way in: a new object cannot be put into the cabinet from outside yet (part 1), and its
       identity (0x4C) is left 0.
 - [ ] **Pages.** HTML + CSS with PyTon scripts (type:script) go through the kernel's own small

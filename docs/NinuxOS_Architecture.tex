@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v2.9.60.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.01.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize version 2.9.60}
+\normalsize project version 3.0.01 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -277,8 +277,131 @@ def open(sw, sh):       # the socket that runs the program in its window
 \texttt{lang:pyton}; \cmd{sources} lists each source, its target and whether the compiled program
 is up to date. A new program comes in from a FAT32 stick with \cmd{files get NAME}.
 
-Outside the system the same work was done by \file{pyton/py2asm.py}. That file is lost; its
-ancestor (\file{py2asmx64v3.21.py}) is in the repository PypyOS.
+\subsection{Three PyTons in v2.9.59}
+
+\begin{longtable}{@{}p{3.6cm} p{11.4cm}@{}}
+\toprule
+which & what it does \\ \midrule
+the old py2asm & ran on the PC and compiled the twenty programs (\texttt{lang:pyton}). Lost with
+                 the disk. Its runtime, about 8 KB, is inside every one of those programs. \\
+\cmd{build} in the kernel & compiles small scripts to \texttt{lang:native}: whole numbers and
+                 lists of them only; no fractions, dicts, methods (its error texts say so). \\
+Studio (F5) & runs a program without compiling it; knows more than \cmd{build}. \\
+\bottomrule
+\end{longtable}
+
+\subsection{The new py2asm (v3)}
+
+\file{pyton/py2asm.py} was written anew. It reads the program with Python's own parser, so the
+syntax is exactly Python's, and writes NASM assembly.
+
+\begin{itemize}
+\item \textbf{What it compiles:} whole numbers and fractions, texts, \texttt{True False None},
+      lists, tuples, dicts, sets; every operator; \texttt{if / elif / else}, \texttt{while},
+      \texttt{for} with \texttt{break}, \texttt{continue}, \texttt{else}; \texttt{def} with default
+      values, \texttt{name=value} and \texttt{*args}; \texttt{def} inside \texttt{def}; \texttt{lambda};
+      functions as values; \texttt{try / except / else / finally}, \texttt{raise}, \texttt{assert};
+      slices, f-strings, the three comprehensions; the usual built-in functions and the methods of
+      texts, lists, dicts and sets.
+\item \textbf{Never:} \texttt{class}. A NinuxOS program is made of objects, not of classes.
+\item \textbf{Not yet:} \texttt{import}, \texttt{with}, \texttt{yield}, \texttt{**kwargs},
+      \texttt{nonlocal}.
+\item \textbf{Different from Python:} whole numbers are 63 bits; memory is not given back; a fraction
+      prints with up to 6 digits after the point; a \texttt{def} inside a \texttt{def} keeps the outer
+      names as they were when it was made; an exception is its kind and its message.
+\end{itemize}
+
+\paragraph{The three layers.}
+\file{pyton/runtime.inc} is a small core in assembly: memory, whole numbers, comparing, lists,
+dicts, functions as values, exceptions. \file{pyton/prelude.py} is the rest of the language written
+in PyTon itself --- texts, fractions, \texttt{str()}, slices, sorting, every method --- and is
+compiled together with each program; only the functions a program needs go into it. A platform
+file connects the two to the outside.
+
+\paragraph{A value} is 64 bits. A whole number $n$ is kept as $2n+1$; anything else is the address
+of a block whose first 8 bytes say what it is:
+
+\begin{longtable}{@{}l l p{9.5cm}@{}}
+\toprule
+kind & what & the block \\ \midrule
+1 & text & kind, length, the bytes, a zero byte \\
+2 & list & kind, length, room, the address of the items \\
+3 & dict & kind, 0, the list of keys, the list of values \\
+4 & float & kind, the 8 bytes of a double \\
+5 & tuple & as a list \\
+6 & None & one fixed block \\
+7 & bool & two fixed blocks: True, False \\
+8 & function & kind, code, values it takes, values it keeps, values it needs, the kept and the
+               default values \\
+9 & set & as a list, every value once \\
+\bottomrule
+\end{longtable}
+
+\noindent A compiled function takes its values on the stack and gives its result in \texttt{rax};
+the functions of the core take theirs in \texttt{rdi, rsi, rdx, rcx}. A \texttt{try} keeps four
+values in the frame of its function (the stack, the frame, where its \texttt{except} starts, the
+\texttt{try} around it); \texttt{raise} goes to the innermost one.
+
+\paragraph{Two targets.}
+\texttt{python pyton/py2asm.py prog.py} and \texttt{nasm -f bin -I pyton/ prog.asm -o prog.exe} give a
+Windows console program, written whole by NASM (\file{platform\_win64.inc}): the way to try the
+language on the PC. \file{pyton/test.py} runs every program of \file{pyton/examples} under real
+Python and compiled, and compares the two outputs.
+With \texttt{--target ninux --name NAME} the result is an ASMO v4 object
+(\file{platform\_ninux.inc}): header, META from the line \texttt{META = \{\ldots\}}, the socket
+tables, the code, the end. The code is position-independent, so the object has no relocations.
+
+\paragraph{How a program reaches the system.} A socket is called with the object in \texttt{rdi},
+the table of the system's functions in \texttt{rsi} and its two values in \texttt{rdx, rcx}. The
+places of that table known so far (read from the runtime of the old programs):
+
+\begin{longtable}{@{}l p{12cm}@{}}
+\toprule
+place & function \\ \midrule
+\texttt{+0x00}, \texttt{+0x08} & write a text / one letter to the screen of the shell \\
+\texttt{+0x10} & the clock (ticks, 100 a second) --- likely \\
+\texttt{+0x18} & \texttt{fill(x, y, w, h, colour)} \\
+\texttt{+0x30} & \texttt{text(x, y, text, colour)}; a fifth value is the background, $-1$ for none \\
+\texttt{+0x38} & \texttt{window(x, y, w, h, title)} \\
+\texttt{+0x40} & \texttt{poll()}: 0 nothing, 1 a key, 2 the mouse; with it come the key, or x, y and
+                 the buttons, which \texttt{key()}, \texttt{mouse\_x()}, \texttt{mouse\_y()},
+                 \texttt{mouse\_buttons()} then give \\
+\texttt{+0x48}, \texttt{+0x50} & \texttt{cursor\_show(x, y)} (likely), \texttt{cursor\_hide()} \\
+\texttt{+0x70} & the META value of an object: \texttt{meta(key)} \\
+\texttt{+0xB0} & memory --- likely \\
+\texttt{+0xC0} & a text to the serial log: \texttt{log(text)} \\
+\texttt{+0xE0} & save an object (name, address, size) --- likely \\
+\texttt{+0x140} & \texttt{fill\_round(x, y, w, h, colour, radius)} \\
+\bottomrule
+\end{longtable}
+
+\noindent Not found yet: \texttt{load\_text}, \texttt{save\_text}, \texttt{load\_image},
+\texttt{save\_image}, \texttt{ob\_count}, \texttt{ob\_meta}, \texttt{system}, \texttt{spawn},
+\texttt{kill}, \texttt{random}, \texttt{time}, the sound and the network. Of the twenty programs
+of v2.9.59, Calc and ASMONCRAFT use only what is known and go through the new py2asm; the other
+eighteen wait for the rest. Nothing compiled by the new py2asm has run inside NinuxOS yet.
+
+% ------------------------------------------------------------------------------------------
+\section{The shell}\label{sec:shell}
+
+The shell is part of the kernel (the core holds its loop and its help text; the tools of the
+shell are the suit \texttt{k\_tools}). The prompt is \texttt{ninux>}, in maintenance mode
+\texttt{ninux(maint)>}. A line is a command and its values; a line that is the name of an object
+runs that object (a program opens in its window).
+
+\begin{itemize}
+\item Commands that change the cabinet answer ``enter maintenance mode first'' until \cmd{maint}
+      and the administrator's password. On a new system the first \cmd{maint} asks to choose one.
+\item A long answer stops at every screen: \emph{any key} goes on, Esc is enough.
+\item \cmd{run NAME [SOCKET]} calls a socket of an object; an object the Sentinel has not verified
+      is refused in the shell and runs only as a program in a window.
+\item Every command writes what matters to the serial log too (\texttt{[ninux] run hello},
+      \texttt{[room] loaded on first use: \ldots}); in QEMU that log is the way to follow a run.
+\end{itemize}
+
+\noindent The table is the help text of the shell itself, as the v2.9.59 kernel carries it.
+
+\input{shell_commands}
 
 % ------------------------------------------------------------------------------------------
 \section{What the user sees}
@@ -295,6 +418,48 @@ ancestor (\file{py2asmx64v3.21.py}) is in the repository PypyOS.
 \end{itemize}
 
 % ------------------------------------------------------------------------------------------
+\section{The other formats}
+
+\subsection{The kernel on the disk}
+
+Sectors 1 to 480. The core comes first, 61968 bytes, and starts with the loader. The extension
+follows at once: the eight bytes \texttt{NXEXT1}, 0, 0, then its size in 8 bytes (158032), then its
+code. The core copies it to \texttt{0x50000} and checks it with SHA-256 before using it. What
+remains of the 480 sectors is free.
+
+\subsection{The source container (\texttt{.nxc})}
+
+The whole source of the project in one file, made at every build by
+\file{tools/source\_container.py}; Puffus writes it onto the stick 1 GiB from its start.
+
+\begin{longtable}{@{}l p{12cm}@{}}
+\toprule
+offset & what \\ \midrule
+0 & \texttt{NINUXSRC1} and a zero byte \\
+16 & 8 bytes: the length of the zip \\
+24 & 32 bytes: the SHA-256 of the zip \\
+64 & the version as text, e.g.\ \texttt{NinuxOS v3.0.01}, zero-ended \\
+96 & the day it was made, \texttt{2026-10-10}, zero-ended \\
+512 & the zip: every file git knows, with its path; then zeros up to a whole sector \\
+\bottomrule
+\end{longtable}
+
+\noindent It is checked, not secret.
+
+\subsection{The test scripts of QEMU (\texttt{q\_*.txt})}
+
+One command a line, run by \file{tools/qemu/qrun.py}: \texttt{qemu ARGS} (first line only),
+\texttt{waitlog TEXT [N]}, \texttt{wait N}, \texttt{type TEXT}, \texttt{text TEXT}, \texttt{enter},
+\texttt{esc}, \texttt{tab}, \texttt{bksp}, \texttt{key NAME}, \texttt{snap NAME}, \texttt{moveto X Y},
+\texttt{click}, \texttt{rclick}, \texttt{drag X Y}. The disk image is opened so that nothing is
+written into it; the serial log and the pictures land in \file{test/qemu/out}.
+
+\subsection{Names of files}
+
+Today \file{.asmo} (objects) and \file{.kasm} (parts of the kernel). The plan is Greek letters,
+with \file{.$\Omega$} for what belongs to the system; the proposal is in \file{TODO.md}.
+
+% ------------------------------------------------------------------------------------------
 \section{The files of the project}
 
 \begin{longtable}{@{}p{4.6cm} p{10.4cm}@{}}
@@ -302,7 +467,9 @@ ancestor (\file{py2asmx64v3.21.py}) is in the repository PypyOS.
 path & what it is \\ \midrule
 \file{disk.img} & the system, ready to start: what the build writes and Puffus puts on a stick \\
 \file{Puffus.exe} & Puffus for Windows (made from \file{tools/puffus}) \\
-\file{CHANGELOG.md}, \file{TODO.md} & what each version brought; what is left to do \\
+\file{DIRECTIVE.md} & how the work goes: who writes, who tests, what is updated after each piece \\
+\file{CHANGELOG.md}, \file{TODO.md}, \file{VERSION} & what each version brought; what is left to do;
+      the version of the project \\
 \midrule
 \file{boot/Boot.kasm} & the boot sector, NASM source with names and comments \\
 \file{kernel/Kernel.kasm} & the kernel (core and extension) as NASM source, made by
@@ -323,6 +490,12 @@ path & what it is \\ \midrule
 \file{build/base/disk\_v2.9.59.img} & the system exactly as it came off the stick; the build
       starts from it \\
 \midrule
+\file{pyton/py2asm.py} & PyTon to assembly (section~6); \file{prelude.py} the language written in
+      PyTon, \file{runtime.inc} the assembly core, \file{platform\_win64.inc} and
+      \file{platform\_ninux.inc} the two targets, \file{test.py} the comparison with real Python,
+      \file{examples/} the programs it is tried on \\
+\file{tools/source\_container.py} & packs the whole source into one checked file, and takes it out
+      of a file, an image or a stick \\
 \file{tools/build\_disk.py} & the build: assembles boot and kernel, puts them and the objects
       into the base image, writes \file{disk.img} \\
 \file{tools/puffus/} & \file{Puffus.cs}, its manifest and \file{make\_puffus.cmd} \\
@@ -356,6 +529,12 @@ path & what it is \\ \midrule
 \noindent Needed on the PC: Python 3, NASM, QEMU; for Puffus only the .NET Framework that
 Windows has.
 
+\subsection{Versions}
+
+The project is \texttt{v3.x.xx}: a small update raises \texttt{xx}, a big one raises \texttt{x}.
+The number the kernel itself says (v2.9.59) changes only when a changed kernel can be built and
+accepted by its own checks.
+
 % ------------------------------------------------------------------------------------------
 \section{What is not known yet}\label{sec:open}
 
@@ -368,7 +547,9 @@ Windows has.
       that belong to none of them.
 \item The nine system sockets and the third number of a procket; the fields \texttt{0x48} and
       \texttt{0x50} of the header.
-\item The numbers of the functions in the API table.
+\item The rest of the table of the system's functions (section~6 lists what is known).
+\item How a new object gets into the cabinet from outside, and whether \cmd{files get} takes an
+      object made on the PC.
 \item Which part of the kernel was which source file.
 \end{itemize}
 

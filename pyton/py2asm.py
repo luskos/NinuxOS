@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# py2asm.py - PyTon to x86-64 assembly (NinuxOS v3.0.0; written anew, the old one was lost).
+# py2asm.py - PyTon to x86-64 assembly (NinuxOS v3; written anew, the old one was lost).
 #
 #   python pyton/py2asm.py prog.py                       -> prog.asm, a Windows program (to try the language)
 #        nasm -f bin -I pyton/ prog.asm -o prog.exe
@@ -52,7 +52,17 @@ INTRINSICS = {
     '_f2i': ('i_f2i', 1), '_write': ('i_write', 1), '_readline': ('i_readline', 0),
     '_error': ('i_error', 1), '_raise': ('rt_raise', 2), '_exit': ('i_exit', 1),
 }
-REGS = ['rdi', 'rsi', 'rdx', 'rcx']
+REGS = ['rdi', 'rsi', 'rdx', 'rcx', 'r8', 'r9']
+
+# the functions of NinuxOS itself (pyton/platform_ninux.inc: sys_NAME).
+# name -> (what each value is, what comes back):  i a whole number, s a text, n nothing
+SYSTEM = {
+    'fill': ('iiiii', 'n'), 'fill_round': ('iiiiii', 'n'), 'text': ('iisi', 'n'),
+    'window': ('iiiis', 'n'), 'poll': ('', 'i'), 'key': ('', 'i'), 'key_mods': ('', 'i'),
+    'mouse_x': ('', 'i'), 'mouse_y': ('', 'i'), 'mouse_buttons': ('', 'i'),
+    'cursor_show': ('ii', 'n'), 'cursor_hide': ('', 'n'), 'ticks': ('', 'i'),
+    'log': ('s', 'n'), 'meta': ('s', 's'),
+}
 
 # a built-in function of Python -> the function of prelude.py that does it
 BUILTINS = {
@@ -227,19 +237,29 @@ class Compiler:
             fail(node, 'the name %s cannot be given a value here' % name)
         fail(node, 'the name %s is used but never given a value' % name)
 
+    def find(self, name):
+        """the function a call by this name goes to, or None. prelude.py has its own names ('p:' + name):
+        a program may have a _helper of its own with the same name"""
+        if self.fn.prelude:
+            return 'p:' + name if 'p:' + name in self.funcs else None
+        if name in self.funcs:
+            return name
+        if not name.startswith('_') and 'p:' + name in self.funcs:
+            return 'p:' + name
+        return None
+
     def known_function(self, name):
         """the function a bare name stands for, or None"""
-        f = self.funcs.get(name)
-        if f is not None and (self.fn.prelude or not f.prelude):
-            return name
-        if name in BUILTINS and not self.fn.prelude:
-            return BUILTINS[name]
-        return None
+        key = self.find(name)
+        if key is None and name in BUILTINS and not self.fn.prelude:
+            key = 'p:' + BUILTINS[name]
+        return key
 
     # ------------------------------------------------------------ calls
     def call_function(self, node, name, args, keywords):
         f = self.funcs[name]
-        shown = name[3:] if name.startswith('_m_') else name.lstrip('_')
+        shown = name[2:] if name.startswith('p:') else name
+        shown = shown[3:] if shown.startswith('_m_') else shown.lstrip('_')
         fixed = f.params[:-1] if f.vararg else f.params
         plain = [a for a in args if not isinstance(a, ast.Starred)]
         star = [a for a in args if isinstance(a, ast.Starred)]
@@ -302,6 +322,29 @@ class Compiler:
         self.emit('mov r10, %s' % keep)
         self.emit('mov rcx, [r10 + 16]')
         self.emit('lea rsp, [rsp + rcx*8]')
+
+    def call_system(self, node, name):
+        """a function of NinuxOS: numbers go as they are, a text as the address of its letters"""
+        kinds, back = SYSTEM[name]
+        if self.target != 'ninux':
+            fail(node, '%s() is a function of NinuxOS - compile with --target ninux' % name)
+        if node.keywords or len(node.args) != len(kinds):
+            fail(node, '%s() takes %d values' % (name, len(kinds)))
+        for a in node.args:
+            self.expr(a)
+            self.emit('push rax')
+        for i in reversed(range(len(kinds))):
+            self.emit('pop %s' % REGS[i])
+        for i, kind in enumerate(kinds):
+            self.emit('sar %s, 1' % REGS[i] if kind == 'i' else 'add %s, 16' % REGS[i])
+        self.emit('call sys_%s' % name)
+        if back == 'i':
+            self.emit('lea rax, [rax*2 + 1]')
+        elif back == 's':
+            self.emit('mov rdi, rax')
+            self.emit('call rt_cstr')
+        else:
+            self.emit('lea rax, [rel rt_none]')
 
     def call_runtime(self, label, args):
         for a in args:
@@ -458,7 +501,7 @@ class Compiler:
         self.sequence(node, 5)
 
     def e_Set(self, node):
-        self.call_function(node, '_set', [ast.copy_location(ast.List(elts=node.elts, ctx=ast.Load()), node)], [])
+        self.call_function(node, 'p:_set', [ast.copy_location(ast.List(elts=node.elts, ctx=ast.Load()), node)], [])
 
     def e_Dict(self, node):
         self.emit('call rt_dict_new')
@@ -479,7 +522,7 @@ class Compiler:
         if isinstance(node.slice, ast.Slice):
             s = node.slice
             none = ast.Constant(value=None)
-            self.call_function(node, '_slice', [node.value, s.lower or none, s.upper or none, s.step or none], [])
+            self.call_function(node, 'p:_slice', [node.value, s.lower or none, s.upper or none, s.step or none], [])
         else:
             self.call_runtime('rt_getitem', [node.value, node.slice])
 
@@ -501,9 +544,9 @@ class Compiler:
                         fail(node, 'a { } inside the format of an f-string is not compiled yet')
                     spec = parts[0]
                 if v.conversion == 114:
-                    self.call_function(node, '_repr', [v.value], [])
+                    self.call_function(node, 'p:_repr', [v.value], [])
                 else:
-                    self.call_function(node, '_fmt', [v.value, spec], [])
+                    self.call_function(node, 'p:_fmt', [v.value, spec], [])
             if not first:
                 self.emit('mov rsi, rax')
                 self.emit('pop rdi')
@@ -553,7 +596,7 @@ class Compiler:
     def e_Call(self, node):
         f = node.func
         if isinstance(f, ast.Attribute):
-            name = '_m_' + f.attr
+            name = 'p:_m_' + f.attr
             if name not in self.funcs:
                 fail(node, 'the method .%s() is not there yet' % f.attr)
             self.call_function(node, name, [f.value] + node.args, node.keywords)
@@ -562,8 +605,10 @@ class Compiler:
             self.call_value(node, f, node.args, node.keywords)
             return
         name = f.id
-        if name in self.funcs and (self.fn.prelude or not self.funcs[name].prelude):
-            self.call_function(node, name, node.args, node.keywords)
+        if self.find(name):
+            self.call_function(node, self.find(name), node.args, node.keywords)
+        elif name in SYSTEM and not self.fn.prelude:
+            self.call_system(node, name)
         elif name in INTRINSICS and self.fn.prelude:
             label, count = INTRINSICS[name]
             if len(node.args) != count:
@@ -578,7 +623,7 @@ class Compiler:
                     end = k.value
                 else:
                     fail(node, 'print() knows only sep= and end=')
-            self.call_function(node, '_print', [ast.List(elts=node.args, ctx=ast.Load()), sep, end], [])
+            self.call_function(node, 'p:_print', [ast.List(elts=node.args, ctx=ast.Load()), sep, end], [])
         elif name == 'len':
             if len(node.args) != 1:
                 fail(node, 'len() takes one value')
@@ -591,11 +636,11 @@ class Compiler:
             if not node.args:
                 fail(node, '%s() of nothing' % name)
             arg = node.args[0] if len(node.args) == 1 else ast.List(elts=node.args, ctx=ast.Load())
-            self.call_function(node, '_' + name, [arg], node.keywords)
+            self.call_function(node, 'p:_' + name, [arg], node.keywords)
         elif name == 'range':
-            self.call_function(node, '_range_list', self.range_args(node), [])
+            self.call_function(node, 'p:_range_list', self.range_args(node), [])
         elif name in BUILTINS:
-            self.call_function(node, BUILTINS[name], node.args, node.keywords)
+            self.call_function(node, 'p:' + BUILTINS[name], node.args, node.keywords)
         else:
             fail(node, 'the function %s() is not defined' % name)
 
@@ -732,7 +777,7 @@ class Compiler:
     def s_Delete(self, node):
         for t in node.targets:
             if isinstance(t, ast.Subscript) and not isinstance(t.slice, ast.Slice):
-                self.call_function(node, '_delitem', [t.value, t.slice], [])
+                self.call_function(node, 'p:_delitem', [t.value, t.slice], [])
             elif isinstance(t, ast.Name):
                 self.emit('lea rax, [rel rt_none]')
                 self.store(t)
@@ -741,7 +786,7 @@ class Compiler:
 
     # ---- try / except / raise
     def raise_now(self, node, kind, message):
-        self.call_function(node, '_str', [message], [])
+        self.call_function(node, 'p:_str', [message], [])
         self.emit('push rax')
         self.const(node, kind)
         self.emit('mov rdi, rax')
@@ -903,7 +948,7 @@ class Compiler:
             self.emit('jmp %s' % top)
         else:                                   # over a text, a list, a tuple, a set, the keys of a dict
             seq, index = self.fn.slot(), self.fn.slot()
-            self.call_function(node, '_iter', [it], [])
+            self.call_function(node, 'p:_iter', [it], [])
             self.emit('mov %s, rax' % seq)
             self.emit('mov qword %s, 1' % index)
             self.label(top)
@@ -947,7 +992,7 @@ class Compiler:
             self.emit('mov %s, rax' % keep)
             self.unwind(0)
             self.emit('mov rax, %s' % keep)
-        self.emit('jmp e_%s' % self.fn.label[2:])
+        self.emit('jmp e%s' % self.fn.label)
 
     # ------------------------------------------------------------ a whole function, a whole program
     def function(self, fn):
@@ -980,7 +1025,7 @@ class Compiler:
             self.emit('mov %s, rax' % off)
         self.out.extend(body)
         self.emit('lea rax, [rel rt_none]')
-        self.label('e_' + fn.label[2:])
+        self.label('e' + fn.label)
         self.emit('mov rsp, rbp')
         self.emit('pop rbp')
         self.emit('ret')
@@ -991,11 +1036,10 @@ class Compiler:
         rest = []
         for st in tree.body:
             if isinstance(st, ast.FunctionDef) and not st.decorator_list:
-                if st.name in self.funcs:
+                key = 'p:' + st.name if prelude else st.name
+                if key in self.funcs:
                     fail(st, 'the function %s is defined twice' % st.name)
-                if not prelude and st.name in INTRINSICS:
-                    fail(st, 'the name %s is taken by the system' % st.name)
-                self.funcs[st.name] = Function(st.name, 'f_' + st.name, st, st.body, prelude=prelude)
+                self.funcs[key] = Function(key, ('p_' if prelude else 'f_') + st.name, st, st.body, prelude=prelude)
             else:
                 rest.append(st)
         return rest
@@ -1020,7 +1064,7 @@ class Compiler:
                     self.globals.append(g)
         self.funcs['__main__'] = Function('__main__', 'f___main__', None, main_body, is_main=True)
         self.user = user
-        self.queue = ['__main__'] + user + RUNTIME_NEEDS
+        self.queue = ['__main__'] + user + ['p:' + n for n in RUNTIME_NEEDS]
         while self.queue:
             name = self.queue.pop(0)
             if name in self.done:
@@ -1068,7 +1112,7 @@ class Compiler:
                 raise CompileError('a socket takes at most two values: def %s' % s)
         meta['sockets'] = ','.join(sockets)
         meta.setdefault('lang', 'pyton')
-        meta['made'] = 'py2asm (v3.0.0)'
+        meta['made'] = 'py2asm (v%s)' % open(os.path.join(HERE, '..', 'VERSION')).read().strip()
         o = ['org 0', '%include "platform_ninux.inc"', 'obj_start:',
              "        db 'OMSA'", '        dd 4', '        dq obj_end - obj_start',
              '        dq obj_data - obj_start', '        dq obj_meta - obj_start',
