@@ -1,0 +1,113 @@
+; Hello.asmo.kasm - the object "Hello" (type demo) of NinuxOS v2.9.59 as NASM source.
+; Made from the compiled object by tools/kdis/odis.py; it assembles to the same 624 bytes:
+;   nasm -f bin -I ./ Hello.asmo.kasm -o Hello.asmo   (run where the file is)
+;
+; obj_data, obj_meta, obj_system, obj_named, obj_prockets, obj_relocs: the parts of the object.
+; sock_N a socket; fn_ a function; L_ a place jumped to; d_ data; p_ what an address points at;
+; r_ a place that holds an address (the table of relocations at the end lists them).
+
+
+org 0
+obj_start:
+        db 0x4F, 0x4D, 0x53, 0x41, 0x04, 0x00, 0x00, 0x00
+        dq obj_end
+        dq obj_data
+        dq obj_meta
+        dq obj_system
+        dq obj_named
+        dq obj_prockets
+        db 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x01, 0x00, 0x00, 0x00, 0x4E, 0x30, 0xFE, 0xA1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x23, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_data:
+        db 'I am the DATA of the hello object.', 0
+
+obj_meta:
+        db 'type:demo', 0
+        db 'name:Hello', 0
+        db 'author:NinuxOS', 0
+        db 'data:text', 0
+        db 'sockets:run,shout', 0
+        db 0x00
+
+obj_system:
+        dq p_0011c
+        dq p_0011c
+        dq p_0011c
+        dq p_0011c
+        dq p_0011c
+        dq p_0011c
+        dq p_0011c
+        dq p_0011c
+        dq p_0011c
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+[bits 64]
+p_0011c:
+        retq
+
+obj_named:
+        dq sock_run
+        dq sock_shout
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_prockets:
+        dq procket_0
+        db 0x32, 0x00, 0x00, 0x00, 0x02
+        times 19 db 0x00
+
+sock_run:
+        push rbx
+        push r15
+        mov rbx,rdi
+        mov r15,rsi
+        lea rdi,[rel d_001cb]
+        call qword near [r15]
+        lea rdi,[rel d_001e7]
+        call qword near [r15]
+        lea rdi,[rel obj_data]
+        call qword near [r15]
+        lea rdi,[rel d_001f3]
+        call qword near [r15]
+        mov rdi,rbx
+        lea rsi,[rel d_0024d]
+        call qword near [r15+0x70]
+        mov rdi,rax
+        call qword near [r15]
+        lea rdi,[rel d_00205]
+        call qword near [r15]
+        mov rdi,rbx
+        mov esi,0x2
+        call qword near [r15+0x88]
+        xor eax,eax
+        pop r15
+        pop rbx
+        retq
+
+sock_shout:
+        lea rdi,[rel d_00207]
+        jmp qword near [rsi]
+
+procket_0:
+        lea rdi,[rel d_0022b]
+        jmp qword near [rsi]
+d_001cb:
+        db 'Hello from an ASMO object!', 10, 0
+d_001e7:
+        db '  my DATA: ', 0
+d_001f3:
+        db 0x0A
+        db '  my META type: ', 0
+d_00205:
+        db 0x0A, 0x00
+d_00207:
+        db 'HELLO! (this is the second socket)', 10, 0
+d_0022b:
+        db '  procket fired: 50% lucky roll!', 10, 0
+d_0024d:
+        db 'type', 0
+        db 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
+        dq obj_end
+        db 'ASMO', 0
+        db 0x00, 0x00, 0x00
+obj_end:

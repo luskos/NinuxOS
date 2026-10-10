@@ -1,0 +1,146 @@
+; Readme.asmo.kasm - the object "Readme" (type icon) of NinuxOS v2.9.59 as NASM source.
+; Made from the compiled object by tools/kdis/odis.py; it assembles to the same 10496 bytes:
+;   nasm -f bin -I ./ Readme.asmo.kasm -o Readme.asmo   (run where the file is)
+;
+; obj_data, obj_meta, obj_system, obj_named, obj_prockets, obj_relocs: the parts of the object.
+; sock_N a socket; fn_ a function; L_ a place jumped to; d_ data; p_ what an address points at;
+; r_ a place that holds an address (the table of relocations at the end lists them).
+
+
+org 0
+obj_start:
+        db 0x4F, 0x4D, 0x53, 0x41, 0x04, 0x00, 0x00, 0x00
+        dq obj_end
+        dq obj_data
+        dq obj_meta
+        dq obj_system
+        dq obj_named
+        dq obj_prockets
+        db 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x01, 0x00, 0x00, 0x00, 0xCF, 0xD9, 0xFE, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x7D, 0x26, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_data:
+        incbin "data/Readme.00068.bin"
+d_02470:
+        db 'Welcome to NinuxOS v2.8', 10
+        db 0x0A
+        db 'Everything you see is a Functional Object (ASMO):', 10
+        db '  DATA      - the raw content (this text, a picture, a wallpaper)', 10
+        db '  META      - key:value facts (type, name, label, sockets)', 10
+        db '  SOCKETS   - its own functions (draw, open, run ...)', 10
+        db '  PROCKETS  - sockets that fire by chance', 10
+        db 0x0A
+        db 'Every program is an ASMO object; the kernel', 39, 's parts are', 10
+        db 'KASM objects. Icons, menus and themes live in the system', 10
+        db 'cabinet - a drawer only the system may read.', 10
+        db 0x0A
+        db 'No file system: the cabinet is one table on the disk,', 10
+        db 'every object follows it directly.', 10
+        db 0x0A
+        db 'Try the shell:  ls   view readme   run greet   kasm', 10
+        db 'Hover an icon to see its META.', 10, 0
+
+obj_meta:
+        db 'type:icon', 0
+        db 'name:Readme', 0
+        db 'label:Readme', 0
+        db 'kind:text', 0
+        db 'data:icon image 48x48 + plain text', 0
+        db 'sockets:draw,open', 0
+        db 0x00
+
+obj_system:
+        dq p_02798
+        dq p_02798
+        dq p_02798
+        dq p_02798
+        dq p_02798
+        dq p_02798
+        dq p_02798
+        dq p_02798
+        dq p_02798
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+[bits 64]
+p_02798:
+        retq
+
+obj_named:
+        dq sock_draw
+        dq sock_open
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_prockets:
+        times 16 db 0x00
+
+sock_draw:
+        push r12
+        push r13
+        push r15
+        mov r15,rsi
+        mov r12,rdx
+        mov r13,rcx
+        lea rdi,[r12+0x18]
+        lea rsi,[r13+0x4]
+        lea rdx,[rel obj_data]
+        mov ecx,0x1
+        call qword near [r15+0x20]
+        lea rdi,[r12+0x19]
+        lea rsi,[r13+0x3b]
+        lea rdx,[rel d_028b5]
+        xor ecx,ecx
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        lea rdi,[r12+0x18]
+        lea rsi,[r13+0x3a]
+        lea rdx,[rel d_028b5]
+        mov ecx,0xffffff
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        pop r15
+        pop r13
+        pop r12
+        retq
+
+sock_open:
+        push r12
+        push r13
+        push r15
+        mov r15,rsi
+        mov r12,rdx
+        sub r12,0x258
+        sar r12,1
+        mov r13,rcx
+        sub r13,0x19e
+        sar r13,1
+        mov rdi,r12
+        mov rsi,r13
+        mov edx,0x258
+        mov ecx,0x17c
+        lea r8,[rel d_028b5]
+        call qword near [r15+0x38]
+        lea rdi,[r12+0x10]
+        lea rsi,[r13+0x2a]
+        lea rdx,[rel d_02470]
+        mov ecx,0xececf5
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        lea rdi,[r12+0x10]
+        lea rsi,[r13+0x164]
+        lea rdx,[rel d_028bc]
+        mov ecx,0x9b9db2
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        pop r15
+        pop r13
+        pop r12
+        retq
+d_028b5:
+        db 'Readme', 0
+d_028bc:
+        db 'Click anywhere or press ESC to close', 0
+        db 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
+        dq obj_end
+        db 'ASMO', 0
+        db 0x00, 0x00, 0x00
+obj_end:

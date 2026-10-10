@@ -1,0 +1,116 @@
+; GuardTest.asmo.kasm - the object "guardtest" (type test) of NinuxOS v2.9.59 as NASM source.
+; Made from the compiled object by tools/kdis/odis.py; it assembles to the same 688 bytes:
+;   nasm -f bin -I ./ GuardTest.asmo.kasm -o GuardTest.asmo   (run where the file is)
+;
+; obj_data, obj_meta, obj_system, obj_named, obj_prockets, obj_relocs: the parts of the object.
+; sock_N a socket; fn_ a function; L_ a place jumped to; d_ data; p_ what an address points at;
+; r_ a place that holds an address (the table of relocations at the end lists them).
+
+
+org 0
+d_00000:
+        db 0x4F, 0x4D, 0x53, 0x41, 0x04, 0x00, 0x00, 0x00
+        dq obj_end
+        dq obj_data
+        dq obj_meta
+        dq obj_system
+        dq obj_named
+        dq obj_prockets
+        db 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x02, 0x00, 0x00, 0x00, 0x5C, 0xEE, 0x45, 0xCF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x3A, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_data:
+        db 'A test object of the user: may it see the system cabinet?', 0
+
+obj_meta:
+        db 'type:test', 0
+        db 'name:guardtest', 0
+        db 'data:text', 0
+        db 'sockets:run', 0
+        db 'version:2.9.3', 0
+        db 0x00
+
+obj_system:
+        dq p_00130
+        dq p_00130
+        dq p_00130
+        dq p_00130
+        dq p_00130
+        dq p_00130
+        dq p_00130
+        dq p_00130
+        dq p_00130
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+[bits 64]
+p_00130:
+        retq
+
+obj_named:
+        dq sock_run
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_prockets:
+        times 16 db 0x00
+
+sock_run:
+        push rbx
+        push r12
+        push r15
+        mov r15,rsi
+        lea rdi,[rel d_0020f]
+        call qword near [r15]
+        lea rbx,[rel d_001c8]
+L_0016a:
+        mov r12,[rbx]
+        test r12,r12
+        jz short L_001b2
+        lea rax,[rel d_00000]
+        mov r12,[rbx]
+        add r12,rax
+        lea rdi,[rel d_00264]
+        call qword near [r15]
+        mov rdi,r12
+        call qword near [r15]
+        mov rdi,r12
+        call qword near [r15+0x68]
+        lea rdi,[rel d_0026c]
+        test rax,rax
+        jz short L_001a9
+        lea rdi,[rel d_0027c]
+L_001a9:
+        call qword near [r15]
+        add rbx,0x8
+        jmp short L_0016a
+L_001b2:
+        lea rdi,[rel d_00288]
+        call qword near [r15]
+        xor eax,eax
+        pop r15
+        pop r12
+        pop rbx
+        retq
+        db 0x90, 0x90, 0x90, 0x90
+d_001c8:
+        db 0xF0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x02, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 'taskbar', 0
+        db 'ico_power', 0
+        db 'k_net', 0
+        db 'readme', 0
+d_0020f:
+        db 'guardtest: a user object asks for system parts (expected: not there; readme: found)', 10, 0
+d_00264:
+        db '  find(', 0
+d_0026c:
+        db ') -> not there', 10, 0
+d_0027c:
+        db ') -> found', 10, 0
+d_00288:
+        db 'guardtest: done', 10, 0
+        db 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
+        dq obj_end
+        db 'ASMO', 0
+        db 0x00, 0x00, 0x00
+obj_end:

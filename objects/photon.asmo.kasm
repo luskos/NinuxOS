@@ -1,0 +1,89 @@
+; photon.asmo.kasm - the object "photon" (type icon) of NinuxOS v2.9.59 as NASM source.
+; Made from the compiled object by tools/kdis/odis.py; it assembles to the same 560 bytes:
+;   nasm -f bin -I ./ photon.asmo.kasm -o photon.asmo   (run where the file is)
+;
+; obj_data, obj_meta, obj_system, obj_named, obj_prockets, obj_relocs: the parts of the object.
+; sock_N a socket; fn_ a function; L_ a place jumped to; d_ data; p_ what an address points at;
+; r_ a place that holds an address (the table of relocations at the end lists them).
+
+
+org 0
+obj_start:
+        db 0x4F, 0x4D, 0x53, 0x41, 0x04, 0x00, 0x00, 0x00
+        dq obj_end
+        dq obj_data
+        dq obj_meta
+        dq obj_system
+        dq obj_named
+        dq obj_prockets
+        db 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x01, 0x00, 0x00, 0x00, 0xE5, 0xA0, 0x73, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_data:
+        db 'Starts the Photon engine full screen: points of light, every CPU core, no GPU driver.', 0
+
+obj_meta:
+        db 'type:icon', 0
+        db 'name:photon', 0
+        db 'label:Photon', 0
+        db 'icon:icon_photon', 0
+        db 'meta:photon', 0
+        db 'data:text', 0
+        db 'sockets:draw,open', 0
+        db 'version:2.9.9', 0
+        db 0x00
+
+obj_system:
+        dq p_00179
+        dq p_00179
+        dq p_00179
+        dq p_00179
+        dq p_00179
+        dq p_00179
+        dq p_00179
+        dq p_00179
+        dq p_00179
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+[bits 64]
+p_00179:
+        retq
+
+obj_named:
+        dq sock_draw
+        dq sock_open
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_prockets:
+        times 16 db 0x00
+
+sock_draw:
+        push r15
+        mov r15,rsi
+        lea rdi,[rdx+0x18]
+        lea rsi,[rcx+0x3a]
+        lea rdx,[rel d_001eb]
+        mov ecx,0xffffff
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        pop r15
+        retq
+
+sock_open:
+        push r15
+        mov r15,rsi
+        lea rdi,[rel d_001f2]
+        call qword near [r15+0xc0]
+        mov edi,0x1
+        call qword near [r15+0x148]
+        pop r15
+        retq
+d_001eb:
+        db 'Photon', 0
+d_001f2:
+        db '[photon] asked for by the desktop app', 10, 0
+        db 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
+        dq obj_end
+        db 'ASMO', 0
+        db 0x00, 0x00, 0x00
+obj_end:

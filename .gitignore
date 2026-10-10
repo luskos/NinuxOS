@@ -11,3 +11,4 @@ pyton/examples/*.asm
 build/source/
 pyton/examples/out/
 build/try/
+build/key/

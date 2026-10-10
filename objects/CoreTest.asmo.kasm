@@ -1,0 +1,260 @@
+; CoreTest.asmo.kasm - the object "coretest" (type icon) of NinuxOS v2.9.59 as NASM source.
+; Made from the compiled object by tools/kdis/odis.py; it assembles to the same 1248 bytes:
+;   nasm -f bin -I ./ CoreTest.asmo.kasm -o CoreTest.asmo   (run where the file is)
+;
+; obj_data, obj_meta, obj_system, obj_named, obj_prockets, obj_relocs: the parts of the object.
+; sock_N a socket; fn_ a function; L_ a place jumped to; d_ data; p_ what an address points at;
+; r_ a place that holds an address (the table of relocations at the end lists them).
+
+
+org 0
+obj_start:
+        db 0x4F, 0x4D, 0x53, 0x41, 0x04, 0x00, 0x00, 0x00
+        dq obj_end
+        dq obj_data
+        dq obj_meta
+        dq obj_system
+        dq obj_named
+        dq obj_prockets
+        db 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x01, 0x00, 0x00, 0x00, 0x51, 0x99, 0x7F, 0x44, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_data:
+        db 'Runs pure work in ring 3 and shows the core it runs on.', 0
+
+obj_meta:
+        db 'type:icon', 0
+        db 'name:coretest', 0
+        db 'label:Core test', 0
+        db 'kind:app', 0
+        db 'icon:icon_tasks', 0
+        db 'data:text', 0
+        db 'sockets:draw,open', 0
+        db 'version:2.9.3', 0
+        db 0x00
+
+obj_system:
+        dq p_0015c
+        dq p_0015c
+        dq p_0015c
+        dq p_0015c
+        dq p_0015c
+        dq p_0015c
+        dq p_0015c
+        dq p_0015c
+        dq p_0015c
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+[bits 64]
+p_0015c:
+        retq
+
+obj_named:
+        dq sock_draw
+        dq sock_open
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_prockets:
+        times 16 db 0x00
+
+sock_draw:
+        push r15
+        mov r15,rsi
+        lea rdi,[rdx+0xc]
+        lea rsi,[rcx+0x3a]
+        lea rdx,[rel d_003ef]
+        mov ecx,0xffffff
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        pop r15
+        retq
+
+sock_open:
+        push rbx
+        push rbp
+        push r12
+        push r13
+        push r14
+        push r15
+        mov r15,rsi
+        mov edi,0x6
+        call qword near [r15+0x118]
+        mov [rel d_00430],rax
+        imul rdi,rax,0x28
+        add rdi,0x208
+        mov [rel d_00438],rdi
+        imul rsi,rax,0x82
+        sub rsi,0x3c
+        mov [rel d_00440],rsi
+        mov edx,0x17c
+        mov ecx,0x78
+        lea r8,[rel d_003ef]
+        call qword near [r15+0x38]
+        mov edi,0x3
+        call qword near [r15+0x120]
+        mov [rel d_00448],rax
+L_00218:
+        call qword near [r15+0xa0]
+        mov rbx,rax
+        xor r12d,r12d
+L_00225:
+        mov ecx,0x186a0
+L_0022a:
+        imul rax,rcx,0x7
+        xor rax,rcx
+        dec ecx
+        jnz short L_0022a
+        inc r12
+        test r12,0xf
+        jnz short L_00225
+        call qword near [r15+0xa0]
+        sub rax,rbx
+        cmp rax,0x64
+        jc short L_00225
+        mov r13,rax
+        mov edi,0x2
+        call qword near [r15+0x120]
+        mov r14,rax
+        mov rax,r12
+        imul rax,rax,0xa
+        xor edx,edx
+        div r13
+        mov rbp,rax
+        call fn_00294
+        call qword near [r15+0x40]
+        cmp rax,0x1
+        jnz short L_00218
+        cmp rdx,0x1b
+        jnz short L_00218
+        xor eax,eax
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbp
+        pop rbx
+        retq
+
+fn_00294:
+        lea rdi,[rel d_00450]
+        lea rsi,[rel d_003f9]
+        call fn_003a9
+        mov rax,[rel d_00430]
+        call fn_003ba
+        lea rsi,[rel d_0040d]
+        call fn_003a9
+        mov rax,r14
+        call fn_003ba
+        lea rsi,[rel d_00417]
+        call fn_003a9
+        mov rax,rbp
+        call fn_003ba
+        lea rsi,[rel d_0041a]
+        call fn_003a9
+        lea rdi,[rel d_00450]
+        call qword near [r15+0xc0]
+        mov rdi,[rel d_00438]
+        add rdi,0xa
+        mov rsi,[rel d_00440]
+        add rsi,0x28
+        mov edx,0x168
+        mov ecx,0x3c
+        mov r8d,0x1c1c2a
+        call qword near [r15+0x18]
+        mov byte [rel d_00450],0x20
+        mov rdi,[rel d_00438]
+        add rdi,0x10
+        mov rsi,[rel d_00440]
+        add rsi,0x30
+        lea rdx,[rel d_0045b]
+        mov ecx,0xececf5
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        mov rax,r14
+        xor ebx,ebx
+L_00358:
+        cmp rbx,[rel d_00448]
+        jnc short L_003a8
+        cmp rbx,0x8
+        jnc short L_003a8
+        mov rdi,[rel d_00438]
+        add rdi,0x10
+        imul rax,rbx,0x28
+        add rdi,rax
+        mov rsi,[rel d_00440]
+        add rsi,0x4c
+        mov edx,0x20
+        mov ecx,0xe
+        mov r8d,0x3a3a50
+        cmp rbx,r14
+        jnz short L_0039f
+        mov r8d,0x22d3a0
+L_0039f:
+        call qword near [r15+0x18]
+        inc rbx
+        jmp short L_00358
+L_003a8:
+        retq
+
+fn_003a9:
+        mov al,[rsi]
+        mov [rdi],al
+        test al,al
+        jz short L_003b9
+        inc rsi
+        inc rdi
+        jmp short fn_003a9
+L_003b9:
+        retq
+
+fn_003ba:
+        lea r8,[rel d_004c4]
+        mov byte [r8],0x0
+        mov ecx,0xa
+L_003ca:
+        xor edx,edx
+        div rcx
+        add dl,0x30
+        dec r8
+        mov [r8],dl
+        test rax,rax
+        jnz short L_003ca
+L_003dd:
+        mov al,[r8]
+        mov [rdi],al
+        test al,al
+        jz short L_003ee
+        inc r8
+        inc rdi
+        jmp short L_003dd
+L_003ee:
+        retq
+d_003ef:
+        db 'Core test', 0
+d_003f9:
+        db '[coretest] program ', 0
+d_0040d:
+        db ' on core ', 0
+d_00417:
+        db 0x3A, 0x20, 0x00
+d_0041a:
+        db ' million steps/s', 10, 0
+        db 0x90, 0x90, 0x90, 0x90
+d_00430:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_00438:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_00440:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_00448:
+        db 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_00450:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_0045b:
+        times 105 db 0x00
+d_004c4:
+        db 0x00, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
+        dq obj_end
+        db 'ASMO', 0
+        db 0x00, 0x00, 0x00
+obj_end:

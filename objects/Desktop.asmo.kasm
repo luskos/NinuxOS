@@ -1,0 +1,3488 @@
+; Desktop.asmo.kasm - the object "Desktop" (type desktop) of NinuxOS v2.9.59 as NASM source.
+; Made from the compiled object by tools/kdis/odis.py; it assembles to the same 1325232 bytes:
+;   nasm -f bin -I ./ Desktop.asmo.kasm -o Desktop.asmo   (run where the file is)
+;
+; obj_data, obj_meta, obj_system, obj_named, obj_prockets, obj_relocs: the parts of the object.
+; sock_N a socket; fn_ a function; L_ a place jumped to; d_ data; p_ what an address points at;
+; r_ a place that holds an address (the table of relocations at the end lists them).
+
+
+org 0
+obj_start:
+        db 0x4F, 0x4D, 0x53, 0x41, 0x04, 0x00, 0x00, 0x00
+        dq obj_end
+        dq obj_data
+        dq obj_meta
+        dq obj_system
+        dq obj_named
+        dq obj_prockets
+        db 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x01, 0x00, 0x00, 0x00, 0x48, 0x38, 0x9B, 0xF8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x08, 0xC0, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00
+        dq obj_relocs
+
+obj_data:
+        incbin "data/Desktop.00068.bin"
+
+obj_meta:
+        db 'type:desktop', 0
+        db 'name:Desktop', 0
+        db 'screen:full', 0
+        db 'sockets:run', 0
+        db 'version:1.7', 0
+        db 'data:wallpaper image 640x480, 32-bit pixels', 0
+        db 0x00
+
+obj_system:
+        dq p_12c12b
+        dq p_12c12b
+        dq p_12c12b
+        dq p_12c12b
+        dq p_12c12b
+        dq p_12c12b
+        dq p_12c12b
+        dq p_12c12b
+        dq p_12c12b
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+[bits 64]
+p_12c12b:
+        retq
+
+obj_named:
+        dq sock_run
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_prockets:
+        dq procket_0
+        db 0x1E, 0x00, 0x00, 0x00, 0x01
+        times 19 db 0x00
+
+sock_run:
+        push rbx
+        push rbp
+        push r12
+        push r13
+        push r14
+        push r15
+        mov [rel d_12ebed],rdi
+        mov r15,rsi
+        call qword near [r15+0x10]
+        test rcx,rcx
+        jnz short L_12c188
+        lea rdi,[rel d_130358]
+        call qword near [r15]
+        jmp near L_12c65b
+L_12c188:
+        mov [rel d_12ebf5],rax
+        mov [rel d_12ebfd],rdx
+        mov byte [rel d_12f21d],0x0
+        mov byte [rel d_12f21e],0x0
+        mov byte [rel d_12f338],0x0
+        mov byte [rel d_130439],0x0
+        mov qword [rel d_130428],0xffffffffffffffff
+        mov byte [rel d_12f21f],0x0
+        mov qword [rel d_12f230],0x0
+        mov qword [rel d_12f6d8],0x0
+        mov qword [rel d_12f6d0],0xffffffffffffffff
+        mov qword [rel d_12ec05],0x0
+        mov qword [rel d_12ec0d],0x0
+        mov rax,[rel d_12f698]
+        test rax,rax
+        jz short L_12c273
+        mov qword [rel d_12f698],0x0
+        mov [rel d_12f6a8],rax
+        call qword near [r15+0xf0]
+        cmp rax,[rel d_12f6a0]
+        jnz short L_12c265
+        mov rdi,[rel d_12f6a8]
+        call qword near [r15+0xd8]
+        mov byte [rel d_12f339],0x1
+        call fn_12c810
+        mov byte [rel d_12f339],0x0
+        mov qword [rel d_1300ab],0xffffffffffffffff
+        lea rdi,[rel d_130291]
+        call qword near [r15+0xc0]
+        jmp short L_12c27d
+L_12c265:
+        mov rdi,[rel d_12f6a8]
+        call qword near [r15+0xb8]
+L_12c273:
+        call fn_12c810
+        call fn_12e31d
+L_12c27d:
+        mov rdi,[rel d_12ebed]
+        mov esi,0x1
+        call qword near [r15+0x88]
+        mov rdi,[rel d_12ebf5]
+        shr rdi,1
+        mov [rel d_12ec05],rdi
+        mov rsi,[rel d_12ebfd]
+        shr rsi,1
+        mov [rel d_12ec0d],rsi
+        call qword near [r15+0x48]
+        lea rdi,[rel d_130333]
+        call qword near [r15+0xc0]
+        mov qword [rel d_1300ab],0xffffffffffffffff
+        xor r14d,r14d
+L_12c2d2:
+        call qword near [r15+0x40]
+        cmp rax,0x1
+        jz near L_12c3e4
+        cmp rax,0x2
+        jz short L_12c2f2
+        call fn_12d428
+        call fn_12d47b
+        jmp short L_12c2d2
+L_12c2f2:
+        mov [rel d_12ec05],rdx
+        mov [rel d_12ec0d],rcx
+        mov rbx,r8
+        mov rdi,rdx
+        mov rsi,rcx
+        call qword near [r15+0x48]
+        cmp byte [rel d_12f7d0],0x0
+        jz short L_12c364
+        test bl,0x1
+        jz short L_12c347
+        test r14b,0x1
+        jnz short L_12c35c
+        cmp qword [rel d_12f580],0xffffffffffffffff
+        jnz short L_12c35c
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        call fn_12d9cb
+        mov [rel d_12f868],rax
+        jmp short L_12c35c
+L_12c347:
+        test r14b,0x1
+        jz short L_12c35c
+        cmp qword [rel d_12f868],0xffffffffffffffff
+        jz short L_12c35c
+        call fn_12d006
+L_12c35c:
+        mov r14,rbx
+        jmp near L_12c2d2
+L_12c364:
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        call fn_12da16
+        call fn_12e7d1
+        test bl,0x2
+        jz short L_12c39a
+        test r14b,0x2
+        jnz short L_12c39a
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        call fn_12e101
+L_12c39a:
+        test bl,0x1
+        jz short L_12c3cf
+        test r14b,0x1
+        jnz short L_12c3cf
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        call fn_12d60d
+L_12c3b8:
+        mov edi,0x2
+        call qword near [r15+0x148]
+        test eax,eax
+        jz short L_12c3cf
+        mov byte [rel d_12f338],0x1
+L_12c3cf:
+        mov r14,rbx
+        cmp byte [rel d_12f338],0x0
+        jnz near L_12c611
+        jmp near L_12c2d2
+L_12c3e4:
+        cmp dl,0x9
+        jnz short L_12c402
+        xor byte [rel d_12f7d2],0x1
+        jnz near L_12c2d2
+        xor byte [rel d_12f7d1],0x1
+        jmp near L_12c4b0
+L_12c402:
+        mov byte [rel d_12f7d2],0x0
+        cmp byte [rel d_12f7d1],0x0
+        jz near L_12c4ec
+        movzx eax,dl
+        sub eax,0x80
+        cmp eax,0x3
+        ja short L_12c42d
+        call fn_12c668
+        jmp near L_12c4b0
+L_12c42d:
+        cmp dl,0xd
+        jz short L_12c476
+        cmp dl,0xa
+        jz short L_12c476
+        test r8b,0x4
+        jz near L_12c4ec
+        mov al,dl
+        or al,0x20
+        cmp al,0x63
+        jz short L_12c451
+        cmp al,0xf6
+        jnz near L_12c4ec
+L_12c451:
+        call fn_12c72c
+        test eax,eax
+        jz near L_12c2d2
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        call fn_12e101
+        jmp near L_12c2d2
+L_12c476:
+        call fn_12c72c
+        test eax,eax
+        jz near L_12c2d2
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        call qword near [r15+0x48]
+        mov rbx,r14
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        call fn_12d60d
+        jmp near L_12c3b8
+L_12c4b0:
+        call fn_12da74
+        call qword near [r15+0x50]
+        call fn_12c810
+        cmp byte [rel d_12f7d1],0x0
+        jz short L_12c4d5
+        call fn_12c72c
+        test eax,eax
+        jz short L_12c4d5
+        call fn_12c781
+L_12c4d5:
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        call qword near [r15+0x48]
+        jmp near L_12c2d2
+L_12c4ec:
+        test r8b,0x4
+        jz short L_12c535
+        mov al,dl
+        or al,0x20
+        cmp al,0x6d
+        jz short L_12c4fe
+        cmp al,0xec
+        jnz short L_12c535
+L_12c4fe:
+        xor byte [rel d_12f7d0],0x1
+        mov qword [rel d_12f868],0xffffffffffffffff
+        call fn_12da74
+        call qword near [r15+0x50]
+        call fn_12c810
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        call qword near [r15+0x48]
+        jmp near L_12c2d2
+L_12c535:
+        cmp dl,0x9c
+        jz short L_12c54c
+        test r8b,0x4
+        jz short L_12c57d
+        mov al,dl
+        or al,0x20
+        cmp al,0x77
+        jz short L_12c54c
+        cmp al,0xe2
+        jnz short L_12c57d
+L_12c54c:
+        mov edi,0xc
+        call qword near [r15+0x118]
+        call fn_12da74
+        call qword near [r15+0x50]
+        call fn_12c810
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        call qword near [r15+0x48]
+        jmp near L_12c2d2
+L_12c57d:
+        cmp dl,0x9d
+        jnz short L_12c5ba
+        cmp byte [rel d_12f21e],0x0
+        jz short L_12c595
+        call fn_12e508
+        jmp near L_12c2d2
+L_12c595:
+        cmp byte [rel d_12f21d],0x0
+        jz short L_12c5a3
+        call fn_12df37
+L_12c5a3:
+        call fn_12e548
+        test eax,eax
+        jnz near L_12c2d2
+        call fn_12e3d0
+        jmp near L_12c2d2
+L_12c5ba:
+        cmp dl,0x1b
+        jnz near L_12c2d2
+        cmp byte [rel d_12f21f],0x0
+        jz short L_12c5d6
+        call fn_12e370
+        jmp near L_12c2d2
+L_12c5d6:
+        cmp byte [rel d_12f21e],0x0
+        jz short L_12c5e9
+        call fn_12e508
+        jmp near L_12c2d2
+L_12c5e9:
+        cmp byte [rel d_12f21d],0x0
+        jnz short L_12c607
+        cmp qword [rel d_12f580],0xffffffffffffffff
+        jz short L_12c611
+        mov qword [rel d_12f580],0xffffffffffffffff
+L_12c607:
+        call fn_12df37
+        jmp near L_12c2d2
+L_12c611:
+        call fn_12da74
+        call fn_12e508
+        call qword near [r15+0x50]
+        xor edi,edi
+        xor esi,esi
+        mov rdx,[rel d_12ebf5]
+        mov rcx,[rel d_12ebfd]
+        call qword near [r15+0xd0]
+        mov [rel d_12f698],rax
+        call qword near [r15+0xf0]
+        mov [rel d_12f6a0],rax
+        lea rdi,[rel d_130346]
+        call qword near [r15+0xc0]
+L_12c65b:
+        xor eax,eax
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbp
+        pop rbx
+        retq
+
+fn_12c668:
+        push rbx
+        push r12
+        push r13
+        mov r8d,eax
+        mov rbx,[rel d_12f870]
+        cmp rbx,[rel d_12ec15]
+        jc short L_12c689
+        xor ebx,ebx
+        mov [rel d_12f870],rbx
+L_12c689:
+        lea rax,[rel d_12ee1d]
+        mov r9,[rax+rbx*8]
+        lea rax,[rel d_12f01d]
+        mov r10,[rax+rbx*8]
+        mov r12,0xffffffffffffffff
+        mov r13d,0x7fffffff
+        xor ecx,ecx
+L_12c6ae:
+        cmp rcx,[rel d_12ec15]
+        jnc short L_12c719
+        lea rax,[rel d_12ee1d]
+        mov rdi,[rax+rcx*8]
+        sub rdi,r9
+        lea rax,[rel d_12f01d]
+        mov rsi,[rax+rcx*8]
+        sub rsi,r10
+        cmp r8d,0x2
+        jnc short L_12c6e9
+        mov rax,rsi
+        mov rdx,rdi
+        test r8d,r8d
+        jnz short L_12c6f8
+        neg rax
+        jmp short L_12c6f8
+L_12c6e9:
+        mov rax,rdi
+        mov rdx,rsi
+        cmp r8d,0x3
+        jz short L_12c6f8
+        neg rax
+L_12c6f8:
+        test rax,rax
+        jng short L_12c714
+        test rdx,rdx
+        jns short L_12c705
+        neg rdx
+L_12c705:
+        lea rax,[rax+rdx*4]
+        cmp rax,r13
+        jnc short L_12c714
+        mov r13,rax
+        mov r12,rcx
+L_12c714:
+        inc rcx
+        jmp short L_12c6ae
+L_12c719:
+        cmp r12,0xffffffffffffffff
+        jz short L_12c726
+        mov [rel d_12f870],r12
+L_12c726:
+        pop r13
+        pop r12
+        pop rbx
+        retq
+
+fn_12c72c:
+        mov rax,[rel d_12f870]
+        cmp rax,[rel d_12ec15]
+        jc short L_12c74f
+        xor eax,eax
+        mov [rel d_12f870],rax
+        cmp qword [rel d_12ec15],0x0
+        jz short L_12c780
+L_12c74f:
+        lea rcx,[rel d_12ee1d]
+        mov rdx,[rcx+rax*8]
+        add rdx,0x30
+        mov [rel d_12ec05],rdx
+        lea rcx,[rel d_12f01d]
+        mov rdx,[rcx+rax*8]
+        add rdx,0x24
+        mov [rel d_12ec0d],rdx
+        mov eax,0x1
+L_12c780:
+        retq
+
+fn_12c781:
+        push rbx
+        push r12
+        mov rax,[rel d_12f870]
+        lea rcx,[rel d_12ee1d]
+        mov rbx,[rcx+rax*8]
+        lea rcx,[rel d_12f01d]
+        mov r12,[rcx+rax*8]
+        mov rdi,rbx
+        mov rsi,r12
+        mov edx,0x60
+        mov ecx,0x2
+        mov r8d,0xd6b4
+        call qword near [r15+0x18]
+        mov rdi,rbx
+        lea rsi,[r12+0x5a]
+        mov edx,0x60
+        mov ecx,0x2
+        mov r8d,0xd6b4
+        call qword near [r15+0x18]
+        mov rdi,rbx
+        mov rsi,r12
+        mov edx,0x2
+        mov ecx,0x5c
+        mov r8d,0xd6b4
+        call qword near [r15+0x18]
+        lea rdi,[rbx+0x5e]
+        mov rsi,r12
+        mov edx,0x2
+        mov ecx,0x5c
+        mov r8d,0xd6b4
+        call qword near [r15+0x18]
+        pop r12
+        pop rbx
+        retq
+
+fn_12c810:
+        push rbx
+        push r12
+        push r13
+        push r14
+        mov byte [rel d_12f222],0x1
+        cmp byte [rel d_12f339],0x0
+        jnz short L_12c887
+        mov byte [rel d_12f7d3],0x0
+        mov edi,0xd
+        call qword near [r15+0x118]
+        cmp rax,0x1
+        jnz short L_12c865
+        mov byte [rel d_12f7d3],0x1
+        xor edi,edi
+        xor esi,esi
+        mov rdx,[rel d_12ebf5]
+        mov rcx,[rel d_12ebfd]
+        mov r8d,0xfe01fe
+        call qword near [r15+0x18]
+        jmp short L_12c882
+L_12c865:
+        xor edi,edi
+        xor esi,esi
+        mov rdx,[rel d_12ebf5]
+        mov rcx,[rel d_12ebfd]
+        lea r8,[rel obj_data]
+        call qword near [r15+0x28]
+L_12c882:
+        call fn_12d0f8
+L_12c887:
+        mov qword [rel d_12ec15],0x0
+        mov rax,[rel d_12ebfd]
+        sub rax,0x32
+        xor edx,edx
+        mov ecx,0x5c
+        div rcx
+        test rax,rax
+        jnz short L_12c8b1
+        mov eax,0x1
+L_12c8b1:
+        mov r14,rax
+L_12c8b4:
+        cmp qword [rel d_12f580],0xffffffffffffffff
+        jnz short L_12c8ce
+        xor edi,edi
+        call qword near [r15+0x110]
+        mov r12,rax
+        xor ebx,ebx
+        jmp short L_12c926
+L_12c8ce:
+        mov edi,0x2
+        mov rsi,[rel d_12f580]
+        call qword near [r15+0x110]
+        cmp rax,0xffffffffffffffff
+        jnz short L_12c8f4
+        mov qword [rel d_12f580],0xffffffffffffffff
+        jmp short L_12c8b4
+L_12c8f4:
+        lea r12,[rax+rdx]
+        lea rbx,[rax-0x1]
+        mov rdi,[rel d_12f580]
+        call qword near [r15+0x60]
+        test rax,rax
+        jz near L_12cd6f
+        mov r13,rax
+        mov byte [rel d_12f221],0x0
+        mov byte [rel d_12f33a],0x4
+        jmp near L_12ca3e
+L_12c926:
+        cmp rbx,r12
+        jnc near L_12cd77
+        mov rdi,rbx
+        call qword near [r15+0x60]
+        test rax,rax
+        jz near L_12cd6f
+        mov r13,rax
+        mov byte [rel d_12f221],0x0
+        cmp qword [r13+0x38],0x3
+        jnz short L_12c959
+        mov byte [rel d_12f221],0x2
+        jmp short L_12c974
+L_12c959:
+        cmp qword [r13+0x38],0x2
+        jnz short L_12c974
+        cmp byte [rel d_12f220],0x0
+        jz near L_12cd6f
+        mov byte [rel d_12f221],0x1
+L_12c974:
+        mov rdi,r13
+        lea rsi,[rel d_13010b]
+        call qword near [r15+0x70]
+        test rax,rax
+        jz near L_12cd6f
+        mov [rel d_12f688],rax
+        mov rdi,rax
+        lea rsi,[rel d_130110]
+        call qword near [r15+0x98]
+        mov byte [rel d_12f33a],0x0
+        test eax,eax
+        jnz near L_12ca3e
+        mov rdi,[rel d_12f688]
+        lea rsi,[rel d_130131]
+        call qword near [r15+0x98]
+        mov byte [rel d_12f33a],0x1
+        test eax,eax
+        jnz short L_12ca3e
+        mov rdi,[rel d_12f688]
+        lea rsi,[rel d_13013d]
+        call qword near [r15+0x98]
+        mov byte [rel d_12f33a],0x3
+        test eax,eax
+        jnz short L_12ca3e
+        mov rdi,[rel d_12f688]
+        lea rsi,[rel d_130138]
+        call qword near [r15+0x98]
+        mov byte [rel d_12f33a],0x2
+        test eax,eax
+        jz short L_12ca62
+        mov rdi,r13
+        lea rsi,[rel d_130255]
+        call qword near [r15+0x70]
+        test rax,rax
+        jz short L_12ca3e
+        mov rdi,rax
+        lea rsi,[rel d_13025d]
+        call qword near [r15+0x98]
+        test eax,eax
+        jnz near L_12cd6f
+L_12ca3e:
+        test dword [r13+0x50],0x1
+        jnz near L_12cd6f
+        mov rcx,[rel d_12ec15]
+        cmp rcx,0x40
+        jnc near L_12cd77
+        jmp near L_12cb11
+L_12ca62:
+        cmp qword [rel d_12f580],0xffffffffffffffff
+        jz short L_12ca9a
+        mov rdi,r13
+        lea rsi,[rel d_130255]
+        call qword near [r15+0x70]
+        test rax,rax
+        jz short L_12caca
+        mov rdi,rax
+        lea rsi,[rel d_13025d]
+        call qword near [r15+0x98]
+        test eax,eax
+        jnz near L_12cd6f
+        jmp short L_12caca
+L_12ca9a:
+        mov rdi,r13
+        lea rsi,[rel d_130255]
+        call qword near [r15+0x70]
+        test rax,rax
+        jz near L_12cd6f
+        mov rdi,rax
+        lea rsi,[rel d_130260]
+        call qword near [r15+0x98]
+        test eax,eax
+        jz near L_12cd6f
+L_12caca:
+        xor ecx,ecx
+L_12cacc:
+        lea rax,[rel r_130a67]
+        mov rsi,[rax+rcx*8]
+        test rsi,rsi
+        jz near L_12cd6f
+        push rcx
+        mov rdi,[rel d_12f688]
+        call qword near [r15+0x98]
+        pop rcx
+        test eax,eax
+        jnz short L_12caf8
+        inc ecx
+        jmp short L_12cacc
+L_12caf8:
+        lea rax,[rel r_130a8f]
+        mov rax,[rax+rcx*8]
+        mov [rel d_130a5f],rax
+        mov byte [rel d_12f33a],0x5
+L_12cb11:
+        mov rcx,[rel d_12ec15]
+        cmp rcx,0x40
+        jnc near L_12cd77
+        lea rax,[rel d_12ec1d]
+        mov [rax+rcx*8],r13
+        mov rax,rcx
+        xor edx,edx
+        div r14
+        imul rax,rax,0x60
+        add rax,0x10
+        lea r8,[rax+0x60]
+        cmp r8,[rel d_12ebf5]
+        jg near L_12cd77
+        imul rdx,rdx,0x5c
+        add rdx,0x10
+        cmp qword [rel d_12f580],0xffffffffffffffff
+        jnz short L_12cb65
+        call fn_12cdfb
+L_12cb65:
+        lea r8,[rel d_12f380]
+        mov [r8+rcx*8],rbx
+        lea r8,[rel d_12ee1d]
+        mov [r8+rcx*8],rax
+        lea r8,[rel d_12f01d]
+        mov [r8+rcx*8],rdx
+        movzx r8d,byte [rel d_12f33a]
+        lea r9,[rel d_12f33b]
+        mov [r9+rcx],r8b
+        inc qword [rel d_12ec15]
+        cmp byte [rel d_12f339],0x0
+        jnz near L_12cd6f
+        cmp byte [rel d_12f7d3],0x0
+        jz short L_12cbdf
+        push rax
+        push rdx
+        lea rdi,[rax+0x6]
+        lea rsi,[rdx+0x2]
+        mov edx,0x54
+        mov ecx,0x54
+        mov r8d,0x1a1c28
+        mov r9d,0xc
+        call qword near [r15+0x140]
+        pop rdx
+        pop rax
+L_12cbdf:
+        cmp byte [rel d_12f33a],0x0
+        jz short L_12cc43
+        lea r8,[rel d_131829]
+        cmp byte [rel d_12f33a],0x1
+        jz short L_12cc2f
+        lea r8,[rel d_133c31]
+        cmp byte [rel d_12f33a],0x2
+        jz short L_12cc2f
+        lea r8,[rel d_136039]
+        cmp byte [rel d_12f33a],0x3
+        jz short L_12cc2f
+        mov r8,[rel d_130a5f]
+        cmp byte [rel d_12f33a],0x5
+        jz short L_12cc2f
+        lea r8,[rel d_138441]
+L_12cc2f:
+        mov [rel d_12f690],r8
+        mov rdi,r13
+        mov rsi,rax
+        call fn_12df69
+        jmp short L_12cc88
+L_12cc43:
+        push rax
+        push rdx
+        mov rdi,r13
+        lea rsi,[rel d_12f7c6]
+        call qword near [r15+0x70]
+        test rax,rax
+        jz short L_12cc6f
+        mov rdi,rax
+        call qword near [r15+0x68]
+        test rax,rax
+        jz short L_12cc6f
+        mov r8,[rax+0x10]
+        add r8,rax
+        pop rdx
+        pop rax
+        jmp short L_12cc2f
+L_12cc6f:
+        pop rdx
+        pop rax
+        mov rdi,r13
+        lea rsi,[rel d_130115]
+        mov rcx,rdx
+        mov rdx,rax
+        call qword near [r15+0x80]
+L_12cc88:
+        mov edi,0x4
+        mov rsi,r13
+        call qword near [r15+0x110]
+        test eax,eax
+        jz short L_12ccd7
+        shr eax,byte 0x8
+        mov r8d,eax
+        mov rcx,[rel d_12ec15]
+        dec rcx
+        lea rax,[rel d_12ee1d]
+        mov rdi,[rax+rcx*8]
+        lea rax,[rel d_12f01d]
+        mov rsi,[rax+rcx*8]
+        add rdi,0x1e
+        add rsi,0x36
+        mov edx,0x24
+        mov ecx,0x2
+        call qword near [r15+0x18]
+L_12ccd7:
+        cmp byte [rel d_12f221],0x0
+        jz near L_12cd6f
+        mov rcx,[rel d_12ec15]
+        dec rcx
+        lea rax,[rel d_12ee1d]
+        mov rdi,[rax+rcx*8]
+        lea rax,[rel d_12f01d]
+        mov rsi,[rax+rcx*8]
+        add rdi,0x12
+        add rsi,0x2
+        mov edx,0x3c
+        mov ecx,0xe
+        mov r8d,0x5a1e14
+        call qword near [r15+0x18]
+        mov rcx,[rel d_12ec15]
+        dec rcx
+        lea rax,[rel d_12ee1d]
+        mov rdi,[rax+rcx*8]
+        lea rax,[rel d_12f01d]
+        mov rsi,[rax+rcx*8]
+        add rdi,0x18
+        add rsi,0x1
+        lea rdx,[rel d_1301b2]
+        cmp byte [rel d_12f221],0x2
+        jnz short L_12cd5f
+        lea rdx,[rel d_1301b9]
+L_12cd5f:
+        mov ecx,0xffb070
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+L_12cd6f:
+        inc rbx
+        jmp near L_12c926
+L_12cd77:
+        cmp byte [rel d_12f7d0],0x0
+        jz short L_12cdac
+        mov rdi,[rel d_12ebf5]
+        shr rdi,1
+        sub rdi,0xe4
+        mov esi,0x6
+        lea rdx,[rel d_12f7e1]
+        mov ecx,0x12131c
+        mov r8d,0xffb020
+        call qword near [r15+0x30]
+L_12cdac:
+        mov byte [rel d_12f222],0x0
+        pop r14
+        pop r13
+        pop r12
+        pop rbx
+        retq
+
+fn_12cdbb:
+        mov byte [rel d_12f7d4],0x1
+        lea rdi,[rel d_12f7d5]
+        call qword near [r15+0x68]
+        test rax,rax
+        jz short L_12cdfa
+        mov rsi,rax
+        add rsi,[rax+0x10]
+        mov rcx,[rsi]
+        cmp rcx,0x40
+        ja short L_12cdfa
+        mov [rel d_12f878],rcx
+        shl rcx,byte 0x5
+        add rsi,0x8
+        lea rdi,[rel d_12f888]
+        rep movsb
+L_12cdfa:
+        retq
+
+fn_12cdfb:
+        push rbx
+        push r12
+        push rax
+        push rdx
+        push rcx
+        cmp byte [rel d_12f7d4],0x0
+        jnz short L_12ce0f
+        call fn_12cdbb
+L_12ce0f:
+        cmp qword [rel d_12f878],0x0
+        jz short L_12ce8b
+        mov rdi,r13
+        lea rsi,[rel d_12f7cb]
+        call qword near [r15+0x70]
+        test rax,rax
+        jz short L_12ce8b
+        mov r12,rax
+        xor ebx,ebx
+L_12ce31:
+        cmp rbx,[rel d_12f878]
+        jnc short L_12ce8b
+        mov rdi,rbx
+        shl rdi,byte 0x5
+        lea rax,[rel d_12f888]
+        add rdi,rax
+        push rdi
+        mov rsi,r12
+        call qword near [r15+0x98]
+        pop rdi
+        test eax,eax
+        jnz short L_12ce60
+        inc rbx
+        jmp short L_12ce31
+L_12ce60:
+        mov rax,[rdi+0x10]
+        mov rdx,[rdi+0x18]
+        lea rcx,[rax+0x60]
+        cmp rcx,[rel d_12ebf5]
+        jg short L_12ce8b
+        lea rcx,[rdx+0x7e]
+        cmp rcx,[rel d_12ebfd]
+        jg short L_12ce8b
+        pop rcx
+        add rsp,0x10
+        pop r12
+        pop rbx
+        retq
+L_12ce8b:
+        pop rcx
+        pop rdx
+        pop rax
+        pop r12
+        pop rbx
+        retq
+
+fn_12ce92:
+        push rbx
+        push r12
+        push r13
+        push r14
+        mov r12,rsi
+        mov r13,rdx
+        lea rax,[rel d_12ec1d]
+        mov rdi,[rax+rdi*8]
+        lea rsi,[rel d_12f7cb]
+        call qword near [r15+0x70]
+        test rax,rax
+        jz short L_12cf2b
+        mov r14,rax
+        xor ebx,ebx
+L_12cebf:
+        cmp rbx,[rel d_12f878]
+        jnc short L_12ceee
+        mov rdi,rbx
+        shl rdi,byte 0x5
+        lea rax,[rel d_12f888]
+        add rdi,rax
+        push rdi
+        mov rsi,r14
+        call qword near [r15+0x98]
+        pop rdi
+        test eax,eax
+        jnz short L_12cf23
+        inc rbx
+        jmp short L_12cebf
+L_12ceee:
+        cmp rbx,0x40
+        jnc short L_12cf2b
+        mov rdi,rbx
+        shl rdi,byte 0x5
+        lea rax,[rel d_12f888]
+        add rdi,rax
+        push rdi
+        mov rsi,r14
+        mov ecx,0xf
+L_12cf0e:
+        lodsb
+        test al,al
+        jz short L_12cf18
+        stosb
+        dec ecx
+        jnz short L_12cf0e
+L_12cf18:
+        mov byte [rdi],0x0
+        pop rdi
+        inc qword [rel d_12f878]
+L_12cf23:
+        mov [rdi+0x10],r12
+        mov [rdi+0x18],r13
+L_12cf2b:
+        pop r14
+        pop r13
+        pop r12
+        pop rbx
+        retq
+
+fn_12cf33:
+        push rbx
+        mov rbx,[rel d_12f880]
+        test rbx,rbx
+        jnz short L_12cf5f
+        mov edi,0x8d0
+        call qword near [r15+0xb0]
+        test rax,rax
+        jz near L_12d004
+        mov rbx,rax
+        mov [rel d_12f880],rax
+L_12cf5f:
+        mov rdi,rbx
+        xor eax,eax
+        mov ecx,0x8d0
+        rep stosb
+        mov dword [rbx],0x41534d4f
+        mov dword [rbx+0x4],0x4
+        mov qword [rbx+0x8],0x8d0
+        mov qword [rbx+0x10],0x68
+        mov qword [rbx+0x18],0x870
+        mov qword [rbx+0x38],0x1
+        mov dword [rbx+0x48],0x2
+        mov qword [rbx+0x58],0x808
+        mov rax,[rel d_12f878]
+        mov [rbx+0x68],rax
+        lea rdi,[rbx+0x70]
+        lea rsi,[rel d_12f888]
+        mov ecx,0x800
+        rep movsb
+        lea rdi,[rbx+0x870]
+        lea rsi,[rel d_12f81f]
+        mov ecx,0x45
+        rep movsb
+        mov qword [rbx+0x8c0],0x8d0
+        mov dword [rbx+0x8c8],0x4f4d5341
+        lea rdi,[rel d_12f7d5]
+        mov rsi,rbx
+        mov edx,0x8d0
+        call qword near [r15+0xe0]
+L_12d004:
+        pop rbx
+        retq
+
+fn_12d006:
+        push rbx
+        push r12
+        push r13
+        mov rbx,[rel d_12f868]
+        mov qword [rel d_12f868],0xffffffffffffffff
+        cmp rbx,[rel d_12ec15]
+        jnc near L_12d0f2
+        mov rax,[rel d_12ec05]
+        sub rax,0x10
+        jns short L_12d039
+        xor eax,eax
+L_12d039:
+        xor edx,edx
+        mov ecx,0x60
+        div rcx
+        imul rax,rax,0x60
+        add rax,0x10
+        lea rcx,[rax+0x60]
+        cmp rcx,[rel d_12ebf5]
+        jg near L_12d0f2
+        mov r12,rax
+        mov rax,[rel d_12ec0d]
+        sub rax,0x10
+        jns short L_12d06e
+        xor eax,eax
+L_12d06e:
+        xor edx,edx
+        mov ecx,0x5c
+        div rcx
+        imul rax,rax,0x5c
+        add rax,0x10
+        lea rcx,[rax+0x7e]
+        cmp rcx,[rel d_12ebfd]
+        jg short L_12d0f2
+        mov r13,rax
+        mov rdi,r12
+        mov rsi,r13
+        call fn_12d9cb
+        cmp rax,0xffffffffffffffff
+        jz short L_12d0c4
+        cmp rax,rbx
+        jz short L_12d0f2
+        mov rdi,rax
+        lea rcx,[rel d_12ee1d]
+        mov rsi,[rcx+rbx*8]
+        lea rcx,[rel d_12f01d]
+        mov rdx,[rcx+rbx*8]
+        call fn_12ce92
+L_12d0c4:
+        mov rdi,rbx
+        mov rsi,r12
+        mov rdx,r13
+        call fn_12ce92
+        call fn_12cf33
+        call qword near [r15+0x50]
+        call fn_12c810
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        call qword near [r15+0x48]
+L_12d0f2:
+        pop r13
+        pop r12
+        pop rbx
+        retq
+
+fn_12d0f8:
+        call fn_12e5fa
+        cmp byte [rel d_130438],0x0
+        jz short fn_12d116
+        mov qword [rel d_1300ab],0xffffffffffffffff
+        jmp near fn_12d47b
+
+fn_12d116:
+        push rbx
+        mov rbx,[rel d_12ebfd]
+        sub rbx,0x22
+        xor edi,edi
+        mov rsi,rbx
+        mov rdx,[rel d_12ebf5]
+        mov ecx,0x22
+        mov r8d,0x1d1d27
+        call qword near [r15+0x18]
+        xor edi,edi
+        mov rsi,rbx
+        mov rdx,[rel d_12ebf5]
+        mov ecx,0x1
+        mov r8d,0x3a3550
+        call qword near [r15+0x18]
+        mov edi,0x6
+        lea rsi,[rbx+0x5]
+        mov edx,0x1e
+        mov ecx,0x18
+        mov r8d,0x282835
+        call qword near [r15+0x18]
+        mov edi,0xb
+        lea rsi,[rbx+0x7]
+        lea rdx,[rel d_130b99]
+        xor ecx,ecx
+        call qword near [r15+0x20]
+        mov edi,0x28
+        lea rsi,[rbx+0x5]
+        mov edx,0x1e
+        mov ecx,0x18
+        mov r8d,0x282835
+        call qword near [r15+0x18]
+        mov edi,0x2d
+        lea rsi,[rbx+0x7]
+        lea rdx,[rel d_1311e1]
+        xor ecx,ecx
+        call qword near [r15+0x20]
+        call fn_12d266
+        cmp qword [rel d_12f230],0x0
+        jnz short L_12d1de
+        cmp qword [rel d_12f588],0x0
+        jz short L_12d1de
+        call fn_12d309
+        jmp short L_12d214
+L_12d1de:
+        mov edi,0x58
+        lea rsi,[rbx+0x9]
+        lea rdx,[rel d_1302e4]
+        mov ecx,0x8fa5b8
+        cmp qword [rel d_12f230],0x0
+        jz short L_12d209
+        lea rdx,[rel d_12f240]
+        mov ecx,0xffb020
+L_12d209:
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+L_12d214:
+        cmp qword [rel d_12ebf5],0x320
+        jc short L_12d254
+        cmp qword [rel d_12f230],0x0
+        jnz short L_12d254
+        mov rdi,[rel d_12ebf5]
+        sub rdi,0x11c
+        lea rsi,[rbx+0x9]
+        lea rdx,[rel d_1302ff]
+        mov ecx,0xafc2d4
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+L_12d254:
+        mov qword [rel d_1300ab],0xffffffffffffffff
+        call fn_12d47b
+        pop rbx
+        retq
+
+fn_12d266:
+        push rbx
+        push r12
+        mov qword [rel d_12f588],0x0
+        mov ebx,0x1
+L_12d279:
+        cmp rbx,0x8
+        jnc short L_12d2f2
+        cmp qword [rel d_12f588],0x6
+        jnc short L_12d2f2
+        mov edi,0x2
+        mov rsi,rbx
+        lea rdx,[rel d_12f628]
+        call qword near [r15+0x118]
+        cmp rax,0x1
+        jnz short L_12d2ed
+        mov r12,[rel d_12f588]
+        lea rax,[rel d_12f598]
+        mov [rax+r12*8],rbx
+        mov rdi,r12
+        shl rdi,byte 0x4
+        lea rax,[rel d_12f5c8]
+        add rdi,rax
+        lea rsi,[rel d_12f628]
+        xor ecx,ecx
+L_12d2d1:
+        mov al,[rsi+rcx]
+        mov [rdi+rcx],al
+        test al,al
+        jz short L_12d2e6
+        inc ecx
+        cmp ecx,0xe
+        jc short L_12d2d1
+        mov byte [rdi+rcx],0x0
+L_12d2e6:
+        inc qword [rel d_12f588]
+L_12d2ed:
+        inc rbx
+        jmp short L_12d279
+L_12d2f2:
+        mov edi,0x4
+        call qword near [r15+0x118]
+        mov [rel d_12f590],rax
+        pop r12
+        pop rbx
+        retq
+
+fn_12d309:
+        push r12
+        push r13
+        mov edi,0x5
+        call qword near [r15+0x118]
+        mov r13,rax
+        xor r12d,r12d
+L_12d31f:
+        cmp r12,[rel d_12f588]
+        jnc near L_12d3d4
+        mov rdi,r12
+        imul rdi,rdi,0x84
+        add rdi,0xd0
+        mov rax,[rel d_12ebf5]
+        sub rax,0x68
+        cmp qword [rel d_12ebf5],0x320
+        jc short L_12d35b
+        sub rax,0xbc
+L_12d35b:
+        cmp rdi,rax
+        ja short L_12d3d4
+        mov rdi,r12
+        imul rdi,rdi,0x84
+        add rdi,0x50
+        lea rsi,[rbx+0x5]
+        mov edx,0x80
+        mov ecx,0x18
+        mov r8d,0x282835
+        lea rax,[rel d_12f598]
+        cmp [rax+r12*8],r13
+        jnz short L_12d395
+        mov r8d,0x7b5cff
+L_12d395:
+        call qword near [r15+0x18]
+        mov rdi,r12
+        imul rdi,rdi,0x84
+        add rdi,0x58
+        lea rsi,[rbx+0x9]
+        mov rdx,r12
+        shl rdx,byte 0x4
+        lea rax,[rel d_12f5c8]
+        add rdx,rax
+        mov ecx,0xe8eef4
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        inc r12
+        jmp near L_12d31f
+L_12d3d4:
+        pop r13
+        pop r12
+        retq
+
+fn_12d3d9:
+        cmp qword [rel d_12f230],0x0
+        jnz short L_12d425
+        sub rdi,0x50
+        jl short L_12d425
+        mov rax,rdi
+        xor edx,edx
+        mov ecx,0x84
+        div rcx
+        cmp rdx,0x80
+        jnc short L_12d425
+        cmp rax,[rel d_12f588]
+        jnc short L_12d425
+        lea rcx,[rel d_12f598]
+        mov rsi,[rcx+rax*8]
+        mov edi,0x3
+        call qword near [r15+0x118]
+        mov eax,0x1
+        retq
+L_12d425:
+        xor eax,eax
+        retq
+
+fn_12d428:
+        call qword near [r15+0xf0]
+        cmp qword [rel d_1300b3],0xffffffffffffffff
+        jz short L_12d459
+        cmp rax,[rel d_1300b3]
+        jz short L_12d460
+        cmp byte [rel d_12f21d],0x0
+        jnz short L_12d460
+        mov [rel d_1300b3],rax
+        call fn_12df37
+        jmp short L_12d460
+L_12d459:
+        mov [rel d_1300b3],rax
+L_12d460:
+        mov edi,0x4
+        call qword near [r15+0x118]
+        cmp rax,[rel d_12f590]
+        jz short L_12d47a
+        call fn_12d0f8
+L_12d47a:
+        retq
+
+fn_12d47b:
+        push rbx
+        cmp qword [rel d_12f230],0x0
+        jz short L_12d4bc
+        call qword near [r15+0xa0]
+        cmp rax,[rel d_12f230]
+        jc short L_12d4bc
+        mov qword [rel d_12f230],0x0
+        call qword near [r15+0x50]
+        call fn_12d0f8
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        call qword near [r15+0x48]
+L_12d4bc:
+        call qword near [r15+0xa0]
+        xor edx,edx
+        mov ecx,0x64
+        div rcx
+        cmp rax,[rel d_1300ab]
+        jz near L_12d5f0
+        mov [rel d_1300ab],rax
+        xor edx,edx
+        mov ecx,0x3c
+        div rcx
+        mov rbx,rdx
+        xor edx,edx
+        div rcx
+        lea rdi,[rel d_1300bb]
+        call fn_12d5f2
+        mov byte [rdi],0x3a
+        inc rdi
+        mov rax,rdx
+        call fn_12d5f2
+        mov byte [rdi],0x3a
+        inc rdi
+        mov rax,rbx
+        call fn_12d5f2
+        mov byte [rdi],0x20
+        inc rdi
+        push rdi
+        mov edi,0xe
+        lea rsi,[rel d_1300cb]
+        mov byte [rsi],0x0
+        call qword near [r15+0x128]
+        pop rdi
+        mov ax,[rel d_1300cb]
+        test al,al
+        jnz short L_12d549
+        dec rdi
+        jmp short L_12d550
+L_12d549:
+        mov [rdi],ax
+        add rdi,0x2
+L_12d550:
+        mov byte [rdi],0x0
+        cmp byte [rel d_130438],0x0
+        jz short L_12d566
+        call fn_12e68c
+        jmp near L_12d5f0
+L_12d566:
+        call qword near [r15+0x50]
+        mov rdi,[rel d_12ebf5]
+        sub rdi,0x60
+        mov rsi,[rel d_12ebfd]
+        sub rsi,0x1d
+        mov edx,0x5a
+        mov ecx,0x18
+        mov r8d,0x22303e
+        call qword near [r15+0x18]
+        mov rdi,[rel d_12ebf5]
+        sub rdi,0x54
+        mov rsi,[rel d_12ebfd]
+        sub rsi,0x19
+        lea rdx,[rel d_1300bb]
+        mov ecx,0xffffff
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        cmp byte [rel d_12f222],0x0
+        jnz short L_12d5f0
+        cmp qword [rel d_12ec05],0x0
+        jnz short L_12d5ec
+        cmp qword [rel d_12ec0d],0x0
+        jz short L_12d5f0
+L_12d5ec:
+        call qword near [r15+0x48]
+L_12d5f0:
+        pop rbx
+        retq
+
+fn_12d5f2:
+        push rdx
+        xor edx,edx
+        mov ecx,0xa
+        div rcx
+        add al,0x30
+        add dl,0x30
+        mov [rdi],al
+        mov [rdi+0x1],dl
+        add rdi,0x2
+        pop rdx
+        retq
+
+fn_12d60d:
+        push rbx
+        push r12
+        push r13
+        mov r12,rdi
+        mov r13,rsi
+        cmp byte [rel d_12f21f],0x0
+        jz short L_12d682
+        call fn_12d9cb
+        cmp rax,0xffffffffffffffff
+        jz near L_12d766
+        lea rcx,[rel d_12ec1d]
+        mov rbx,[rcx+rax*8]
+        mov byte [rel d_12f21f],0x0
+        call fn_12da74
+        mov qword [rel d_12f6d0],0xffffffffffffffff
+        call qword near [r15+0x50]
+        mov rdx,rbx
+        mov rdi,[rel d_12f228]
+        mov esi,0xa
+        lea rcx,[rel d_12f240]
+        call qword near [r15+0x108]
+        call fn_12e3aa
+        call fn_12df37
+        jmp near L_12d766
+L_12d682:
+        cmp byte [rel d_12f21e],0x0
+        jz short L_12d6c6
+        mov rdi,r12
+        mov rsi,r13
+        call fn_12e5c2
+        push rax
+        call fn_12e508
+        pop rax
+        cmp rax,0xffffffffffffffff
+        jz near L_12d766
+        mov rdi,rax
+        push rdi
+        lea rdi,[rel d_130279]
+        call qword near [r15+0xc0]
+        pop rdi
+        call qword near [r15+0xe8]
+        jmp near L_12d766
+L_12d6c6:
+        mov rax,[rel d_12ebfd]
+        sub rax,0x22
+        cmp r13,rax
+        jl short L_12d73d
+        cmp byte [rel d_130438],0x0
+        jz short L_12d6eb
+        call fn_12e83a
+        cmp eax,0x1
+        jz short L_12d71f
+        jmp short L_12d766
+L_12d6eb:
+        cmp r12,0x6
+        jl short L_12d766
+        cmp r12,0x24
+        jl short L_12d71f
+        cmp r12,0x28
+        jl short L_12d766
+        cmp r12,0x46
+        jnl short L_12d70c
+        mov byte [rel d_12f338],0x1
+        jmp short L_12d766
+L_12d70c:
+        mov rdi,r12
+        call fn_12d3d9
+        test eax,eax
+        jz short L_12d766
+        call fn_12d0f8
+        jmp short L_12d766
+L_12d71f:
+        cmp byte [rel d_12f21d],0x0
+        jz short L_12d72d
+        call fn_12df37
+L_12d72d:
+        call fn_12e548
+        test eax,eax
+        jnz short L_12d766
+        call fn_12e3d0
+        jmp short L_12d766
+L_12d73d:
+        cmp byte [rel d_12f21d],0x0
+        jz short L_12d74d
+        call fn_12df37
+        jmp short L_12d766
+L_12d74d:
+        mov rdi,r12
+        mov rsi,r13
+        call fn_12d9cb
+        cmp rax,0xffffffffffffffff
+        jz short L_12d766
+        mov rbx,rax
+        call fn_12d76c
+L_12d766:
+        pop r13
+        pop r12
+        pop rbx
+        retq
+
+fn_12d76c:
+        lea rax,[rel d_12ec1d]
+        mov rax,[rax+rbx*8]
+        cmp qword [rax+0x38],0x3
+        jnz short L_12d7a9
+        lea rdi,[rel d_12f240]
+        lea rsi,[rel d_1301c0]
+        call fn_12e3bf
+        call fn_12e3aa
+        call qword near [r15+0x50]
+        call fn_12d0f8
+        mov rdi,r12
+        mov rsi,r13
+        jmp qword near [r15+0x48]
+L_12d7a9:
+        call fn_12da74
+        mov qword [rel d_12f6d0],0xffffffffffffffff
+        call qword near [r15+0x50]
+        lea rax,[rel d_12f33b]
+        movzx ecx,byte [rax+rbx]
+        cmp ecx,0x5
+        jnz short L_12d7f0
+        lea rax,[rel d_12ec1d]
+        mov rdi,[rax+rbx*8]
+        lea rsi,[rel d_130a5a]
+        lea rdx,[rel d_13018f]
+        call fn_12e08b
+        jmp near L_12d99f
+L_12d7f0:
+        cmp ecx,0x3
+        jc short L_12d82a
+        mov qword [rel d_12f580],0xffffffffffffffff
+        cmp ecx,0x4
+        jz short L_12d825
+        lea rax,[rel d_12f380]
+        mov rax,[rax+rbx*8]
+        mov [rel d_12f580],rax
+        lea rdi,[rel d_130145]
+        call qword near [r15+0xc0]
+L_12d825:
+        jmp near fn_12df37
+L_12d82a:
+        test ecx,ecx
+        jz near L_12d8e7
+        cmp ecx,0x1
+        jnz short L_12d8a6
+        mov edi,0x7
+        lea rax,[rel d_12ec1d]
+        mov rsi,[rax+rbx*8]
+        call qword near [r15+0x110]
+        test rax,rax
+        jz short L_12d8a6
+        push rax
+        lea rdi,[rel d_13015e]
+        call qword near [r15+0xc0]
+        pop rsi
+        push rsi
+        xor edi,edi
+        lea rdx,[rel d_130270]
+        xor ecx,ecx
+        xor r8d,r8d
+        call qword near [r15+0x118]
+        pop rdi
+        cmp rax,0xffffffffffffffff
+        jnz short L_12d89c
+        lea rsi,[rel d_130270]
+        xor edx,edx
+        xor ecx,ecx
+        call qword near [r15+0x80]
+        mov eax,0x1
+        jmp near L_12d99f
+L_12d89c:
+        mov eax,0x2
+        jmp near L_12d99f
+L_12d8a6:
+        lea rax,[rel d_12f33b]
+        movzx ecx,byte [rax+rbx]
+        lea rax,[rel d_12ec1d]
+        mov rdi,[rax+rbx*8]
+        lea rsi,[rel d_130270]
+        lea rdx,[rel d_130269]
+        cmp ecx,0x1
+        jz short L_12d8dd
+        lea rsi,[rel d_130264]
+        lea rdx,[rel d_13018f]
+L_12d8dd:
+        call fn_12e08b
+        jmp near L_12d99f
+L_12d8e7:
+        lea rax,[rel d_12ec1d]
+        mov rdi,[rax+rbx*8]
+        lea rsi,[rel d_130088]
+        call qword near [r15+0x70]
+        test rax,rax
+        jz short L_12d978
+        mov rdi,rax
+        lea rsi,[rel d_13008d]
+        call qword near [r15+0x98]
+        test eax,eax
+        jnz short L_12d942
+        lea rax,[rel d_12ec1d]
+        mov rdi,[rax+rbx*8]
+        lea rsi,[rel d_130088]
+        call qword near [r15+0x70]
+        mov rdi,rax
+        lea rsi,[rel d_130091]
+        call qword near [r15+0x98]
+        test eax,eax
+        jz short L_12d978
+L_12d942:
+        xor edi,edi
+        lea rax,[rel d_12ec1d]
+        mov rsi,[rax+rbx*8]
+        lea rdx,[rel d_13011a]
+        mov rcx,[rel d_12ebf5]
+        mov r8,[rel d_12ebfd]
+        call qword near [r15+0x118]
+        cmp rax,0xffffffffffffffff
+        jz short L_12d978
+        mov eax,0x2
+        jmp short L_12d99f
+L_12d978:
+        lea rax,[rel d_12ec1d]
+        mov rdi,[rax+rbx*8]
+        lea rsi,[rel d_13011a]
+        mov rdx,[rel d_12ebf5]
+        mov rcx,[rel d_12ebfd]
+        call qword near [r15+0x80]
+L_12d99f:
+        cmp rax,0x2
+        jnz short L_12d9af
+        mov rdi,r12
+        mov rsi,r13
+        jmp qword near [r15+0x48]
+L_12d9af:
+        cmp rax,0x1
+        jnz short L_12d9ba
+        jmp near fn_12df37
+L_12d9ba:
+        mov byte [rel d_12f21d],0x1
+        mov rdi,r12
+        mov rsi,r13
+        jmp qword near [r15+0x48]
+
+fn_12d9cb:
+        xor eax,eax
+L_12d9cd:
+        cmp rax,[rel d_12ec15]
+        jnc short L_12da0e
+        lea rcx,[rel d_12ee1d]
+        mov rdx,[rcx+rax*8]
+        cmp rdi,rdx
+        jl short L_12da09
+        add rdx,0x60
+        cmp rdi,rdx
+        jnl short L_12da09
+        lea rcx,[rel d_12f01d]
+        mov rdx,[rcx+rax*8]
+        cmp rsi,rdx
+        jl short L_12da09
+        add rdx,0x5c
+        cmp rsi,rdx
+        jnl short L_12da09
+        retq
+L_12da09:
+        inc rax
+        jmp short L_12d9cd
+L_12da0e:
+        mov rax,0xffffffffffffffff
+        retq
+
+fn_12da16:
+        cmp byte [rel d_12f21d],0x0
+        jnz short L_12da73
+        cmp byte [rel d_12f21e],0x0
+        jnz short L_12da73
+        push rbx
+        push r12
+        push r13
+        mov r12,rdi
+        mov r13,rsi
+        call fn_12d9cb
+        cmp rax,[rel d_12f6d0]
+        jz short L_12da6e
+        mov rbx,rax
+        call fn_12da74
+        mov [rel d_12f6d0],rbx
+        cmp rbx,0xffffffffffffffff
+        jz short L_12da64
+        mov rdi,r12
+        mov rsi,r13
+        mov rdx,rbx
+        call fn_12dac6
+L_12da64:
+        mov rdi,r12
+        mov rsi,r13
+        call qword near [r15+0x48]
+L_12da6e:
+        pop r13
+        pop r12
+        pop rbx
+L_12da73:
+        retq
+
+fn_12da74:
+        cmp qword [rel d_12f6d8],0x0
+        jz short L_12da9b
+        call qword near [r15+0x50]
+        mov rdi,[rel d_12f6d8]
+        mov qword [rel d_12f6d8],0x0
+        call qword near [r15+0xd8]
+L_12da9b:
+        retq
+
+fn_12da9c:
+        xor eax,eax
+L_12da9e:
+        cmp byte [rdi+rax],0x0
+        jz short L_12daad
+        inc rax
+        cmp rax,0x2e
+        jc short L_12da9e
+L_12daad:
+        retq
+
+fn_12daae:
+        xor ecx,ecx
+L_12dab0:
+        mov al,[rsi+rcx]
+        mov [rdi+rcx],al
+        test al,al
+        jz short L_12dac5
+        inc ecx
+        cmp ecx,0x2e
+        jc short L_12dab0
+        mov byte [rdi+rcx],0x0
+L_12dac5:
+        retq
+
+fn_12dac6:
+        push rbx
+        push rbp
+        push r12
+        push r13
+        push r14
+        mov r12,rdi
+        mov r13,rsi
+        lea rax,[rel d_12ec1d]
+        mov rbx,[rax+rdx*8]
+        mov rdi,rbx
+        lea rsi,[rel d_12f7c0]
+        call qword near [r15+0x70]
+        test rax,rax
+        jnz short L_12db0c
+        mov rdi,rbx
+        lea rsi,[rel d_12f7cb]
+        call qword near [r15+0x70]
+        test rax,rax
+        jnz short L_12db0c
+        lea rax,[rel d_1300a1]
+L_12db0c:
+        mov [rel d_12f6e0],rax
+        mov dword [rel d_12f728],0xffb020
+        mov rdi,rbx
+        lea rsi,[rel d_130088]
+        call qword near [r15+0x70]
+        test rax,rax
+        jz short L_12dba0
+        mov [rel d_12f6e8],rax
+        mov rdi,rax
+        lea rsi,[rel d_13008d]
+        call qword near [r15+0x98]
+        test eax,eax
+        jz short L_12db58
+        mov dword [rel d_12f728],0x2fb7ff
+        jmp short L_12dba0
+L_12db58:
+        mov rdi,[rel d_12f6e8]
+        lea rsi,[rel d_130096]
+        call qword near [r15+0x98]
+        test eax,eax
+        jz short L_12db7d
+        mov dword [rel d_12f728],0x7ce07c
+        jmp short L_12dba0
+L_12db7d:
+        mov rdi,[rel d_12f6e8]
+        lea rsi,[rel d_13009c]
+        call qword near [r15+0x98]
+        test eax,eax
+        jz short L_12dba0
+        mov dword [rel d_12f728],0xffffff
+L_12dba0:
+        mov rdi,[rel d_12f6e0]
+        call fn_12da9c
+        mov r14,rax
+        xor ebp,ebp
+        mov qword [rel d_12f6f0],0x0
+L_12dbbc:
+        cmp ebp,0xc
+        jnc short L_12dc0b
+        mov rdi,rbx
+        mov rsi,[rel d_12f6f0]
+        call qword near [r15+0xc8]
+        test rax,rax
+        jz short L_12dc0b
+        inc qword [rel d_12f6f0]
+        cmp dword [rax],0x6562616c
+        jnz short L_12dbec
+        cmp byte [rax+0x4],0x6c
+        jz short L_12dbbc
+L_12dbec:
+        lea rdx,[rel d_12f730]
+        mov [rdx+rbp*8],rax
+        inc ebp
+        mov rdi,rax
+        call fn_12da9c
+        cmp rax,r14
+        jna short L_12dbbc
+        mov r14,rax
+        jmp short L_12dbbc
+L_12dc0b:
+        mov qword [rel d_12f65d],0xffffffffffffffff
+        cmp ebp,0xc
+        jnc short L_12dc83
+        mov edi,0x4
+        mov rsi,rbx
+        call qword near [r15+0x110]
+        mov [rel d_12f659],eax
+        test eax,eax
+        jz short L_12dc83
+        lea rdi,[rel d_12f669]
+        mov ecx,0x1c
+L_12dc40:
+        mov edx,eax
+        shr edx,cl
+        and edx,0xf
+        add dl,0x30
+        cmp dl,0x39
+        jna short L_12dc52
+        add dl,0x7
+L_12dc52:
+        mov [rdi],dl
+        inc rdi
+        sub ecx,0x4
+        jns short L_12dc40
+        lea rdx,[rel d_12f730]
+        lea rax,[rel d_12f665]
+        mov [rdx+rbp*8],rax
+        mov [rel d_12f65d],rbp
+        inc ebp
+        cmp r14,0xf
+        jnc short L_12dc83
+        mov r14d,0xf
+L_12dc83:
+        mov [rel d_12f6f8],rbp
+        imul r14,r14,0x8
+        add r14,0x14
+        mov [rel d_12f710],r14
+        lea rax,[rbp+0x1]
+        shl rax,byte 0x4
+        add rax,0x16
+        mov [rel d_12f718],rax
+        lea rax,[r12+0x10]
+        mov rcx,rax
+        add rcx,[rel d_12f710]
+        add rcx,0x4
+        cmp rcx,[rel d_12ebf5]
+        jng short L_12dcda
+        mov rax,[rel d_12ebf5]
+        sub rax,[rel d_12f710]
+        sub rax,0x6
+L_12dcda:
+        mov [rel d_12f700],rax
+        lea rax,[r13+0x14]
+        mov rcx,rax
+        add rcx,[rel d_12f718]
+        add rcx,0x4
+        mov rdx,[rel d_12ebfd]
+        sub rdx,0x22
+        cmp rcx,rdx
+        jng short L_12dd11
+        mov rax,r13
+        sub rax,[rel d_12f718]
+        sub rax,0x8
+L_12dd11:
+        mov [rel d_12f708],rax
+        call qword near [r15+0x50]
+        mov rdi,[rel d_12f700]
+        mov rsi,[rel d_12f708]
+        mov rdx,[rel d_12f710]
+        add rdx,0x4
+        mov rcx,[rel d_12f718]
+        add rcx,0x4
+        call qword near [r15+0xd0]
+        mov [rel d_12f6d8],rax
+        mov rdi,[rel d_12f700]
+        add rdi,0x4
+        mov rsi,[rel d_12f708]
+        add rsi,0x4
+        mov rdx,[rel d_12f710]
+        mov rcx,[rel d_12f718]
+        mov r8d,0x5080c
+        call qword near [r15+0x18]
+        mov rdi,[rel d_12f700]
+        mov rsi,[rel d_12f708]
+        mov rdx,[rel d_12f710]
+        mov rcx,[rel d_12f718]
+        mov r8d,0xc8a040
+        call qword near [r15+0x18]
+        mov rdi,[rel d_12f700]
+        inc rdi
+        mov rsi,[rel d_12f708]
+        inc rsi
+        mov rdx,[rel d_12f710]
+        sub rdx,0x2
+        mov rcx,[rel d_12f718]
+        sub rcx,0x2
+        mov r8d,0x12131c
+        call qword near [r15+0x18]
+        lea rdi,[rel d_12f790]
+        mov rsi,[rel d_12f6e0]
+        call fn_12daae
+        mov rdi,[rel d_12f700]
+        add rdi,0xa
+        mov rsi,[rel d_12f708]
+        add rsi,0x8
+        lea rdx,[rel d_12f790]
+        mov ecx,[rel d_12f728]
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        xor ebp,ebp
+L_12de19:
+        cmp rbp,[rel d_12f6f8]
+        jnc near L_12df2e
+        lea rax,[rel d_12f730]
+        lea rdi,[rel d_12f790]
+        mov rsi,[rax+rbp*8]
+        call fn_12daae
+        mov rax,rbp
+        shl rax,byte 0x4
+        add rax,[rel d_12f708]
+        add rax,0x1e
+        mov [rel d_12f720],rax
+        mov rdi,[rel d_12f700]
+        add rdi,0xa
+        mov rsi,rax
+        lea rdx,[rel d_12f790]
+        mov ecx,0x8fa5b8
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        xor ecx,ecx
+L_12de7d:
+        lea rax,[rel d_12f790]
+        mov dl,[rax+rcx]
+        test dl,dl
+        jz short L_12dec5
+        inc ecx
+        cmp dl,0x3a
+        jnz short L_12de7d
+        lea rdx,[rel d_12f790]
+        add rdx,rcx
+        mov rdi,rcx
+        shl rdi,byte 0x3
+        add rdi,[rel d_12f700]
+        add rdi,0xa
+        mov rsi,[rel d_12f720]
+        mov ecx,0xe8eef4
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+L_12dec5:
+        cmp rbp,[rel d_12f65d]
+        jnz short L_12df26
+        mov rdi,[rel d_12f700]
+        add rdi,0x72
+        mov rsi,[rel d_12f720]
+        inc rsi
+        mov edx,0xe
+        mov ecx,0xd
+        mov r8d,0xe8eef4
+        call qword near [r15+0x18]
+        mov rdi,[rel d_12f700]
+        add rdi,0x73
+        mov rsi,[rel d_12f720]
+        add rsi,0x2
+        mov edx,0xc
+        mov ecx,0xb
+        mov r8d,[rel d_12f659]
+        shr r8d,byte 0x8
+        call qword near [r15+0x18]
+L_12df26:
+        inc rbp
+        jmp near L_12de19
+L_12df2e:
+        pop r14
+        pop r13
+        pop r12
+        pop rbp
+        pop rbx
+        retq
+
+fn_12df37:
+        call fn_12da74
+        mov qword [rel d_12f6d0],0xffffffffffffffff
+        call qword near [r15+0x50]
+        call fn_12c810
+        mov byte [rel d_12f21d],0x0
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        jmp qword near [r15+0x48]
+
+fn_12df69:
+        push rbx
+        push r12
+        push r13
+        mov rbx,rdi
+        mov r12,rsi
+        mov r13,rdx
+        lea rdi,[r12+0x18]
+        lea rsi,[r13+0x4]
+        mov rdx,[rel d_12f690]
+        mov ecx,0x1
+        call qword near [r15+0x20]
+        mov rdi,rbx
+        mov esi,0x14
+        xor edx,edx
+        lea rcx,[rel d_12f2b0]
+        call qword near [r15+0x108]
+        mov rdi,rbx
+        lea rsi,[rel d_12f7cb]
+        call qword near [r15+0x70]
+        test rax,rax
+        jz short L_12dfd0
+        mov rdi,rax
+        lea rsi,[rel d_12f2b0]
+        call qword near [r15+0x98]
+        test eax,eax
+        jnz short L_12dfe2
+L_12dfd0:
+        cmp byte [rel d_12f2b0],0x0
+        jz short L_12dfe2
+        lea rax,[rel d_12f2b0]
+        jmp short L_12e00f
+L_12dfe2:
+        mov rdi,rbx
+        lea rsi,[rel d_12f7c0]
+        call qword near [r15+0x70]
+        test rax,rax
+        jnz short L_12e00f
+        mov rdi,rbx
+        lea rsi,[rel d_12f7cb]
+        call qword near [r15+0x70]
+        test rax,rax
+        jnz short L_12e00f
+        lea rax,[rel d_1300a1]
+L_12e00f:
+        mov rbx,rax
+        xor ecx,ecx
+L_12e014:
+        cmp byte [rbx+rcx],0x0
+        jz short L_12e021
+        inc ecx
+        cmp ecx,0xc
+        jc short L_12e014
+L_12e021:
+        lea rdi,[rel d_12f672]
+        xor edx,edx
+L_12e02a:
+        cmp edx,ecx
+        jnc short L_12e038
+        mov al,[rbx+rdx]
+        mov [rdi+rdx],al
+        inc edx
+        jmp short L_12e02a
+L_12e038:
+        mov byte [rdi+rdx],0x0
+        shl ecx,byte 0x2
+        mov rdi,r12
+        add rdi,0x30
+        sub rdi,rcx
+        mov rbx,rdi
+        inc rdi
+        lea rsi,[r13+0x3b]
+        lea rdx,[rel d_12f672]
+        xor ecx,ecx
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        mov rdi,rbx
+        lea rsi,[r13+0x3a]
+        lea rdx,[rel d_12f672]
+        mov ecx,0xffffff
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        pop r13
+        pop r12
+        pop rbx
+        retq
+
+fn_12e08b:
+        push rbx
+        push r12
+        mov rbx,rdi
+        mov r12,rsi
+        mov rdi,rdx
+        call qword near [r15+0x68]
+        test rax,rax
+        jz short L_12e0ed
+        cmp byte [rel d_12f658],0x0
+        jnz short L_12e0cd
+        push rax
+        xor edi,edi
+        mov rsi,rax
+        mov rdx,r12
+        mov rcx,rbx
+        xor r8d,r8d
+        call qword near [r15+0x118]
+        cmp rax,0xffffffffffffffff
+        pop rax
+        jz short L_12e0cd
+        mov eax,0x2
+        jmp short L_12e0fd
+L_12e0cd:
+        mov byte [rel d_12f658],0x0
+        mov rdi,rax
+        mov rsi,r12
+        mov rdx,rbx
+        xor ecx,ecx
+        call qword near [r15+0x80]
+        mov eax,0x1
+        jmp short L_12e0fd
+L_12e0ed:
+        lea rdi,[rel d_1302b9]
+        call qword near [r15+0xc0]
+        xor eax,eax
+L_12e0fd:
+        pop r12
+        pop rbx
+        retq
+
+fn_12e101:
+        push rbx
+        push r12
+        push r13
+        push r14
+        mov r12,rdi
+        mov r13,rsi
+        cmp byte [rel d_12f21d],0x0
+        jnz near L_12e315
+        cmp byte [rel d_12f21e],0x0
+        jnz near L_12e315
+        cmp byte [rel d_12f21f],0x0
+        jz short L_12e13b
+        call fn_12e370
+        jmp near L_12e315
+L_12e13b:
+        mov rax,[rel d_12ebfd]
+        sub rax,0x22
+        cmp r13,rax
+        jnl near L_12e315
+        mov rdi,r12
+        mov rsi,r13
+        call fn_12d9cb
+        mov rbx,rax
+        xor r14d,r14d
+        cmp rbx,0xffffffffffffffff
+        jz short L_12e181
+        lea rax,[rel d_12ec1d]
+        mov r14,[rax+rbx*8]
+        lea rax,[rel d_12f33b]
+        cmp byte [rax+rbx],0x4
+        jnz short L_12e181
+        xor r14d,r14d
+L_12e181:
+        call fn_12da74
+        mov qword [rel d_12f6d0],0xffffffffffffffff
+        call qword near [r15+0x50]
+        lea rdi,[rel d_13018f]
+        call qword near [r15+0x68]
+        test rax,rax
+        jz near L_12e2df
+        mov [rel d_12f238],rax
+        mov rdi,rax
+        lea rsi,[rel d_130193]
+        mov rdx,r14
+        mov rcx,r13
+        shl rcx,byte 0x10
+        or rcx,r12
+        call qword near [r15+0x80]
+        cmp rax,0xffffffffffffffff
+        jz near L_12e2df
+        test rax,rax
+        jz near L_12e2d3
+        push rax
+        mov rdi,[rel d_12f238]
+        lea rsi,[rel d_1301aa]
+        call qword near [r15+0x80]
+        test rax,rax
+        jz short L_12e22e
+        mov rsi,rax
+        lea rdi,[rel d_12f240]
+        mov ecx,0x54
+L_12e20b:
+        mov dl,[rsi]
+        mov [rdi],dl
+        test dl,dl
+        jz short L_12e220
+        inc rsi
+        inc rdi
+        dec ecx
+        jnz short L_12e20b
+        mov byte [rdi],0x0
+L_12e220:
+        cmp byte [rel d_12f240],0x0
+        jz short L_12e22e
+        call fn_12e3aa
+L_12e22e:
+        pop rax
+        cmp rax,0x2
+        jnz short L_12e241
+        mov byte [rel d_12f338],0x1
+        jmp near L_12e315
+L_12e241:
+        cmp rax,0x3
+        jnz short L_12e275
+        mov [rel d_12f228],r14
+        mov byte [rel d_12f21f],0x1
+        lea rdi,[rel d_12f240]
+        lea rsi,[rel d_1301ec]
+        call fn_12e3bf
+        mov qword [rel d_12f230],0xffffffffffffffff
+        jmp short L_12e2cc
+L_12e275:
+        cmp rax,0x4
+        jnz short L_12e284
+        mov byte [rel d_12f220],0x1
+        jmp short L_12e2cc
+L_12e284:
+        cmp rax,0x5
+        jnz short L_12e29c
+        cmp rbx,0xffffffffffffffff
+        jz short L_12e2cc
+        call fn_12df37
+        call fn_12d76c
+        jmp short L_12e315
+L_12e29c:
+        cmp rax,0x6
+        jnz short L_12e2bf
+        test r14,r14
+        jz short L_12e2cc
+        mov rdi,r14
+        lea rsi,[rel d_130274]
+        lea rdx,[rel d_130269]
+        call fn_12e08b
+        jmp short L_12e2cc
+L_12e2bf:
+        cmp rax,0x7
+        jnz short L_12e2cc
+        mov byte [rel d_12f220],0x0
+L_12e2cc:
+        call fn_12df37
+        jmp short L_12e315
+L_12e2d3:
+        mov rdi,r12
+        mov rsi,r13
+        call qword near [r15+0x48]
+        jmp short L_12e315
+L_12e2df:
+        cmp rbx,0xffffffffffffffff
+        jz short L_12e2d3
+        lea rax,[rel d_12f33b]
+        cmp byte [rax+rbx],0x0
+        jz short L_12e2d3
+        lea rax,[rel d_12ec1d]
+        mov rdi,[rax+rbx*8]
+        lea rsi,[rel d_130274]
+        lea rdx,[rel d_130269]
+        call fn_12e08b
+        call fn_12df37
+L_12e315:
+        pop r14
+        pop r13
+        pop r12
+        pop rbx
+        retq
+
+fn_12e31d:
+        cmp byte [rel d_12f223],0x0
+        jnz short L_12e36f
+        mov byte [rel d_12f223],0x1
+        lea rdi,[rel d_13019b]
+        call qword near [r15+0x68]
+        test rax,rax
+        jnz short L_12e36f
+        lea rdi,[rel d_1301a4]
+        call qword near [r15+0x68]
+        test rax,rax
+        jz short L_12e36f
+        mov rdi,rax
+        lea rsi,[rel d_130264]
+        lea rdx,[rel d_13018f]
+        mov byte [rel d_12f658],0x1
+        call fn_12e08b
+        call fn_12c810
+L_12e36f:
+        retq
+
+fn_12e370:
+        mov byte [rel d_12f21f],0x0
+        lea rdi,[rel d_12f240]
+        lea rsi,[rel d_130238]
+        call fn_12e3bf
+        call fn_12e3aa
+        call qword near [r15+0x50]
+        call fn_12d0f8
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        jmp qword near [r15+0x48]
+
+fn_12e3aa:
+        call qword near [r15+0xa0]
+        add rax,0x258
+        mov [rel d_12f230],rax
+        retq
+
+fn_12e3bf:
+        mov al,[rsi]
+        mov [rdi],al
+        test al,al
+        jz short L_12e3cf
+        inc rsi
+        inc rdi
+        jmp short fn_12e3bf
+L_12e3cf:
+        retq
+
+fn_12e3d0:
+        push rbx
+        cmp byte [rel d_12f21e],0x0
+        jnz near L_12e506
+        call fn_12da74
+        mov qword [rel d_12f6d0],0xffffffffffffffff
+        call qword near [r15+0x50]
+        mov rbx,[rel d_12ebfd]
+        sub rbx,0x6c
+        mov [rel d_12f6b8],rbx
+        mov edi,0x6
+        mov rsi,rbx
+        mov edx,0xb4
+        mov ecx,0x4a
+        call qword near [r15+0xd0]
+        mov [rel d_12f6b0],rax
+        mov edi,0xa
+        lea rsi,[rbx+0x4]
+        mov edx,0xb0
+        mov ecx,0x46
+        mov r8d,0x5080c
+        call qword near [r15+0x18]
+        mov edi,0x6
+        mov rsi,rbx
+        mov edx,0xb0
+        mov ecx,0x48
+        mov r8d,0x3a3550
+        call qword near [r15+0x18]
+        mov edi,0x7
+        lea rsi,[rbx+0x1]
+        mov edx,0xae
+        mov ecx,0x46
+        mov r8d,0x1d1d27
+        call qword near [r15+0x18]
+        xor r8d,r8d
+L_12e47d:
+        cmp r8,0x2
+        jnc short L_12e4ed
+        push r8
+        mov rax,r8
+        imul rax,rax,0x1e
+        lea rsi,[rbx+rax+0x6]
+        push rsi
+        mov edi,0xc
+        add rsi,0xb
+        mov edx,0x8
+        mov ecx,0x8
+        mov r8d,0xe06c5a
+        cmp qword [rsp+0x8],0x0
+        jz short L_12e4b9
+        mov r8d,0xf0c850
+L_12e4b9:
+        call qword near [r15+0x18]
+        pop rsi
+        mov r8,[rsp]
+        lea rax,[rel r_12f6c0]
+        mov rdx,[rax+r8*8]
+        mov edi,0x1c
+        add rsi,0x7
+        mov ecx,0xe8eef4
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        pop r8
+        inc r8
+        jmp short L_12e47d
+L_12e4ed:
+        mov byte [rel d_12f21e],0x1
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        call qword near [r15+0x48]
+L_12e506:
+        pop rbx
+        retq
+
+fn_12e508:
+        cmp byte [rel d_12f21e],0x0
+        jz short L_12e547
+        mov byte [rel d_12f21e],0x0
+        call qword near [r15+0x50]
+        mov rdi,[rel d_12f6b0]
+        mov qword [rel d_12f6b0],0x0
+        call qword near [r15+0xd8]
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        jmp qword near [r15+0x48]
+L_12e547:
+        retq
+
+fn_12e548:
+        push rbx
+        lea rdi,[rel d_130249]
+        call qword near [r15+0x68]
+        test rax,rax
+        jz short L_12e5be
+        mov rbx,rax
+        lea rdi,[rel d_13018f]
+        call qword near [r15+0x68]
+        test rax,rax
+        jz short L_12e5be
+        mov rdi,rax
+        lea rsi,[rel d_13024f]
+        mov rdx,rbx
+        xor ecx,ecx
+        call qword near [r15+0x80]
+        cmp rax,0x2
+        jnz short L_12e591
+        mov byte [rel d_12f338],0x1
+        jmp short L_12e5b7
+L_12e591:
+        cmp rax,0x1
+        jz short L_12e5ab
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        call qword near [r15+0x48]
+        jmp short L_12e5b7
+L_12e5ab:
+        mov byte [rel d_12f21d],0x1
+        call fn_12df37
+L_12e5b7:
+        mov eax,0x1
+        pop rbx
+        retq
+L_12e5be:
+        xor eax,eax
+        pop rbx
+        retq
+
+fn_12e5c2:
+        cmp rdi,0x6
+        jl short L_12e5f2
+        cmp rdi,0xb6
+        jnl short L_12e5f2
+        mov rax,rsi
+        sub rax,[rel d_12f6b8]
+        sub rax,0x6
+        jl short L_12e5f2
+        xor edx,edx
+        mov ecx,0x1e
+        div rcx
+        cmp rax,0x2
+        jnc short L_12e5f2
+        retq
+L_12e5f2:
+        mov rax,0xffffffffffffffff
+        retq
+
+fn_12e5fa:
+        mov byte [rel d_130438],0x0
+        cmp byte [rel d_130439],0x0
+        jnz short L_12e638
+        lea rdi,[rel d_130a52]
+        call qword near [r15+0x68]
+        test rax,rax
+        jz short L_12e638
+        lea rdi,[rel d_13018f]
+        call qword near [r15+0x68]
+        test rax,rax
+        jz short L_12e638
+        mov [rel d_130420],rax
+        mov byte [rel d_130438],0x1
+L_12e638:
+        retq
+
+fn_12e639:
+        lea rax,[rel d_130a52]
+        mov [rel d_1303a0],rax
+        lea rax,[rel d_130452]
+        mov [rel d_1303a8],rax
+        mov qword [rel d_1303b0],0x0
+        mov rax,[rel d_12ebfd]
+        sub rax,0x22
+        mov [rel d_1303b8],rax
+        mov rax,[rel d_12ebf5]
+        mov [rel d_1303c0],rax
+        mov qword [rel d_1303c8],0x22
+        retq
+
+fn_12e68c:
+        push rbx
+        call fn_12d266
+        call fn_12e9b9
+        call fn_12e639
+        mov qword [rel d_1303d0],0xffffffffffffffff
+        mov qword [rel d_1303d8],0xffffffffffffffff
+        cmp qword [rel d_130428],0xffffffffffffffff
+        jz short L_12e6d8
+        mov rax,[rel d_12ec05]
+        mov [rel d_1303d0],rax
+        mov rax,[rel d_12ec0d]
+        mov [rel d_1303d8],rax
+L_12e6d8:
+        call qword near [r15+0x50]
+        xor edi,edi
+        mov rsi,[rel d_12ebfd]
+        sub rsi,0x22
+        mov rdx,[rel d_12ebf5]
+        mov ecx,0x22
+        call qword near [r15+0x100]
+        xor edi,edi
+        xor esi,esi
+        mov rdx,[rel d_12ebf5]
+        mov rcx,[rel d_12ebfd]
+        lea r8,[rel obj_data]
+        call qword near [r15+0x28]
+        xor edi,edi
+        xor esi,esi
+        xor edx,edx
+        xor ecx,ecx
+        call qword near [r15+0x100]
+        mov rdi,[rel d_130420]
+        lea rsi,[rel d_130ac7]
+        lea rdx,[rel d_1303a0]
+        xor ecx,ecx
+        call qword near [r15+0x80]
+        cmp rax,0x1
+        jz short L_12e76f
+        mov byte [rel d_130439],0x1
+        mov byte [rel d_130438],0x0
+        lea rdi,[rel d_130b16]
+        call qword near [r15+0xc0]
+        call fn_12d116
+        jmp short L_12e792
+L_12e76f:
+        cmp byte [rel d_12f222],0x0
+        jnz short L_12e792
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        mov rax,rdi
+        or rax,rsi
+        jz short L_12e792
+        call qword near [r15+0x48]
+L_12e792:
+        pop rbx
+        retq
+
+fn_12e794:
+        push rdi
+        push rsi
+        call fn_12e9b9
+        call fn_12e639
+        pop rsi
+        pop rdi
+        mov [rel d_1303d0],rdi
+        mov [rel d_1303d8],rsi
+        mov rdi,[rel d_130420]
+        lea rsi,[rel d_130ac7]
+        lea rdx,[rel d_1303a0]
+        mov ecx,0x1
+        jmp qword near [r15+0x80]
+
+fn_12e7d1:
+        cmp byte [rel d_130438],0x0
+        jz short L_12e839
+        cmp byte [rel d_12f21e],0x0
+        jnz short L_12e839
+        mov rax,[rel d_12ebfd]
+        sub rax,0x22
+        cmp [rel d_12ec0d],rax
+        jl short L_12e81f
+        mov rdi,[rel d_12ec05]
+        mov rsi,[rel d_12ec0d]
+        call fn_12e794
+        cmp rax,[rel d_130428]
+        jz short L_12e839
+        mov [rel d_130428],rax
+        jmp near fn_12e68c
+L_12e81f:
+        cmp qword [rel d_130428],0xffffffffffffffff
+        jz short L_12e839
+        mov qword [rel d_130428],0xffffffffffffffff
+        jmp near fn_12e68c
+L_12e839:
+        retq
+
+fn_12e83a:
+        push rbx
+        mov rdi,r12
+        mov rsi,r13
+        call fn_12e794
+        cmp rax,0xffffffffffffffff
+        jz near L_12e9ae
+        lea rbx,[rel d_1303e0]
+        mov rdi,rbx
+        lea rsi,[rel d_130249]
+        call qword near [r15+0x98]
+        test eax,eax
+        jnz near L_12e9b2
+        mov rdi,rbx
+        lea rsi,[rel d_130acb]
+        call qword near [r15+0x98]
+        test eax,eax
+        jz short L_12e891
+        mov byte [rel d_12f338],0x1
+        jmp near L_12e9ae
+L_12e891:
+        mov rdi,rbx
+        lea rsi,[rel d_130ad8]
+        call qword near [r15+0x98]
+        test eax,eax
+        jz short L_12e8b4
+        xor edi,edi
+        call qword near [r15+0xe8]
+        jmp near L_12e9ae
+L_12e8b4:
+        mov rdi,rbx
+        lea rsi,[rel d_130ae8]
+        call qword near [r15+0x98]
+        test eax,eax
+        jz short L_12e8da
+        mov edi,0x1
+        call qword near [r15+0xe8]
+        jmp near L_12e9ae
+L_12e8da:
+        mov rdi,rbx
+        lea rsi,[rel d_130af7]
+        call qword near [r15+0x98]
+        test eax,eax
+        jz short L_12e905
+        mov edi,0x9
+        call qword near [r15+0x118]
+        call fn_12d0f8
+        jmp near L_12e9ae
+L_12e905:
+        cmp dword [rbx],0x6b736174
+        jnz short L_12e943
+        cmp byte [rbx+0x4],0x2e
+        jnz short L_12e943
+        xor esi,esi
+        lea rcx,[rbx+0x5]
+L_12e919:
+        movzx eax,byte [rcx]
+        sub eax,0x30
+        cmp eax,0x9
+        ja short L_12e930
+        imul rsi,rsi,0xa
+        add rsi,rax
+        inc rcx
+        jmp short L_12e919
+L_12e930:
+        mov edi,0x3
+        call qword near [r15+0x118]
+        call fn_12d0f8
+        jmp short L_12e9ae
+L_12e943:
+        mov rdi,rbx
+        call qword near [r15+0x68]
+        test rax,rax
+        jz short L_12e985
+        mov rcx,[rel d_12ec15]
+        lea rdx,[rel d_12ec1d]
+L_12e95d:
+        test rcx,rcx
+        jz short L_12e985
+        dec rcx
+        cmp [rdx+rcx*8],rax
+        jnz short L_12e95d
+        mov rbx,rcx
+        cmp byte [rel d_12f21d],0x0
+        jz short L_12e97e
+        push rbx
+        call fn_12df37
+        pop rbx
+L_12e97e:
+        call fn_12d76c
+        jmp short L_12e9ae
+L_12e985:
+        lea rdi,[rel d_12f240]
+        lea rsi,[rel d_130b04]
+        call fn_12e3bf
+        lea rsi,[rel d_1303e0]
+        call fn_12e3bf
+        call fn_12e3aa
+        call fn_12d0f8
+L_12e9ae:
+        xor eax,eax
+        pop rbx
+        retq
+L_12e9b2:
+        mov eax,0x1
+        pop rbx
+        retq
+
+fn_12e9b9:
+        push rbx
+        push r12
+        push r13
+        lea rdi,[rel d_130452]
+        lea rsi,[rel d_130b47]
+        call fn_12eb43
+        mov [rel d_130430],rdi
+        mov edi,0x5
+        call qword near [r15+0x118]
+        mov r13,rax
+        mov rdi,[rel d_130430]
+        xor r12d,r12d
+L_12e9f1:
+        cmp r12,[rel d_12f588]
+        jnc near L_12ea89
+        lea rsi,[rel d_130b67]
+        call fn_12eb43
+        lea rax,[rel d_12f598]
+        mov rbx,[rax+r12*8]
+        cmp rbx,r13
+        jnz short L_12ea26
+        lea rsi,[rel d_130b79]
+        call fn_12eb43
+L_12ea26:
+        lea rsi,[rel d_130b7d]
+        call fn_12eb43
+        mov rax,rbx
+        call fn_12eb60
+        lea rsi,[rel d_130b8e]
+        call fn_12eb43
+        mov rsi,r12
+        shl rsi,byte 0x4
+        lea rax,[rel d_12f5c8]
+        add rsi,rax
+L_12ea57:
+        mov al,[rsi]
+        test al,al
+        jz short L_12ea75
+        cmp al,0x3c
+        jz short L_12ea69
+        cmp al,0x3e
+        jz short L_12ea69
+        cmp al,0x26
+        jnz short L_12ea6b
+L_12ea69:
+        mov al,0x20
+L_12ea6b:
+        mov [rdi],al
+        inc rdi
+        inc rsi
+        jmp short L_12ea57
+L_12ea75:
+        lea rsi,[rel d_130b91]
+        call fn_12eb43
+        inc r12
+        jmp near L_12e9f1
+L_12ea89:
+        mov byte [rdi],0x0
+        inc rdi
+        lea rsi,[rel d_130b4e]
+        call fn_12eb43
+        cmp qword [rel d_12f230],0x0
+        jnz short L_12eabb
+        cmp qword [rel d_12f588],0x0
+        jnz short L_12eabb
+        lea rsi,[rel d_1302e4]
+        call fn_12eb43
+L_12eabb:
+        mov byte [rdi],0x0
+        inc rdi
+        lea rsi,[rel d_130b55]
+        call fn_12eb43
+        cmp qword [rel d_12f230],0x0
+        jz short L_12eae3
+        lea rsi,[rel d_12f240]
+        call fn_12eb43
+L_12eae3:
+        mov byte [rdi],0x0
+        inc rdi
+        lea rsi,[rel d_130b5a]
+        call fn_12eb43
+        cmp qword [rel d_12f230],0x0
+        jnz short L_12eb18
+        cmp qword [rel d_12ebf5],0x320
+        jc short L_12eb18
+        lea rsi,[rel d_1302ff]
+        call fn_12eb43
+L_12eb18:
+        mov byte [rdi],0x0
+        inc rdi
+        lea rsi,[rel d_130b60]
+        call fn_12eb43
+        lea rsi,[rel d_1300bb]
+        call fn_12eb43
+        mov byte [rdi],0x0
+        mov byte [rdi+0x1],0x0
+        pop r13
+        pop r12
+        pop rbx
+        retq
+
+fn_12eb43:
+        lea rcx,[rel d_1309b2]
+L_12eb4a:
+        cmp rdi,rcx
+        jnc short L_12eb5f
+        mov al,[rsi]
+        test al,al
+        jz short L_12eb5f
+        mov [rdi],al
+        inc rsi
+        inc rdi
+        jmp short L_12eb4a
+L_12eb5f:
+        retq
+
+fn_12eb60:
+        push rbx
+        lea rbx,[rel d_130451]
+        mov byte [rbx],0x0
+        mov ecx,0xa
+L_12eb70:
+        xor edx,edx
+        div rcx
+        add dl,0x30
+        dec rbx
+        mov [rbx],dl
+        test rax,rax
+        jnz short L_12eb70
+        mov rsi,rbx
+        call fn_12eb43
+        pop rbx
+        retq
+
+procket_0:
+        push r15
+        mov r15,rsi
+        cmp byte [rel d_130438],0x0
+        jz short L_12ebba
+        lea rdi,[rel d_12f240]
+        lea rsi,[rel d_130315]
+        call fn_12e3bf
+        call fn_12e3aa
+        call fn_12d0f8
+        pop r15
+        retq
+L_12ebba:
+        mov rdi,[rel d_12ebf5]
+        shr rdi,1
+        sub rdi,0x28
+        mov rsi,[rel d_12ebfd]
+        sub rsi,0x19
+        lea rdx,[rel d_130315]
+        mov ecx,0xffb020
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        pop r15
+        retq
+d_12ebed:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12ebf5:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12ebfd:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12ec05:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12ec0d:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12ec15:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12ec1d:
+        times 512 db 0x00
+d_12ee1d:
+        times 512 db 0x00
+d_12f01d:
+        times 512 db 0x00
+d_12f21d:
+        db 0x00
+d_12f21e:
+        db 0x00
+d_12f21f:
+        db 0x00
+d_12f220:
+        db 0x00
+d_12f221:
+        db 0x00
+d_12f222:
+        db 0x00
+d_12f223:
+        db 0x00, 0x90, 0x90, 0x90, 0x90
+d_12f228:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f230:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f238:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f240:
+        times 112 db 0x00
+d_12f2b0:
+        times 136 db 0x00
+d_12f338:
+        db 0x00
+d_12f339:
+        db 0x00
+d_12f33a:
+        db 0x00
+d_12f33b:
+        times 64 db 0x00
+        db 0x90, 0x90, 0x90, 0x90, 0x90
+d_12f380:
+        times 512 db 0x00
+d_12f580:
+        db 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+d_12f588:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f590:
+        db 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+d_12f598:
+        times 48 db 0x00
+d_12f5c8:
+        times 96 db 0x00
+d_12f628:
+        times 48 db 0x00
+d_12f658:
+        db 0x00
+d_12f659:
+        db 0x00, 0x00, 0x00, 0x00
+d_12f65d:
+        db 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+d_12f665:
+        db 'id:#'
+d_12f669:
+        db '00000000', 0
+d_12f672:
+        times 16 db 0x00
+        db 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
+d_12f688:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f690:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f698:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f6a0:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f6a8:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f6b0:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f6b8:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+r_12f6c0:
+        dq p_13011f
+
+r_12f6c8:
+        dq p_130129
+d_12f6d0:
+        db 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+d_12f6d8:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f6e0:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f6e8:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f6f0:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f6f8:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f700:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f708:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f710:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f718:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f720:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f728:
+        db 0x00, 0x00, 0x00, 0x00, 0x90, 0x90, 0x90, 0x90
+d_12f730:
+        times 96 db 0x00
+d_12f790:
+        times 48 db 0x00
+d_12f7c0:
+        db 'label', 0
+d_12f7c6:
+        db 'icon', 0
+d_12f7cb:
+        db 'name', 0
+d_12f7d0:
+        db 0x00
+d_12f7d1:
+        db 0x00
+d_12f7d2:
+        db 0x00
+d_12f7d3:
+        db 0x00
+d_12f7d4:
+        db 0x00
+d_12f7d5:
+        db 'desk_places', 0
+d_12f7e1:
+        db '  MOVE MODE: carry an icon to its place - Alt + M when done  ', 0
+d_12f81f:
+        db 'type:data', 0
+        db 'kind:data', 0
+        db 'data:where the desktop', 39, 's icons stand', 0
+        db 'desktop:no', 0
+        db 0x00, 0x90, 0x90, 0x90, 0x90
+d_12f868:
+        db 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+d_12f870:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f878:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f880:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_12f888:
+        times 2048 db 0x00
+d_130088:
+        db 'kind', 0
+d_13008d:
+        db 0x61, 0x70, 0x70, 0x00
+d_130091:
+        db 'game', 0
+d_130096:
+        db 'image', 0
+d_13009c:
+        db 'text', 0
+d_1300a1:
+        db '(no name)', 0
+d_1300ab:
+        db 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+d_1300b3:
+        db 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+d_1300bb:
+        times 16 db 0x00
+d_1300cb:
+        times 64 db 0x00
+d_13010b:
+        db 'type', 0
+d_130110:
+        db 'icon', 0
+d_130115:
+        db 'draw', 0
+d_13011a:
+        db 'open', 0
+p_13011f:
+        db 'Shut down', 0
+p_130129:
+        db 'Restart', 0
+d_130131:
+        db 'script', 0
+d_130138:
+        db 'page', 0
+d_13013d:
+        db 'cabinet', 0
+d_130145:
+        db '[desktop] drawer opened', 10, 0
+d_13015e:
+        db '[desktop] running the native (compiled) version', 10, 0
+d_13018f:
+        db 0x6E, 0x65, 0x74, 0x00
+d_130193:
+        db 'context', 0
+d_13019b:
+        db 'settings', 0
+d_1301a4:
+        db 'setup', 0
+d_1301aa:
+        db 'message', 0
+d_1301b2:
+        db 'hidden', 0
+d_1301b9:
+        db 'locked', 0
+d_1301c0:
+        db 'Locked: right-click it and choose Unlock...', 0
+d_1301ec:
+        db 'Inject: click the object whose DATA to copy in (right-click or ESC cancels)', 0
+d_130238:
+        db 'Inject cancelled', 0
+d_130249:
+        db 'start', 0
+d_13024f:
+        db 'popup', 0
+d_130255:
+        db 'desktop', 0
+d_13025d:
+        db 0x6E, 0x6F, 0x00
+d_130260:
+        db 0x79, 0x65, 0x73, 0x00
+d_130264:
+        db 'show', 0
+d_130269:
+        db 'studio', 0
+d_130270:
+        db 0x72, 0x75, 0x6E, 0x00
+d_130274:
+        db 'edit', 0
+d_130279:
+        db '[desktop] power button', 10, 0
+d_130291:
+        db '[desktop] resumed from its saved state', 10, 0
+d_1302b9:
+        db '[desktop] no studio object in the cabinet', 10, 0
+d_1302e4:
+        db 'Functional Objects desktop', 0
+d_1302ff:
+        db 'ESC or >_ : the shell', 0
+d_130315:
+        db '* procket: lucky start! (30%)', 0
+d_130333:
+        db '[desktop] started', 10, 0
+d_130346:
+        db '[desktop] closed', 10, 0
+d_130358:
+        db 'The desktop needs a graphics mode (no 32-bit VESA mode was found).', 10, 0
+        db 0x90, 0x90, 0x90, 0x90
+d_1303a0:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_1303a8:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_1303b0:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_1303b8:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_1303c0:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_1303c8:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_1303d0:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_1303d8:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_1303e0:
+        times 64 db 0x00
+d_130420:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_130428:
+        db 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
+d_130430:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_130438:
+        db 0x00
+d_130439:
+        times 24 db 0x00
+d_130451:
+        db 0x00
+d_130452:
+        times 1376 db 0x00
+d_1309b2:
+        times 160 db 0x00
+d_130a52:
+        db 'taskbar', 0
+d_130a5a:
+        db 'view', 0
+d_130a5f:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+r_130a67:
+        dq p_130aaf
+
+r_130a6f:
+        dq p_130ab5
+
+r_130a77:
+        dq p_130abb
+
+r_130a7f:
+        dq p_130ac2
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+r_130a8f:
+        dq p_13a849
+
+r_130a97:
+        dq p_13cc51
+
+r_130a9f:
+        dq p_13f059
+
+r_130aa7:
+        dq p_141461
+p_130aaf:
+        db 'image', 0
+p_130ab5:
+        db 'style', 0
+p_130abb:
+        db 'source', 0
+p_130ac2:
+        db 'text', 0
+d_130ac7:
+        db 0x62, 0x61, 0x72, 0x00
+d_130acb:
+        db 'system.shell', 0
+d_130ad8:
+        db 'system.shutdown', 0
+d_130ae8:
+        db 'system.restart', 0
+d_130af7:
+        db 'system.stone', 0
+d_130b04:
+        db 'Not on the desk: ', 0
+d_130b16:
+        db '[desktop] no taskbar page: the built-in taskbar', 10, 0
+d_130b47:
+        db 'tasks=', 0
+d_130b4e:
+        db 'title=', 0
+d_130b55:
+        db 'msg=', 0
+d_130b5a:
+        db 'hint=', 0
+d_130b60:
+        db 'clock=', 0
+d_130b67:
+        db '<span class="task', 0
+d_130b79:
+        db 0x20, 0x6F, 0x6E, 0x00
+d_130b7d:
+        db '" onclick="task.', 0
+d_130b8e:
+        db 0x22, 0x3E, 0x00
+d_130b91:
+        db '</span>', 0
+d_130b99:
+        db 0x14, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xAC, 0x9C, 0x9D, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xAC, 0x9C, 0x9D, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0x8D, 0x7A, 0x7C, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0x8D, 0x7A, 0x7C, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xF9, 0xEE, 0xEF, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xBB, 0xAC, 0xAD, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xBB, 0xAC, 0xAD, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xF9, 0xEE, 0xEF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xCB, 0xBD, 0xBE, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xEA, 0xDD, 0xDF, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xCB, 0xBD, 0xBE, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0x7D, 0x6A, 0x6C, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0x7D, 0x6A, 0x6C, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xF9, 0xEE, 0xEF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xAC, 0x9C, 0x9D, 0x00, 0xDA, 0xCD, 0xCE, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xDA, 0xCD, 0xCE, 0x00, 0xAC, 0x9C, 0x9D, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xF9, 0xEE, 0xEF, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xF9, 0xEE, 0xEF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xEA, 0xDD, 0xDF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xF9, 0xEE, 0xEF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xEA, 0xDD, 0xDF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xF9, 0xEE, 0xEF, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xF9, 0xEE, 0xEF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xEA, 0xDD, 0xDF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xF9, 0xEE, 0xEF, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xF9, 0xEE, 0xEF, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xEA, 0xDD, 0xDF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xF9, 0xEE, 0xEF, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xEA, 0xDD, 0xDF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xF9, 0xEE, 0xEF, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xEA, 0xDD, 0xDF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xF9, 0xEE, 0xEF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xAC, 0x9C, 0x9D, 0x00, 0xDA, 0xCD, 0xCE, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xDA, 0xCD, 0xCE, 0x00, 0xAC, 0x9C, 0x9D, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xF9, 0xEE, 0xEF, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0x7D, 0x6A, 0x6C, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0x7D, 0x6A, 0x6C, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xCB, 0xBD, 0xBE, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xEA, 0xDD, 0xDF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xEA, 0xDD, 0xDF, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xCB, 0xBD, 0xBE, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xF9, 0xEE, 0xEF, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xBB, 0xAC, 0xAD, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xBB, 0xAC, 0xAD, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xF9, 0xEE, 0xEF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0x8D, 0x7A, 0x7C, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0xFF, 0xF4, 0xF5, 0x00, 0x8D, 0x7A, 0x7C, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xAC, 0x9C, 0x9D, 0x00, 0xFF, 0xF4, 0xF5, 0x00
+        db 0xFF, 0xF4, 0xF5, 0x00, 0xAC, 0x9C, 0x9D, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+d_1311e1:
+        db 0x14, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00
+        db 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00
+        db 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00
+        db 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0x7D, 0x7B, 0x39, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0x7D, 0x7B, 0x39, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0x7D, 0x7B, 0x39, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0x7D, 0x7B, 0x39, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x8A, 0x8C, 0x3E, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0x8A, 0x8C, 0x3E, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x70, 0x6A, 0x33, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x7D, 0x7B, 0x39, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0x7D, 0x7B, 0x39, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0x7D, 0x7B, 0x39, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x7D, 0x7B, 0x39, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00
+        db 0x70, 0x6A, 0x33, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x70, 0x6A, 0x33, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00
+        db 0x70, 0x6A, 0x33, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x8A, 0x8C, 0x3E, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0x8A, 0x8C, 0x3E, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0x7D, 0x7B, 0x39, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0x7D, 0x7B, 0x39, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0x7D, 0x7B, 0x39, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00
+        db 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0xDC, 0xF5, 0x5F, 0x00, 0x7D, 0x7B, 0x39, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00
+        db 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00
+        db 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00
+        db 0x97, 0x9C, 0x43, 0x00, 0x97, 0x9C, 0x43, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+        db 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00
+d_131829:
+        incbin "data/Desktop.131829.bin"
+d_133c31:
+        incbin "data/Desktop.133c31.bin"
+d_136039:
+        incbin "data/Desktop.136039.bin"
+d_138441:
+        incbin "data/Desktop.138441.bin"
+p_13a849:
+        incbin "data/Desktop.13a849.bin"
+p_13cc51:
+        incbin "data/Desktop.13cc51.bin"
+p_13f059:
+        incbin "data/Desktop.13f059.bin"
+p_141461:
+        incbin "data/Desktop.141461.bin"
+
+obj_relocs:
+        db 0x0A, 0x00, 0x00, 0x00
+        dd r_12f6c0
+        dd r_12f6c8
+        dd r_130a67
+        dd r_130a6f
+        dd r_130a77
+        dd r_130a7f
+        dd r_130a8f
+        dd r_130a97
+        dd r_130a9f
+        dd r_130aa7
+        db 0x00, 0x00, 0x00, 0x00
+        dq obj_end
+        db 'ASMO', 0
+        db 0x00, 0x00, 0x00
+obj_end:

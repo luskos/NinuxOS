@@ -1,0 +1,121 @@
+; Picture.asmo.kasm - the object "Picture" (type icon) of NinuxOS v2.9.59 as NASM source.
+; Made from the compiled object by tools/kdis/odis.py; it assembles to the same 316992 bytes:
+;   nasm -f bin -I ./ Picture.asmo.kasm -o Picture.asmo   (run where the file is)
+;
+; obj_data, obj_meta, obj_system, obj_named, obj_prockets, obj_relocs: the parts of the object.
+; sock_N a socket; fn_ a function; L_ a place jumped to; d_ data; p_ what an address points at;
+; r_ a place that holds an address (the table of relocations at the end lists them).
+
+
+org 0
+obj_start:
+        db 0x4F, 0x4D, 0x53, 0x41, 0x04, 0x00, 0x00, 0x00
+        dq obj_end
+        dq obj_data
+        dq obj_meta
+        dq obj_system
+        dq obj_named
+        dq obj_prockets
+        db 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x01, 0x00, 0x00, 0x00, 0x42, 0xC2, 0x99, 0xE9, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x10, 0xD4, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_data:
+        incbin "data/Picture.00068.bin"
+d_02470:
+        incbin "data/Picture.02470.bin"
+
+obj_meta:
+        db 'type:icon', 0
+        db 'name:Picture', 0
+        db 'label:Sunset', 0
+        db 'kind:image', 0
+        db 'data:icon image 48x48 + picture 320x240', 0
+        db 'sockets:draw,open', 0
+        db 0x00
+
+obj_system:
+        dq p_4d532
+        dq p_4d532
+        dq p_4d532
+        dq p_4d532
+        dq p_4d532
+        dq p_4d532
+        dq p_4d532
+        dq p_4d532
+        dq p_4d532
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+[bits 64]
+p_4d532:
+        retq
+
+obj_named:
+        dq sock_draw
+        dq sock_open
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_prockets:
+        times 16 db 0x00
+
+sock_draw:
+        push r12
+        push r13
+        push r15
+        mov r15,rsi
+        mov r12,rdx
+        mov r13,rcx
+        lea rdi,[r12+0x18]
+        lea rsi,[r13+0x4]
+        lea rdx,[rel obj_data]
+        mov ecx,0x1
+        call qword near [r15+0x20]
+        lea rdi,[r12+0x19]
+        lea rsi,[r13+0x3b]
+        lea rdx,[rel d_4d622]
+        xor ecx,ecx
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        lea rdi,[r12+0x18]
+        lea rsi,[r13+0x3a]
+        lea rdx,[rel d_4d622]
+        mov ecx,0xffffff
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        pop r15
+        pop r13
+        pop r12
+        retq
+
+sock_open:
+        push r12
+        push r13
+        push r15
+        mov r15,rsi
+        mov r12,rdx
+        sub r12,0x160
+        sar r12,1
+        mov r13,rcx
+        sub r13,0x15a
+        sar r13,1
+        mov rdi,r12
+        mov rsi,r13
+        mov edx,0x160
+        mov ecx,0x138
+        lea r8,[rel d_4d622]
+        call qword near [r15+0x38]
+        lea rdi,[r12+0x10]
+        lea rsi,[r13+0x2c]
+        lea rdx,[rel d_02470]
+        xor ecx,ecx
+        call qword near [r15+0x20]
+        pop r15
+        pop r13
+        pop r12
+        retq
+d_4d622:
+        db 'Sunset', 0
+        db 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
+        dq obj_end
+        db 'ASMO', 0
+        db 0x00, 0x00, 0x00
+obj_end:

@@ -1,0 +1,291 @@
+; tasktest.asmo.kasm - the object "tasktest" (type icon) of NinuxOS v2.9.59 as NASM source.
+; Made from the compiled object by tools/kdis/odis.py; it assembles to the same 1696 bytes:
+;   nasm -f bin -I ./ tasktest.asmo.kasm -o tasktest.asmo   (run where the file is)
+;
+; obj_data, obj_meta, obj_system, obj_named, obj_prockets, obj_relocs: the parts of the object.
+; sock_N a socket; fn_ a function; L_ a place jumped to; d_ data; p_ what an address points at;
+; r_ a place that holds an address (the table of relocations at the end lists them).
+
+
+org 0
+obj_start:
+        db 0x4F, 0x4D, 0x53, 0x41, 0x04, 0x00, 0x00, 0x00
+        dq obj_end
+        dq obj_data
+        dq obj_meta
+        dq obj_system
+        dq obj_named
+        dq obj_prockets
+        db 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x01, 0x00, 0x00, 0x00, 0xCB, 0xE5, 0x98, 0xB6, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x3D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_data:
+        db 'A test program for v2.1: own memory, time slices, isolation.', 0
+
+obj_meta:
+        db 'type:icon', 0
+        db 'name:tasktest', 0
+        db 'label:Task test', 0
+        db 'kind:app', 0
+        db 'icon:icon_tasks', 0
+        db 'data:text', 0
+        db 'sockets:draw,open', 0
+        db 'version:2.1', 0
+        db 0x00
+
+obj_system:
+        dq p_0015f
+        dq p_0015f
+        dq p_0015f
+        dq p_0015f
+        dq p_0015f
+        dq p_0015f
+        dq p_0015f
+        dq p_0015f
+        dq p_0015f
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+[bits 64]
+p_0015f:
+        retq
+
+obj_named:
+        dq sock_draw
+        dq sock_open
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_prockets:
+        times 16 db 0x00
+
+sock_draw:
+        push r12
+        push r13
+        push r15
+        mov r15,rsi
+        mov r12,rdx
+        mov r13,rcx
+        lea rdi,[r12+0x1c]
+        lea rsi,[r13+0x8]
+        mov edx,0x28
+        mov ecx,0x28
+        mov r8d,0x3a6ea5
+        call qword near [r15+0x18]
+        lea rdi,[r12+0x26]
+        lea rsi,[r13+0x14]
+        mov edx,0x14
+        mov ecx,0x10
+        mov r8d,0xf0f0f0
+        call qword near [r15+0x18]
+        lea rdi,[r12+0xc]
+        lea rsi,[r13+0x3a]
+        lea rdx,[rel d_00438]
+        mov ecx,0xffffff
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        pop r15
+        pop r13
+        pop r12
+        retq
+
+sock_open:
+        push rbx
+        push rbp
+        push r12
+        push r13
+        push r14
+        push r15
+        mov r15,rsi
+        mov edi,0x230
+        mov esi,0x78
+        mov edx,0x1a4
+        mov ecx,0xc8
+        lea r8,[rel d_00438]
+        call qword near [r15+0x38]
+        mov qword [rel d_00610],0x0
+        mov edi,0x6
+        call qword near [r15+0x118]
+        mov [rel d_00608],rax
+        mov edi,0x8
+        mov rsi,[rel d_00608]
+        call qword near [r15+0x118]
+        mov r12,rax
+        mov edi,0x1000
+        call qword near [r15+0xb0]
+        lea rdi,[rel d_00472]
+        test r12,r12
+        jz short L_00289
+        cmp rax,r12
+        jc short L_00289
+        lea rdx,[r12+0x800000]
+        cmp rax,rdx
+        jnc short L_00289
+        lea rdi,[rel d_00442]
+L_00289:
+        call fn_0037d
+        call qword near [r15+0xa0]
+        mov rbx,rax
+L_00298:
+        mov ecx,0x186a0
+L_0029d:
+        dec ecx
+        jnz short L_0029d
+        call qword near [r15+0xa0]
+        sub rax,rbx
+        cmp rax,0x96
+        jc short L_00298
+        mov edi,0x8
+        mov rsi,[rel d_00608]
+        call qword near [r15+0x118]
+        mov rdi,rdx
+        lea rsi,[rel d_004a3]
+        call fn_003bf
+        mov ebx,0x1
+L_002da:
+        cmp rbx,0x8
+        jnc short L_00308
+        cmp rbx,[rel d_00608]
+        jz short L_00303
+        mov edi,0x8
+        mov rsi,rbx
+        call qword near [r15+0x118]
+        cmp rax,0xffffffffffffffff
+        jz short L_00303
+        test rax,rax
+        jnz short L_00316
+L_00303:
+        inc rbx
+        jmp short L_002da
+L_00308:
+        lea rdi,[rel d_004e5]
+        call fn_0037d
+        jmp short L_00360
+L_00316:
+        mov r13,rax
+        lea rdi,[r13+0x40]
+        xor esi,esi
+        mov edx,0x40
+        call qword near [r15+0x130]
+        lea rdi,[rel d_0051b]
+        cmp rax,0xffffffffffffffff
+        jz short L_0033f
+        lea rdi,[rel d_0055a]
+L_0033f:
+        call fn_0037d
+        lea rdi,[rel d_0059d]
+        call fn_0037d
+        mov rax,[r13+0x40]
+        lea rdi,[rel d_005d8]
+        call fn_0037d
+L_00360:
+        call qword near [r15+0x40]
+        cmp rax,0x1
+        jnz short L_00360
+        cmp rdx,0x1b
+        jnz short L_00360
+        xor eax,eax
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbp
+        pop rbx
+        retq
+
+fn_0037d:
+        push rbx
+        mov rbx,rdi
+        call qword near [r15+0xc0]
+        mov rax,[rel d_00610]
+        imul rax,rax,0x14
+        lea rsi,[rax+0xa0]
+        mov edi,0x23e
+        mov rdx,rbx
+        add rdx,0xb
+        mov ecx,0xececf5
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        inc qword [rel d_00610]
+        pop rbx
+        retq
+
+fn_003bf:
+        push rbx
+        push r12
+        mov r12,rdi
+        lea rbx,[rel d_00618]
+        mov rdi,rbx
+L_003cf:
+        mov al,[rsi]
+        test al,al
+        jz short L_003df
+        mov [rdi],al
+        inc rsi
+        inc rdi
+        jmp short L_003cf
+L_003df:
+        mov rax,r12
+        lea r8,[rel d_0068c]
+        mov byte [r8],0x0
+        mov ecx,0xa
+L_003f2:
+        xor edx,edx
+        div rcx
+        add dl,0x30
+        dec r8
+        mov [r8],dl
+        test rax,rax
+        jnz short L_003f2
+L_00405:
+        mov al,[r8]
+        mov [rdi],al
+        inc r8
+        inc rdi
+        test al,al
+        jnz short L_00405
+        dec rdi
+        lea rsi,[rel d_004dd]
+L_0041e:
+        mov al,[rsi]
+        mov [rdi],al
+        inc rsi
+        inc rdi
+        test al,al
+        jnz short L_0041e
+        mov rdi,rbx
+        call fn_0037d
+        pop r12
+        pop rbx
+        retq
+d_00438:
+        db 'Task test', 0
+d_00442:
+        db '[tasktest] 1 alloc: inside my own memory - yes', 10, 0
+d_00472:
+        db '[tasktest] 1 alloc: no own memory (shield off?)', 10, 0
+d_004a3:
+        db '[tasktest] 2 busy 1.5 s, never polled: my turn was taken ', 0
+d_004dd:
+        db ' times', 10, 0
+d_004e5:
+        db '[tasktest] 3 no other program runs (open Calc first)', 10, 0
+d_0051b:
+        db '[tasktest] 3 API with a pointer into another program: refused', 10, 0
+d_0055a:
+        db '[tasktest] 3 API with a pointer into another program: NOT refused', 10, 0
+d_0059d:
+        db '[tasktest] 3 reading another program', 39, 's memory directly...', 10, 0
+d_005d8:
+        db '[tasktest] 3 ... it WORKED: no isolation!', 10, 0
+        db 0x90, 0x90, 0x90, 0x90, 0x90
+d_00608:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_00610:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_00618:
+        times 116 db 0x00
+d_0068c:
+        db 0x00, 0x00, 0x00, 0x00
+        dq obj_end
+        db 'ASMO', 0
+        db 0x00, 0x00, 0x00
+obj_end:

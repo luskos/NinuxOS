@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.03.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.04.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.03 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.04 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -148,7 +148,8 @@ sectors & bytes & what \\ \midrule
 0 & \texttt{0x000000} & the boot sector \\
 1 -- 480 & \texttt{0x000200} & the kernel: the core (61968 bytes), then the extension
                                (158032 bytes), then free room \\
-from 490 & \texttt{0x03D400} & the cabinet: objects, each starting on a sector \\
+481 -- 484 & \texttt{0x03C200} & the table of the cabinet \\
+from 490 & \texttt{0x03D400} & the objects, each starting on a sector \\
 \bottomrule
 \end{longtable}
 
@@ -163,9 +164,59 @@ At the end of the boot sector the build (or \cmd{install}) leaves three numbers:
 and \texttt{0x1B0} where the system starts on the disk (LBA, high and low half), at \texttt{0x1B4}
 how many sectors the kernel takes (480).
 
-The cabinet holds 165 objects: 105 that \cmd{ls} lists and 60 inside the drawers. \cmd{ls} prints
-other addresses than the offsets in the image (they differ by \texttt{0xC4000}); how the system
-keeps the list of objects, slots and gaps is not known yet.
+\subsection{The table of the cabinet}
+
+Sector 481 begins with 16 bytes: \texttt{CABN}; 2 bytes the version (1); 2 bytes how many objects
+(47); 2 bytes how many sectors the table takes (4); 2 bytes of flags (settings the kernel keeps
+there); 4 bytes the screen (\texttt{0x0556}, \texttt{0x0300}: 1366 by 768). Then 32 bytes for every
+object, 63 places:
+
+\begin{longtable}{@{}l p{12cm}@{}}
+\toprule
+offset & what \\ \midrule
+0 & the name, 16 bytes, small letters, zero-filled \\
+16 & 4 bytes: the sector the object starts at \\
+20 & 4 bytes: how many sectors it takes \\
+24 & 4 bytes: its identity --- the same number as in the object's header at \texttt{0x4C} \\
+28 & 4 bytes: where it is in memory once loaded (what \cmd{ls} prints); 0 on a fresh disk \\
+\bottomrule
+\end{longtable}
+
+\noindent When the system loads an object it compares the two identities and refuses the object
+if both are there and differ (``identity does not match the table''). If either is 0 nothing is
+compared --- so an object made outside goes in with 0 in both, and the function that computes an
+identity need not be known.
+
+A \textbf{drawer} is an object of type \texttt{cabinet} whose DATA is such a table: \texttt{DRWR},
+2 bytes how many, 2 bytes the places (63), 8 zero bytes, then the same 32 bytes an object.
+v2.9.59 has three: \texttt{archive} (27 objects: the sources), \texttt{samples} (empty),
+\texttt{system} (33: pages, themes, icons, the font, the Sentinel's list).
+
+So the system has 107 objects: 47 in the cabinet and 60 in the drawers. The image holds 165
+whole objects --- the other 58 are older copies the build left between the live ones (a second
+\texttt{deskmenu}, the forty sample pages, an older Desktop); no table points at them.
+
+\subsection{What seals a build}
+
+\begin{itemize}
+\item \textbf{The extension.} The core keeps the SHA-256 of the whole extension (from
+      \texttt{NXEXT1} to its end) at byte \texttt{0xF058} of the kernel. A wrong one and the system
+      starts with ``system operations off''.
+\item \textbf{The Sentinel's list} is the DATA of the object \texttt{sentinel}: 64 bytes of
+      signature; \texttt{NXSN}; 4 bytes how many lines (98); 4 zero bytes; then 48 bytes a line: a
+      name of 16 bytes and a SHA-256. For an object the SHA-256 is taken over everything after
+      its header (from byte \texttt{0x68} to the end); the source of a program is listed as
+      \texttt{name/source}; the line \texttt{@kernel} is the SHA-256 of the 480 sectors of the
+      kernel. The signature is Ed25519 over the list without the signature.
+\item \textbf{The key.} The public half the signature is checked with lies in the extension, at
+      byte \texttt{0x2D280} of the kernel. The private half of v2.9.59 was lost with the old
+      project; the build makes its own pair (\file{build/key/build.key}, never in git), puts its
+      public half in that place and signs with it.
+\end{itemize}
+
+\noindent \file{tools/build\_disk.py} does all three after every change; the order matters: the
+key goes into the extension, then the SHA-256 of the extension into the core, then the kernel is
+hashed for the list, then the list is signed.
 
 % ------------------------------------------------------------------------------------------
 \section{The start}
@@ -498,6 +549,13 @@ path & what it is \\ \midrule
 \file{scripts/*.asmo} & the PyTon scripts of the pages \\
 \file{texts/} & objects of plain text without a name, and the log of the system \\
 \midrule
+\file{objects/*.asmo.kasm} & the compiled objects of v2.9.59 as NASM source, made by
+      \file{tools/kdis/odis.py} --- Desktop, Studio, NET and the twenty programs among them. Each
+      assembles to the same bytes. The header, the socket tables and every place that holds an
+      address are names, so lines can be added and removed. Long runs of pixels are files in
+      \file{objects/data} \\
+\file{build/add/*.asmo} & objects the build adds to the cabinet (or puts in the place of the one
+      with the same name): how a program made by py2asm gets into the system \\
 \file{build/objects/*.asmo} & every object as it lies in the cabinet (header, DATA, META, sockets,
       code); \file{X.Source.asmo} is the source object of program X \\
 \file{build/objects/Kernel.kasm} & the compiled kernel, 220000 bytes; \file{Boot.bin} the compiled
@@ -551,22 +609,22 @@ Windows has.
 The project is \texttt{v3.x.xx}: a small update raises \texttt{xx}, a big one raises \texttt{x}.
 The number is always seven letters (\texttt{v3.0.03}). The build writes it over \texttt{v2.9.59} in
 the texts of the kernel's core --- the line of the loader, the line at the top of the shell,
-\cmd{info}, the first line of the log --- in place, so nothing in the kernel moves. The extension
-is checked by SHA-256 and keeps its bytes: \cmd{machine} and Setup still say v2.9.59. The
-Sentinel's list was signed for the old bytes of the kernel, so \cmd{sentinel} is expected to list
-\texttt{@kernel} as changed. \texttt{python tools/build\_disk.py -{}-keep-version} builds without the
+\cmd{info}, the first line of the log --- in place, so nothing in the kernel moves. The same is done in the extension (\cmd{machine}, Setup), and the build seals the kernel again
+(section~3). \texttt{python tools/build\_disk.py -{}-keep-version} builds without the
 new number.
 
 % ------------------------------------------------------------------------------------------
 \section{What is not known yet}\label{sec:open}
 
 \begin{itemize}
-\item How the identity of an object (header \texttt{0x4C}) is computed.
-\item Where the expected SHA-256 of the extension lies, and the format and the key of the Sentinel's
-      list. Until then a kernel or a system object with other bytes is refused, so the system in
-      v2.9.60 is still the v2.9.59 kernel.
-\item The table of the cabinet: slots, drawers, gaps; and 580 KB between the objects of the image
-      that belong to none of them.
+\item How the identity of an object (header \texttt{0x4C}) is computed --- not needed for a
+      build (0 is accepted), but \cmd{id} shows it.
+\item Whether a system built and signed this way starts and passes \cmd{sentinel}: written from
+      what was read, not tried yet.
+\item The kernel suits (\texttt{k\_tools}, \texttt{k\_net}, \texttt{k\_usb12}, \texttt{k\_sound}): their
+      code lies in their DATA in a form of its own; not turned into source yet.
+\item Photon, Puffer, Tuner and META are 560-byte launchers; their code is in the extension of
+      the kernel.
 \item The nine system sockets and the third number of a procket; the fields \texttt{0x48} and
       \texttt{0x50} of the header.
 \item The rest of the table of the system's functions (section~6 lists what is known).

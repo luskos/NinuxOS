@@ -1,7 +1,7 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.03 (the system on the disk is the v2.9.59 kernel; the build
-writes the project's version into its texts).
+State on 10 October 2026, project v3.0.04 (the kernel is the one of v2.9.59, as source; the build
+writes the version into it, adds objects and signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
 
@@ -32,24 +32,31 @@ Order inside a part = importance.
 
 ## 1. So that a changed system can be built
 
-- [ ] **The kernel's own check.** The core checks the extension with SHA-256 at the start
-      ("SHA-256 MISMATCH - system operations off"). Find where the expected hash lies and how the
-      build fills it in; `tools/build_disk.py` must do the same.
-- [ ] **The Sentinel list.** `sentinel` checks every system object and `@kernel` against "the build's
-      signed list". Read the object `sentinel` (5048 bytes): its format, the hash it uses, the key.
-      The private key of the old build is lost - a new build needs its own key, with the public
-      half put into the kernel.
-- [ ] **The object's identity** (header, 4 bytes at 0x4C; `id NAME` prints it, e.g. calc = #2032954E).
-      CRC32 and FNV-1a over the obvious ranges do not give it. Find the function in the kernel.
-- [ ] **The table of the cabinet.** Where the list of objects, slots, drawers and gaps lies on the
-      disk (`ls` shows other addresses than the offsets in the image: +0xC4000). Until then the build
-      can only replace an object by one of the same size.
-- [ ] **580 KB between the objects** that belong to none of the 165 (pixels, an old Desktop v1.7).
-      Find out whether the system uses them or the old build left them.
-- [x] v3.0.03: the build writes VERSION over `v2.9.59` in the texts of the core (same length,
-      in place). To check on the machine: does the system start as before, and what does
-      `sentinel` say about @kernel. If it refuses more than listing it CHANGED: `--keep-version`.
-- [ ] The same in the extension (`machine`, Setup still say v2.9.59) - needs the SHA-256 check solved.
+Solved in v3.0.04 by reading the image (docs/NinuxOS_Architecture.tex, section 3) - **not tried
+on a machine yet**:
+
+- [x] The SHA-256 of the extension: at byte 0xF058 of the kernel; the build writes it anew.
+- [x] The Sentinel's list: 64 bytes Ed25519 signature, 'NXSN', 98 lines of name + SHA-256 (an
+      object from byte 0x68 to its end; @kernel = the 480 sectors). The build writes it and signs
+      it with its own key (build/key/build.key); the public half goes to byte 0x2D280 of the kernel.
+- [x] The table of the cabinet: sector 481, 'CABN', 32 bytes an object, 63 places; drawers are the
+      same table in the DATA of an object. The build adds the objects of build/add/.
+- [x] The identity: an object with 0 is not compared with the table - not needed for a build.
+- [x] The "580 KB between the objects": 58 of the 165 objects in the image are old copies no
+      table points at. The system has 107.
+- [x] The version: written into the whole kernel.
+
+Open:
+
+- [ ] **Try it** (the owner): does v3.0.04 start, what does `sentinel` say, do `pyhello` and
+      `pycalc` appear (`ls`, `run pyhello`, the desktop). If it does not start: build with
+      `--no-seal`, then with `--keep-version`, then without the files of build/add/ - the first
+      one that starts says which part is wrong.
+- [ ] build/key/build.key is on this PC only. Copy it somewhere safe (not into git).
+- [ ] Put a new object into a drawer, not only into the cabinet (63 places, 49 taken now).
+- [ ] Take the 58 dead copies out of the image and out of docs/cabinet_objects.csv; build the
+      image from nothing instead of from the base image.
+- [ ] How an identity is computed (for `id`; the system fills it in when it saves an object).
 
 ## 2. PyTon: py2asm (pyton/)
 
@@ -103,20 +110,31 @@ No class, on purpose: a program is made of objects (ASMO), not of classes.
 - [ ] The old tests that survived (`../test` beside this folder: 35 `q_*.txt`, `script*.txt`):
       bring over the ones that still make sense.
 
-## 4. The kernel source
+## 4. The source of what is compiled
 
-- [ ] `kernel/Kernel.kasm` is 55% code, 45% `db`. Follow the code through the tables: the shell
-      commands, the interrupt gates, the API table the programs call, the system sockets.
-- [ ] Addresses kept in data and absolute addresses in code are still numbers. Turn them into
-      labels - before that **no line may be added or removed**, only bytes changed in place.
-- [ ] 143 instructions are `db` because nasm encodes them another way (lea 66, mov 58, cmp 15).
-      Give them the exact form (`strict`, the long encodings).
-- [ ] Names instead of addresses: from the shell commands and the log lines (`[shield]`, `[smp]`,
-      `[pci]`, `[room]` ...). Then cut the file into the old parts: Loader, Core, Memory, Gates,
-      Shield, Cart, ATA, and the extension's PCI, AHCI, NVMe, XHCI, Crypto, Files, PyTonCompiler ...
-- [ ] The kernel suits (`build/kernel`: Tools, USB12, Network = k_net, Sound) and the compiled
-      programs without a source (Desktop, Studio, NET, puffer, photon, tuner, metaspace): the same
-      treatment as the kernel.
+- [x] v3.0.04: `tools/kdis/odis.py` - all 34 compiled objects as NASM source in `objects/`
+      (Desktop, Studio, NET, the 20 programs, the tests); each assembles to the same bytes; the
+      header, the socket tables and the relocations are names, so lines can be added.
+- [x] v3.0.04: kdis took `retq` for an ordinary instruction and ran on past the end of every
+      function. Corrected: the kernel is 41% recognised code now (the 55% before held data read
+      as code).
+- [ ] **The kernel** (`kernel/Kernel.kasm`): the rest of its code is reached only through tables
+      - the shell commands, the interrupt gates, the table of functions the programs call, the
+      system sockets. Find the tables and follow them.
+- [ ] Addresses kept in the kernel's data and absolute addresses in its code are still numbers
+      (it has no table of relocations as the objects have). Until they are names **no line of
+      Kernel.kasm may be added or removed**, only bytes changed in place.
+- [ ] 117 instructions of the kernel are `db` because nasm encodes them another way.
+- [ ] Names instead of addresses, in the kernel and in the objects: from the shell commands, the
+      log lines, the texts next to the code. Then cut the kernel into the old parts: Loader, Core,
+      Memory, Gates, Shield, Cart, ATA; PCI, AHCI, NVMe, XHCI, Crypto, Files, PyTonCompiler ...
+- [ ] **The kernel suits** (k_tools, k_net, k_usb12, k_sound): their code lies in their DATA in a
+      form of its own (no sockets, no relocations). Read how the kernel puts a suit on, then the
+      same treatment.
+- [ ] Photon, Puffer, Tuner, META: the objects are 560-byte launchers; the programs themselves
+      are in the extension of the kernel - they come with the kernel's source.
+- [ ] Rewrite, part by part, what is only disassembly into source meant to be read: begin where
+      changes are wanted first (the shell? the desktop?) - to decide with the owner.
 
 ## 5. New: the disks of other systems - winlolz, linlolz
 

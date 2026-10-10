@@ -1,0 +1,6095 @@
+; nest.asmo.kasm - the object "nest" (type icon) of NinuxOS v2.9.59 as NASM source.
+; Made from the compiled object by tools/kdis/odis.py; it assembles to the same 43128 bytes:
+;   nasm -f bin -I ./ nest.asmo.kasm -o nest.asmo   (run where the file is)
+;
+; obj_data, obj_meta, obj_system, obj_named, obj_prockets, obj_relocs: the parts of the object.
+; sock_N a socket; fn_ a function; L_ a place jumped to; d_ data; p_ what an address points at;
+; r_ a place that holds an address (the table of relocations at the end lists them).
+
+
+org 0
+obj_start:
+        db 0x4F, 0x4D, 0x53, 0x41, 0x04, 0x00, 0x00, 0x00
+        dq obj_end
+        dq obj_data
+        dq obj_data
+        dq obj_system
+        dq obj_named
+        dq obj_prockets
+        db 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x01, 0x00, 0x00, 0x00, 0x74, 0x5F, 0xB3, 0x39
+        times 16 db 0x00
+        dq obj_relocs
+
+obj_data:
+        db 'type:icon', 0
+        db 'label:Nest', 0
+        db 'kind:app', 0
+        db 'icon:icon_nest', 0
+        db 'name:nest', 0
+        db 'sockets:draw,open', 0
+        db 'lang:pyton', 0
+        db 'source:nest', 0
+        db 'source_hash:fc7d458eec95', 0
+        db 0x00, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
+
+obj_system:
+        dq p_00138
+        dq p_00138
+        dq p_00138
+        dq p_00138
+        dq p_00138
+        dq p_00138
+        dq p_00138
+        dq p_00138
+        dq p_00138
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+[bits 64]
+p_00138:
+        retq
+        db 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
+
+obj_named:
+        dq sock_draw
+        dq sock_open
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_prockets:
+        times 16 db 0x00
+
+sock_draw:
+        push rbx
+        push rbp
+        push r12
+        push r13
+        push r14
+        push r15
+        mov [rel d_0756e],rdi
+        mov [rel d_07566],rsi
+        call fn_0644e
+        mov rdi,rdx
+        mov rsi,rcx
+        call fn_00212
+        push rax
+        call fn_06480
+        test rax,rax
+        jz short L_001b1
+        lea rdi,[rel d_0755c]
+        call fn_0514b
+        pop rax
+        mov rax,0xffffffffffffffff
+        jmp short L_001b2
+L_001b1:
+        pop rax
+L_001b2:
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbp
+        pop rbx
+        retq
+
+sock_open:
+        push rbx
+        push rbp
+        push r12
+        push r13
+        push r14
+        push r15
+        mov [rel d_0756e],rdi
+        mov [rel d_07566],rsi
+        call fn_0644e
+        mov rdi,rdx
+        mov rsi,rcx
+        call fn_04185
+        push rax
+        call fn_06480
+        test rax,rax
+        jz short L_00206
+        lea rdi,[rel d_07561]
+        call fn_0514b
+        pop rax
+        mov rax,0xffffffffffffffff
+        jmp short L_00207
+L_00206:
+        pop rax
+L_00207:
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbp
+        pop rbx
+        retq
+
+fn_00212:
+        push rbp
+        mov rbp,rsp
+        sub rsp,0x50
+        mov rax,[rel d_0741c]
+        mov [rbp-0x28],rax
+        mov rax,[rel d_07424]
+        mov [rbp-0x30],rax
+        mov rax,[rel d_0742c]
+        mov [rbp-0x38],rax
+        mov rax,[rel d_074dc]
+        mov [rbp-0x40],rax
+        mov rax,[rel d_074e4]
+        mov [rbp-0x48],rax
+        mov rax,[rel d_074ec]
+        mov [rbp-0x50],rax
+        mov [rel d_0741c],rdi
+        mov qword [rel d_07424],0x0
+        mov [rel d_074dc],rsi
+        mov qword [rel d_074e4],0x0
+        mov ebx,0x1a
+        mov rax,[rel d_0741c]
+        add rax,rbx
+        push rax
+        mov ebx,0x6
+        mov rax,[rel d_074dc]
+        add rax,rbx
+        push rax
+        mov eax,0x2c
+        push rax
+        mov eax,0x2c
+        push rax
+        mov eax,0x2a2440
+        push rax
+        mov eax,0xa
+        push rax
+        pop r9
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051e1
+        call fn_06480
+        test rax,rax
+        jz short L_0031b
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0741c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07424],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0742c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_074dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_074e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_074ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_0031b:
+        mov ebx,0x20
+        mov rax,[rel d_0741c]
+        add rax,rbx
+        push rax
+        mov ebx,0x16
+        mov rax,[rel d_074dc]
+        add rax,rbx
+        push rax
+        mov eax,0xa
+        push rax
+        mov eax,0xc
+        push rax
+        mov eax,0xa3e635
+        push rax
+        mov eax,0x3
+        push rax
+        pop r9
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051e1
+        call fn_06480
+        test rax,rax
+        jz short L_003b6
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0741c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07424],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0742c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_074dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_074e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_074ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_003b6:
+        mov ebx,0x2b
+        mov rax,[rel d_0741c]
+        add rax,rbx
+        push rax
+        mov ebx,0x1b
+        mov rax,[rel d_074dc]
+        add rax,rbx
+        push rax
+        mov eax,0x4
+        push rax
+        mov eax,0x2
+        push rax
+        mov eax,0xececf5
+        push rax
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051d7
+        call fn_06480
+        test rax,rax
+        jz short L_00449
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0741c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07424],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0742c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_074dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_074e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_074ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_00449:
+        mov ebx,0x30
+        mov rax,[rel d_0741c]
+        add rax,rbx
+        push rax
+        mov ebx,0x16
+        mov rax,[rel d_074dc]
+        add rax,rbx
+        push rax
+        mov eax,0xa
+        push rax
+        mov eax,0xc
+        push rax
+        mov eax,0xd6b4
+        push rax
+        mov eax,0x3
+        push rax
+        pop r9
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051e1
+        call fn_06480
+        test rax,rax
+        jz short L_004e4
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0741c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07424],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0742c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_074dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_074e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_074ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_004e4:
+        mov ebx,0x3b
+        mov rax,[rel d_0741c]
+        add rax,rbx
+        push rax
+        mov ebx,0x1b
+        mov rax,[rel d_074dc]
+        add rax,rbx
+        push rax
+        mov eax,0x4
+        push rax
+        mov eax,0x2
+        push rax
+        mov eax,0xececf5
+        push rax
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051d7
+        call fn_06480
+        test rax,rax
+        jz short L_00577
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0741c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07424],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0742c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_074dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_074e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_074ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_00577:
+        mov ebx,0x40
+        mov rax,[rel d_0741c]
+        add rax,rbx
+        push rax
+        mov ebx,0x16
+        mov rax,[rel d_074dc]
+        add rax,rbx
+        push rax
+        mov eax,0x4
+        push rax
+        mov eax,0xc
+        push rax
+        mov eax,0xffb020
+        push rax
+        mov eax,0x2
+        push rax
+        pop r9
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051e1
+        call fn_06480
+        test rax,rax
+        jz short L_00612
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0741c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07424],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0742c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_074dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_074e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_074ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_00612:
+        mov ebx,0x20
+        mov rax,[rel d_0741c]
+        add rax,rbx
+        push rax
+        mov ebx,0x3a
+        mov rax,[rel d_074dc]
+        add rax,rbx
+        push rax
+        lea rax,[rel d_06751]
+        push rax
+        mov eax,0xffffff
+        push rax
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_057d7
+        call fn_06480
+        test rax,rax
+        jz short L_0069f
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0741c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07424],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0742c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_074dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_074e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_074ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_0069f:
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0741c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07424],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0742c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_074dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_074e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_074ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+
+fn_006eb:
+        push rbp
+        mov rbp,rsp
+        sub rsp,0x50
+        mov rax,[rel d_0729c]
+        mov [rbp-0x28],rax
+        mov rax,[rel d_072a4]
+        mov [rbp-0x30],rax
+        mov rax,[rel d_072ac]
+        mov [rbp-0x38],rax
+        mov rax,[rel d_0701c]
+        mov [rbp-0x40],rax
+        mov rax,[rel d_07024]
+        mov [rbp-0x48],rax
+        mov rax,[rel d_0702c]
+        mov [rbp-0x50],rax
+        lea rax,[rel d_0670c]
+        mov [rel d_0729c],rax
+        mov qword [rel d_072a4],0x0
+        mov eax,0x0
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+L_00765:
+        mov rbx,[rel d_0715c]
+        mov rax,[rel d_0701c]
+        cmp rax,rbx
+        jnl short L_007e0
+        mov rax,[rel d_0729c]
+        push rax
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_00793
+        add rbx,[rel d_06c24]
+L_00793:
+        mov rax,[rel r_06c1c]
+        mov rax,[rax+rbx*8]
+        mov rsi,rax
+        pop rdi
+        call fn_065e0
+        mov [rel d_0729c],rax
+        mov rdi,rax
+        call fn_065d1
+        mov [rel d_072a4],rax
+        mov ebx,0x1
+        mov rax,[rel d_0701c]
+        add rax,rbx
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+        jmp short L_00765
+L_007e0:
+        mov rax,[rel d_0729c]
+        mov rcx,[rbp-0x28]
+        mov [rel d_0729c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_072a4],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_072ac],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_0702c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+        db 0xB8, 0x00, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xD8, 0x48, 0x89, 0x0D, 0x5E, 0x6A, 0x00, 0x00
+        db 0x48, 0x8B, 0x4D, 0xD0, 0x48, 0x89, 0x0D, 0x5B, 0x6A, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xC8, 0x48
+        db 0x89, 0x0D, 0x58, 0x6A, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xC0, 0x48, 0x89, 0x0D, 0xBD, 0x67, 0x00
+        db 0x00, 0x48, 0x8B, 0x4D, 0xB8, 0x48, 0x89, 0x0D, 0xBA, 0x67, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xB0
+        db 0x48, 0x89, 0x0D, 0xB7, 0x67, 0x00, 0x00, 0x48, 0x89, 0xEC, 0x5D, 0xC3
+
+fn_0087a:
+        push rbp
+        mov rbp,rsp
+        sub rsp,0x40
+        mov rax,[rel d_0729c]
+        mov [rbp-0x28],rax
+        mov rax,[rel d_072a4]
+        mov [rbp-0x30],rax
+        mov rax,[rel d_072ac]
+        mov [rbp-0x38],rax
+        mov [rel d_0729c],rdi
+        mov qword [rel d_072a4],0x0
+        mov rax,[rel d_0729c]
+        mov [rel r_0731c],rax
+        mov rax,[rel d_072a4]
+        mov [rel d_07324],rax
+        mov qword [rel d_0732c],0x0
+        mov ebx,0xc
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x1b8
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        mov ebx,0x18
+        mov rax,[rel d_06d5c]
+        sub rax,rbx
+        push rax
+        mov eax,0x12
+        push rax
+        mov eax,0x1c1c2a
+        push rax
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051d7
+        call fn_06480
+        test rax,rax
+        jz short L_00958
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0729c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_072a4],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_072ac],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_00958:
+        mov ebx,0xe
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x1b9
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        mov rax,[rel r_0731c]
+        push rax
+        mov eax,0xc9cede
+        push rax
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_057d7
+        call fn_06480
+        test rax,rax
+        jz short L_009c4
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0729c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_072a4],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_072ac],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_009c4:
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0729c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_072a4],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_072ac],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+
+fn_009ef:
+        push rbp
+        mov rbp,rsp
+        sub rsp,0x20
+        mov ebx,0xc
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x26
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        mov eax,0x1a4
+        push rax
+        mov eax,0x1a
+        push rax
+        mov eax,0x1c1c2a
+        push rax
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051d7
+        call fn_06480
+        test rax,rax
+        jz short L_00a48
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_00a48:
+        mov ebx,0x10
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x2b
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        lea rax,[rel d_06756]
+        push rax
+        mov eax,0x9aa0b6
+        push rax
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_057d7
+        call fn_06480
+        test rax,rax
+        jz short L_00a93
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_00a93:
+        mov ebx,0x52
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x28
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        mov eax,0xc8
+        push rax
+        mov eax,0x16
+        push rax
+        mov eax,0x2a2a3c
+        push rax
+        mov eax,0x6
+        push rax
+        pop r9
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051e1
+        call fn_06480
+        test rax,rax
+        jz short L_00aec
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_00aec:
+        mov ebx,0x5a
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x2b
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        call fn_006eb
+        push rax
+        lea rsi,[rel d_0675e]
+        pop rdi
+        call fn_065e0
+        push rax
+        mov eax,0xececf5
+        push rax
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_057d7
+        call fn_06480
+        test rax,rax
+        jz short L_00b43
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_00b43:
+        mov ebx,0x12c
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x26
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        mov eax,0x40
+        push rax
+        mov eax,0x1a
+        push rax
+        mov eax,0x24324a
+        push rax
+        mov eax,0x8
+        push rax
+        pop r9
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051e1
+        call fn_06480
+        test rax,rax
+        jz short L_00b9c
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_00b9c:
+        mov ebx,0x13c
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x2b
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        lea rax,[rel d_06760]
+        push rax
+        mov eax,0xf5f4ff
+        push rax
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_057d7
+        call fn_06480
+        test rax,rax
+        jz short L_00be7
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_00be7:
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+
+fn_00bf1:
+        push rbp
+        mov rbp,rsp
+        sub rsp,0x70
+        mov rax,[rel d_0701c]
+        mov [rbp-0x28],rax
+        mov rax,[rel d_07024]
+        mov [rbp-0x30],rax
+        mov rax,[rel d_0702c]
+        mov [rbp-0x38],rax
+        mov rax,[rel d_073dc]
+        mov [rbp-0x40],rax
+        mov rax,[rel d_073e4]
+        mov [rbp-0x48],rax
+        mov rax,[rel d_073ec]
+        mov [rbp-0x50],rax
+        mov rax,[rel d_06e9c]
+        mov [rbp-0x58],rax
+        mov rax,[rel d_06ea4]
+        mov [rbp-0x60],rax
+        mov rax,[rel d_06eac]
+        mov [rbp-0x68],rax
+        mov ebx,0xc
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x4c
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        mov ebx,0x18
+        mov rax,[rel d_06d5c]
+        sub rax,rbx
+        push rax
+        mov eax,0x28
+        push rax
+        mov eax,0x1c1c2a
+        push rax
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051d7
+        call fn_06480
+        test rax,rax
+        jz short L_00d1a
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_073dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_073e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_073ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_06e9c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_06ea4],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_06eac],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_00d1a:
+        mov eax,0x0
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+L_00d31:
+        mov ebx,0x6
+        mov rax,[rel d_0701c]
+        cmp rax,rbx
+        jnl near L_01059
+        mov ebx,0x10
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x6e
+        mov rax,[rel d_0701c]
+        imul rax,rbx
+        mov rbx,rax
+        pop rax
+        add rax,rbx
+        mov [rel d_073dc],rax
+        mov qword [rel d_073e4],0x0
+        mov eax,0x2a2a3c
+        mov [rel d_06e9c],rax
+        mov qword [rel d_06ea4],0x0
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_00da9
+        add rbx,[rel d_06ca4]
+L_00da9:
+        mov rax,[rel r_06c9c]
+        mov rax,[rax+rbx*8]
+        mov ebx,0x0
+        cmp rax,rbx
+        jz short L_00dd5
+        mov eax,0x7b5cff
+        mov [rel d_06e9c],rax
+        mov qword [rel d_06ea4],0x0
+L_00dd5:
+        mov rax,[rel d_073dc]
+        push rax
+        mov ebx,0x52
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        mov eax,0x5c
+        push rax
+        mov eax,0x1c
+        push rax
+        mov rax,[rel d_06e9c]
+        push rax
+        mov eax,0x8
+        push rax
+        pop r9
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051e1
+        call fn_06480
+        test rax,rax
+        jz short L_00e8b
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_073dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_073e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_073ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_06e9c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_06ea4],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_06eac],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_00e8b:
+        mov ebx,0xa
+        mov rax,[rel d_073dc]
+        add rax,rbx
+        push rax
+        mov ebx,0x58
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_00ebe
+        add rbx,[rel d_06ca4]
+L_00ebe:
+        mov rax,[rel r_06c9c]
+        mov rax,[rax+rbx*8]
+        mov rbx,rax
+        test rbx,rbx
+        jns short L_00ed8
+        add rbx,[rel d_06b64]
+L_00ed8:
+        mov rax,[rel r_06b5c]
+        mov rax,[rax+rbx*8]
+        push rax
+        mov eax,0xf5f4ff
+        push rax
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_057d7
+        call fn_06480
+        test rax,rax
+        jz short L_00f6a
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_073dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_073e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_073ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_06e9c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_06ea4],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_06eac],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_00f6a:
+        mov ebx,0x5
+        mov rax,[rel d_0701c]
+        cmp rax,rbx
+        jnl near L_01033
+        mov ebx,0x5f
+        mov rax,[rel d_073dc]
+        add rax,rbx
+        push rax
+        mov ebx,0x5f
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        mov eax,0xc
+        push rax
+        mov eax,0x2
+        push rax
+        mov eax,0x9aa0b6
+        push rax
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051d7
+        call fn_06480
+        test rax,rax
+        jz short L_01033
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_073dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_073e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_073ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_06e9c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_06ea4],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_06eac],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_01033:
+        mov ebx,0x1
+        mov rax,[rel d_0701c]
+        add rax,rbx
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+        jmp near L_00d31
+L_01059:
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_073dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_073e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_073ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_06e9c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_06ea4],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_06eac],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+
+fn_010c6:
+        push rbp
+        mov rbp,rsp
+        sub rsp,0xe0
+        mov rax,[rel d_0745c]
+        mov [rbp-0x28],rax
+        mov rax,[rel d_07464]
+        mov [rbp-0x30],rax
+        mov rax,[rel d_0746c]
+        mov [rbp-0x38],rax
+        mov rax,[rel d_0751c]
+        mov [rbp-0x40],rax
+        mov rax,[rel d_07524]
+        mov [rbp-0x48],rax
+        mov rax,[rel d_0752c]
+        mov [rbp-0x50],rax
+        mov rax,[rel d_074dc]
+        mov [rbp-0x58],rax
+        mov rax,[rel d_074e4]
+        mov [rbp-0x60],rax
+        mov rax,[rel d_074ec]
+        mov [rbp-0x68],rax
+        mov rax,[rel d_0721c]
+        mov [rbp-0x70],rax
+        mov rax,[rel d_07224]
+        mov [rbp-0x78],rax
+        mov rax,[rel d_0722c]
+        mov [rbp-0x80],rax
+        mov rax,[rel d_0741c]
+        mov [rbp-0x88],rax
+        mov rax,[rel d_07424]
+        mov [rbp-0x90],rax
+        mov rax,[rel d_0742c]
+        mov [rbp-0x98],rax
+        mov rax,[rel d_06e9c]
+        mov [rbp-0xa0],rax
+        mov rax,[rel d_06ea4]
+        mov [rbp-0xa8],rax
+        mov rax,[rel d_06eac]
+        mov [rbp-0xb0],rax
+        mov rax,[rel d_0749c]
+        mov [rbp-0xb8],rax
+        mov rax,[rel d_074a4]
+        mov [rbp-0xc0],rax
+        mov rax,[rel d_074ac]
+        mov [rbp-0xc8],rax
+        mov rax,[rel d_06f9c]
+        mov [rbp-0xd0],rax
+        mov rax,[rel d_06fa4]
+        mov [rbp-0xd8],rax
+        mov rax,[rel d_06fac]
+        mov [rbp-0xe0],rax
+        mov [rel d_0745c],rdi
+        mov qword [rel d_07464],0x0
+        mov [rel d_0751c],rsi
+        mov qword [rel d_07524],0x0
+        mov eax,0x0
+        mov [rel d_074dc],rax
+        mov qword [rel d_074e4],0x0
+L_01238:
+        mov rbx,[rel d_0739c]
+        mov rax,[rel d_074dc]
+        cmp rax,rbx
+        jnl near L_015b2
+        mov rbx,[rel d_06b1c]
+        mov rax,[rel d_074dc]
+        imul rax,rbx
+        mov [rel d_0721c],rax
+        mov qword [rel d_07224],0x0
+        mov eax,0x0
+        mov [rel d_0741c],rax
+        mov qword [rel d_07424],0x0
+L_0128a:
+        mov rbx,[rel d_06b1c]
+        mov rax,[rel d_0741c]
+        cmp rax,rbx
+        jnl near L_0158c
+        mov rbx,[rel d_0741c]
+        mov rax,[rel d_0721c]
+        add rax,rbx
+        mov rbx,rax
+        test rbx,rbx
+        jns short L_012c1
+        add rbx,[rel d_06c64]
+L_012c1:
+        mov rax,[rel r_06c5c]
+        mov rax,[rax+rbx*8]
+        mov [rel d_06e9c],rax
+        mov qword [rel d_06ea4],0x0
+        mov ebx,0x1
+        mov rax,[rel d_0741c]
+        add rax,rbx
+        mov [rel d_0749c],rax
+        mov qword [rel d_074a4],0x0
+        mov eax,0x1
+        mov [rel d_06f9c],rax
+        mov qword [rel d_06fa4],0x0
+L_01316:
+        mov ebx,0x1
+        mov rax,[rel d_06f9c]
+        cmp rax,rbx
+        jnz near L_013cd
+        mov rbx,[rel d_06b1c]
+        mov rax,[rel d_0749c]
+        cmp rax,rbx
+        jl short L_01357
+        mov eax,0x0
+        mov [rel d_06f9c],rax
+        mov qword [rel d_06fa4],0x0
+        jmp short L_013c8
+L_01357:
+        mov rbx,[rel d_0749c]
+        mov rax,[rel d_0721c]
+        add rax,rbx
+        mov rbx,rax
+        test rbx,rbx
+        jns short L_01377
+        add rbx,[rel d_06c64]
+L_01377:
+        mov rax,[rel r_06c5c]
+        mov rax,[rax+rbx*8]
+        mov rbx,[rel d_06e9c]
+        cmp rax,rbx
+        jz short L_013a7
+        mov eax,0x0
+        mov [rel d_06f9c],rax
+        mov qword [rel d_06fa4],0x0
+        jmp short L_013c8
+L_013a7:
+        mov ebx,0x1
+        mov rax,[rel d_0749c]
+        add rax,rbx
+        mov [rel d_0749c],rax
+        mov qword [rel d_074a4],0x0
+L_013c8:
+        jmp near L_01316
+L_013cd:
+        mov rbx,[rel d_0741c]
+        mov rax,[rel d_0745c]
+        add rax,rbx
+        push rax
+        mov rbx,[rel d_074dc]
+        mov rax,[rel d_0751c]
+        add rax,rbx
+        push rax
+        mov rbx,[rel d_0741c]
+        mov rax,[rel d_0749c]
+        sub rax,rbx
+        push rax
+        mov eax,0x1
+        push rax
+        mov rax,[rel d_06e9c]
+        push rax
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051d7
+        call fn_06480
+        test rax,rax
+        jz near L_01560
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0745c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07464],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0746c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_0751c],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_07524],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_0752c],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_074dc],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_074e4],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_074ec],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_0721c],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_07224],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_0722c],rcx
+        mov rcx,[rbp-0x88]
+        mov [rel d_0741c],rcx
+        mov rcx,[rbp-0x90]
+        mov [rel d_07424],rcx
+        mov rcx,[rbp-0x98]
+        mov [rel d_0742c],rcx
+        mov rcx,[rbp-0xa0]
+        mov [rel d_06e9c],rcx
+        mov rcx,[rbp-0xa8]
+        mov [rel d_06ea4],rcx
+        mov rcx,[rbp-0xb0]
+        mov [rel d_06eac],rcx
+        mov rcx,[rbp-0xb8]
+        mov [rel d_0749c],rcx
+        mov rcx,[rbp-0xc0]
+        mov [rel d_074a4],rcx
+        mov rcx,[rbp-0xc8]
+        mov [rel d_074ac],rcx
+        mov rcx,[rbp-0xd0]
+        mov [rel d_06f9c],rcx
+        mov rcx,[rbp-0xd8]
+        mov [rel d_06fa4],rcx
+        mov rcx,[rbp-0xe0]
+        mov [rel d_06fac],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_01560:
+        mov rax,[rel d_0749c]
+        mov [rel d_0741c],rax
+        mov rax,[rel d_074a4]
+        mov [rel d_07424],rax
+        mov qword [rel d_0742c],0x0
+        jmp near L_0128a
+L_0158c:
+        mov ebx,0x1
+        mov rax,[rel d_074dc]
+        add rax,rbx
+        mov [rel d_074dc],rax
+        mov qword [rel d_074e4],0x0
+        jmp near L_01238
+L_015b2:
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0745c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07464],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0746c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_0751c],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_07524],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_0752c],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_074dc],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_074e4],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_074ec],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_0721c],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_07224],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_0722c],rcx
+        mov rcx,[rbp-0x88]
+        mov [rel d_0741c],rcx
+        mov rcx,[rbp-0x90]
+        mov [rel d_07424],rcx
+        mov rcx,[rbp-0x98]
+        mov [rel d_0742c],rcx
+        mov rcx,[rbp-0xa0]
+        mov [rel d_06e9c],rcx
+        mov rcx,[rbp-0xa8]
+        mov [rel d_06ea4],rcx
+        mov rcx,[rbp-0xb0]
+        mov [rel d_06eac],rcx
+        mov rcx,[rbp-0xb8]
+        mov [rel d_0749c],rcx
+        mov rcx,[rbp-0xc0]
+        mov [rel d_074a4],rcx
+        mov rcx,[rbp-0xc8]
+        mov [rel d_074ac],rcx
+        mov rcx,[rbp-0xd0]
+        mov [rel d_06f9c],rcx
+        mov rcx,[rbp-0xd8]
+        mov [rel d_06fa4],rcx
+        mov rcx,[rbp-0xe0]
+        mov [rel d_06fac],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+
+fn_016e8:
+        push rbp
+        mov rbp,rsp
+        sub rsp,0x20
+        mov rax,[rel d_06d9c]
+        push rax
+        mov rax,[rel d_06ddc]
+        push rax
+        mov rax,[rel d_06d5c]
+        push rax
+        mov rax,[rel d_06d1c]
+        push rax
+        lea rax,[rel d_06751]
+        push rax
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_057e8
+        call fn_06480
+        test rax,rax
+        jz short L_01737
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_01737:
+        call fn_009ef
+        call fn_06480
+        test rax,rax
+        jz short L_01750
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_01750:
+        call fn_00bf1
+        call fn_06480
+        test rax,rax
+        jz short L_01769
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_01769:
+        mov ebx,0x28
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x82
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        lea rax,[rel d_06764]
+        push rax
+        mov eax,0x9aa0b6
+        push rax
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_057d7
+        call fn_06480
+        test rax,rax
+        jz short L_017b4
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_017b4:
+        mov ebx,0x190
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x82
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        lea rax,[rel d_0676f]
+        push rax
+        mov eax,0x9aa0b6
+        push rax
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_057d7
+        call fn_06480
+        test rax,rax
+        jz short L_017ff
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_017ff:
+        mov ebx,0x26
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x94
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        mov ebx,0x4
+        mov rax,[rel d_06b1c]
+        add rax,rbx
+        push rax
+        mov ebx,0x4
+        mov rax,[rel d_0739c]
+        add rax,rbx
+        push rax
+        mov eax,0x3a3a50
+        push rax
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051d7
+        call fn_06480
+        test rax,rax
+        jz short L_01864
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_01864:
+        mov ebx,0x18e
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x94
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        mov ebx,0x4
+        mov rax,[rel d_06b1c]
+        add rax,rbx
+        push rax
+        mov ebx,0x4
+        mov rax,[rel d_0739c]
+        add rax,rbx
+        push rax
+        mov eax,0x3a3a50
+        push rax
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051d7
+        call fn_06480
+        test rax,rax
+        jz short L_018c9
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_018c9:
+        mov ebx,0x28
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x96
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        mov rax,[rel d_06b1c]
+        push rax
+        mov rax,[rel d_0739c]
+        push rax
+        mov eax,0x101820
+        push rax
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051d7
+        call fn_06480
+        test rax,rax
+        jz short L_0191e
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_0191e:
+        mov ebx,0x190
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x96
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        mov rax,[rel d_06b1c]
+        push rax
+        mov rax,[rel d_0739c]
+        push rax
+        mov eax,0x101820
+        push rax
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051d7
+        call fn_06480
+        test rax,rax
+        jz short L_01973
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_01973:
+        mov ebx,0x12c
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0xe4
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        mov eax,0x50
+        push rax
+        mov eax,0x2
+        push rax
+        mov eax,0x9aa0b6
+        push rax
+        pop r8
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_051d7
+        call fn_06480
+        test rax,rax
+        jz short L_019c4
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_019c4:
+        mov ebx,0x28
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x14a
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        lea rax,[rel d_0677e]
+        push rax
+        mov eax,0x6b7088
+        push rax
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_057d7
+        call fn_06480
+        test rax,rax
+        jz short L_01a0f
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_01a0f:
+        mov ebx,0x28
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x15e
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        lea rax,[rel d_067c3]
+        push rax
+        mov eax,0x6b7088
+        push rax
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_057d7
+        call fn_06480
+        test rax,rax
+        jz short L_01a5a
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_01a5a:
+        mov rax,[rel r_0731c]
+        push rax
+        pop rdi
+        call fn_0087a
+        call fn_06480
+        test rax,rax
+        jz short L_01a7c
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+L_01a7c:
+        mov eax,0x0
+        mov rsp,rbp
+        pop rbp
+        retq
+
+fn_01a86:
+        push rbp
+        mov rbp,rsp
+        sub rsp,0x130
+        mov rax,[rel d_0705c]
+        mov [rbp-0x28],rax
+        mov rax,[rel d_07064]
+        mov [rbp-0x30],rax
+        mov rax,[rel d_0706c]
+        mov [rbp-0x38],rax
+        mov rax,[rel d_0711c]
+        mov [rbp-0x40],rax
+        mov rax,[rel d_07124]
+        mov [rbp-0x48],rax
+        mov rax,[rel d_0712c]
+        mov [rbp-0x50],rax
+        mov rax,[rel d_0701c]
+        mov [rbp-0x58],rax
+        mov rax,[rel d_07024]
+        mov [rbp-0x60],rax
+        mov rax,[rel d_0702c]
+        mov [rbp-0x68],rax
+        mov rax,[rel d_06e9c]
+        mov [rbp-0x70],rax
+        mov rax,[rel d_06ea4]
+        mov [rbp-0x78],rax
+        mov rax,[rel d_06eac]
+        mov [rbp-0x80],rax
+        mov rax,[rel d_06f5c]
+        mov [rbp-0x88],rax
+        mov rax,[rel d_06f64]
+        mov [rbp-0x90],rax
+        mov rax,[rel d_06f6c]
+        mov [rbp-0x98],rax
+        mov rax,[rel d_074dc]
+        mov [rbp-0xa0],rax
+        mov rax,[rel d_074e4]
+        mov [rbp-0xa8],rax
+        mov rax,[rel d_074ec]
+        mov [rbp-0xb0],rax
+        mov rax,[rel d_06e1c]
+        mov [rbp-0xb8],rax
+        mov rax,[rel d_06e24]
+        mov [rbp-0xc0],rax
+        mov rax,[rel d_06e2c]
+        mov [rbp-0xc8],rax
+        mov rax,[rel d_06e5c]
+        mov [rbp-0xd0],rax
+        mov rax,[rel d_06e64]
+        mov [rbp-0xd8],rax
+        mov rax,[rel d_06e6c]
+        mov [rbp-0xe0],rax
+        mov rax,[rel d_0741c]
+        mov [rbp-0xe8],rax
+        mov rax,[rel d_07424]
+        mov [rbp-0xf0],rax
+        mov rax,[rel d_0742c]
+        mov [rbp-0xf8],rax
+        mov rax,[rel d_071dc]
+        mov [rbp-0x100],rax
+        mov rax,[rel d_071e4]
+        mov [rbp-0x108],rax
+        mov rax,[rel d_071ec]
+        mov [rbp-0x110],rax
+        mov rax,[rel d_06f1c]
+        mov [rbp-0x118],rax
+        mov rax,[rel d_06f24]
+        mov [rbp-0x120],rax
+        mov rax,[rel d_06f2c]
+        mov [rbp-0x128],rax
+        mov [rel d_0705c],rdi
+        mov qword [rel d_07064],0x0
+        mov rbx,[rel d_0739c]
+        mov rax,[rel d_06b1c]
+        imul rax,rbx
+        mov [rel d_0711c],rax
+        mov qword [rel d_07124],0x0
+        mov eax,0x0
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+        mov ebx,0x1
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jnz near L_01d21
+L_01c9d:
+        mov rbx,[rel d_0711c]
+        mov rax,[rel d_0701c]
+        cmp rax,rbx
+        jnl short L_01d1c
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_01cc3
+        add rbx,[rel d_06c64]
+L_01cc3:
+        mov rax,[rel r_06c5c]
+        mov rax,[rax+rbx*8]
+        mov rbx,rax
+        mov eax,0xffffff
+        sub rax,rbx
+        push rax
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_01ced
+        add rbx,[rel d_06c64]
+L_01ced:
+        pop rcx
+        mov rax,[rel r_06c5c]
+        mov [rax+rbx*8],rcx
+        mov ebx,0x1
+        mov rax,[rel d_0701c]
+        add rax,rbx
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+        jmp short L_01c9d
+L_01d1c:
+        jmp near L_029ab
+L_01d21:
+        mov ebx,0x2
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jnz near L_01e85
+L_01d36:
+        mov rbx,[rel d_0711c]
+        mov rax,[rel d_0701c]
+        cmp rax,rbx
+        jnl near L_01e80
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_01d60
+        add rbx,[rel d_06c64]
+L_01d60:
+        mov rax,[rel r_06c5c]
+        mov rax,[rax+rbx*8]
+        mov [rel d_06e9c],rax
+        mov qword [rel d_06ea4],0x0
+        mov ebx,0x10
+        mov rax,[rel d_06e9c]
+        mov rcx,rbx
+        sar rax,cl
+        mov ebx,0xff
+        and rax,rbx
+        mov ebx,0x4d
+        imul rax,rbx
+        push rax
+        mov ebx,0x8
+        mov rax,[rel d_06e9c]
+        mov rcx,rbx
+        sar rax,cl
+        mov ebx,0xff
+        and rax,rbx
+        mov ebx,0x96
+        imul rax,rbx
+        mov rbx,rax
+        pop rax
+        add rax,rbx
+        push rax
+        mov ebx,0xff
+        mov rax,[rel d_06e9c]
+        and rax,rbx
+        mov ebx,0x1d
+        imul rax,rbx
+        mov rbx,rax
+        pop rax
+        add rax,rbx
+        mov ebx,0x8
+        mov rcx,rbx
+        sar rax,cl
+        mov [rel d_06f5c],rax
+        mov qword [rel d_06f64],0x0
+        mov ebx,0x10000
+        mov rax,[rel d_06f5c]
+        imul rax,rbx
+        push rax
+        mov ebx,0x100
+        mov rax,[rel d_06f5c]
+        imul rax,rbx
+        mov rbx,rax
+        pop rax
+        add rax,rbx
+        mov rbx,[rel d_06f5c]
+        add rax,rbx
+        push rax
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_01e4e
+        add rbx,[rel d_06c64]
+L_01e4e:
+        pop rcx
+        mov rax,[rel r_06c5c]
+        mov [rax+rbx*8],rcx
+        mov ebx,0x1
+        mov rax,[rel d_0701c]
+        add rax,rbx
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+        jmp near L_01d36
+L_01e80:
+        jmp near L_029ab
+L_01e85:
+        mov ebx,0x3
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jnz near L_02035
+        mov eax,0x0
+        mov [rel d_074dc],rax
+        mov qword [rel d_074e4],0x0
+L_01eb1:
+        mov rbx,[rel d_0739c]
+        mov rax,[rel d_074dc]
+        cmp rax,rbx
+        jnl near L_02030
+        mov rbx,[rel d_06b1c]
+        mov rax,[rel d_074dc]
+        imul rax,rbx
+        mov [rel d_06e1c],rax
+        mov qword [rel d_06e24],0x0
+        mov rbx,[rel d_06b1c]
+        mov rax,[rel d_06e1c]
+        add rax,rbx
+        mov ebx,0x1
+        sub rax,rbx
+        mov [rel d_06e5c],rax
+        mov qword [rel d_06e64],0x0
+L_01f17:
+        mov rbx,[rel d_06e5c]
+        mov rax,[rel d_06e1c]
+        cmp rax,rbx
+        jnl near L_0200a
+        mov rbx,[rel d_06e1c]
+        test rbx,rbx
+        jns short L_01f41
+        add rbx,[rel d_06c64]
+L_01f41:
+        mov rax,[rel r_06c5c]
+        mov rax,[rax+rbx*8]
+        mov [rel d_06e9c],rax
+        mov qword [rel d_06ea4],0x0
+        mov rbx,[rel d_06e5c]
+        test rbx,rbx
+        jns short L_01f71
+        add rbx,[rel d_06c64]
+L_01f71:
+        mov rax,[rel r_06c5c]
+        mov rax,[rax+rbx*8]
+        push rax
+        mov rbx,[rel d_06e1c]
+        test rbx,rbx
+        jns short L_01f90
+        add rbx,[rel d_06c64]
+L_01f90:
+        pop rcx
+        mov rax,[rel r_06c5c]
+        mov [rax+rbx*8],rcx
+        mov rax,[rel d_06e9c]
+        push rax
+        mov rbx,[rel d_06e5c]
+        test rbx,rbx
+        jns short L_01fb7
+        add rbx,[rel d_06c64]
+L_01fb7:
+        pop rcx
+        mov rax,[rel r_06c5c]
+        mov [rax+rbx*8],rcx
+        mov ebx,0x1
+        mov rax,[rel d_06e1c]
+        add rax,rbx
+        mov [rel d_06e1c],rax
+        mov qword [rel d_06e24],0x0
+        mov ebx,0x1
+        mov rax,[rel d_06e5c]
+        sub rax,rbx
+        mov [rel d_06e5c],rax
+        mov qword [rel d_06e64],0x0
+        jmp near L_01f17
+L_0200a:
+        mov ebx,0x1
+        mov rax,[rel d_074dc]
+        add rax,rbx
+        mov [rel d_074dc],rax
+        mov qword [rel d_074e4],0x0
+        jmp near L_01eb1
+L_02030:
+        jmp near L_029ab
+L_02035:
+        mov ebx,0x4
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jnz near L_0224d
+        mov eax,0x0
+        mov [rel d_074dc],rax
+        mov qword [rel d_074e4],0x0
+L_02061:
+        mov ebx,0x2
+        mov rax,[rel d_0739c]
+        test rbx,rbx
+        jnz short L_02083
+        mov edi,0x3
+        call fn_06469
+        mov eax,0x0
+        jmp short L_02098
+L_02083:
+        cqo
+        idiv rbx
+        test rdx,rdx
+        jz short L_02098
+        mov rcx,rdx
+        xor rcx,rbx
+        jns short L_02098
+        dec rax
+L_02098:
+        mov rbx,rax
+        mov rax,[rel d_074dc]
+        cmp rax,rbx
+        jnl near L_02248
+        mov rbx,[rel d_06b1c]
+        mov rax,[rel d_074dc]
+        imul rax,rbx
+        mov [rel d_06e1c],rax
+        mov qword [rel d_06e24],0x0
+        mov ebx,0x1
+        mov rax,[rel d_0739c]
+        sub rax,rbx
+        mov rbx,[rel d_074dc]
+        sub rax,rbx
+        mov rbx,[rel d_06b1c]
+        imul rax,rbx
+        mov [rel d_06e5c],rax
+        mov qword [rel d_06e64],0x0
+        mov eax,0x0
+        mov [rel d_0741c],rax
+        mov qword [rel d_07424],0x0
+L_0211c:
+        mov rbx,[rel d_06b1c]
+        mov rax,[rel d_0741c]
+        cmp rax,rbx
+        jnl near L_02222
+        mov rbx,[rel d_0741c]
+        mov rax,[rel d_06e1c]
+        add rax,rbx
+        mov rbx,rax
+        test rbx,rbx
+        jns short L_02153
+        add rbx,[rel d_06c64]
+L_02153:
+        mov rax,[rel r_06c5c]
+        mov rax,[rax+rbx*8]
+        mov [rel d_06e9c],rax
+        mov qword [rel d_06ea4],0x0
+        mov rbx,[rel d_0741c]
+        mov rax,[rel d_06e5c]
+        add rax,rbx
+        mov rbx,rax
+        test rbx,rbx
+        jns short L_02190
+        add rbx,[rel d_06c64]
+L_02190:
+        mov rax,[rel r_06c5c]
+        mov rax,[rax+rbx*8]
+        push rax
+        mov rbx,[rel d_0741c]
+        mov rax,[rel d_06e1c]
+        add rax,rbx
+        mov rbx,rax
+        test rbx,rbx
+        jns short L_021bc
+        add rbx,[rel d_06c64]
+L_021bc:
+        pop rcx
+        mov rax,[rel r_06c5c]
+        mov [rax+rbx*8],rcx
+        mov rax,[rel d_06e9c]
+        push rax
+        mov rbx,[rel d_0741c]
+        mov rax,[rel d_06e5c]
+        add rax,rbx
+        mov rbx,rax
+        test rbx,rbx
+        jns short L_021f0
+        add rbx,[rel d_06c64]
+L_021f0:
+        pop rcx
+        mov rax,[rel r_06c5c]
+        mov [rax+rbx*8],rcx
+        mov ebx,0x1
+        mov rax,[rel d_0741c]
+        add rax,rbx
+        mov [rel d_0741c],rax
+        mov qword [rel d_07424],0x0
+        jmp near L_0211c
+L_02222:
+        mov ebx,0x1
+        mov rax,[rel d_074dc]
+        add rax,rbx
+        mov [rel d_074dc],rax
+        mov qword [rel d_074e4],0x0
+        jmp near L_02061
+L_02248:
+        jmp near L_029ab
+L_0224d:
+        mov ebx,0x5
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jz short L_02273
+        mov ebx,0x6
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jnz near L_02508
+L_02273:
+        mov rbx,[rel d_0711c]
+        mov rax,[rel d_0701c]
+        cmp rax,rbx
+        jnl near L_02503
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_0229d
+        add rbx,[rel d_06c64]
+L_0229d:
+        mov rax,[rel r_06c5c]
+        mov rax,[rax+rbx*8]
+        mov [rel d_06e9c],rax
+        mov qword [rel d_06ea4],0x0
+        mov ebx,0x10
+        mov rax,[rel d_06e9c]
+        mov rcx,rbx
+        sar rax,cl
+        mov ebx,0xff
+        and rax,rbx
+        mov [rel d_071dc],rax
+        mov qword [rel d_071e4],0x0
+        mov ebx,0x8
+        mov rax,[rel d_06e9c]
+        mov rcx,rbx
+        sar rax,cl
+        mov ebx,0xff
+        and rax,rbx
+        mov [rel d_06f5c],rax
+        mov qword [rel d_06f64],0x0
+        mov ebx,0xff
+        mov rax,[rel d_06e9c]
+        and rax,rbx
+        mov [rel d_06e5c],rax
+        mov qword [rel d_06e64],0x0
+        mov ebx,0x5
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jnz near L_023f8
+        mov rbx,[rel d_071dc]
+        mov eax,0xff
+        sub rax,rbx
+        mov ebx,0x2
+        mov rcx,rbx
+        sar rax,cl
+        mov rbx,rax
+        mov rax,[rel d_071dc]
+        add rax,rbx
+        mov [rel d_071dc],rax
+        mov qword [rel d_071e4],0x0
+        mov rbx,[rel d_06f5c]
+        mov eax,0xff
+        sub rax,rbx
+        mov ebx,0x2
+        mov rcx,rbx
+        sar rax,cl
+        mov rbx,rax
+        mov rax,[rel d_06f5c]
+        add rax,rbx
+        mov [rel d_06f5c],rax
+        mov qword [rel d_06f64],0x0
+        mov rbx,[rel d_06e5c]
+        mov eax,0xff
+        sub rax,rbx
+        mov ebx,0x2
+        mov rcx,rbx
+        sar rax,cl
+        mov rbx,rax
+        mov rax,[rel d_06e5c]
+        add rax,rbx
+        mov [rel d_06e5c],rax
+        mov qword [rel d_06e64],0x0
+        jmp near L_0248b
+L_023f8:
+        mov ebx,0x2
+        mov rax,[rel d_071dc]
+        mov rcx,rbx
+        sar rax,cl
+        mov rbx,rax
+        mov rax,[rel d_071dc]
+        sub rax,rbx
+        mov [rel d_071dc],rax
+        mov qword [rel d_071e4],0x0
+        mov ebx,0x2
+        mov rax,[rel d_06f5c]
+        mov rcx,rbx
+        sar rax,cl
+        mov rbx,rax
+        mov rax,[rel d_06f5c]
+        sub rax,rbx
+        mov [rel d_06f5c],rax
+        mov qword [rel d_06f64],0x0
+        mov ebx,0x2
+        mov rax,[rel d_06e5c]
+        mov rcx,rbx
+        sar rax,cl
+        mov rbx,rax
+        mov rax,[rel d_06e5c]
+        sub rax,rbx
+        mov [rel d_06e5c],rax
+        mov qword [rel d_06e64],0x0
+L_0248b:
+        mov ebx,0x10000
+        mov rax,[rel d_071dc]
+        imul rax,rbx
+        push rax
+        mov ebx,0x100
+        mov rax,[rel d_06f5c]
+        imul rax,rbx
+        mov rbx,rax
+        pop rax
+        add rax,rbx
+        mov rbx,[rel d_06e5c]
+        add rax,rbx
+        push rax
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_024d1
+        add rbx,[rel d_06c64]
+L_024d1:
+        pop rcx
+        mov rax,[rel r_06c5c]
+        mov [rax+rbx*8],rcx
+        mov ebx,0x1
+        mov rax,[rel d_0701c]
+        add rax,rbx
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+        jmp near L_02273
+L_02503:
+        jmp near L_029ab
+L_02508:
+        mov ebx,0x7
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jnz near L_0259e
+L_0251d:
+        mov rbx,[rel d_0711c]
+        mov rax,[rel d_0701c]
+        cmp rax,rbx
+        jnl short L_02599
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_02543
+        add rbx,[rel d_06c64]
+L_02543:
+        mov rax,[rel r_06c5c]
+        mov rax,[rax+rbx*8]
+        mov ebx,0xff0000
+        and rax,rbx
+        push rax
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_0256a
+        add rbx,[rel d_06c64]
+L_0256a:
+        pop rcx
+        mov rax,[rel r_06c5c]
+        mov [rax+rbx*8],rcx
+        mov ebx,0x1
+        mov rax,[rel d_0701c]
+        add rax,rbx
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+        jmp short L_0251d
+L_02599:
+        jmp near L_029ab
+L_0259e:
+        mov ebx,0x8
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jnz near L_02634
+L_025b3:
+        mov rbx,[rel d_0711c]
+        mov rax,[rel d_0701c]
+        cmp rax,rbx
+        jnl short L_0262f
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_025d9
+        add rbx,[rel d_06c64]
+L_025d9:
+        mov rax,[rel r_06c5c]
+        mov rax,[rax+rbx*8]
+        mov ebx,0xff00
+        and rax,rbx
+        push rax
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_02600
+        add rbx,[rel d_06c64]
+L_02600:
+        pop rcx
+        mov rax,[rel r_06c5c]
+        mov [rax+rbx*8],rcx
+        mov ebx,0x1
+        mov rax,[rel d_0701c]
+        add rax,rbx
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+        jmp short L_025b3
+L_0262f:
+        jmp near L_029ab
+L_02634:
+        mov ebx,0x9
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jnz near L_026ca
+L_02649:
+        mov rbx,[rel d_0711c]
+        mov rax,[rel d_0701c]
+        cmp rax,rbx
+        jnl short L_026c5
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_0266f
+        add rbx,[rel d_06c64]
+L_0266f:
+        mov rax,[rel r_06c5c]
+        mov rax,[rax+rbx*8]
+        mov ebx,0xff
+        and rax,rbx
+        push rax
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_02696
+        add rbx,[rel d_06c64]
+L_02696:
+        pop rcx
+        mov rax,[rel r_06c5c]
+        mov [rax+rbx*8],rcx
+        mov ebx,0x1
+        mov rax,[rel d_0701c]
+        add rax,rbx
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+        jmp short L_02649
+L_026c5:
+        jmp near L_029ab
+L_026ca:
+        mov ebx,0xa
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jnz near L_029ab
+L_026df:
+        mov rbx,[rel d_0711c]
+        mov rax,[rel d_0701c]
+        cmp rax,rbx
+        jnl short L_02753
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_02705
+        add rbx,[rel d_06c64]
+L_02705:
+        mov rax,[rel r_06c5c]
+        mov rax,[rax+rbx*8]
+        push rax
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_02724
+        add rbx,[rel d_06ce4]
+L_02724:
+        pop rcx
+        mov rax,[rel r_06cdc]
+        mov [rax+rbx*8],rcx
+        mov ebx,0x1
+        mov rax,[rel d_0701c]
+        add rax,rbx
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+        jmp short L_026df
+L_02753:
+        mov eax,0x0
+        mov [rel d_074dc],rax
+        mov qword [rel d_074e4],0x0
+L_0276a:
+        mov rbx,[rel d_0739c]
+        mov rax,[rel d_074dc]
+        cmp rax,rbx
+        jnl near L_029ab
+        mov eax,0x0
+        mov [rel d_0741c],rax
+        mov qword [rel d_07424],0x0
+L_02798:
+        mov rbx,[rel d_06b1c]
+        mov rax,[rel d_0741c]
+        cmp rax,rbx
+        jnl near L_02985
+        mov rbx,[rel d_06b1c]
+        mov rax,[rel d_074dc]
+        imul rax,rbx
+        mov rbx,[rel d_0741c]
+        add rax,rbx
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+        mov eax,0x0
+        mov [rel d_06f1c],rax
+        mov qword [rel d_06f24],0x0
+        mov ebx,0x1
+        mov rax,[rel d_06b1c]
+        sub rax,rbx
+        mov rbx,rax
+        mov rax,[rel d_0741c]
+        cmp rax,rbx
+        jnl short L_0287a
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_02825
+        add rbx,[rel d_06ce4]
+L_02825:
+        mov rax,[rel r_06cdc]
+        mov rax,[rax+rbx*8]
+        push rax
+        mov ebx,0x1
+        mov rax,[rel d_0701c]
+        add rax,rbx
+        mov rbx,rax
+        test rbx,rbx
+        jns short L_0284f
+        add rbx,[rel d_06ce4]
+L_0284f:
+        mov rax,[rel r_06cdc]
+        mov rax,[rax+rbx*8]
+        mov rbx,rax
+        pop rax
+        cmp rax,rbx
+        jz short L_0287a
+        mov eax,0x1
+        mov [rel d_06f1c],rax
+        mov qword [rel d_06f24],0x0
+L_0287a:
+        mov ebx,0x1
+        mov rax,[rel d_0739c]
+        sub rax,rbx
+        mov rbx,rax
+        mov rax,[rel d_074dc]
+        cmp rax,rbx
+        jnl short L_02902
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_028ab
+        add rbx,[rel d_06ce4]
+L_028ab:
+        mov rax,[rel r_06cdc]
+        mov rax,[rax+rbx*8]
+        push rax
+        mov rbx,[rel d_06b1c]
+        mov rax,[rel d_0701c]
+        add rax,rbx
+        mov rbx,rax
+        test rbx,rbx
+        jns short L_028d7
+        add rbx,[rel d_06ce4]
+L_028d7:
+        mov rax,[rel r_06cdc]
+        mov rax,[rax+rbx*8]
+        mov rbx,rax
+        pop rax
+        cmp rax,rbx
+        jz short L_02902
+        mov eax,0x1
+        mov [rel d_06f1c],rax
+        mov qword [rel d_06f24],0x0
+L_02902:
+        mov ebx,0x1
+        mov rax,[rel d_06f1c]
+        cmp rax,rbx
+        jnz short L_0293a
+        mov eax,0x0
+        push rax
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_0292c
+        add rbx,[rel d_06c64]
+L_0292c:
+        pop rcx
+        mov rax,[rel r_06c5c]
+        mov [rax+rbx*8],rcx
+        jmp short L_0295f
+L_0293a:
+        mov eax,0xffffff
+        push rax
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_02953
+        add rbx,[rel d_06c64]
+L_02953:
+        pop rcx
+        mov rax,[rel r_06c5c]
+        mov [rax+rbx*8],rcx
+L_0295f:
+        mov ebx,0x1
+        mov rax,[rel d_0741c]
+        add rax,rbx
+        mov [rel d_0741c],rax
+        mov qword [rel d_07424],0x0
+        jmp near L_02798
+L_02985:
+        mov ebx,0x1
+        mov rax,[rel d_074dc]
+        add rax,rbx
+        mov [rel d_074dc],rax
+        mov qword [rel d_074e4],0x0
+        jmp near L_0276a
+L_029ab:
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0705c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07064],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0706c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_0711c],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_07124],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_0712c],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_06e9c],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_06ea4],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_06eac],rcx
+        mov rcx,[rbp-0x88]
+        mov [rel d_06f5c],rcx
+        mov rcx,[rbp-0x90]
+        mov [rel d_06f64],rcx
+        mov rcx,[rbp-0x98]
+        mov [rel d_06f6c],rcx
+        mov rcx,[rbp-0xa0]
+        mov [rel d_074dc],rcx
+        mov rcx,[rbp-0xa8]
+        mov [rel d_074e4],rcx
+        mov rcx,[rbp-0xb0]
+        mov [rel d_074ec],rcx
+        mov rcx,[rbp-0xb8]
+        mov [rel d_06e1c],rcx
+        mov rcx,[rbp-0xc0]
+        mov [rel d_06e24],rcx
+        mov rcx,[rbp-0xc8]
+        mov [rel d_06e2c],rcx
+        mov rcx,[rbp-0xd0]
+        mov [rel d_06e5c],rcx
+        mov rcx,[rbp-0xd8]
+        mov [rel d_06e64],rcx
+        mov rcx,[rbp-0xe0]
+        mov [rel d_06e6c],rcx
+        mov rcx,[rbp-0xe8]
+        mov [rel d_0741c],rcx
+        mov rcx,[rbp-0xf0]
+        mov [rel d_07424],rcx
+        mov rcx,[rbp-0xf8]
+        mov [rel d_0742c],rcx
+        mov rcx,[rbp-0x100]
+        mov [rel d_071dc],rcx
+        mov rcx,[rbp-0x108]
+        mov [rel d_071e4],rcx
+        mov rcx,[rbp-0x110]
+        mov [rel d_071ec],rcx
+        mov rcx,[rbp-0x118]
+        mov [rel d_06f1c],rcx
+        mov rcx,[rbp-0x120]
+        mov [rel d_06f24],rcx
+        mov rcx,[rbp-0x128]
+        mov [rel d_06f2c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+
+fn_02b5f:
+        push rbp
+        mov rbp,rsp
+        sub rsp,0x80
+        mov rax,[rel d_0711c]
+        mov [rbp-0x28],rax
+        mov rax,[rel d_07124]
+        mov [rbp-0x30],rax
+        mov rax,[rel d_0712c]
+        mov [rbp-0x38],rax
+        mov rax,[rel d_06edc]
+        mov [rbp-0x40],rax
+        mov rax,[rel d_06ee4]
+        mov [rbp-0x48],rax
+        mov rax,[rel d_06eec]
+        mov [rbp-0x50],rax
+        mov rax,[rel d_0701c]
+        mov [rbp-0x58],rax
+        mov rax,[rel d_07024]
+        mov [rbp-0x60],rax
+        mov rax,[rel d_0702c]
+        mov [rbp-0x68],rax
+        mov rax,[rel d_071dc]
+        mov [rbp-0x70],rax
+        mov rax,[rel d_071e4]
+        mov [rbp-0x78],rax
+        mov rax,[rel d_071ec]
+        mov [rbp-0x80],rax
+        mov ebx,0x0
+        mov rax,[rel d_0715c]
+        cmp rax,rbx
+        jnz near L_02d3b
+        lea rax,[rel d_06801]
+        push rax
+        pop rdi
+        call fn_0087a
+        call fn_06480
+        test rax,rax
+        jz near L_02cad
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0711c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07124],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0712c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_06edc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_06ee4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_06eec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_071dc],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_071e4],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_071ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_02cad:
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0711c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07124],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0712c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_06edc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_06ee4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_06eec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_071dc],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_071e4],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_071ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_02d3b:
+        call fn_006eb
+        push rax
+        lea rax,[rel r_06c5c]
+        push rax
+        pop rsi
+        pop rdi
+        call fn_05554
+        mov [rel d_0711c],rax
+        mov qword [rel d_07124],0x0
+        call fn_06480
+        test rax,rax
+        jz near L_02dfe
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0711c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07124],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0712c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_06edc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_06ee4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_06eec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_071dc],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_071e4],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_071ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_02dfe:
+        mov ebx,0x0
+        mov rax,[rel d_0711c]
+        cmp rax,rbx
+        jg near L_02f68
+        lea rax,[rel d_0681f]
+        push rax
+        call fn_006eb
+        mov rsi,rax
+        pop rdi
+        call fn_065e0
+        push rax
+        lea rsi,[rel d_06833]
+        pop rdi
+        call fn_065e0
+        push rax
+        pop rdi
+        call fn_0087a
+        call fn_06480
+        test rax,rax
+        jz near L_02eda
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0711c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07124],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0712c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_06edc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_06ee4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_06eec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_071dc],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_071e4],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_071ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_02eda:
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0711c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07124],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0712c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_06edc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_06ee4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_06eec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_071dc],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_071e4],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_071ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_02f68:
+        mov ebx,0x28
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x96
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        pop rsi
+        pop rdi
+        call fn_010c6
+        call fn_06480
+        test rax,rax
+        jz near L_0302b
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0711c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07124],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0712c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_06edc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_06ee4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_06eec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_071dc],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_071e4],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_071ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_0302b:
+        mov eax,0x0
+        mov [rel d_06edc],rax
+        mov qword [rel d_06ee4],0x0
+        mov eax,0x0
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+L_03059:
+        mov ebx,0x6
+        mov rax,[rel d_0701c]
+        cmp rax,rbx
+        jnl near L_032cb
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_03081
+        add rbx,[rel d_06ca4]
+L_03081:
+        mov rax,[rel r_06c9c]
+        mov rax,[rax+rbx*8]
+        mov ebx,0x0
+        cmp rax,rbx
+        jz near L_032a5
+        lea rax,[rel d_06856]
+        push rax
+        mov ebx,0x1
+        mov rax,[rel d_0701c]
+        add rax,rbx
+        mov rdi,rax
+        call fn_0664b
+        mov rsi,rax
+        pop rdi
+        call fn_065e0
+        push rax
+        lea rsi,[rel d_0685c]
+        pop rdi
+        call fn_065e0
+        push rax
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_030e4
+        add rbx,[rel d_06ca4]
+L_030e4:
+        mov rax,[rel r_06c9c]
+        mov rax,[rax+rbx*8]
+        mov rbx,rax
+        test rbx,rbx
+        jns short L_030fe
+        add rbx,[rel d_06b64]
+L_030fe:
+        mov rax,[rel r_06b5c]
+        mov rax,[rax+rbx*8]
+        mov rsi,rax
+        pop rdi
+        call fn_065e0
+        push rax
+        lea rsi,[rel d_0685f]
+        pop rdi
+        call fn_065e0
+        push rax
+        pop rdi
+        call fn_0087a
+        call fn_06480
+        test rax,rax
+        jz near L_031c3
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0711c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07124],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0712c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_06edc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_06ee4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_06eec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_071dc],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_071e4],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_071ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_031c3:
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_031d6
+        add rbx,[rel d_06ca4]
+L_031d6:
+        mov rax,[rel r_06c9c]
+        mov rax,[rax+rbx*8]
+        push rax
+        pop rdi
+        call fn_01a86
+        call fn_06480
+        test rax,rax
+        jz near L_03284
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0711c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07124],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0712c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_06edc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_06ee4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_06eec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_071dc],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_071e4],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_071ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_03284:
+        mov ebx,0x1
+        mov rax,[rel d_06edc]
+        add rax,rbx
+        mov [rel d_06edc],rax
+        mov qword [rel d_06ee4],0x0
+L_032a5:
+        mov ebx,0x1
+        mov rax,[rel d_0701c]
+        add rax,rbx
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+        jmp near L_03059
+L_032cb:
+        mov ebx,0x190
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        push rax
+        mov ebx,0x96
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        push rax
+        pop rsi
+        pop rdi
+        call fn_010c6
+        call fn_06480
+        test rax,rax
+        jz near L_0338e
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0711c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07124],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0712c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_06edc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_06ee4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_06eec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_071dc],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_071e4],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_071ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_0338e:
+        mov eax,0x1
+        mov [rel d_06fdc],rax
+        mov qword [rel d_06fe4],0x0
+        mov ebx,0x0
+        mov rax,[rel d_06edc]
+        cmp rax,rbx
+        jnz near L_034f2
+        lea rax,[rel d_06864]
+        push rax
+        pop rdi
+        call fn_0087a
+        call fn_06480
+        test rax,rax
+        jz near L_03464
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0711c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07124],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0712c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_06edc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_06ee4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_06eec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_071dc],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_071e4],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_071ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_03464:
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0711c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07124],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0712c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_06edc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_06ee4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_06eec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_071dc],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_071e4],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_071ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_034f2:
+        call fn_006eb
+        push rax
+        lea rsi,[rel d_06892]
+        pop rdi
+        call fn_065e0
+        push rax
+        mov rax,[rel d_06b1c]
+        push rax
+        mov rax,[rel d_0739c]
+        push rax
+        lea rax,[rel r_06c5c]
+        push rax
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        call fn_05446
+        mov [rel d_071dc],rax
+        mov qword [rel d_071e4],0x0
+        call fn_06480
+        test rax,rax
+        jz near L_035d5
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0711c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07124],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0712c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_06edc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_06ee4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_06eec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_071dc],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_071e4],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_071ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_035d5:
+        mov ebx,0x0
+        mov rax,[rel d_071dc]
+        cmp rax,rbx
+        jnz near L_036da
+        lea rax,[rel d_06895]
+        push rax
+        mov rdi,[rel d_06edc]
+        call fn_0664b
+        mov rsi,rax
+        pop rdi
+        call fn_065e0
+        push rax
+        lea rsi,[rel d_0689c]
+        pop rdi
+        call fn_065e0
+        push rax
+        call fn_006eb
+        mov rsi,rax
+        pop rdi
+        call fn_065e0
+        push rax
+        lea rsi,[rel d_068af]
+        pop rdi
+        call fn_065e0
+        push rax
+        pop rdi
+        call fn_0087a
+        call fn_06480
+        test rax,rax
+        jz near L_036d5
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0711c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07124],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0712c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_06edc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_06ee4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_06eec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_071dc],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_071e4],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_071ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_036d5:
+        jmp near L_037c5
+L_036da:
+        lea rax,[rel d_068cb]
+        push rax
+        call fn_006eb
+        mov rsi,rax
+        pop rdi
+        call fn_065e0
+        push rax
+        lea rsi,[rel d_068d7]
+        pop rdi
+        call fn_065e0
+        push rax
+        mov rdi,[rel d_071dc]
+        call fn_0664b
+        mov rsi,rax
+        pop rdi
+        call fn_065e0
+        push rax
+        lea rsi,[rel d_068f5]
+        pop rdi
+        call fn_065e0
+        push rax
+        pop rdi
+        call fn_0087a
+        call fn_06480
+        test rax,rax
+        jz near L_037c5
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0711c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07124],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0712c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_06edc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_06ee4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_06eec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_071dc],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_071e4],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_071ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_037c5:
+        mov eax,0x1
+        mov rcx,[rbp-0x28]
+        mov [rel d_0711c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07124],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0712c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_06edc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_06ee4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_06eec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_071dc],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_071e4],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_071ec],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+        db 0xB8, 0x00, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xD8, 0x48, 0x89, 0x0D, 0xB9, 0x38, 0x00, 0x00
+        db 0x48, 0x8B, 0x4D, 0xD0, 0x48, 0x89, 0x0D, 0xB6, 0x38, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xC8, 0x48
+        db 0x89, 0x0D, 0xB3, 0x38, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xC0, 0x48, 0x89, 0x0D, 0x58, 0x36, 0x00
+        db 0x00, 0x48, 0x8B, 0x4D, 0xB8, 0x48, 0x89, 0x0D, 0x55, 0x36, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xB0
+        db 0x48, 0x89, 0x0D, 0x52, 0x36, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xA8, 0x48, 0x89, 0x0D, 0x77, 0x37
+        db 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xA0, 0x48, 0x89, 0x0D, 0x74, 0x37, 0x00, 0x00, 0x48, 0x8B, 0x4D
+        db 0x98, 0x48, 0x89, 0x0D, 0x71, 0x37, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0x90, 0x48, 0x89, 0x0D, 0x16
+        db 0x39, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0x88, 0x48, 0x89, 0x0D, 0x13, 0x39, 0x00, 0x00, 0x48, 0x8B
+        db 0x4D, 0x80, 0x48, 0x89, 0x0D, 0x10, 0x39, 0x00, 0x00, 0x48, 0x89, 0xEC, 0x5D, 0xC3
+
+fn_038e1:
+        push rbp
+        mov rbp,rsp
+        sub rsp,0x70
+        mov rax,[rel d_0709c]
+        mov [rbp-0x28],rax
+        mov rax,[rel d_070a4]
+        mov [rbp-0x30],rax
+        mov rax,[rel d_070ac]
+        mov [rbp-0x38],rax
+        mov rax,[rel d_070dc]
+        mov [rbp-0x40],rax
+        mov rax,[rel d_070e4]
+        mov [rbp-0x48],rax
+        mov rax,[rel d_070ec]
+        mov [rbp-0x50],rax
+        mov rax,[rel d_0701c]
+        mov [rbp-0x58],rax
+        mov rax,[rel d_07024]
+        mov [rbp-0x60],rax
+        mov rax,[rel d_0702c]
+        mov [rbp-0x68],rax
+        mov [rel d_0709c],rdi
+        mov qword [rel d_070a4],0x0
+        mov [rel d_070dc],rsi
+        mov qword [rel d_070e4],0x0
+        mov ebx,0x26
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        mov rbx,rax
+        mov rax,[rel d_070dc]
+        cmp rax,rbx
+        jl near L_03ae1
+        mov ebx,0x40
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        mov rbx,rax
+        mov rax,[rel d_070dc]
+        cmp rax,rbx
+        jnl near L_03ae1
+        mov ebx,0x12c
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        mov rbx,rax
+        mov rax,[rel d_0709c]
+        cmp rax,rbx
+        jl near L_03ae1
+        mov ebx,0x16c
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        mov rbx,rax
+        mov rax,[rel d_0709c]
+        cmp rax,rbx
+        jnl near L_03ae1
+        call fn_02b5f
+        call fn_06480
+        test rax,rax
+        jz short L_03a74
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0709c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_070a4],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_070ac],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_070dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_070e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_070ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_03a74:
+        mov eax,0x1
+        mov rcx,[rbp-0x28]
+        mov [rel d_0709c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_070a4],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_070ac],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_070dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_070e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_070ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_03ae1:
+        mov ebx,0x52
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        mov rbx,rax
+        mov rax,[rel d_070dc]
+        cmp rax,rbx
+        jl near L_03e1b
+        mov ebx,0x6e
+        mov rax,[rel d_06ddc]
+        add rax,rbx
+        mov rbx,rax
+        mov rax,[rel d_070dc]
+        cmp rax,rbx
+        jnl near L_03e1b
+        mov rbx,[rel d_06d9c]
+        mov rax,[rel d_0709c]
+        sub rax,rbx
+        mov ebx,0x10
+        sub rax,rbx
+        mov ebx,0x6e
+        test rbx,rbx
+        jnz short L_03b59
+        mov edi,0x3
+        call fn_06469
+        mov eax,0x0
+        jmp short L_03b6e
+L_03b59:
+        cqo
+        idiv rbx
+        test rdx,rdx
+        jz short L_03b6e
+        mov rcx,rdx
+        xor rcx,rbx
+        jns short L_03b6e
+        dec rax
+L_03b6e:
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+        call fn_06480
+        test rax,rax
+        jz short L_03bf7
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0709c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_070a4],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_070ac],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_070dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_070e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_070ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_03bf7:
+        mov ebx,0x10
+        mov rax,[rel d_06d9c]
+        add rax,rbx
+        mov rbx,rax
+        mov rax,[rel d_0709c]
+        cmp rax,rbx
+        jl near L_03dae
+        mov ebx,0x0
+        mov rax,[rel d_0701c]
+        cmp rax,rbx
+        jl near L_03dae
+        mov ebx,0x6
+        mov rax,[rel d_0701c]
+        cmp rax,rbx
+        jnl near L_03dae
+        mov rbx,[rel d_06d9c]
+        mov rax,[rel d_0709c]
+        sub rax,rbx
+        mov ebx,0x10
+        sub rax,rbx
+        mov ebx,0x6e
+        test rbx,rbx
+        jnz short L_03c77
+        mov edi,0x3
+        call fn_06469
+        mov eax,0x0
+        jmp short L_03c8f
+L_03c77:
+        cqo
+        idiv rbx
+        mov rax,rdx
+        test rax,rax
+        jz short L_03c8f
+        mov rcx,rax
+        xor rcx,rbx
+        jns short L_03c8f
+        add rax,rbx
+L_03c8f:
+        mov ebx,0x5c
+        cmp rax,rbx
+        jnl near L_03dae
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_03cb0
+        add rbx,[rel d_06ca4]
+L_03cb0:
+        mov rax,[rel r_06c9c]
+        mov rax,[rax+rbx*8]
+        mov ebx,0x1
+        add rax,rbx
+        push rax
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_03cd7
+        add rbx,[rel d_06ca4]
+L_03cd7:
+        pop rcx
+        mov rax,[rel r_06c9c]
+        mov [rax+rbx*8],rcx
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_03cf6
+        add rbx,[rel d_06ca4]
+L_03cf6:
+        mov rax,[rel r_06c9c]
+        mov rax,[rax+rbx*8]
+        mov rbx,[rel d_06bdc]
+        cmp rax,rbx
+        jl short L_03d32
+        mov eax,0x0
+        push rax
+        mov rbx,[rel d_0701c]
+        test rbx,rbx
+        jns short L_03d26
+        add rbx,[rel d_06ca4]
+L_03d26:
+        pop rcx
+        mov rax,[rel r_06c9c]
+        mov [rax+rbx*8],rcx
+L_03d32:
+        call fn_00bf1
+        call fn_06480
+        test rax,rax
+        jz short L_03dae
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0709c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_070a4],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_070ac],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_070dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_070e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_070ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_03dae:
+        mov eax,0x1
+        mov rcx,[rbp-0x28]
+        mov [rel d_0709c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_070a4],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_070ac],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_070dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_070e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_070ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_03e1b:
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0709c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_070a4],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_070ac],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_070dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_070e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_070ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_0702c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+        db 0xB8, 0x00, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xD8, 0x48, 0x89, 0x0D, 0x04, 0x32, 0x00, 0x00
+        db 0x48, 0x8B, 0x4D, 0xD0, 0x48, 0x89, 0x0D, 0x01, 0x32, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xC8, 0x48
+        db 0x89, 0x0D, 0xFE, 0x31, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xC0, 0x48, 0x89, 0x0D, 0x23, 0x32, 0x00
+        db 0x00, 0x48, 0x8B, 0x4D, 0xB8, 0x48, 0x89, 0x0D, 0x20, 0x32, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xB0
+        db 0x48, 0x89, 0x0D, 0x1D, 0x32, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xA8, 0x48, 0x89, 0x0D, 0x42, 0x31
+        db 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xA0, 0x48, 0x89, 0x0D, 0x3F, 0x31, 0x00, 0x00, 0x48, 0x8B, 0x4D
+        db 0x98, 0x48, 0x89, 0x0D, 0x3C, 0x31, 0x00, 0x00, 0x48, 0x89, 0xEC, 0x5D, 0xC3
+
+fn_03ef5:
+        push rbp
+        mov rbp,rsp
+        sub rsp,0x40
+        mov rax,[rel d_0705c]
+        mov [rbp-0x28],rax
+        mov rax,[rel d_07064]
+        mov [rbp-0x30],rax
+        mov rax,[rel d_0706c]
+        mov [rbp-0x38],rax
+        mov [rel d_0705c],rdi
+        mov qword [rel d_07064],0x0
+        mov ebx,0xa
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jz short L_03f52
+        mov ebx,0xd
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jnz short L_03fb7
+L_03f52:
+        call fn_02b5f
+        call fn_06480
+        test rax,rax
+        jz short L_03f8c
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0705c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07064],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0706c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_03f8c:
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0705c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07064],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0706c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_03fb7:
+        mov ebx,0x8
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jnz short L_03fff
+        mov ebx,0x0
+        mov rax,[rel d_0715c]
+        cmp rax,rbx
+        jng short L_03ffa
+        mov ebx,0x1
+        mov rax,[rel d_0715c]
+        sub rax,rbx
+        mov [rel d_0715c],rax
+        mov qword [rel d_07164],0x0
+L_03ffa:
+        jmp near L_040f5
+L_03fff:
+        mov ebx,0x30
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jl short L_04023
+        mov ebx,0x39
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jg short L_04023
+        jmp short L_0405c
+L_04023:
+        mov ebx,0x61
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jl short L_04047
+        mov ebx,0x7a
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jg short L_04047
+        jmp short L_0405c
+L_04047:
+        mov ebx,0x5f
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jnz near L_040f5
+L_0405c:
+        mov ebx,0xd
+        mov rax,[rel d_0715c]
+        cmp rax,rbx
+        jnl near L_040f5
+        mov rax,[rel d_0705c]
+        push rax
+        pop rdi
+        call fn_052d7
+        push rax
+        mov rbx,[rel d_0715c]
+        test rbx,rbx
+        jns short L_04093
+        add rbx,[rel d_06c24]
+L_04093:
+        pop rcx
+        mov rax,[rel r_06c1c]
+        mov [rax+rbx*8],rcx
+        call fn_06480
+        test rax,rax
+        jz short L_040d4
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0705c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07064],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0706c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_040d4:
+        mov ebx,0x1
+        mov rax,[rel d_0715c]
+        add rax,rbx
+        mov [rel d_0715c],rax
+        mov qword [rel d_07164],0x0
+L_040f5:
+        call fn_009ef
+        call fn_06480
+        test rax,rax
+        jz short L_0412f
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0705c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07064],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0706c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_0412f:
+        mov eax,0x1
+        mov rcx,[rbp-0x28]
+        mov [rel d_0705c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07064],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0706c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+        db 0xB8, 0x00, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xD8, 0x48, 0x89, 0x0D, 0xF2, 0x2E, 0x00, 0x00
+        db 0x48, 0x8B, 0x4D, 0xD0, 0x48, 0x89, 0x0D, 0xEF, 0x2E, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xC8, 0x48
+        db 0x89, 0x0D, 0xEC, 0x2E, 0x00, 0x00, 0x48, 0x89, 0xEC, 0x5D, 0xC3
+
+fn_04185:
+        push rbp
+        mov rbp,rsp
+        sub rsp,0xe0
+        mov rax,[rel d_0735c]
+        mov [rbp-0x28],rax
+        mov rax,[rel d_07364]
+        mov [rbp-0x30],rax
+        mov rax,[rel d_0736c]
+        mov [rbp-0x38],rax
+        mov rax,[rel d_072dc]
+        mov [rbp-0x40],rax
+        mov rax,[rel d_072e4]
+        mov [rbp-0x48],rax
+        mov rax,[rel d_072ec]
+        mov [rbp-0x50],rax
+        mov rax,[rel d_0719c]
+        mov [rbp-0x58],rax
+        mov rax,[rel d_071a4]
+        mov [rbp-0x60],rax
+        mov rax,[rel d_071ac]
+        mov [rbp-0x68],rax
+        mov rax,[rel d_0725c]
+        mov [rbp-0x70],rax
+        mov rax,[rel d_07264]
+        mov [rbp-0x78],rax
+        mov rax,[rel d_0726c]
+        mov [rbp-0x80],rax
+        mov rax,[rel d_0701c]
+        mov [rbp-0x88],rax
+        mov rax,[rel d_07024]
+        mov [rbp-0x90],rax
+        mov rax,[rel d_0702c]
+        mov [rbp-0x98],rax
+        mov rax,[rel d_06f1c]
+        mov [rbp-0xa0],rax
+        mov rax,[rel d_06f24]
+        mov [rbp-0xa8],rax
+        mov rax,[rel d_06f2c]
+        mov [rbp-0xb0],rax
+        mov rax,[rel d_0705c]
+        mov [rbp-0xb8],rax
+        mov rax,[rel d_07064]
+        mov [rbp-0xc0],rax
+        mov rax,[rel d_0706c]
+        mov [rbp-0xc8],rax
+        mov rax,[rel d_06e5c]
+        mov [rbp-0xd0],rax
+        mov rax,[rel d_06e64]
+        mov [rbp-0xd8],rax
+        mov rax,[rel d_06e6c]
+        mov [rbp-0xe0],rax
+        mov [rel d_0735c],rdi
+        mov qword [rel d_07364],0x0
+        mov [rel d_072dc],rsi
+        mov qword [rel d_072e4],0x0
+        mov rax,[rel d_06c64]
+        mov ebx,0x0
+        cmp rax,rbx
+        jnz short L_0436e
+        mov eax,0x0
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+L_04308:
+        mov rbx,[rel d_0739c]
+        mov rax,[rel d_06b1c]
+        imul rax,rbx
+        mov rbx,rax
+        mov rax,[rel d_0701c]
+        cmp rax,rbx
+        jnl short L_0436e
+        mov esi,0x101820
+        lea rdi,[rel r_06c5c]
+        call fn_05ddc
+        mov esi,0x0
+        lea rdi,[rel r_06cdc]
+        call fn_05ddc
+        mov ebx,0x1
+        mov rax,[rel d_0701c]
+        add rax,rbx
+        mov [rel d_0701c],rax
+        mov qword [rel d_07024],0x0
+        jmp short L_04308
+L_0436e:
+        call fn_016e8
+        call fn_06480
+        test rax,rax
+        jz near L_044b7
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0735c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07364],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0736c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_072dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_072e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_072ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0719c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_071a4],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_071ac],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_0725c],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_07264],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_0726c],rcx
+        mov rcx,[rbp-0x88]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x90]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x98]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0xa0]
+        mov [rel d_06f1c],rcx
+        mov rcx,[rbp-0xa8]
+        mov [rel d_06f24],rcx
+        mov rcx,[rbp-0xb0]
+        mov [rel d_06f2c],rcx
+        mov rcx,[rbp-0xb8]
+        mov [rel d_0705c],rcx
+        mov rcx,[rbp-0xc0]
+        mov [rel d_07064],rcx
+        mov rcx,[rbp-0xc8]
+        mov [rel d_0706c],rcx
+        mov rcx,[rbp-0xd0]
+        mov [rel d_06e5c],rcx
+        mov rcx,[rbp-0xd8]
+        mov [rel d_06e64],rcx
+        mov rcx,[rbp-0xe0]
+        mov [rel d_06e6c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_044b7:
+        mov eax,0x0
+        mov [rel d_0719c],rax
+        mov qword [rel d_071a4],0x0
+        mov eax,0x1
+        mov [rel d_0725c],rax
+        mov qword [rel d_07264],0x0
+L_044e5:
+        mov ebx,0x1
+        mov rax,[rel d_0725c]
+        cmp rax,rbx
+        jnz near L_04c66
+        call fn_05852
+        mov [rel d_06f1c],rax
+        mov qword [rel d_06f24],0x0
+        call fn_06480
+        test rax,rax
+        jz near L_04655
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0735c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07364],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0736c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_072dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_072e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_072ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0719c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_071a4],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_071ac],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_0725c],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_07264],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_0726c],rcx
+        mov rcx,[rbp-0x88]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x90]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x98]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0xa0]
+        mov [rel d_06f1c],rcx
+        mov rcx,[rbp-0xa8]
+        mov [rel d_06f24],rcx
+        mov rcx,[rbp-0xb0]
+        mov [rel d_06f2c],rcx
+        mov rcx,[rbp-0xb8]
+        mov [rel d_0705c],rcx
+        mov rcx,[rbp-0xc0]
+        mov [rel d_07064],rcx
+        mov rcx,[rbp-0xc8]
+        mov [rel d_0706c],rcx
+        mov rcx,[rbp-0xd0]
+        mov [rel d_06e5c],rcx
+        mov rcx,[rbp-0xd8]
+        mov [rel d_06e64],rcx
+        mov rcx,[rbp-0xe0]
+        mov [rel d_06e6c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_04655:
+        mov ebx,0x1
+        mov rax,[rel d_06f1c]
+        cmp rax,rbx
+        jnz near L_04949
+        call fn_05877
+        mov [rel d_0705c],rax
+        mov qword [rel d_07064],0x0
+        call fn_06480
+        test rax,rax
+        jz near L_047c5
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0735c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07364],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0736c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_072dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_072e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_072ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0719c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_071a4],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_071ac],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_0725c],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_07264],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_0726c],rcx
+        mov rcx,[rbp-0x88]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x90]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x98]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0xa0]
+        mov [rel d_06f1c],rcx
+        mov rcx,[rbp-0xa8]
+        mov [rel d_06f24],rcx
+        mov rcx,[rbp-0xb0]
+        mov [rel d_06f2c],rcx
+        mov rcx,[rbp-0xb8]
+        mov [rel d_0705c],rcx
+        mov rcx,[rbp-0xc0]
+        mov [rel d_07064],rcx
+        mov rcx,[rbp-0xc8]
+        mov [rel d_0706c],rcx
+        mov rcx,[rbp-0xd0]
+        mov [rel d_06e5c],rcx
+        mov rcx,[rbp-0xd8]
+        mov [rel d_06e64],rcx
+        mov rcx,[rbp-0xe0]
+        mov [rel d_06e6c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_047c5:
+        mov ebx,0x1b
+        mov rax,[rel d_0705c]
+        cmp rax,rbx
+        jnz short L_047f2
+        mov eax,0x0
+        mov [rel d_0725c],rax
+        mov qword [rel d_07264],0x0
+        jmp near L_04944
+L_047f2:
+        mov rax,[rel d_0705c]
+        push rax
+        pop rdi
+        call fn_03ef5
+        call fn_06480
+        test rax,rax
+        jz near L_04944
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0735c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07364],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0736c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_072dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_072e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_072ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0719c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_071a4],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_071ac],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_0725c],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_07264],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_0726c],rcx
+        mov rcx,[rbp-0x88]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x90]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x98]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0xa0]
+        mov [rel d_06f1c],rcx
+        mov rcx,[rbp-0xa8]
+        mov [rel d_06f24],rcx
+        mov rcx,[rbp-0xb0]
+        mov [rel d_06f2c],rcx
+        mov rcx,[rbp-0xb8]
+        mov [rel d_0705c],rcx
+        mov rcx,[rbp-0xc0]
+        mov [rel d_07064],rcx
+        mov rcx,[rbp-0xc8]
+        mov [rel d_0706c],rcx
+        mov rcx,[rbp-0xd0]
+        mov [rel d_06e5c],rcx
+        mov rcx,[rbp-0xd8]
+        mov [rel d_06e64],rcx
+        mov rcx,[rbp-0xe0]
+        mov [rel d_06e6c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_04944:
+        jmp near L_04c61
+L_04949:
+        mov ebx,0x2
+        mov rax,[rel d_06f1c]
+        cmp rax,rbx
+        jnz near L_04c61
+        call fn_058a2
+        mov [rel d_06e5c],rax
+        mov qword [rel d_06e64],0x0
+        call fn_06480
+        test rax,rax
+        jz near L_04ab9
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0735c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07364],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0736c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_072dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_072e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_072ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0719c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_071a4],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_071ac],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_0725c],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_07264],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_0726c],rcx
+        mov rcx,[rbp-0x88]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x90]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x98]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0xa0]
+        mov [rel d_06f1c],rcx
+        mov rcx,[rbp-0xa8]
+        mov [rel d_06f24],rcx
+        mov rcx,[rbp-0xb0]
+        mov [rel d_06f2c],rcx
+        mov rcx,[rbp-0xb8]
+        mov [rel d_0705c],rcx
+        mov rcx,[rbp-0xc0]
+        mov [rel d_07064],rcx
+        mov rcx,[rbp-0xc8]
+        mov [rel d_0706c],rcx
+        mov rcx,[rbp-0xd0]
+        mov [rel d_06e5c],rcx
+        mov rcx,[rbp-0xd8]
+        mov [rel d_06e64],rcx
+        mov rcx,[rbp-0xe0]
+        mov [rel d_06e6c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_04ab9:
+        mov ebx,0x1
+        mov rax,[rel d_06e5c]
+        cmp rax,rbx
+        jnz near L_04c3a
+        mov ebx,0x0
+        mov rax,[rel d_0719c]
+        cmp rax,rbx
+        jnz near L_04c3a
+        call fn_05892
+        push rax
+        call fn_0589a
+        push rax
+        pop rsi
+        pop rdi
+        call fn_038e1
+        call fn_06480
+        test rax,rax
+        jz near L_04c3a
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0735c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07364],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0736c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_072dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_072e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_072ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0719c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_071a4],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_071ac],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_0725c],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_07264],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_0726c],rcx
+        mov rcx,[rbp-0x88]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x90]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x98]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0xa0]
+        mov [rel d_06f1c],rcx
+        mov rcx,[rbp-0xa8]
+        mov [rel d_06f24],rcx
+        mov rcx,[rbp-0xb0]
+        mov [rel d_06f2c],rcx
+        mov rcx,[rbp-0xb8]
+        mov [rel d_0705c],rcx
+        mov rcx,[rbp-0xc0]
+        mov [rel d_07064],rcx
+        mov rcx,[rbp-0xc8]
+        mov [rel d_0706c],rcx
+        mov rcx,[rbp-0xd0]
+        mov [rel d_06e5c],rcx
+        mov rcx,[rbp-0xd8]
+        mov [rel d_06e64],rcx
+        mov rcx,[rbp-0xe0]
+        mov [rel d_06e6c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_04c3a:
+        mov rax,[rel d_06e5c]
+        mov [rel d_0719c],rax
+        mov rax,[rel d_06e64]
+        mov [rel d_071a4],rax
+        mov qword [rel d_071ac],0x0
+L_04c61:
+        jmp near L_044e5
+L_04c66:
+        lea rax,[rel d_068f8]
+        push rax
+        pop rdi
+        call fn_0582e
+        call fn_06480
+        test rax,rax
+        jz near L_04db8
+        mov eax,0x0
+        mov rcx,[rbp-0x28]
+        mov [rel d_0735c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07364],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0736c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_072dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_072e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_072ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0719c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_071a4],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_071ac],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_0725c],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_07264],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_0726c],rcx
+        mov rcx,[rbp-0x88]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x90]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x98]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0xa0]
+        mov [rel d_06f1c],rcx
+        mov rcx,[rbp-0xa8]
+        mov [rel d_06f24],rcx
+        mov rcx,[rbp-0xb0]
+        mov [rel d_06f2c],rcx
+        mov rcx,[rbp-0xb8]
+        mov [rel d_0705c],rcx
+        mov rcx,[rbp-0xc0]
+        mov [rel d_07064],rcx
+        mov rcx,[rbp-0xc8]
+        mov [rel d_0706c],rcx
+        mov rcx,[rbp-0xd0]
+        mov [rel d_06e5c],rcx
+        mov rcx,[rbp-0xd8]
+        mov [rel d_06e64],rcx
+        mov rcx,[rbp-0xe0]
+        mov [rel d_06e6c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+L_04db8:
+        mov eax,0x1
+        mov rcx,[rbp-0x28]
+        mov [rel d_0735c],rcx
+        mov rcx,[rbp-0x30]
+        mov [rel d_07364],rcx
+        mov rcx,[rbp-0x38]
+        mov [rel d_0736c],rcx
+        mov rcx,[rbp-0x40]
+        mov [rel d_072dc],rcx
+        mov rcx,[rbp-0x48]
+        mov [rel d_072e4],rcx
+        mov rcx,[rbp-0x50]
+        mov [rel d_072ec],rcx
+        mov rcx,[rbp-0x58]
+        mov [rel d_0719c],rcx
+        mov rcx,[rbp-0x60]
+        mov [rel d_071a4],rcx
+        mov rcx,[rbp-0x68]
+        mov [rel d_071ac],rcx
+        mov rcx,[rbp-0x70]
+        mov [rel d_0725c],rcx
+        mov rcx,[rbp-0x78]
+        mov [rel d_07264],rcx
+        mov rcx,[rbp-0x80]
+        mov [rel d_0726c],rcx
+        mov rcx,[rbp-0x88]
+        mov [rel d_0701c],rcx
+        mov rcx,[rbp-0x90]
+        mov [rel d_07024],rcx
+        mov rcx,[rbp-0x98]
+        mov [rel d_0702c],rcx
+        mov rcx,[rbp-0xa0]
+        mov [rel d_06f1c],rcx
+        mov rcx,[rbp-0xa8]
+        mov [rel d_06f24],rcx
+        mov rcx,[rbp-0xb0]
+        mov [rel d_06f2c],rcx
+        mov rcx,[rbp-0xb8]
+        mov [rel d_0705c],rcx
+        mov rcx,[rbp-0xc0]
+        mov [rel d_07064],rcx
+        mov rcx,[rbp-0xc8]
+        mov [rel d_0706c],rcx
+        mov rcx,[rbp-0xd0]
+        mov [rel d_06e5c],rcx
+        mov rcx,[rbp-0xd8]
+        mov [rel d_06e64],rcx
+        mov rcx,[rbp-0xe0]
+        mov [rel d_06e6c],rcx
+        mov rsp,rbp
+        pop rbp
+        retq
+        db 0xB8, 0x00, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xD8, 0x48, 0x89, 0x0D, 0x5E, 0x24, 0x00, 0x00
+        db 0x48, 0x8B, 0x4D, 0xD0, 0x48, 0x89, 0x0D, 0x5B, 0x24, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xC8, 0x48
+        db 0x89, 0x0D, 0x58, 0x24, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xC0, 0x48, 0x89, 0x0D, 0xBD, 0x23, 0x00
+        db 0x00, 0x48, 0x8B, 0x4D, 0xB8, 0x48, 0x89, 0x0D, 0xBA, 0x23, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xB0
+        db 0x48, 0x89, 0x0D, 0xB7, 0x23, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xA8, 0x48, 0x89, 0x0D, 0x5C, 0x22
+        db 0x00, 0x00, 0x48, 0x8B, 0x4D, 0xA0, 0x48, 0x89, 0x0D, 0x59, 0x22, 0x00, 0x00, 0x48, 0x8B, 0x4D
+        db 0x98, 0x48, 0x89, 0x0D, 0x56, 0x22, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0x90, 0x48, 0x89, 0x0D, 0xFB
+        db 0x22, 0x00, 0x00, 0x48, 0x8B, 0x4D, 0x88, 0x48, 0x89, 0x0D, 0xF8, 0x22, 0x00, 0x00, 0x48, 0x8B
+        db 0x4D, 0x80, 0x48, 0x89, 0x0D, 0xF5, 0x22, 0x00, 0x00, 0x48, 0x8B, 0x8D, 0x78, 0xFF, 0xFF, 0xFF
+        db 0x48, 0x89, 0x0D, 0x97, 0x20, 0x00, 0x00, 0x48, 0x8B, 0x8D, 0x70, 0xFF, 0xFF, 0xFF, 0x48, 0x89
+        db 0x0D, 0x91, 0x20, 0x00, 0x00, 0x48, 0x8B, 0x8D, 0x68, 0xFF, 0xFF, 0xFF, 0x48, 0x89, 0x0D, 0x8B
+        db 0x20, 0x00, 0x00, 0x48, 0x8B, 0x8D, 0x60, 0xFF, 0xFF, 0xFF, 0x48, 0x89, 0x0D, 0x6D, 0x1F, 0x00
+        db 0x00, 0x48, 0x8B, 0x8D, 0x58, 0xFF, 0xFF, 0xFF, 0x48, 0x89, 0x0D, 0x67, 0x1F, 0x00, 0x00, 0x48
+        db 0x8B, 0x8D, 0x50, 0xFF, 0xFF, 0xFF, 0x48, 0x89, 0x0D, 0x61, 0x1F, 0x00, 0x00, 0x48, 0x8B, 0x8D
+        db 0x48, 0xFF, 0xFF, 0xFF, 0x48, 0x89, 0x0D, 0x83, 0x20, 0x00, 0x00, 0x48, 0x8B, 0x8D, 0x40, 0xFF
+        db 0xFF, 0xFF, 0x48, 0x89, 0x0D, 0x7D, 0x20, 0x00, 0x00, 0x48, 0x8B, 0x8D, 0x38, 0xFF, 0xFF, 0xFF
+        db 0x48, 0x89, 0x0D, 0x77, 0x20, 0x00, 0x00, 0x48, 0x8B, 0x8D, 0x30, 0xFF, 0xFF, 0xFF, 0x48, 0x89
+        db 0x0D, 0x59, 0x1E, 0x00, 0x00, 0x48, 0x8B, 0x8D, 0x28, 0xFF, 0xFF, 0xFF, 0x48, 0x89, 0x0D, 0x53
+        db 0x1E, 0x00, 0x00, 0x48, 0x8B, 0x8D, 0x20, 0xFF, 0xFF, 0xFF, 0x48, 0x89, 0x0D, 0x4D, 0x1E, 0x00
+        db 0x00, 0x48, 0x89, 0xEC, 0x5D, 0xC3, 0xC3
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56
+        db 0x57
+        db 0x41
+        db 0x50
+        db 0x41
+        db 0x51
+        db 0x41
+        db 0x52
+        db 0x41
+        db 0x53
+        db 0x41, 0x54, 0x41, 0x55, 0x48, 0x89, 0xF3, 0x49, 0x89, 0xD5, 0x45, 0x31, 0xE4, 0x4D, 0x39, 0xEC
+        db 0x73, 0x14, 0x42, 0x0F, 0xB6, 0x3C, 0x23, 0x48, 0x8B, 0x05, 0x16, 0x25, 0x00, 0x00, 0xFF, 0x50
+        db 0x08, 0x49, 0xFF, 0xC4, 0xEB, 0xE7, 0x4C, 0x89, 0xE8
+        db 0x41
+        db 0x5D
+        db 0x41
+        db 0x5C
+        db 0x41
+        db 0x5B
+        db 0x41
+        db 0x5A
+        db 0x41
+        db 0x59
+        db 0x41
+        db 0x58
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56
+        db 0x57
+        db 0x41
+        db 0x50
+        db 0x41
+        db 0x51
+        db 0x41, 0x52, 0x41, 0x53, 0x48, 0x89, 0xF3, 0x48, 0x8B, 0x05, 0xE2, 0x24, 0x00, 0x00, 0xFF, 0x50
+        db 0x40, 0x48, 0x83, 0xF8, 0x01, 0x75, 0xF0, 0x88, 0x13, 0x0F, 0xB6, 0xFA, 0x48, 0x8B, 0x05, 0xCD
+        db 0x24, 0x00, 0x00, 0xFF, 0x50, 0x08, 0xB8, 0x01, 0x00, 0x00, 0x00
+        db 0x41
+        db 0x5B
+        db 0x41
+        db 0x5A
+        db 0x41
+        db 0x59
+        db 0x41
+        db 0x58
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3, 0x48, 0x8D, 0x3D, 0xA1, 0x27, 0x00, 0x00, 0x48, 0x8B, 0x05
+        db 0xA9, 0x24, 0x00, 0x00, 0xFF, 0x90, 0xC0, 0x00, 0x00, 0x00, 0x0F, 0x0B
+L_050c5:
+        push rbx
+        push rcx
+        push rdx
+        push rsi
+        push rdi
+        push r8
+        push r9
+        push r10
+        push r11
+        lea rbx,[rdi+0xf]
+        and rbx,0xfffffffffffffff0
+        mov rax,[rel d_0758e]
+        lea rcx,[rax+rbx]
+        cmp rcx,[rel d_07596]
+        jna short L_05120
+        mov edi,0x10000
+        cmp rbx,rdi
+        jna short L_050fb
+        mov rdi,rbx
+L_050fb:
+        push rdi
+        push rdi
+        mov rax,[rel d_07566]
+        call qword near [rax+0xb0]
+        pop rdi
+        pop rdi
+        test rax,rax
+        jz short L_05135
+        lea rcx,[rax+rdi]
+        mov [rel d_07596],rcx
+        lea rcx,[rax+rbx]
+L_05120:
+        mov [rel d_0758e],rcx
+        pop r11
+        pop r10
+        pop r9
+        pop r8
+        pop rdi
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rbx
+        retq
+L_05135:
+        lea rdi,[rel d_07876]
+        mov rax,[rel d_07566]
+        call qword near [rax+0xc0]
+        ud2
+
+fn_0514b:
+        push rbx
+        push rcx
+        push rdx
+        push rsi
+        push rdi
+        push r8
+        push r9
+        push r10
+        push r11
+        mov rbx,rdi
+        lea rdi,[rel d_0788d]
+        mov rax,[rel d_07566]
+        call qword near [rax+0xc0]
+        call fn_0643c
+        mov rdi,rax
+        call fn_0664b
+        mov rdi,rax
+        mov rax,[rel d_07566]
+        call qword near [rax+0xc0]
+        lea rdi,[rel d_078b0]
+        mov rax,[rel d_07566]
+        call qword near [rax+0xc0]
+        mov rdi,rbx
+        mov rax,[rel d_07566]
+        call qword near [rax+0xc0]
+        lea rdi,[rel d_07855]
+        mov rax,[rel d_07566]
+        call qword near [rax+0xc0]
+        call fn_0644e
+        pop r11
+        pop r10
+        pop r9
+        pop r8
+        pop rdi
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rbx
+        retq
+
+fn_051d7:
+        mov rax,[rel d_07566]
+        jmp qword near [rax+0x18]
+
+fn_051e1:
+        mov rax,[rel d_07566]
+        jmp qword near [rax+0x140]
+        db 0x41, 0x57, 0x55, 0x4C, 0x8D, 0x3D, 0xA7, 0x23, 0x00, 0x00, 0xBD, 0x38, 0x00, 0x00, 0x00, 0xEB
+        db 0x0F, 0x41, 0x57, 0x55, 0x4C, 0x8D, 0x3D, 0xCE, 0x23, 0x00, 0x00, 0xBD, 0x4C, 0x00, 0x00, 0x00
+        db 0x53
+        db 0x41
+        db 0x54
+        db 0x41, 0x55, 0x41, 0x56, 0x49, 0x89, 0xFC, 0x49, 0x89, 0xF5, 0x4C, 0x89, 0xEF, 0xE8, 0xAE, 0x13
+        db 0x00, 0x00, 0x49, 0x89, 0xC6, 0x49, 0x8D, 0x5E, 0x70, 0x48, 0x83, 0xE3, 0xF8, 0x48, 0x8D, 0x7C
+        db 0x1D, 0x17, 0x48, 0x83, 0xE7, 0xF8, 0x57, 0xE8, 0x55, 0x12, 0x00, 0x00, 0x59, 0x48, 0x85, 0xC0
+        db 0x74, 0x7F, 0x48, 0x89, 0xC2, 0xC7, 0x02, 0x4F, 0x4D, 0x53, 0x41, 0xC7, 0x42, 0x04, 0x04, 0x00
+        db 0x00, 0x00, 0x48, 0x89, 0x4A, 0x08, 0x48, 0xC7, 0x42, 0x10, 0x68, 0x00, 0x00, 0x00, 0x48, 0x89
+        db 0x5A, 0x18, 0x48, 0xC7, 0x42, 0x38, 0x01, 0x00, 0x00, 0x00, 0xC7, 0x42, 0x48, 0x02, 0x00, 0x00
+        db 0x00, 0x8B, 0x05, 0xB0, 0x24, 0x00, 0x00, 0xC1, 0xE0, 0x08, 0x89, 0x42, 0x50, 0x4C, 0x89, 0x72
+        db 0x58, 0x48, 0x8D, 0x7A, 0x68, 0x4C, 0x89, 0xEE, 0x51, 0x4C, 0x89, 0xF1, 0xF3, 0xA4, 0x48, 0x8D
+        db 0x3C, 0x1A, 0x4C, 0x89, 0xFE, 0x89, 0xE9, 0xF3, 0xA4, 0x59, 0x48, 0x8D, 0x44, 0x0A, 0xF0, 0x48
+        db 0x89, 0x08, 0xC7, 0x40, 0x08
+        db 0x41, 0x53, 0x4D, 0x4F, 0x4C, 0x89, 0xE7, 0x48, 0x89, 0xD6, 0x48, 0x89, 0xCA, 0x48, 0x8B, 0x05
+        db 0xAC, 0x22, 0x00, 0x00, 0xFF, 0x90, 0xE0, 0x00, 0x00, 0x00, 0xEB, 0x05, 0xB8, 0xFF, 0xFF, 0xFF
+        db 0xFF
+        db 0x41
+        db 0x5E
+        db 0x41
+        db 0x5D
+        db 0x41
+        db 0x5C, 0x5B, 0x5D, 0x41, 0x5F, 0xC3, 0x0F, 0xB6, 0x04, 0x37, 0xC3
+
+fn_052d7:
+        push rbx
+        mov rbx,rdi
+        mov edi,0x2
+        call fn_06492
+        test rax,rax
+        jz short L_052f0
+        mov [rax],bl
+        mov byte [rax+0x1],0x0
+L_052f0:
+        pop rbx
+        retq
+        db 0x48, 0x8B, 0x05, 0x6D, 0x22, 0x00, 0x00, 0xFF, 0x60, 0x58, 0x53, 0x48, 0x89, 0xF3, 0x48, 0x8B
+        db 0x05, 0x5F, 0x22, 0x00, 0x00, 0xFF, 0x50, 0x60, 0xEB, 0x0E, 0x53, 0x48, 0x89, 0xF3, 0x48, 0x8B
+        db 0x05, 0x4F, 0x22, 0x00, 0x00, 0xFF, 0x50, 0x68, 0x48, 0x85, 0xC0, 0x74, 0x15, 0x48, 0x89, 0xC7
+        db 0x48, 0x89, 0xDE, 0x48, 0x8B, 0x05, 0x3A, 0x22, 0x00, 0x00, 0xFF, 0x50, 0x70, 0x48, 0x85, 0xC0
+        db 0x75, 0x07, 0x48, 0x8D, 0x05, 0x63, 0x22, 0x00, 0x00, 0x5B, 0xC3
+        db 0x53
+        db 0x41, 0x54, 0x41, 0x55, 0x48, 0x8B, 0x05, 0x1D, 0x22, 0x00, 0x00, 0xFF, 0x50, 0x68, 0x48, 0x85
+        db 0xC0, 0x74, 0x34, 0x48, 0x89, 0xC3, 0x48, 0x8B, 0x05, 0x0B, 0x22, 0x00, 0x00, 0xFF, 0x50, 0x10
+        db 0x49, 0x89, 0xC4, 0x49, 0x89, 0xD5, 0x31, 0xFF, 0x48, 0x89, 0xDE, 0x48, 0x8D, 0x15, 0xB3, 0x23
+        db 0x00, 0x00, 0x4C, 0x89, 0xE1, 0x4D, 0x89, 0xE8, 0x48, 0x8B, 0x05, 0xE9, 0x21, 0x00, 0x00, 0xFF
+        db 0x90, 0x18, 0x01, 0x00, 0x00, 0xEB, 0x07, 0x48, 0xC7, 0xC0, 0xFF, 0xFF, 0xFF, 0xFF
+        db 0x41, 0x5D, 0x41, 0x5C, 0x5B, 0xC3, 0x48, 0x89, 0xFE, 0xBF, 0x0A, 0x00, 0x00, 0x00, 0x48, 0x8B
+        db 0x05, 0xC5, 0x21, 0x00, 0x00, 0xFF, 0xA0, 0x18, 0x01, 0x00, 0x00, 0x53, 0x41, 0x54, 0x48, 0x89
+        db 0xFB, 0x4C, 0x8B, 0x63, 0x08, 0x49, 0x8D, 0x7C, 0x24, 0x01, 0xE8, 0xD7, 0x10, 0x00, 0x00, 0x48
+        db 0x85, 0xC0, 0x74, 0x19, 0x48, 0x8B, 0x33, 0x31, 0xC9, 0x4C, 0x39, 0xE1, 0x73, 0x0B, 0x8A, 0x14
+        db 0xCE, 0x88, 0x14, 0x08, 0x48, 0xFF, 0xC1, 0xEB, 0xF0, 0xC6, 0x04, 0x08, 0x00, 0x41, 0x5C, 0x5B
+        db 0xC3, 0x53, 0x48, 0x8B, 0x42, 0x08, 0x48, 0x39, 0xC1, 0x73, 0x5D, 0x48, 0x29, 0xC8, 0x49, 0x39
+        db 0xC0, 0x4C, 0x0F, 0x4F, 0xC0, 0x49, 0x81, 0xF8, 0xFF, 0x00, 0x00, 0x00, 0x7E, 0x06, 0x41, 0xB8
+        db 0xFF, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x1A, 0x48, 0x8D, 0x1C, 0xCB, 0x31, 0xC9, 0x4C, 0x39, 0xC1
+        db 0x7D, 0x14, 0x8A, 0x04, 0xCB, 0x3C, 0x20, 0x73, 0x02, 0xB0, 0x20, 0x88, 0x81
+
+r_05419:
+        db 0x23, 0x76, 0x00, 0x00, 0x48, 0xFF, 0xC1, 0xEB, 0xE7, 0xC6, 0x81
+
+r_05424:
+        db 0x23, 0x76, 0x00, 0x00, 0x00, 0x4C, 0x89, 0xC9, 0x48, 0x8D, 0x15, 0xF0, 0x21, 0x00, 0x00, 0x49
+        db 0xC7, 0xC0, 0xFF, 0xFF, 0xFF, 0xFF, 0x48, 0x8B, 0x05, 0x25, 0x21, 0x00, 0x00, 0xFF, 0x50, 0x30
+        db 0x5B, 0xC3
+
+fn_05446:
+        push rbx
+        push r12
+        push r13
+        push r14
+        push r15
+        push rbp
+        mov r12,rdi
+        mov r13,rsi
+        mov r14,rdx
+        mov r15,rcx
+        test r15,r15
+        jz near L_05544
+        mov rbx,r13
+        imul rbx,r14
+        test rbx,rbx
+        jz near L_05544
+        cmp rbx,[r15+0x8]
+        ja near L_05544
+        lea rbp,[rbx*4+0x8]
+        lea rcx,[rbp+0x6f]
+        and rcx,0xfffffffffffffff8
+        push rcx
+        lea rdi,[rcx+0x62]
+        and rdi,0xfffffffffffffff8
+        push rdi
+        call fn_06492
+        pop r9
+        pop r8
+        test rax,rax
+        jz near L_05544
+        mov rdx,rax
+        mov dword [rdx],0x41534d4f
+        mov dword [rdx+0x4],0x4
+        mov [rdx+0x8],r9
+        mov qword [rdx+0x10],0x68
+        mov [rdx+0x18],r8
+        mov qword [rdx+0x38],0x1
+        mov dword [rdx+0x48],0x2
+        mov eax,[rel d_07728]
+        shl eax,byte 0x8
+        mov [rdx+0x50],eax
+        mov [rdx+0x58],rbp
+        mov [rdx+0x68],r13d
+        mov [rdx+0x6c],r14d
+        mov rsi,[r15]
+        xor ecx,ecx
+L_054f7:
+        mov eax,[rsi+rcx*8]
+        and eax,0xffffff
+        mov [rdx+rcx*4+0x70],eax
+        inc rcx
+        cmp rcx,rbx
+        jc short L_054f7
+        lea rdi,[rdx+r8]
+        lea rsi,[rel d_07738]
+        mov ecx,0x4b
+        rep movsb
+        lea rax,[rdx+r9-0x10]
+        mov [rax],r9
+        mov dword [rax+0x8],0x4f4d5341
+        mov rdi,r12
+        mov rsi,rdx
+        mov rdx,r9
+        mov rax,[rel d_07566]
+        call qword near [rax+0xe0]
+        jmp short L_05549
+L_05544:
+        mov eax,0xffffffff
+L_05549:
+        pop rbp
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbx
+        retq
+
+fn_05554:
+        push rbx
+        push r12
+        mov r12,rsi
+        mov rax,[rel d_07566]
+        call qword near [rax+0x68]
+        test rax,rax
+        jz short L_055ae
+        test r12,r12
+        jz short L_055ae
+        mov rbx,[rax+0x10]
+        add rbx,rax
+        mov eax,[rbx]
+        mov ecx,[rbx+0x4]
+        imul rax,rcx
+        mov rcx,[r12+0x8]
+        cmp rax,rcx
+        cmovc rcx,rax
+        mov rdi,[r12]
+        xor edx,edx
+L_05590:
+        cmp rdx,rcx
+        jnc short L_055a7
+        mov eax,[rbx+rdx*4+0x8]
+        and eax,0xffffff
+        mov [rdi+rdx*8],rax
+        inc rdx
+        jmp short L_05590
+L_055a7:
+        mov rax,rcx
+        pop r12
+        pop rbx
+        retq
+L_055ae:
+        xor eax,eax
+        pop r12
+        pop rbx
+        retq
+        db 0x53, 0x48, 0x8B, 0x05, 0xAA, 0x1F, 0x00, 0x00, 0xFF, 0x50, 0x68, 0x48, 0x85, 0xC0, 0x74, 0x2C
+        db 0x48, 0x8B, 0x58, 0x10, 0x48, 0x01, 0xC3, 0x48, 0x89, 0xDF, 0xE8, 0xFE, 0x0F, 0x00, 0x00, 0x48
+        db 0x8D, 0x78, 0x01, 0x50, 0xE8, 0xB5, 0x0E, 0x00, 0x00, 0x59, 0x48, 0x85, 0xC0, 0x74, 0x0D, 0x48
+        db 0x89, 0xC7, 0x48, 0x89, 0xDE, 0xF3, 0xA4, 0xC6, 0x07, 0x00, 0x5B, 0xC3, 0x48, 0x8D, 0x05, 0xA7
+        db 0x1F, 0x00, 0x00, 0x5B, 0xC3
+        db 0x53
+        db 0x41, 0x54, 0x41, 0x55, 0x49, 0x89, 0xFC, 0x49, 0x89, 0xD5, 0x4D, 0x85, 0xED, 0x74, 0x15, 0x41
+        db 0x8A, 0x04, 0x24, 0x84, 0xC0, 0x74, 0x3F, 0x49, 0xFF, 0xC4, 0x40, 0x38, 0xF0, 0x75, 0xF0, 0x49
+        db 0xFF, 0xCD, 0xEB, 0xE6, 0x31, 0xDB, 0x41, 0x8A, 0x04, 0x1C, 0x84, 0xC0, 0x74, 0x0A, 0x40, 0x38
+        db 0xF0, 0x74, 0x05, 0x48, 0xFF, 0xC3, 0xEB, 0xEE, 0x48, 0x8D, 0x7B, 0x01, 0xE8, 0x57, 0x0E, 0x00
+        db 0x00, 0x48, 0x85, 0xC0, 0x74, 0x10, 0x48, 0x89, 0xC7, 0x4C, 0x89, 0xE6, 0x48, 0x89, 0xD9, 0xF3
+        db 0xA4, 0xC6, 0x07, 0x00, 0xEB, 0x07, 0x48, 0x8D, 0x05, 0x47, 0x1F, 0x00, 0x00
+        db 0x41, 0x5D, 0x41, 0x5C, 0x5B, 0xC3, 0x48, 0x89, 0xF2, 0x48, 0x89, 0xFE, 0xBF, 0x02, 0x00, 0x00
+        db 0x00, 0x48, 0x8B, 0x05, 0xF7, 0x1E, 0x00, 0x00, 0xFF, 0xA0, 0x38, 0x01, 0x00, 0x00
+        db 0x53
+        db 0x41, 0x54, 0x41, 0x55, 0x49, 0x89, 0xF4, 0x48, 0x8B, 0x05, 0xE2, 0x1E, 0x00, 0x00, 0xFF, 0x50
+        db 0x68, 0x48, 0x85, 0xC0, 0x0F, 0x84, 0x9C, 0x00, 0x00, 0x00, 0x48, 0x89, 0xC3, 0x48, 0x8B, 0x4B
+        db 0x58, 0x48, 0x89, 0xDE, 0x48, 0x03, 0x73, 0x10, 0x48, 0x83, 0xF9, 0x2C, 0x72, 0x47, 0x81
+        db 0x3E
+        db 0x52
+        db 0x49
+        db 0x46, 0x46, 0x75, 0x3F, 0x4C, 0x8D, 0x04, 0x0E, 0x48, 0x8D, 0x56, 0x0C, 0x48, 0x8D, 0x42, 0x08
+        db 0x4C, 0x39, 0xC0, 0x77, 0x6F, 0x8B, 0x42, 0x04, 0x81
+        db 0x3A
+        db 0x64, 0x61, 0x74, 0x61, 0x74, 0x0E, 0x48, 0xFF, 0xC0, 0x48, 0x83, 0xE0, 0xFE, 0x48, 0x8D, 0x54
+        db 0x02, 0x08, 0xEB, 0xDE, 0x48, 0x8D, 0x72, 0x08, 0x89, 0xC1, 0x48, 0x8D, 0x04, 0x0E, 0x4C, 0x39
+        db 0xC0, 0x76, 0x06, 0x4C, 0x89, 0xC1, 0x48, 0x29, 0xF1, 0x49, 0x39, 0xCC, 0x73, 0x3C, 0x4C, 0x01
+        db 0xE6, 0x4C, 0x29, 0xE1, 0x48, 0x81, 0xF9, 0x00, 0xB8, 0x0B, 0x00, 0x76, 0x05, 0xB9, 0x00, 0xB8
+        db 0x0B, 0x00, 0x48, 0x83, 0xE1, 0xFC, 0x74, 0x22, 0x49, 0x89, 0xCD, 0xBF, 0x01, 0x00, 0x00, 0x00
+        db 0x48, 0x89, 0xCA, 0x48, 0x8B, 0x05, 0x4A, 0x1E, 0x00, 0x00, 0xFF, 0x90, 0x38, 0x01, 0x00, 0x00
+        db 0x48, 0x85, 0xC0, 0x74, 0x05, 0x4C, 0x89, 0xE8, 0xEB, 0x02, 0x31, 0xC0
+        db 0x41, 0x5D, 0x41, 0x5C, 0x5B, 0xC3, 0xBF, 0x03, 0x00, 0x00, 0x00, 0x48, 0x8B, 0x05, 0x26, 0x1E
+        db 0x00, 0x00, 0xFF, 0xA0, 0x38, 0x01, 0x00, 0x00, 0x48, 0x89, 0xF2, 0x48, 0x89, 0xFE, 0xBF, 0x0E
+        db 0x00, 0x00, 0x00, 0x48, 0x8B, 0x05, 0x0E, 0x1E, 0x00, 0x00, 0xFF, 0xA0, 0x18, 0x01, 0x00, 0x00
+        db 0x48, 0x89, 0xD1, 0x48, 0x89, 0xF2, 0x48, 0x89, 0xFE, 0xBF, 0x01, 0x00, 0x00, 0x00, 0x48, 0x8B
+        db 0x05, 0xF3, 0x1D, 0x00, 0x00, 0xFF, 0xA0, 0x50, 0x01, 0x00, 0x00, 0x31, 0xFF, 0x48, 0x8B, 0x05
+        db 0xE4, 0x1D, 0x00, 0x00, 0xFF, 0xA0, 0x50, 0x01, 0x00, 0x00, 0x48, 0x8B, 0x05, 0xA1, 0x1F, 0x00
+        db 0x00, 0x48, 0x85, 0xC0, 0x75, 0x16, 0xBF, 0x00, 0x00, 0x01, 0x00, 0xE8, 0xF4, 0x0C, 0x00, 0x00
+        db 0x48, 0x85, 0xC0, 0x74, 0x2C, 0x48, 0x89, 0x05, 0x86, 0x1F, 0x00, 0x00, 0xC6, 0x00, 0x00, 0xBF
+        db 0x02, 0x00, 0x00, 0x00, 0x48, 0x89, 0xC6, 0xBA, 0x00, 0x00, 0x01, 0x00, 0x48, 0x8B, 0x05, 0xA5
+        db 0x1D, 0x00, 0x00, 0xFF, 0x90, 0x50, 0x01, 0x00, 0x00, 0x48, 0x8B, 0x05, 0x62, 0x1F, 0x00, 0x00
+        db 0xC3, 0x48, 0x8D, 0x05, 0xC8, 0x1D, 0x00, 0x00, 0xC3
+
+fn_057d7:
+        mov r8,0xffffffffffffffff
+        mov rax,[rel d_07566]
+        jmp qword near [rax+0x30]
+
+fn_057e8:
+        mov rax,[rel d_07566]
+        jmp qword near [rax+0x38]
+        db 0x48, 0x8B, 0x05, 0x6D, 0x1D, 0x00, 0x00, 0xFF, 0x60, 0x20, 0x48, 0x8B, 0x05, 0x63, 0x1D, 0x00
+        db 0x00, 0xFF, 0x60, 0x10, 0x48, 0x8B, 0x05, 0x59, 0x1D, 0x00, 0x00, 0xFF, 0x50, 0x10, 0x48, 0x89
+        db 0xD0, 0xC3, 0x48, 0x8B, 0x05, 0x4B, 0x1D, 0x00, 0x00, 0xFF, 0xA0, 0xA0, 0x00, 0x00, 0x00, 0x48
+        db 0x8B, 0x05, 0x3E, 0x1D, 0x00, 0x00, 0xFF, 0xA0, 0xA8, 0x00, 0x00, 0x00
+
+fn_0582e:
+        push rbx
+        mov rax,[rel d_07566]
+        call qword near [rax+0xc0]
+        lea rdi,[rel d_07855]
+        mov rax,[rel d_07566]
+        call qword near [rax+0xc0]
+        pop rbx
+        retq
+
+fn_05852:
+        mov rax,[rel d_07566]
+        call qword near [rax+0x40]
+        test rax,rax
+        jz short L_05876
+        mov [rel d_07576],rdx
+        mov [rel d_0757e],rcx
+        mov [rel d_07586],r8
+L_05876:
+        retq
+
+fn_05877:
+        mov rax,[rel d_07576]
+        retq
+        db 0x83, 0xE7, 0x1F, 0x48, 0x89, 0x3D, 0x9F, 0x1E, 0x00, 0x00, 0xC3, 0x48, 0x8B, 0x05, 0xF5, 0x1C
+        db 0x00, 0x00, 0xC3
+
+fn_05892:
+        mov rax,[rel d_07576]
+        retq
+
+fn_0589a:
+        mov rax,[rel d_0757e]
+        retq
+
+fn_058a2:
+        mov rax,[rel d_07586]
+        retq
+        db 0x48, 0x8B, 0x05, 0xB5, 0x1C, 0x00, 0x00, 0xFF, 0x60, 0x48, 0x48, 0x8B, 0x05, 0xAB, 0x1C, 0x00
+        db 0x00, 0xFF, 0x60, 0x50, 0x48, 0x8B, 0x05, 0xA9, 0x1C, 0x00, 0x00, 0x48, 0x03, 0x40, 0x10, 0xC3
+        db 0x48, 0x89, 0xFE, 0x48, 0x8B, 0x3D, 0x9A, 0x1C, 0x00, 0x00, 0x48, 0x8B, 0x05, 0x8B, 0x1C, 0x00
+        db 0x00, 0xFF, 0x50, 0x70, 0x48, 0x85, 0xC0, 0x75, 0x07, 0x48, 0x8D, 0x05, 0xB4, 0x1C, 0x00, 0x00
+        db 0xC3, 0x53, 0x41, 0x54, 0x49, 0x89, 0xFC, 0x31, 0xDB, 0x48, 0x8D, 0x05, 0x8E, 0x1E, 0x00, 0x00
+        db 0x48, 0x8B, 0x34, 0xD8, 0x48, 0x85, 0xF6, 0x74, 0x35, 0x4C, 0x89, 0xE7, 0xE8, 0x10, 0x03, 0x00
+        db 0x00, 0x48, 0x85, 0xC0, 0x74, 0x04, 0xFF, 0xC3, 0xEB, 0xDF, 0xBF, 0x40, 0x00, 0x00, 0x00, 0xE8
+        db 0x74, 0x0B, 0x00, 0x00, 0x49, 0x89, 0xC4, 0x89, 0xDF, 0x4C, 0x89, 0xE6, 0x48, 0x8B, 0x05, 0x39
+        db 0x1C, 0x00, 0x00, 0xFF, 0x90, 0x28, 0x01, 0x00, 0x00, 0x4C, 0x89, 0xE0, 0xEB, 0x07, 0x48, 0x8D
+        db 0x05, 0x5F, 0x1C, 0x00, 0x00, 0x41, 0x5C, 0x5B, 0xC3, 0x53, 0x41, 0x54, 0x48, 0x89, 0xFB, 0xBF
+        db 0x40, 0x00, 0x00, 0x00, 0xE8, 0x3F, 0x0B, 0x00, 0x00, 0x49, 0x89, 0xC4, 0x48, 0x8D, 0xBB, 0xE8
+        db 0x03, 0x00, 0x00, 0x4C, 0x89, 0xE6, 0x48, 0x8B, 0x05, 0xFF, 0x1B, 0x00, 0x00, 0xFF, 0x90, 0x28
+        db 0x01, 0x00, 0x00, 0x48, 0x85, 0xC0, 0x79, 0x05, 0x41, 0xC6, 0x04, 0x24, 0x00, 0x4C, 0x89, 0xE0
+        db 0x41, 0x5C, 0x5B, 0xC3, 0x53, 0x48, 0x89, 0xF3, 0x48, 0x8B, 0x05, 0xDD, 0x1B, 0x00, 0x00, 0xFF
+        db 0x50, 0x68, 0x48, 0x85, 0xC0, 0x74, 0x31, 0x48, 0x89, 0xC7, 0x48, 0x89, 0xDE, 0x31, 0xD2, 0x31
+        db 0xC9, 0xFF, 0x35, 0xCD, 0x1B, 0x00, 0x00, 0xFF, 0x35, 0xBF, 0x1B, 0x00, 0x00, 0x48, 0x8B, 0x05
+        db 0xB8, 0x1B, 0x00, 0x00, 0xFF, 0x90, 0x80, 0x00, 0x00, 0x00, 0x8F, 0x05, 0xAC, 0x1B, 0x00, 0x00
+        db 0x8F, 0x05, 0xAE, 0x1B, 0x00, 0x00, 0x5B, 0xC3, 0x48, 0xC7, 0xC0, 0xFF, 0xFF, 0xFF, 0xFF, 0x5B
+        db 0xC3, 0x48, 0x8B, 0x05, 0x94, 0x1B, 0x00, 0x00, 0xFF, 0xA0, 0x90, 0x00, 0x00, 0x00, 0x48, 0x8B
+        db 0x05, 0x87, 0x1B, 0x00, 0x00, 0xFF, 0x60, 0x08, 0xE8, 0xF2, 0x00, 0x00, 0x00, 0x50, 0xB0, 0x0A
+        db 0xE8, 0x20, 0x00, 0x00, 0x00, 0x58, 0xC3, 0x50, 0x57, 0x8A, 0x07, 0x84, 0xC0, 0x74, 0x0A, 0xE8
+        db 0x11, 0x00, 0x00, 0x00, 0x48, 0xFF, 0xC7, 0xEB, 0xF0, 0x50, 0xB0, 0x0A, 0xE8, 0x04, 0x00, 0x00
+        db 0x00, 0x58, 0x5F, 0x58, 0xC3, 0x50, 0x52, 0x56, 0x88, 0x05, 0x78, 0x4D, 0x00, 0x00, 0x48, 0x8D
+        db 0x35, 0x71, 0x4D, 0x00, 0x00, 0xBA, 0x01, 0x00, 0x00, 0x00, 0xE8, 0xFC, 0xF5, 0xFF, 0xFF, 0x5E
+        db 0x5A, 0x58, 0xC3, 0x50, 0xB0, 0x0A, 0xE8, 0xDA, 0xFF, 0xFF, 0xFF, 0x58, 0xC3
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56
+        db 0x57, 0x41, 0x53, 0x48, 0x31, 0xC9, 0x48, 0x81, 0xF9, 0xFF, 0x00, 0x00, 0x00, 0x7D, 0x37, 0x48
+        db 0x8D, 0x35, 0xBB, 0x0F, 0x00, 0x00, 0x48, 0x01, 0xCE, 0xBA, 0x01, 0x00, 0x00, 0x00, 0xE8, 0x0F
+        db 0xF6, 0xFF, 0xFF, 0x48, 0x83, 0xF8, 0x01, 0x7C, 0x18, 0x48, 0x8D, 0x3D, 0xA1, 0x0F, 0x00, 0x00
+        db 0x80, 0x3C, 0x0F, 0x0A, 0x74, 0x10, 0x80, 0x3C, 0x0F, 0x0D, 0x74, 0xCA, 0x48, 0xFF, 0xC1, 0xEB
+        db 0xC5, 0x48, 0x85, 0xC9, 0x74, 0x37, 0x48, 0x8D, 0x3D, 0x84, 0x0F, 0x00, 0x00, 0xC6, 0x04, 0x0F
+        db 0x00, 0x48, 0x89, 0x0D, 0x79, 0x10, 0x00, 0x00, 0x51, 0x48, 0x8D, 0x79, 0x01, 0xE8, 0xF5, 0x09
+        db 0x00, 0x00, 0x59, 0x48, 0x8D, 0x35, 0x67, 0x0F, 0x00, 0x00, 0x48, 0x31, 0xD2, 0x8A, 0x1C, 0x16
+        db 0x88, 0x1C, 0x10, 0x48, 0xFF, 0xC2, 0x48, 0x39, 0xCA, 0x7E, 0xF2, 0xEB, 0x19, 0x48, 0xC7, 0x05
+        db 0x49, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC6, 0x05, 0x42, 0x0F, 0x00, 0x00, 0x00, 0x48
+        db 0x8D, 0x05, 0x3B, 0x0F, 0x00, 0x00
+        db 0x41
+        db 0x5B
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3
+        db 0x50
+        db 0x53
+        db 0x51, 0x52, 0x56, 0x57, 0x48, 0x89, 0xF8, 0x48, 0x85, 0xC0, 0x79, 0x0C, 0x50, 0xB0, 0x2D, 0xE8
+        db 0x20, 0xFF, 0xFF, 0xFF, 0x58, 0x48, 0xF7, 0xD8, 0xB9, 0x0A, 0x00, 0x00, 0x00, 0x48, 0x31, 0xDB
+        db 0x48, 0x83, 0xF8, 0x00, 0x75, 0x07, 0x6A, 0x00, 0x48, 0xFF, 0xC3, 0xEB, 0x0F, 0x48, 0x31, 0xD2
+        db 0x48, 0xF7, 0xF1, 0x52, 0x48, 0xFF, 0xC3, 0x48, 0x85, 0xC0, 0x75, 0xF1, 0x58, 0x04, 0x30, 0xE8
+        db 0xF0, 0xFE, 0xFF, 0xFF, 0x48, 0xFF, 0xCB, 0x75, 0xF3
+        db 0x5F
+        db 0x5E, 0x5A, 0x59, 0x5B, 0x58, 0xC3
+        db 0x50
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56, 0x57, 0x41, 0x50, 0x48, 0x89, 0xF8, 0xB9, 0x0A, 0x00, 0x00, 0x00, 0x48, 0x31, 0xDB, 0x48
+        db 0x83, 0xF8, 0x00, 0x75, 0x07, 0x6A, 0x00, 0x48, 0xFF, 0xC3, 0xEB, 0x0F, 0x48, 0x31, 0xD2, 0x48
+        db 0xF7, 0xF1, 0x52, 0x48, 0xFF, 0xC3, 0x48, 0x85, 0xC0, 0x75, 0xF1, 0x41, 0xB8, 0x06, 0x00, 0x00
+        db 0x00, 0x49, 0x29, 0xD8, 0x49, 0x83, 0xF8, 0x00, 0x7E, 0x0E, 0x50, 0xB0, 0x30, 0xE8, 0x9E, 0xFE
+        db 0xFF, 0xFF, 0x58, 0x49, 0xFF, 0xC8, 0xEB, 0xEC, 0x58, 0x04, 0x30, 0xE8, 0x90, 0xFE, 0xFF, 0xFF
+        db 0x48, 0xFF, 0xCB, 0x75, 0xF3
+        db 0x41
+        db 0x58
+        db 0x5F
+        db 0x5E, 0x5A, 0x59, 0x5B, 0x58, 0xC3
+        db 0x50
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56
+        db 0x57
+        db 0x41, 0x50, 0x41, 0x51, 0x48, 0x83, 0xEC, 0x10, 0x66, 0x0F, 0xD6, 0x04, 0x24, 0x66, 0x48, 0x0F
+        db 0x7E, 0xC0, 0x48, 0x85, 0xC0, 0x79, 0x14, 0xB0, 0x2D, 0xE8, 0x5E, 0xFE, 0xFF, 0xFF, 0x48, 0x8B
+        db 0x04, 0x24, 0x48, 0x0F, 0xBA, 0xF0, 0x3F, 0x48, 0x89, 0x04, 0x24, 0xF3, 0x0F, 0x7E, 0x14, 0x24
+        db 0xF2, 0x48, 0x0F, 0x2C, 0xC2, 0x50, 0xB8, 0x40, 0x42, 0x0F, 0x00, 0x66, 0x48, 0x0F, 0x6E, 0xC8
+        db 0xF2, 0x48, 0x0F, 0x2A, 0xC8, 0xF2, 0x0F, 0x59, 0xD1, 0xF2, 0x48, 0x0F, 0x2C, 0xC2, 0x5B, 0x53
+        db 0xB9, 0x40, 0x42, 0x0F, 0x00, 0x48, 0x0F, 0xAF, 0xD9, 0x48, 0x29, 0xD8, 0x50, 0x5A, 0x5F, 0x52
+        db 0xE8, 0xE1, 0xFE, 0xFF, 0xFF, 0xB0, 0x2E, 0xE8, 0x10, 0xFE, 0xFF, 0xFF, 0x5F, 0xE8, 0x26, 0xFF
+        db 0xFF, 0xFF, 0xB0, 0x0A, 0xE8, 0x03, 0xFE, 0xFF, 0xFF, 0x48, 0x83, 0xC4, 0x10
+        db 0x41
+        db 0x59
+        db 0x41
+        db 0x58
+        db 0x5F
+        db 0x5E, 0x5A, 0x59, 0x5B, 0x58, 0xC3, 0x53, 0x51, 0x52, 0x48, 0x89, 0xFB, 0x48, 0x89, 0xF1, 0x8A
+        db 0x03, 0x8A, 0x11, 0x38, 0xD0, 0x75, 0x13, 0x84, 0xC0, 0x74, 0x08, 0x48, 0xFF, 0xC3, 0x48, 0xFF
+        db 0xC1, 0xEB, 0xEC, 0xB8, 0x00, 0x00, 0x00, 0x00, 0xEB, 0x05, 0xB8, 0x01, 0x00, 0x00, 0x00, 0x5A
+        db 0x59, 0x5B, 0xC3
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56
+        db 0x57
+        db 0x41, 0x50, 0x41, 0x51, 0x48, 0x89, 0xFB, 0x48, 0x89, 0xF1, 0x48, 0x89, 0xD2, 0x41, 0xB8, 0x00
+        db 0x00, 0x00, 0x00, 0x49, 0x39, 0xD0, 0x7D, 0x54, 0x4A, 0x8B, 0x04, 0xC3, 0x48, 0x3D, 0x00, 0x10
+        db 0x00, 0x00, 0x72, 0x29, 0x48, 0x81, 0xF9, 0x00, 0x10, 0x00, 0x00
+        db 0x72
+        db 0x20
+        db 0x50
+        db 0x51
+        db 0x52
+        db 0x56, 0x57, 0x41, 0x50, 0x48, 0x89, 0xC7, 0x48, 0x89, 0xCE, 0xE8, 0x8F, 0xFF, 0xFF, 0xFF, 0x48
+        db 0x85, 0xC0, 0x74, 0x1A
+        db 0x41
+        db 0x58
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x58, 0xEB, 0x05, 0x48, 0x39, 0xC8, 0x74, 0x05, 0x49, 0xFF, 0xC0, 0xEB
+        db 0xBC, 0xB8, 0x01, 0x00, 0x00, 0x00, 0xEB, 0x13
+        db 0x41
+        db 0x58
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x58, 0xB8, 0x01, 0x00, 0x00, 0x00, 0xEB, 0x05, 0xB8, 0x00, 0x00, 0x00
+        db 0x00
+        db 0x41
+        db 0x59
+        db 0x41
+        db 0x58
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3
+        db 0x53
+        db 0x51, 0x52, 0x56, 0x57, 0x48, 0x89, 0xFB, 0x48, 0x89, 0xF1, 0x80, 0x39, 0x00, 0x74, 0x31, 0x80
+        db 0x3B, 0x00, 0x74, 0x25, 0x8A, 0x03, 0x84, 0xC0, 0x74, 0x1F, 0x8A, 0x03, 0x3A, 0x01, 0x75, 0x14
+        db 0x53, 0x51, 0x48, 0x89, 0xDE, 0x48, 0x89, 0xCF, 0xE8, 0x1E, 0x00, 0x00, 0x00, 0x59, 0x5B, 0x48
+        db 0x85, 0xC0, 0x75, 0x0C, 0x48, 0xFF, 0xC3, 0xEB, 0xDB, 0xB8, 0x00, 0x00, 0x00, 0x00, 0xEB, 0x05
+        db 0xB8, 0x01, 0x00, 0x00, 0x00
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3, 0x53, 0x51, 0x48, 0x89, 0xF3, 0x48, 0x89, 0xF9, 0x8A, 0x01
+        db 0x84, 0xC0, 0x74, 0x0E, 0x8A, 0x13, 0x38, 0xC2, 0x75, 0x0F, 0x48, 0xFF, 0xC3, 0x48, 0xFF, 0xC1
+        db 0xEB, 0xEC, 0xB8, 0x01, 0x00, 0x00, 0x00, 0xEB, 0x05, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x59, 0x5B
+        db 0xC3
+        db 0x53
+        db 0x51, 0x52, 0x56, 0x57, 0x48, 0x89, 0xFB, 0x48, 0x89, 0xF1, 0xB8, 0x00, 0x00, 0x00, 0x00, 0xBA
+        db 0x00, 0x00, 0x00, 0x00, 0x48, 0x39, 0xCA, 0x7D, 0x09, 0x48, 0x03, 0x04, 0xD3, 0x48, 0xFF, 0xC2
+        db 0xEB, 0xF2
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3
+        db 0x53
+        db 0x51, 0x52, 0x56, 0x57, 0x48, 0x83, 0xFE, 0x00, 0x74, 0x24, 0x48, 0x89, 0xFB, 0x48, 0x89, 0xF1
+        db 0x48, 0x8B, 0x03, 0xBA, 0x01, 0x00, 0x00, 0x00, 0x48, 0x39, 0xCA, 0x7D, 0x16, 0x4C, 0x8B, 0x04
+        db 0xD3, 0x49, 0x39, 0xC0, 0x7D, 0x03, 0x4C, 0x89, 0xC0, 0x48, 0xFF, 0xC2, 0xEB, 0xEA, 0xB8, 0x00
+        db 0x00, 0x00, 0x00
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3
+        db 0x53
+        db 0x51, 0x52, 0x56, 0x57, 0x48, 0x83, 0xFE, 0x00, 0x74, 0x24, 0x48, 0x89, 0xFB, 0x48, 0x89, 0xF1
+        db 0x48, 0x8B, 0x03, 0xBA, 0x01, 0x00, 0x00, 0x00, 0x48, 0x39, 0xCA, 0x7D, 0x16, 0x4C, 0x8B, 0x04
+        db 0xD3, 0x49, 0x39, 0xC0, 0x7E, 0x03, 0x4C, 0x89, 0xC0, 0x48, 0xFF, 0xC2, 0xEB, 0xEA, 0xB8, 0x00
+        db 0x00, 0x00, 0x00
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3
+
+fn_05ddc:
+        push rbx
+        push r8
+        call fn_06551
+        mov rbx,[rdi]
+        mov r8,[rdi+0x8]
+        mov [rbx+r8*8],rsi
+        inc r8
+        mov [rdi+0x8],r8
+        pop r8
+        pop rbx
+        retq
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56, 0x57, 0x41, 0x50, 0x48, 0x8B, 0x1F, 0x48, 0x8B, 0x4F, 0x08, 0x48, 0x83, 0xF9, 0x00, 0x7E
+        db 0x0D, 0x48, 0xFF, 0xC9, 0x48, 0x8B, 0x04, 0xCB, 0x48, 0x89, 0x4F, 0x08, 0xEB, 0x05, 0xB8, 0x00
+        db 0x00, 0x00, 0x00
+        db 0x41
+        db 0x58
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56
+        db 0x57
+        db 0x41, 0x50, 0x41, 0x51, 0x48, 0x8B, 0x1F, 0x48, 0x8B, 0x4F, 0x08, 0x49, 0x89, 0xF0, 0x49, 0x83
+        db 0xF8, 0x00, 0x7C, 0x28, 0x49, 0x39, 0xC8, 0x7D, 0x23, 0x4A, 0x8B, 0x04, 0xC3, 0x4D, 0x89, 0xC1
+        db 0x49, 0x39, 0xC9, 0x7D, 0x0E, 0x4A, 0x8B, 0x54, 0xCB, 0x08, 0x4A, 0x89, 0x14, 0xCB, 0x49, 0xFF
+        db 0xC1, 0xEB, 0xED, 0x48, 0xFF, 0xC9, 0x48, 0x89, 0x4F, 0x08, 0xEB, 0x05, 0xB8, 0x00, 0x00, 0x00
+        db 0x00
+        db 0x41
+        db 0x59
+        db 0x41
+        db 0x58
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3, 0x53, 0x51, 0x52, 0x48, 0x89, 0xFB, 0x48, 0x89, 0xF1, 0x8A
+        db 0x03, 0x84, 0xC0, 0x74, 0x18, 0x8A, 0x11, 0x80, 0xFA, 0x3D, 0x74, 0x11, 0x80, 0xFA, 0x00, 0x74
+        db 0x21, 0x38, 0xD0, 0x75, 0x1D, 0x48, 0xFF, 0xC3, 0x48, 0xFF, 0xC1, 0xEB, 0xE2, 0x8A, 0x11, 0x80
+        db 0xFA, 0x3D, 0x74, 0x07, 0x80, 0xFA, 0x00, 0x74, 0x02, 0xEB, 0x07, 0xB8, 0x00, 0x00, 0x00, 0x00
+        db 0xEB, 0x05, 0xB8, 0x01, 0x00, 0x00, 0x00, 0x5A, 0x59, 0x5B, 0xC3
+        db 0x50
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56
+        db 0x57, 0x41, 0x50, 0x41, 0x51, 0xE8, 0x19, 0x01, 0x00, 0x00, 0x48, 0x85, 0xC0, 0x74, 0x5A, 0x48
+        db 0x89, 0xC3, 0x49, 0x89, 0xC0, 0x41, 0x80, 0x38, 0x7C, 0x74, 0x0B, 0x41, 0x80, 0x38, 0x00, 0x74
+        db 0x05, 0x49, 0xFF, 0xC0, 0xEB, 0xEF, 0x4C, 0x8D, 0x0D, 0xA1, 0x40, 0x00, 0x00, 0x41, 0x8A, 0x00
+        db 0x41, 0x88, 0x01, 0x49, 0xFF, 0xC0, 0x49, 0xFF, 0xC1, 0x84, 0xC0, 0x75, 0xF0, 0x49, 0x89, 0xD0
+        db 0x41, 0x8A, 0x00, 0x84, 0xC0, 0x74, 0x0A, 0x88, 0x03, 0x49, 0xFF, 0xC0, 0x48, 0xFF, 0xC3, 0xEB
+        db 0xEF, 0x4C, 0x8D, 0x0D, 0x76, 0x40, 0x00, 0x00, 0x41, 0x8A, 0x01, 0x88, 0x03, 0x49, 0xFF, 0xC1
+        db 0x48, 0xFF, 0xC3, 0x84, 0xC0, 0x75, 0xF1, 0xEB, 0x49, 0x48, 0x89, 0xFB, 0x80, 0x3B, 0x00, 0x74
+        db 0x05, 0x48, 0xFF, 0xC3, 0xEB, 0xF6, 0x48, 0x39, 0xFB, 0x74, 0x06, 0xC6, 0x03, 0x7C, 0x48, 0xFF
+        db 0xC3, 0x49, 0x89, 0xF0, 0x41, 0x8A, 0x00, 0x84, 0xC0, 0x74, 0x0A, 0x88, 0x03, 0x49, 0xFF, 0xC0
+        db 0x48, 0xFF, 0xC3, 0xEB, 0xEF, 0xC6, 0x03, 0x3D, 0x48, 0xFF, 0xC3, 0x49, 0x89, 0xD0, 0x41, 0x8A
+        db 0x00, 0x84, 0xC0, 0x74, 0x0A, 0x88, 0x03, 0x49, 0xFF, 0xC0, 0x48, 0xFF, 0xC3, 0xEB, 0xEF, 0xC6
+        db 0x03, 0x00
+        db 0x41
+        db 0x59
+        db 0x41
+        db 0x58
+        db 0x5F
+        db 0x5E, 0x5A, 0x59, 0x5B, 0x58, 0xC3, 0xE8, 0x61, 0x00, 0x00, 0x00, 0x48, 0x85, 0xC0
+        db 0x74
+        db 0x5B
+        db 0x53, 0x51, 0x52, 0x56, 0x48, 0x8B, 0x0D, 0x91, 0x19, 0x00, 0x00, 0x48, 0x89, 0xCA, 0x48, 0xFF
+        db 0xC1, 0x48, 0x83, 0xE1, 0x0F, 0x48, 0x89, 0x0D, 0x80, 0x19, 0x00, 0x00, 0x48, 0xC1, 0xE2, 0x08
+        db 0x48, 0x8D, 0x1D, 0xE0, 0x2F, 0x00, 0x00, 0x48, 0x01, 0xD3, 0x48, 0x89, 0xDE, 0x48, 0x31, 0xD2
+        db 0x8A, 0x08, 0x80, 0xF9, 0x7C, 0x74, 0x1A, 0x84, 0xC9, 0x74, 0x16, 0x48, 0x81, 0xFA, 0xFF, 0x00
+        db 0x00, 0x00, 0x7D, 0x0D, 0x88, 0x0E, 0x48, 0xFF, 0xC0, 0x48, 0xFF, 0xC6, 0x48, 0xFF, 0xC2, 0xEB
+        db 0xDF, 0xC6, 0x06, 0x00, 0x48, 0x89, 0xD8, 0x5E, 0x5A, 0x59, 0x5B, 0xC3
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56
+        db 0x57
+        db 0x41, 0x50, 0x41, 0x51, 0x48, 0x89, 0xFB, 0x48, 0x89, 0xF1, 0x49, 0x89, 0xD8, 0x41, 0x80, 0x38
+        db 0x00, 0x74, 0x38, 0x4C, 0x89, 0xC6, 0x48, 0x89, 0xCF, 0xE8, 0x70, 0xFE, 0xFF, 0xFF, 0x48, 0x85
+        db 0xC0, 0x75, 0x12, 0x4C, 0x89, 0xC0, 0x80, 0x38, 0x3D, 0x74, 0x05, 0x48, 0xFF, 0xC0, 0xEB, 0xF6
+        db 0x48, 0xFF, 0xC0, 0xEB, 0x1B, 0x41, 0x80, 0x38, 0x7C, 0x74, 0x0B, 0x41, 0x80, 0x38, 0x00, 0x74
+        db 0x0A, 0x49, 0xFF, 0xC0, 0xEB, 0xEF, 0x49, 0xFF, 0xC0, 0xEB, 0xC2, 0xB8, 0x00, 0x00, 0x00, 0x00
+        db 0x41
+        db 0x59
+        db 0x41
+        db 0x58
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3, 0xE8, 0x9C, 0xFF, 0xFF, 0xFF, 0x48, 0x85, 0xC0, 0x0F, 0x95
+        db 0xC0, 0x48, 0x0F, 0xB6, 0xC0, 0xC3
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56
+        db 0x57
+        db 0x41
+        db 0x50
+        db 0x41
+        db 0x51
+        db 0x41, 0x52, 0x41, 0x53, 0x48, 0x89, 0xFB, 0x4C, 0x8D, 0x0D, 0x07, 0x19, 0x00, 0x00, 0x4C, 0x8D
+        db 0x15, 0x18, 0x1F, 0x00, 0x00, 0x41, 0xBB, 0x00, 0x00, 0x00, 0x00, 0x80, 0x3B, 0x00, 0x74, 0x3C
+        db 0x80, 0x3B, 0x00, 0x74, 0x37, 0x4F, 0x89, 0x14, 0xD9, 0x8A, 0x03, 0x3C, 0x00, 0x74, 0x0F, 0x3C
+        db 0x3D, 0x74, 0x0B, 0x41, 0x88, 0x02, 0x48, 0xFF, 0xC3, 0x49, 0xFF, 0xC2, 0xEB, 0xEB, 0x41, 0xC6
+        db 0x02, 0x00, 0x49, 0xFF, 0xC2, 0x49, 0xFF, 0xC3, 0x80, 0x3B, 0x00, 0x74, 0x0F, 0x80, 0x3B, 0x7C
+        db 0x74, 0x05, 0x48, 0xFF, 0xC3, 0xEB, 0xF1, 0x48, 0xFF, 0xC3, 0xEB, 0xC4, 0x4B, 0xC7, 0x04, 0xD9
+        db 0x00, 0x00, 0x00, 0x00, 0x48, 0x8D, 0x05, 0xAA, 0x18, 0x00, 0x00
+        db 0x41
+        db 0x5B
+        db 0x41
+        db 0x5A
+        db 0x41
+        db 0x59
+        db 0x41
+        db 0x58
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56
+        db 0x57
+        db 0x41
+        db 0x50
+        db 0x41
+        db 0x51
+        db 0x41, 0x52, 0x41, 0x53, 0x48, 0x89, 0xFB, 0x4C, 0x8D, 0x0D, 0x8D, 0x1A, 0x00, 0x00, 0x4C, 0x8D
+        db 0x15, 0x96, 0x22, 0x00, 0x00, 0x41, 0xBB, 0x00, 0x00, 0x00, 0x00, 0x80, 0x3B, 0x00, 0x74, 0x44
+        db 0x80, 0x3B, 0x00, 0x74, 0x3F, 0x80, 0x3B, 0x00, 0x74, 0x3A, 0x80, 0x3B, 0x3D, 0x74, 0x05, 0x48
+        db 0xFF, 0xC3, 0xEB, 0xF1, 0x48, 0xFF, 0xC3, 0x4F, 0x89, 0x14, 0xD9, 0x8A, 0x03, 0x3C, 0x00, 0x74
+        db 0x0F, 0x3C, 0x7C, 0x74, 0x0B, 0x41, 0x88, 0x02, 0x48, 0xFF, 0xC3, 0x49, 0xFF, 0xC2, 0xEB, 0xEB
+        db 0x41, 0xC6, 0x02, 0x00, 0x49, 0xFF, 0xC2, 0x49, 0xFF, 0xC3, 0x80, 0x3B, 0x7C, 0x75, 0x05, 0x48
+        db 0xFF, 0xC3, 0xEB, 0xBC, 0x4B, 0xC7, 0x04, 0xD9, 0x00, 0x00, 0x00, 0x00, 0x48, 0x8D, 0x05, 0x28
+        db 0x1A, 0x00, 0x00
+        db 0x41
+        db 0x5B
+        db 0x41
+        db 0x5A
+        db 0x41
+        db 0x59
+        db 0x41
+        db 0x58
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56
+        db 0x57
+        db 0x41
+        db 0x50
+        db 0x41
+        db 0x51
+        db 0x41, 0x52, 0x41, 0x53, 0x48, 0x89, 0xFB, 0x4C, 0x8D, 0x0D, 0x0B, 0x1C, 0x00, 0x00, 0x4C, 0x8D
+        db 0x15, 0x0C, 0x26, 0x00, 0x00, 0x41, 0xBB, 0x00, 0x00, 0x00, 0x00, 0x80, 0x3B, 0x00, 0x74, 0x32
+        db 0x80, 0x3B, 0x00, 0x74, 0x2D, 0x4F, 0x89, 0x14, 0xD9, 0x8A, 0x03, 0x3C, 0x00, 0x74, 0x0F, 0x3C
+        db 0x7C, 0x74, 0x0B, 0x41, 0x88, 0x02, 0x48, 0xFF, 0xC3, 0x49, 0xFF, 0xC2, 0xEB, 0xEB, 0x41, 0xC6
+        db 0x02, 0x00, 0x49, 0xFF, 0xC2, 0x49, 0xFF, 0xC3, 0x80, 0x3B, 0x7C, 0x75, 0x05, 0x48, 0xFF, 0xC3
+        db 0xEB, 0xCE, 0x4B, 0xC7, 0x04, 0xD9, 0x00, 0x00, 0x00, 0x00, 0x48, 0x8D, 0x05, 0xB8, 0x1B, 0x00
+        db 0x00
+        db 0x41
+        db 0x5B
+        db 0x41
+        db 0x5A
+        db 0x41
+        db 0x59
+        db 0x41
+        db 0x58
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3
+        db 0x53
+        db 0x51
+        db 0x41
+        db 0x50
+        db 0x41, 0x51, 0x41, 0x52, 0x49, 0x89, 0xF0, 0x49, 0x89, 0xD1, 0x4C, 0x8B, 0x57, 0x08, 0x49, 0x83
+        db 0xF8, 0x00, 0x7C, 0x2E, 0x4D, 0x39, 0xD0, 0x7F, 0x29, 0xE8, 0x57, 0x03, 0x00, 0x00, 0x48, 0x8B
+        db 0x1F, 0x4C, 0x89, 0xD0, 0x4C, 0x39, 0xC0, 0x7E, 0x0E, 0x48, 0x8B, 0x4C, 0xC3, 0xF8, 0x48, 0x89
+        db 0x0C, 0xC3, 0x48, 0xFF, 0xC8, 0xEB, 0xED, 0x4E, 0x89, 0x0C, 0xC3, 0x49, 0xFF, 0xC2, 0x4C, 0x89
+        db 0x57, 0x08
+        db 0x41
+        db 0x5A
+        db 0x41
+        db 0x59, 0x41, 0x58, 0x59, 0x5B, 0xC3
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56
+        db 0x57
+        db 0x41
+        db 0x50
+        db 0x41, 0x51, 0x41, 0x52, 0x48, 0x8B, 0x1F, 0x48, 0x89, 0xF9, 0x49, 0x89, 0xF0, 0x48, 0x85, 0xDB
+        db 0x74, 0x46, 0x4C, 0x8B, 0x51, 0x08, 0x41, 0xB9, 0x00, 0x00, 0x00, 0x00, 0x4D, 0x39, 0xD1, 0x7D
+        db 0x32, 0x4A, 0x8B, 0x04, 0xCB, 0x4C, 0x39, 0xC0, 0x74, 0x05, 0x49, 0xFF, 0xC1, 0xEB, 0xED, 0x4C
+        db 0x89, 0xC8, 0x4C, 0x39, 0xD0, 0x7D, 0x0E, 0x48, 0x8B, 0x54, 0xC3, 0x08, 0x48, 0x89, 0x14, 0xC3
+        db 0x48, 0xFF, 0xC0, 0xEB, 0xED, 0x49, 0xFF, 0xCA, 0x4C, 0x89, 0x51, 0x08, 0xB8, 0x01, 0x00, 0x00
+        db 0x00, 0xEB, 0x05, 0xB8, 0x00, 0x00, 0x00, 0x00
+        db 0x41
+        db 0x5A
+        db 0x41
+        db 0x59
+        db 0x41
+        db 0x58
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56
+        db 0x57
+        db 0x41, 0x50, 0x41, 0x51, 0x48, 0x8B, 0x1F, 0x48, 0x89, 0xF1, 0x48, 0x85, 0xDB, 0x74, 0x22, 0x4C
+        db 0x8B, 0x4F, 0x08, 0x41, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x4D, 0x39, 0xC8, 0x7D, 0x13, 0x4A, 0x8B
+        db 0x04, 0xC3, 0x48, 0x39, 0xC8, 0x74, 0x05, 0x49, 0xFF, 0xC0, 0xEB, 0xED, 0x4C, 0x89, 0xC0, 0xEB
+        db 0x07, 0x48, 0xC7, 0xC0, 0xFF, 0xFF, 0xFF, 0xFF
+        db 0x41
+        db 0x59
+        db 0x41
+        db 0x58
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56
+        db 0x57
+        db 0x41
+        db 0x50
+        db 0x41
+        db 0x51
+        db 0x41
+        db 0x52
+        db 0x41, 0x53, 0x41, 0x54, 0x48, 0x8B, 0x1F, 0x48, 0x89, 0xF9, 0x48, 0x85, 0xDB, 0x74, 0x33, 0x4C
+        db 0x8B, 0x51, 0x08, 0x49, 0x83, 0xFA, 0x01, 0x7E, 0x29, 0x41, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x4D
+        db 0x89, 0xD1, 0x49, 0xFF, 0xC9, 0x4D, 0x39, 0xC8, 0x7D, 0x18, 0x4A, 0x8B, 0x04, 0xC3, 0x4E, 0x8B
+        db 0x1C, 0xCB, 0x4E, 0x89, 0x1C, 0xC3, 0x4A, 0x89, 0x04, 0xCB, 0x49, 0xFF, 0xC0, 0x49, 0xFF, 0xC9
+        db 0xEB, 0xE3
+        db 0x41
+        db 0x5C
+        db 0x41
+        db 0x5B
+        db 0x41
+        db 0x5A
+        db 0x41
+        db 0x59
+        db 0x41
+        db 0x58
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56
+        db 0x57
+        db 0x41
+        db 0x50
+        db 0x41
+        db 0x51
+        db 0x41
+        db 0x52
+        db 0x41, 0x53, 0x41, 0x54, 0x48, 0x8B, 0x1F, 0x48, 0x89, 0xF9, 0x48, 0x85, 0xDB, 0x74, 0x54, 0x4C
+        db 0x8B, 0x51, 0x08, 0x49, 0x83, 0xFA, 0x02, 0x7C, 0x4A, 0x4D, 0x89, 0xD3, 0x49, 0xFF, 0xCB, 0x49
+        db 0x83, 0xFB, 0x00, 0x7E, 0x3E, 0x41, 0xBC, 0x00, 0x00, 0x00, 0x00, 0x41, 0xB8, 0x00, 0x00, 0x00
+        db 0x00, 0x4D, 0x39, 0xD8, 0x7D, 0x22, 0x4A, 0x8B, 0x04, 0xC3, 0x4A, 0x8B, 0x54, 0xC3, 0x08, 0x48
+        db 0x39, 0xD0, 0x7E, 0x0F, 0x4A, 0x89, 0x14, 0xC3, 0x4A, 0x89, 0x44, 0xC3, 0x08, 0x41, 0xBC, 0x01
+        db 0x00, 0x00, 0x00, 0x49, 0xFF, 0xC0, 0xEB, 0xD9, 0x49, 0x83, 0xFC, 0x00, 0x74, 0x05, 0x49, 0xFF
+        db 0xCB, 0xEB, 0xBC
+        db 0x41
+        db 0x5C
+        db 0x41
+        db 0x5B
+        db 0x41
+        db 0x5A
+        db 0x41
+        db 0x59
+        db 0x41
+        db 0x58
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3, 0x50, 0x57, 0xF2, 0x48, 0x0F, 0x2A, 0xC7, 0x5F, 0x58, 0xC3
+        db 0x53, 0x51, 0x52, 0x56, 0x57, 0xF2, 0x48, 0x0F, 0x2C, 0xC0
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3
+        db 0x53
+        db 0x51
+        db 0x52
+        db 0x56, 0x57, 0x41, 0x50, 0x48, 0x89, 0xFE, 0xB8, 0x00, 0x00, 0x00, 0x00, 0x41, 0xB8, 0x00, 0x00
+        db 0x00, 0x00, 0x8A, 0x1E, 0x80, 0xFB, 0x2D, 0x75, 0x09, 0x41, 0xB8, 0x01, 0x00, 0x00, 0x00, 0x48
+        db 0xFF, 0xC6, 0x48, 0x0F, 0xB6, 0x1E, 0x84, 0xDB, 0x74, 0x1D, 0x80, 0xFB, 0x30, 0x7C, 0x18, 0x80
+        db 0xFB, 0x39, 0x7F, 0x13, 0xB9, 0x0A, 0x00, 0x00, 0x00, 0x48, 0xF7, 0xE1, 0x80, 0xEB, 0x30, 0x48
+        db 0x01, 0xD8, 0x48, 0xFF, 0xC6, 0xEB, 0xDB, 0x49, 0x83, 0xF8, 0x01, 0x75, 0x03, 0x48, 0xF7, 0xD8
+        db 0x41
+        db 0x58
+        db 0x5F, 0x5E, 0x5A, 0x59, 0x5B, 0xC3, 0x50, 0x57, 0x48, 0x8B, 0x05, 0x30, 0x15, 0x00, 0x00, 0x48
+        db 0x89, 0x3D, 0x31, 0x15, 0x00, 0x00, 0x5F, 0x58, 0xC3
+
+fn_0643c:
+        push rbx
+        push rcx
+        push rdx
+        push rsi
+        push rdi
+        mov rax,[rel d_0796a]
+        pop rdi
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rbx
+        retq
+
+fn_0644e:
+        push rax
+        push rdi
+        mov qword [rel d_0796a],0x0
+        mov qword [rel d_07962],0x0
+        pop rdi
+        pop rax
+        retq
+
+fn_06469:
+        push rax
+        push rdi
+        mov [rel d_0796a],rdi
+        mov qword [rel d_07962],0x1
+        pop rdi
+        pop rax
+        retq
+
+fn_06480:
+        push rbx
+        push rcx
+        push rdx
+        push rsi
+        push rdi
+        mov rax,[rel d_07962]
+        pop rdi
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rbx
+        retq
+
+fn_06492:
+        push rbx
+        push rcx
+        push rdx
+        push rsi
+        push rdi
+        lea rbx,[rdi+0x10]
+        mov ecx,0x5
+L_064a0:
+        mov edx,0x1
+        shl edx,cl
+        cmp rbx,rdx
+        jna short L_064c8
+        inc ecx
+        cmp ecx,0xc
+        jna short L_064a0
+        mov rdi,rbx
+        call fn_0654c
+        mov qword [rax],0x0
+        add rax,0x10
+        jmp short L_06513
+L_064c8:
+        lea rsi,[rel d_078bd]
+        mov rax,[rsi+rcx*8]
+        test rax,rax
+        jz short L_064fa
+        mov rbx,[rax+0x8]
+        mov [rsi+rcx*8],rbx
+        push rax
+        push rcx
+        lea rdi,[rax+0x10]
+        mov rcx,rdx
+        sub rcx,0x10
+        shr rcx,byte 0x3
+        xor eax,eax
+        rep stosq
+        pop rcx
+        pop rax
+        jmp short L_06504
+L_064fa:
+        push rcx
+        mov rdi,rdx
+        call fn_0654c
+        pop rcx
+L_06504:
+        mov [rax],rcx
+        mov qword [rax+0x8],0x0
+        add rax,0x10
+L_06513:
+        pop rdi
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rbx
+        retq
+
+fn_06519:
+        test rdi,rdi
+        jz short L_0654b
+        push rax
+        push rcx
+        push rsi
+        mov rcx,[rdi-0x10]
+        cmp rcx,0x5
+        jc short L_06548
+        cmp rcx,0xc
+        ja short L_06548
+        lea rsi,[rel d_078bd]
+        mov rax,[rsi+rcx*8]
+        mov [rdi-0x8],rax
+        lea rax,[rdi-0x10]
+        mov [rsi+rcx*8],rax
+L_06548:
+        pop rsi
+        pop rcx
+        pop rax
+L_0654b:
+        retq
+
+fn_0654c:
+        jmp near L_050c5
+
+fn_06551:
+        push rax
+        push rcx
+        push rdx
+        push rsi
+        push r8
+        push r9
+        push r10
+        mov r8,[rdi+0x8]
+        mov r9,[rdi+0x10]
+        cmp r8,r9
+        jl short L_065b6
+        mov r10,r8
+        shl r10,1
+        cmp r10,0x4
+        jnl short L_0657a
+        mov r10d,0x4
+L_0657a:
+        push rdi
+        mov rdi,r10
+        shl rdi,byte 0x3
+        call fn_06492
+        pop rdi
+        mov rsi,[rdi]
+        xor rcx,rcx
+L_0658e:
+        cmp rcx,r8
+        jnl short L_065a0
+        mov rdx,[rsi+rcx*8]
+        mov [rax+rcx*8],rdx
+        inc rcx
+        jmp short L_0658e
+L_065a0:
+        test r9,r9
+        jz short L_065af
+        push rdi
+        mov rdi,rsi
+        call fn_06519
+        pop rdi
+L_065af:
+        mov [rdi],rax
+        mov [rdi+0x10],r10
+L_065b6:
+        pop r10
+        pop r9
+        pop r8
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rax
+        retq
+        db 0x48, 0x31, 0xC0, 0x48, 0x83, 0x3C, 0xC7, 0x00, 0x74, 0x05, 0x48, 0xFF, 0xC0, 0xEB, 0xF4, 0xC3
+
+fn_065d1:
+        xor rax,rax
+L_065d4:
+        cmp byte [rdi+rax],0x0
+        jz short L_065df
+        inc rax
+        jmp short L_065d4
+L_065df:
+        retq
+
+fn_065e0:
+        push rbx
+        push rcx
+        push rdx
+        push rsi
+        push rdi
+        push r8
+        push r9
+        push r10
+        push r11
+        mov r8,rdi
+        mov r9,rsi
+        call fn_065d1
+        mov r10,rax
+        mov rdi,r9
+        call fn_065d1
+        mov r11,rax
+        lea rdi,[r10+r11+0x1]
+        call fn_06492
+        xor ecx,ecx
+L_06612:
+        cmp rcx,r10
+        jnc short L_06623
+        mov dl,[r8+rcx]
+        mov [rax+rcx],dl
+        inc rcx
+        jmp short L_06612
+L_06623:
+        xor ebx,ebx
+L_06625:
+        cmp rbx,r11
+        jnc short L_06639
+        mov dl,[r9+rbx]
+        mov [rax+rcx],dl
+        inc rcx
+        inc rbx
+        jmp short L_06625
+L_06639:
+        mov byte [rax+rcx],0x0
+        pop r11
+        pop r10
+        pop r9
+        pop r8
+        pop rdi
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rbx
+        retq
+
+fn_0664b:
+        push rbx
+        push rcx
+        push rdx
+        push rsi
+        push rdi
+        push r8
+        sub rsp,0x20
+        mov rax,rdi
+        lea rsi,[rsp+0x1f]
+        mov byte [rsi],0x0
+        xor r8d,r8d
+        test rax,rax
+        jns short L_06672
+        mov r8d,0x1
+        neg rax
+L_06672:
+        mov ecx,0xa
+L_06677:
+        xor edx,edx
+        div rcx
+        add dl,0x30
+        dec rsi
+        mov [rsi],dl
+        test rax,rax
+        jnz short L_06677
+        test r8d,r8d
+        jz short L_06694
+        dec rsi
+        mov byte [rsi],0x2d
+L_06694:
+        mov rbx,rsi
+        lea rdi,[rsp+0x20]
+        sub rdi,rsi
+        call fn_06492
+        xor ecx,ecx
+L_066a6:
+        mov dl,[rbx+rcx]
+        mov [rax+rcx],dl
+        inc rcx
+        test dl,dl
+        jnz short L_066a6
+        add rsp,0x20
+        pop r8
+        pop rdi
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rbx
+        retq
+        db 0x00
+p_066c0:
+        db 0x2D, 0x00
+p_066c2:
+        db 'Invert', 0
+p_066c9:
+        db 'Grey', 0
+p_066ce:
+        db 'Mirror', 0
+p_066d5:
+        db 'Flip', 0
+p_066da:
+        db 'Lighter', 0
+p_066e2:
+        db 'Darker', 0
+p_066e9:
+        db 0x52, 0x65, 0x64, 0x00
+p_066ed:
+        db 'Green', 0
+p_066f3:
+        db 'Blue', 0
+p_066f8:
+        db 'Edges', 0
+p_066fe:
+        db 0x64, 0x00
+p_06700:
+        db 0x72, 0x00
+p_06702:
+        db 0x61, 0x00
+p_06704:
+        db 0x77, 0x00
+p_06706:
+        db 0x69, 0x00
+p_06708:
+        db 0x6E, 0x00
+p_0670a:
+        db 0x67, 0x00
+d_0670c:
+        db 0x00
+p_0670d:
+        db 'Type the name of a picture made in Paint, set the steps, press Run.', 0
+d_06751:
+        db 'Nest', 0
+d_06756:
+        db 'Source:', 0
+d_0675e:
+        db 0x5F, 0x00
+d_06760:
+        db 0x52, 0x75, 0x6E, 0x00
+d_06764:
+        db 'the source', 0
+d_0676f:
+        db 'what comes out', 0
+d_0677e:
+        db 'A click on a step changes what it does. The source is never changed;', 0
+d_067c3:
+        db 'the result is saved as a new picture: the source', 39, 's name + _n.', 0
+d_06801:
+        db 'Type the source', 39, 's name first.', 0
+d_0681f:
+        db 'No picture called ', 39, 0
+d_06833:
+        db 39, ' (make one in Paint and Save it).', 0
+d_06856:
+        db 'Step ', 0
+d_0685c:
+        db 0x3A, 0x20, 0x00
+d_0685f:
+        db ' ...', 0
+d_06864:
+        db 'No step is set: click the boxes of the chain.', 0
+d_06892:
+        db 0x5F, 0x6E, 0x00
+d_06895:
+        db 'Done: ', 0
+d_0689c:
+        db ' steps. Saved as ', 39, 0
+d_068af:
+        db '_n', 39, ' - it is on the desktop.', 0
+d_068cb:
+        db 'Done, but ', 39, 0
+d_068d7:
+        db '_n', 39, ' could not be saved (code ', 0
+d_068f5:
+        db 0x29, 0x2E, 0x00
+d_068f8:
+        db 'Nest closed', 0
+p_06904:
+        times 48 db 0x00
+
+r_06934:
+        dq p_066c0
+
+r_0693c:
+        dq p_066c2
+
+r_06944:
+        dq p_066c9
+
+r_0694c:
+        dq p_066ce
+
+r_06954:
+        dq p_066d5
+
+r_0695c:
+        dq p_066da
+
+r_06964:
+        dq p_066e2
+
+r_0696c:
+        dq p_066e9
+
+r_06974:
+        dq p_066ed
+
+r_0697c:
+        dq p_066f3
+
+r_06984:
+        dq p_066f8
+
+r_0698c:
+        dq p_066fe
+
+r_06994:
+        dq p_06700
+
+r_0699c:
+        dq p_06702
+
+r_069a4:
+        dq p_06704
+
+r_069ac:
+        dq p_06706
+
+r_069b4:
+        dq p_06708
+
+r_069bc:
+        dq p_0670a
+
+r_069c4:
+        dq d_0670c
+
+r_069cc:
+        dq d_0670c
+
+r_069d4:
+        dq d_0670c
+
+r_069dc:
+        dq d_0670c
+
+r_069e4:
+        dq d_0670c
+
+r_069ec:
+        dq d_0670c
+
+r_069f4:
+        dq d_0670c
+
+r_069fc:
+        dq d_0670c
+
+r_06a04:
+        dq d_0670c
+        times 272 db 0x00
+d_06b1c:
+        db 0xF0
+        times 63 db 0x00
+
+r_06b5c:
+        dq r_06934
+d_06b64:
+        db 0x0B
+        times 119 db 0x00
+d_06bdc:
+        db 0x0B
+        times 63 db 0x00
+
+r_06c1c:
+        dq r_0698c
+d_06c24:
+        db 0x10
+        times 55 db 0x00
+
+r_06c5c:
+        dq p_06904
+d_06c64:
+        times 56 db 0x00
+
+r_06c9c:
+        dq p_06904
+d_06ca4:
+        db 0x06
+        times 55 db 0x00
+
+r_06cdc:
+        dq p_06904
+d_06ce4:
+        times 56 db 0x00
+d_06d1c:
+        db 0xD6, 0x01
+        times 62 db 0x00
+d_06d5c:
+        db 0xBC, 0x02
+        times 62 db 0x00
+d_06d9c:
+        db 0x3C
+        times 63 db 0x00
+d_06ddc:
+        db 0x28
+        times 63 db 0x00
+d_06e1c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_06e24:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_06e2c:
+        times 48 db 0x00
+d_06e5c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_06e64:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_06e6c:
+        times 48 db 0x00
+d_06e9c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_06ea4:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_06eac:
+        times 48 db 0x00
+d_06edc:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_06ee4:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_06eec:
+        times 48 db 0x00
+d_06f1c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_06f24:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_06f2c:
+        times 48 db 0x00
+d_06f5c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_06f64:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_06f6c:
+        times 48 db 0x00
+d_06f9c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_06fa4:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_06fac:
+        times 48 db 0x00
+d_06fdc:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_06fe4:
+        times 56 db 0x00
+d_0701c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_07024:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_0702c:
+        times 48 db 0x00
+d_0705c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_07064:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_0706c:
+        times 48 db 0x00
+d_0709c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_070a4:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_070ac:
+        times 48 db 0x00
+d_070dc:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_070e4:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_070ec:
+        times 48 db 0x00
+d_0711c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_07124:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_0712c:
+        times 48 db 0x00
+d_0715c:
+        db 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_07164:
+        times 56 db 0x00
+d_0719c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_071a4:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_071ac:
+        times 48 db 0x00
+d_071dc:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_071e4:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_071ec:
+        times 48 db 0x00
+d_0721c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_07224:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_0722c:
+        times 48 db 0x00
+d_0725c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_07264:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_0726c:
+        times 48 db 0x00
+d_0729c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_072a4:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_072ac:
+        times 48 db 0x00
+d_072dc:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_072e4:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_072ec:
+        times 48 db 0x00
+
+r_0731c:
+        dq p_0670d
+d_07324:
+        db 0x43, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_0732c:
+        times 48 db 0x00
+d_0735c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_07364:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_0736c:
+        times 48 db 0x00
+d_0739c:
+        db 0xA0
+        times 63 db 0x00
+d_073dc:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_073e4:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_073ec:
+        times 48 db 0x00
+d_0741c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_07424:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_0742c:
+        times 48 db 0x00
+d_0745c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_07464:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_0746c:
+        times 48 db 0x00
+d_0749c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_074a4:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_074ac:
+        times 48 db 0x00
+d_074dc:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_074e4:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_074ec:
+        times 48 db 0x00
+d_0751c:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_07524:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_0752c:
+        times 48 db 0x00
+d_0755c:
+        db 'draw', 0
+d_07561:
+        db 'open', 0
+d_07566:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_0756e:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_07576:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_0757e:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_07586:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_0758e:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_07596:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 'type:text', 0
+        db 'kind:text', 0
+        db 'data:text saved by a PyTon program', 0
+        db 0x00
+        db 'type:page', 0
+        db 'kind:page', 0
+        db 'lang:html', 0
+        db 'data:a page made inside NinuxOS (Interfacer)', 0
+        times 257 db 0x00
+        db 'open', 0
+d_07728:
+        times 16 db 0x00
+d_07738:
+        db 'type:image', 0
+        db 'kind:image', 0
+        db 'data:a picture saved by a PyTon program', 0
+        db 'desktop:yes', 0
+        db 0x00, 0x90, 0x90, 0x90, 0x90, 0x90
+
+r_07788:
+        dq p_07800
+
+r_07790:
+        dq p_07804
+
+r_07798:
+        dq p_0780a
+
+r_077a0:
+        dq p_07811
+
+r_077a8:
+        dq p_07818
+
+r_077b0:
+        dq p_07821
+
+r_077b8:
+        dq p_07826
+
+r_077c0:
+        dq p_0782e
+
+r_077c8:
+        dq p_07833
+
+r_077d0:
+        dq p_07839
+
+r_077d8:
+        dq p_0783d
+
+r_077e0:
+        dq p_07842
+
+r_077e8:
+        dq p_07849
+
+r_077f0:
+        dq p_07850
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+p_07800:
+        db 0x63, 0x70, 0x75, 0x00
+p_07804:
+        db 'cores', 0
+p_0780a:
+        db 'memory', 0
+p_07811:
+        db 'screen', 0
+p_07818:
+        db 'graphics', 0
+p_07821:
+        db 'disk', 0
+p_07826:
+        db 'version', 0
+p_0782e:
+        db 'year', 0
+p_07833:
+        db 'month', 0
+p_07839:
+        db 0x64, 0x61, 0x79, 0x00
+p_0783d:
+        db 'hour', 0
+p_07842:
+        db 'minute', 0
+p_07849:
+        db 'second', 0
+p_07850:
+        db 'time', 0
+d_07855:
+        db 0x0A, 0x00
+        db '[pyton] fatal error in object', 10, 0
+d_07876:
+        db '[pyton] out of memory', 10, 0
+d_0788d:
+        db '[pyton] unhandled exception (code ', 0
+d_078b0:
+        db ') in socket ', 0
+d_078bd:
+        times 112 db 0x00
+        db 'MemoryError: heap is full', 0
+        db 'Unhandled exception, code:', 0
+d_07962:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_0796a:
+        incbin "data/nest.0796a.bin"
+
+obj_relocs:
+        db 0x31, 0x00, 0x00, 0x00
+        dd r_05419
+        dd r_05424
+        dd r_06934
+        dd r_0693c
+        dd r_06944
+        dd r_0694c
+        dd r_06954
+        dd r_0695c
+        dd r_06964
+        dd r_0696c
+        dd r_06974
+        dd r_0697c
+        dd r_06984
+        dd r_0698c
+        dd r_06994
+        dd r_0699c
+        dd r_069a4
+        dd r_069ac
+        dd r_069b4
+        dd r_069bc
+        dd r_069c4
+        dd r_069cc
+        dd r_069d4
+        dd r_069dc
+        dd r_069e4
+        dd r_069ec
+        dd r_069f4
+        dd r_069fc
+        dd r_06a04
+        dd r_06b5c
+        dd r_06c1c
+        dd r_06c5c
+        dd r_06c9c
+        dd r_06cdc
+        dd r_0731c
+        dd r_07788
+        dd r_07790
+        dd r_07798
+        dd r_077a0
+        dd r_077a8
+        dd r_077b0
+        dd r_077b8
+        dd r_077c0
+        dd r_077c8
+        dd r_077d0
+        dd r_077d8
+        dd r_077e0
+        dd r_077e8
+        dd r_077f0
+        dq obj_end
+        db 'ASMO', 0
+        db 0x00, 0x00, 0x00
+obj_end:

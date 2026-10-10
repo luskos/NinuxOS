@@ -3,6 +3,20 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.04** (10 October 2026) - the build can change the system
+  - Read from the image and written into `tools/build_disk.py`: the SHA-256 the core keeps of the
+    extension; the Sentinel's list (98 lines of name + SHA-256, signed with Ed25519) and the place
+    of its public key in the kernel; the table of the cabinet at sector 481 and the drawers.
+    The build now writes the version into the whole kernel, adds the objects of `build/add/` to
+    the cabinet, seals the extension, writes the Sentinel's list anew and signs it with a key of
+    its own (`build/key/build.key`, made at the first build, not in git).
+  - `disk.img` v3.0.04 has two programs made by the new py2asm in its cabinet: pyhello, pycalc.
+  - `tools/kdis/odis.py`: all 34 compiled objects as NASM source in `objects/` - Desktop, Studio,
+    NET, the twenty programs - each assembling to the same bytes, with names for the header, the
+    sockets and every relocation.
+  - kdis corrected (`retq` ends a function); `kernel/Kernel.kasm` made anew: 41% recognised code.
+  - The system has 107 objects, not 165: 58 in the image are old copies.
+  - Nothing of this ran on a machine: the owner tests (TODO.md, part 1).
 - **v3.0.03** (10 October 2026)
   - The system shows the version of the project: the build writes `VERSION` over `v2.9.59` in the
     texts of the kernel's core (the line of the loader, the top of the shell, `info`, the log) -

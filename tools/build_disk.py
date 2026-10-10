@@ -1,40 +1,55 @@
 #!/usr/bin/env python3
-# build_disk.py - make disk.img from the project (NinuxOS v3.0.0).
+# build_disk.py - make disk.img from the project (NinuxOS v3).
 #
-#   python tools/build_disk.py [--out disk.img] [--base build/base/disk_v2.9.59.img]
+#   python tools/build_disk.py [--out disk.img] [--base build/base/disk_v2.9.59.img] [--keep-version]
 #
 # What it does:
 #   1. assembles boot/Boot.kasm (the boot sector) and kernel/Kernel.kasm (core + extension) with nasm
-#   2. takes the base image - the system as it came off the stick - and puts into it
-#        the boot sector            at sector 0
-#        the kernel                 from sector 1 (480 sectors are kept for it)
-#        every object of build/     at the place docs/cabinet_objects.csv gives it
-#   3. writes disk.img and says what is different from the base
+#   2. writes the version of the project (the file VERSION) into the texts of the kernel
+#   3. takes the base image - the system as it came off the stick - and puts into it
+#        the boot sector, the kernel, every object of build/ at its place
+#        every object of build/add/*.asmo as a new object of the cabinet (or in the place of the
+#        one with the same name) - this is how a program made by py2asm gets into the system
+#   4. seals it, so that the system takes it for its own:
+#        the SHA-256 the core keeps of the extension
+#        the Sentinel's list: the SHA-256 of every system object and of the kernel, signed with
+#        this project's own key (build/key/build.key - made at the first build, never in git);
+#        the public half of the key goes into the kernel
+#   5. packs the whole source next to it (tools/source_container.py)
 #
-# What it does not do yet (see TODO.md):
-#   - an object of another size, a new object: the table of the cabinet is not understood yet,
-#     so an object can only be replaced by one of the same length
-#   - sign anything: a kernel with other bytes fails its own SHA-256 check ("system operations
-#     off") and the Sentinel calls a changed system object CHANGED
-# With nothing changed in the project the result is the base image, byte for byte.
+# The disk, as read from v2.9.59 (docs/NinuxOS_Architecture.tex has it in full):
+#   sector 0          the boot sector
+#   sectors 1..480    the kernel: core, extension, free room
+#   sector 481..      the table of the cabinet: 'CABN', version, how many, its sectors (4), flags,
+#                     the screen; then 32 bytes an object: name (16), sector, sectors, identity, address
+#   sector 490..      the objects; a drawer is an object whose DATA is such a table ('DRWR', 63 places)
+# An object and its place in the table carry the same identity; 0 in either is not checked, so
+# a new object goes in with 0.
 
 import argparse
 import csv
+import glob
 import hashlib
 import os
 import shutil
+import struct
 import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, '..'))
 WORK = os.path.join(ROOT, 'build', 'work')
+KEY = os.path.join(ROOT, 'build', 'key', 'build.key')
 
 SECTOR = 512
 KERNEL_SECTORS = 480                    # boot/Boot.kasm: kernel_sectors
 KERNEL_ROOM = KERNEL_SECTORS * SECTOR
-CORE_SIZE = 61968                       # the core; the extension (checked by SHA-256) follows it
+CORE_SIZE = 61968                       # the core; the extension follows it
 KERNEL_SAYS = b'v2.9.59'                # the version written in the kernel's texts
+EXT_HASH_AT = 0xF058                    # in the kernel: the SHA-256 the extension must have (32 bytes)
+PUBLIC_KEY_AT = 0x2D280                 # in the kernel: the key the Sentinel's list is checked with
+TABLE_AT = 481 * SECTOR                 # the table of the cabinet
+TABLE_PLACES = 63
 
 
 def find_nasm():
@@ -58,11 +73,253 @@ def assemble(nasm, src, name):
     return open(out, 'rb').read()
 
 
+# ---------------------------------------------------------------- Ed25519 (the Sentinel's signature)
+
+P = 2 ** 255 - 19
+ORDER = 2 ** 252 + 27742317777372353535851937790883648493
+D = -121665 * pow(121666, P - 2, P) % P
+ROOT_M1 = pow(2, (P - 1) // 4, P)
+
+
+def _x(y):
+    xx = (y * y - 1) * pow(D * y * y + 1, P - 2, P)
+    x = pow(xx, (P + 3) // 8, P)
+    if (x * x - xx) % P != 0:
+        x = x * ROOT_M1 % P
+    if (x * x - xx) % P != 0:
+        return None
+    return P - x if x % 2 else x
+
+
+_BY = 4 * pow(5, P - 2, P) % P
+BASE = (_x(_BY), _BY, 1, _x(_BY) * _BY % P)
+
+
+def _add(a, b):
+    x1, y1, z1, t1 = a
+    x2, y2, z2, t2 = b
+    e = (y1 - x1) * (y2 - x2) % P
+    f = (y1 + x1) * (y2 + x2) % P
+    g = t1 * 2 * D * t2 % P
+    h = z1 * 2 * z2 % P
+    return ((f - e) * (h - g) % P, (h + g) * (f + e) % P, (h - g) * (h + g) % P, (f - e) * (f + e) % P)
+
+
+def _mul(s, p):
+    q = (0, 1, 1, 0)
+    while s > 0:
+        if s & 1:
+            q = _add(q, p)
+        p = _add(p, p)
+        s >>= 1
+    return q
+
+
+def _encode(p):
+    x, y, z, t = p
+    zi = pow(z, P - 2, P)
+    x, y = x * zi % P, y * zi % P
+    return (y | ((x & 1) << 255)).to_bytes(32, 'little')
+
+
+def _decode(s):
+    y = int.from_bytes(s, 'little')
+    sign = y >> 255
+    y &= (1 << 255) - 1
+    x = _x(y) if y < P else None
+    if x is None:
+        return None
+    if (x & 1) != sign:
+        x = P - x
+    return (x, y, 1, x * y % P)
+
+
+def _secret(seed):
+    h = hashlib.sha512(seed).digest()
+    a = int.from_bytes(h[:32], 'little')
+    a &= (1 << 254) - 8
+    a |= 1 << 254
+    return a, h[32:]
+
+
+def public_key(seed):
+    return _encode(_mul(_secret(seed)[0], BASE))
+
+
+def sign(seed, message):
+    a, prefix = _secret(seed)
+    pub = _encode(_mul(a, BASE))
+    r = int.from_bytes(hashlib.sha512(prefix + message).digest(), 'little') % ORDER
+    big_r = _encode(_mul(r, BASE))
+    k = int.from_bytes(hashlib.sha512(big_r + pub + message).digest(), 'little') % ORDER
+    return big_r + ((r + k * a) % ORDER).to_bytes(32, 'little')
+
+
+def verify(pub, message, signature):
+    a = _decode(pub)
+    s = int.from_bytes(signature[32:], 'little')
+    if a is None or s >= ORDER:
+        return False
+    k = int.from_bytes(hashlib.sha512(signature[:32] + pub + message).digest(), 'little') % ORDER
+    minus_a = (P - a[0], a[1], 1, (P - a[0]) * a[1] % P)
+    return _encode(_add(_mul(s, BASE), _mul(k, minus_a))) == signature[:32]
+
+
+def build_key():
+    """this project's own signing key: made once, kept out of git"""
+    if os.path.exists(KEY):
+        return bytes.fromhex(open(KEY).read().split()[0])
+    seed = os.urandom(32)
+    os.makedirs(os.path.dirname(KEY), exist_ok=True)
+    with open(KEY, 'w') as f:
+        f.write(seed.hex() + '\n# The key the builds of this project are signed with. Keep it; do not give it away.\n'
+                '# If it is lost a new one is made at the next build - sticks built before stay as they are.\n')
+    print('build: a new signing key was made: build/key/build.key (keep a copy; it is not in git)')
+    return seed
+
+
+# ---------------------------------------------------------------- objects and the tables of the cabinet
+
+def object_size(img, off):
+    if img[off:off + 4] != b'OMSA':
+        return 0
+    return struct.unpack_from('<Q', img, off + 8)[0]
+
+
+def object_hash(img, off):
+    """what the Sentinel's list keeps of an object: the SHA-256 of all of it after the header"""
+    return hashlib.sha256(img[off + 0x68:off + object_size(img, off)]).digest()
+
+
+def meta(data, key):
+    m = struct.unpack_from('<Q', data, 0x18)[0]
+    for part in bytes(data[m:m + 4096]).split(b'\0'):
+        if not part:
+            break
+        if part.startswith(key.encode() + b':'):
+            return part[len(key) + 1:].decode('latin-1')
+    return ''
+
+
+class Table:
+    """a table of objects: the cabinet's ('CABN') or a drawer's ('DRWR'); at is where it lies in the image"""
+
+    def __init__(self, img, at):
+        self.at = at
+        self.magic = bytes(img[at:at + 4])
+        self.count = struct.unpack_from('<H', img, at + (6 if self.magic == b'CABN' else 4))[0]
+
+    def entries(self, img):
+        for i in range(TABLE_PLACES):
+            e = self.at + 16 + 32 * i
+            if img[e]:
+                name = bytes(img[e:e + 16]).split(b'\0')[0].decode('latin-1')
+                lba, sectors, ident = struct.unpack_from('<III', img, e + 16)
+                yield e, name, lba, sectors, ident
+
+
+def all_tables(img):
+    top = Table(img, TABLE_AT)
+    if top.magic != b'CABN':
+        sys.exit('build: the table of the cabinet is not at sector 481 of the base image')
+    tables = [top]
+    for e, name, lba, sectors, ident in top.entries(img):
+        off = lba * SECTOR
+        if object_size(img, off) and meta(img[off:off + 8192], 'type') == 'cabinet':
+            data = off + struct.unpack_from('<Q', img, off + 0x10)[0]
+            if img[data:data + 4] == b'DRWR':
+                tables.append(Table(img, data))
+    return tables
+
+
+def add_object(img, tables, path):
+    """a new object of the cabinet, or a new one in the place of the object with its name"""
+    data = open(path, 'rb').read()
+    if data[:4] != b'OMSA' or struct.unpack_from('<Q', data, 8)[0] != len(data) or data[-8:-4] != b'ASMO':
+        sys.exit('build: %s is not a whole ASMO object' % os.path.relpath(path, ROOT))
+    name = (meta(data, 'name') or os.path.splitext(os.path.basename(path))[0]).lower()[:15]
+    kind = meta(data, 'type')
+    top = tables[0]
+    used = 490
+    for t in tables:
+        for e, n, lba, sectors, ident in t.entries(img):
+            used = max(used, lba + sectors)
+    sectors = (len(data) + SECTOR - 1) // SECTOR
+    if (used + sectors) * SECTOR > len(img):
+        img.extend(b'\0' * ((used + sectors) * SECTOR - len(img)))
+    place = None
+    for e, n, lba, sec, ident in top.entries(img):
+        if n == name and (meta(img[lba * SECTOR:lba * SECTOR + 8192], 'type') == 'source') == (kind == 'source'):
+            place = e
+    what = 'in the place of the old one'
+    if place is None:
+        what = 'new'
+        for i in range(TABLE_PLACES):
+            if not img[top.at + 16 + 32 * i]:
+                place = top.at + 16 + 32 * i
+                break
+        if place is None:
+            sys.exit('build: the cabinet has no free place for %s (63 objects; put it in a drawer)' % name)
+        top.count += 1
+        struct.pack_into('<H', img, top.at + 6, top.count)
+    img[used * SECTOR:used * SECTOR + sectors * SECTOR] = data + b'\0' * (sectors * SECTOR - len(data))
+    img[place:place + 32] = (name.encode('latin-1').ljust(16, b'\0')
+                             + struct.pack('<IIII', used, sectors, struct.unpack_from('<I', data, 0x4C)[0], 0))
+    return '%s (%s, %d bytes, sector %d)' % (name, what, len(data), used)
+
+
+def seal(img, base, tables, seed, old_public):
+    """the Sentinel's list for this image, signed with our key; returns what it did"""
+    sentinel = None
+    for t in tables:
+        for e, name, lba, sectors, ident in t.entries(img):
+            if name == 'sentinel':
+                sentinel = lba * SECTOR
+    if sentinel is None:
+        return 'no Sentinel list in this system - not signed'
+    data = sentinel + struct.unpack_from('<Q', img, sentinel + 0x10)[0]
+    length = struct.unpack_from('<Q', img, sentinel + 0x58)[0]
+    body = bytes(base[data + 64:data + length])
+    if body[:4] != b'NXSN' or not verify(old_public, body, bytes(base[data:data + 64])):
+        return 'the Sentinel list of the base image is not as expected - left as it is'
+    count = struct.unpack_from('<I', body, 4)[0]
+    # which place of which table each line of the list speaks of: found by the hash it has now
+    by_hash = {}
+    for t in tables:
+        for e, name, lba, sectors, ident in Table(base, t.at).entries(base):
+            if object_size(base, lba * SECTOR):
+                by_hash[object_hash(base, lba * SECTOR)] = e
+    new = bytearray(body)
+    fresh = kept = 0
+    for i in range(count):
+        at = 12 + 48 * i
+        name = body[at:at + 16].split(b'\0')[0]
+        old = body[at + 16:at + 48]
+        if name == b'@kernel':
+            h = hashlib.sha256(img[SECTOR:SECTOR + KERNEL_ROOM]).digest()
+        elif old in by_hash:
+            lba = struct.unpack_from('<I', img, by_hash[old] + 16)[0]
+            h = object_hash(img, lba * SECTOR)
+        else:
+            h = old                             # the list did not match this object before either
+            kept += 1
+        if h != old:
+            fresh += 1
+        new[at + 16:at + 48] = h
+    signature = sign(seed, bytes(new))
+    if not verify(public_key(seed), bytes(new), signature):
+        sys.exit('build: the signature just made does not check - not built')
+    img[data:data + 64] = signature
+    img[data + 64:data + length] = new
+    return 'the Sentinel list: %d lines, %d written anew, %d left as they were; signed' % (count, fresh, kept)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', default=os.path.join(ROOT, 'disk.img'))
     ap.add_argument('--base', default=os.path.join(ROOT, 'build', 'base', 'disk_v2.9.59.img'))
     ap.add_argument('--keep-version', action='store_true', help='leave v2.9.59 in the texts of the kernel')
+    ap.add_argument('--no-seal', action='store_true', help='do not sign: the Sentinel will call what changed CHANGED')
     a = ap.parse_args()
 
     if not os.path.exists(a.base):
@@ -83,24 +340,17 @@ def main():
     kernel = assemble(nasm, os.path.join('kernel', 'Kernel.kasm'), 'Kernel.bin')
     if len(kernel) > KERNEL_ROOM:
         sys.exit('build: the kernel is %d bytes, the boot sector reads only %d' % (len(kernel), KERNEL_ROOM))
-    # the version of the project (the file VERSION) goes into the texts of the core: the line the
-    # loader shows, the line at the top of the shell, 'info'. Only the core: the extension has a
-    # SHA-256 check and keeps its bytes (so 'machine' and Setup still say v2.9.59).
-    stamped = 0
-    kernel_changed = kernel != base[SECTOR:SECTOR + len(kernel)]
+    base_kernel = base[SECTOR:SECTOR + len(kernel)]
+    if kernel != base_kernel:
+        changed.append('the kernel (kernel/Kernel.kasm)')
     version = ('v' + open(os.path.join(ROOT, 'VERSION')).read().strip()).encode()
-    if not a.keep_version and not kernel_changed:
+    if not a.keep_version:
         if len(version) != len(KERNEL_SAYS):
-            print('build: VERSION must be as long as %s (3.0.03) - the version is not stamped' % KERNEL_SAYS.decode())
+            print('build: VERSION must be as long as %s (3.0.04) - the version is not written' % KERNEL_SAYS.decode())
         elif version != KERNEL_SAYS:
-            core = kernel[:CORE_SIZE]
-            stamped = core.count(KERNEL_SAYS)
-            kernel = core.replace(KERNEL_SAYS, version) + kernel[CORE_SIZE:]
-    if kernel_changed:
-        changed.append('the kernel')
-    elif stamped:
-        changed.append('the version in the kernel (%s, %d places)' % (version.decode(), stamped))
-    img[SECTOR:SECTOR + len(kernel)] = kernel
+            n = kernel.count(KERNEL_SAYS)
+            kernel = kernel.replace(KERNEL_SAYS, version)
+            changed.append('the version the system says (%s, %d places)' % (version.decode(), n))
 
     table = os.path.join(ROOT, 'docs', 'cabinet_objects.csv')
     count = 0
@@ -112,14 +362,31 @@ def main():
             sys.exit('build: the object file is missing: ' + row['Object'])
         data = open(path, 'rb').read()
         if len(data) != size:
-            sys.exit('build: %s is %d bytes, its place in the cabinet holds %d - an object of another '
-                     'size cannot be put in yet (TODO.md)' % (row['Object'], len(data), size))
+            sys.exit('build: %s is %d bytes, its place holds %d - put the new one into build/add/ instead'
+                     % (row['Object'], len(data), size))
         if data[:4] != b'OMSA':
             sys.exit('build: %s is not an ASMO object (no OMSA at its start)' % row['Object'])
         if data != base[off:off + size]:
             changed.append(row['Object'])
         img[off:off + size] = data
         count += 1
+
+    tables = all_tables(img)
+    for path in sorted(glob.glob(os.path.join(ROOT, 'build', 'add', '*.asmo'))):
+        changed.append('added: ' + add_object(img, tables, path))
+
+    old_public = base_kernel[PUBLIC_KEY_AT:PUBLIC_KEY_AT + 32]
+    sealed = None
+    if changed and not a.no_seal:
+        seed = build_key()
+        kernel = kernel[:PUBLIC_KEY_AT] + public_key(seed) + kernel[PUBLIC_KEY_AT + 32:]
+    if kernel[CORE_SIZE:] != base_kernel[CORE_SIZE:]:
+        if base_kernel[EXT_HASH_AT:EXT_HASH_AT + 32] != hashlib.sha256(base_kernel[CORE_SIZE:]).digest():
+            sys.exit('build: the hash of the extension is not where it was in v2.9.59 - not built')
+        kernel = kernel[:EXT_HASH_AT] + hashlib.sha256(kernel[CORE_SIZE:]).digest() + kernel[EXT_HASH_AT + 32:]
+    img[SECTOR:SECTOR + len(kernel)] = kernel
+    if changed and not a.no_seal:
+        sealed = seal(img, base, tables, seed, old_public)
 
     with open(a.out, 'wb') as f:
         f.write(img)
@@ -130,20 +397,12 @@ def main():
         print('build: the source container was not made (%s)' % e)
     print('build: boot sector %d bytes, kernel %d bytes, %d objects' % (len(boot), len(kernel), count))
     print('build: %s  %d bytes  SHA-256 %s' % (a.out, len(img), hashlib.sha256(img).hexdigest()))
-    if stamped:
-        print('build: the system says %s now. The Sentinel will list @kernel as CHANGED (its list was' % version.decode())
-        print('       signed for v2.9.59); if the system refuses more than that, build with --keep-version.')
     if not changed:
         print('build: the same as the base image (v2.9.59)')
     else:
-        print('build: different from the base image: ' + ', '.join(changed))
-        if kernel_changed:
-            print('build: WARNING - the kernel has other bytes. Nothing signs it yet: it will fail its own')
-            print('       SHA-256 check (system operations off) and the Sentinel will call it CHANGED.')
-        objects_changed = [c for c in changed if c.endswith('.asmo') or c.endswith('.kasm')]
-        if objects_changed:
-            print('build: WARNING - a changed system object is CHANGED for the Sentinel until it is accepted')
-            print("       on the machine ('sentinel trust NAME', administrator).")
+        for c in changed:
+            print('build:   ' + c)
+        print('build: ' + (sealed or 'NOT signed (--no-seal): the Sentinel will call what changed CHANGED'))
     return 0
 
 

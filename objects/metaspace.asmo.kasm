@@ -1,0 +1,88 @@
+; metaspace.asmo.kasm - the object "metaspace" (type icon) of NinuxOS v2.9.59 as NASM source.
+; Made from the compiled object by tools/kdis/odis.py; it assembles to the same 560 bytes:
+;   nasm -f bin -I ./ metaspace.asmo.kasm -o metaspace.asmo   (run where the file is)
+;
+; obj_data, obj_meta, obj_system, obj_named, obj_prockets, obj_relocs: the parts of the object.
+; sock_N a socket; fn_ a function; L_ a place jumped to; d_ data; p_ what an address points at;
+; r_ a place that holds an address (the table of relocations at the end lists them).
+
+
+org 0
+obj_start:
+        db 0x4F, 0x4D, 0x53, 0x41, 0x04, 0x00, 0x00, 0x00
+        dq obj_end
+        dq obj_data
+        dq obj_meta
+        dq obj_system
+        dq obj_named
+        dq obj_prockets
+        db 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x01, 0x00, 0x00, 0x00, 0xEE, 0x4B, 0x55, 0xF8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x66, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_data:
+        db 'META: the launcher of full-screen programs (spaces) - local ones now, spaces on other machines later.', 0
+
+obj_meta:
+        db 'type:icon', 0
+        db 'name:metaspace', 0
+        db 'label:META', 0
+        db 'icon:icon_metaspace', 0
+        db 'data:text', 0
+        db 'sockets:draw,open', 0
+        db 'version:2.9.21', 0
+        db 0x00
+
+obj_system:
+        dq p_00182
+        dq p_00182
+        dq p_00182
+        dq p_00182
+        dq p_00182
+        dq p_00182
+        dq p_00182
+        dq p_00182
+        dq p_00182
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+[bits 64]
+p_00182:
+        retq
+
+obj_named:
+        dq sock_draw
+        dq sock_open
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_prockets:
+        times 16 db 0x00
+
+sock_draw:
+        push r15
+        mov r15,rsi
+        lea rdi,[rdx+0x20]
+        lea rsi,[rcx+0x3a]
+        lea rdx,[rel d_001f4]
+        mov ecx,0xffffff
+        mov r8,0xffffffffffffffff
+        call qword near [r15+0x30]
+        pop r15
+        retq
+
+sock_open:
+        push r15
+        mov r15,rsi
+        lea rdi,[rel d_001f9]
+        call qword near [r15+0xc0]
+        mov edi,0x4
+        call qword near [r15+0x148]
+        pop r15
+        retq
+d_001f4:
+        db 'META', 0
+d_001f9:
+        db '[meta] asked for by the desktop app', 10, 0
+        db 0x90, 0x90
+        dq obj_end
+        db 'ASMO', 0
+        db 0x00, 0x00, 0x00
+obj_end:

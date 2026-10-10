@@ -36,6 +36,23 @@ EXT_VMA = 0x50000                       # the core copies the extension here
 FAR = {0x7E56: (0x8360, 32), 0x8404: (0x840B, 64)}
 ENTRIES = [(0x7E00, 16), (0x8360, 32), (0x840B, 64), (0x8423, 64)]
 
+# set by a tool that uses this file for something else than the kernel (tools/kdis/odis.py)
+POINTERS = {}                           # address -> (bytes, the address kept there, what is added to it)
+GIVEN = {}                              # address -> name
+BLOBS = None                            # (folder, name): long runs of plain data go into files there
+HEADER = [
+    '; Kernel.kasm - the NinuxOS v2.9.59 kernel: the core (with the loader in front) and the extension.',
+    '; Recovered from the compiled kernel by tools/kdis/kdis.py; it assembles to the same 220000 bytes:',
+    ';   nasm -f bin Kernel.kasm -o Kernel.bin',
+    ';',
+    '; fn_ADDR  a function (something calls it)      L_ADDR  a place jumped to',
+    '; d_ADDR   data the code points at              ADDR is the address in memory',
+    '; A line that is "db ... ; instruction" is an instruction nasm would encode in another way.',
+    '',
+]
+DIRECTIVES = {'core': 'section .core vstart=0x7E00 align=1',
+              'ext': 'section .ext vstart=0x50000 follows=.core align=1'}
+
 
 def find_tool(name):
     p = shutil.which(name)
@@ -147,7 +164,8 @@ PREFIX_WORDS = {'rep', 'repe', 'repne', 'repz', 'repnz', 'lock', 'o16', 'o32', '
                 'cs', 'ds', 'es', 'fs', 'gs', 'ss', 'wait', 'xacquire', 'xrelease', 'bnd'}
 BRANCH = re.compile(r'^((?:\w+\s+)*?)(call|jmp|j[a-z]+|loop[a-z]*)\s+(?:short\s+|near\s+)?0x([0-9a-f]+)$')
 RELREF = re.compile(r'\[rel 0x([0-9a-f]+)\]')
-ENDS = {'ret', 'retf', 'retn', 'iret', 'iretw', 'iretd', 'iretq', 'jmp', 'ud2', 'sysret', 'sysretq'}
+ENDS = {'ret', 'retq', 'retw', 'retd', 'retf', 'retfq', 'retn', 'iret', 'iretw', 'iretd', 'iretq', 'jmp', 'ud2',
+        'sysret', 'sysretq'}
 LEGACY = {0x66, 0x67, 0x2E, 0x3E, 0x26, 0x36, 0x64, 0x65, 0xF0, 0xF2, 0xF3}
 
 
@@ -313,6 +331,13 @@ def data_items(a, b):
     items = []
     base = offset(a)
     data = image[base:base + (b - a)]
+    if BLOBS and b - a >= 8192 and (data[:4096].count(0) > 40 or sum(1 for x in data[:4096] if 0x20 <= x <= 0x7E) < 2400):
+        folder, name = BLOBS                    # pixels and the like: kept as they are, beside the source
+        os.makedirs(folder, exist_ok=True)
+        blob = '%s.%05x.bin' % (name, a)
+        with open(os.path.join(folder, blob), 'wb') as f:
+            f.write(data)
+        return [Item(a, b - a, 'incbin "%s/%s"' % (os.path.basename(folder), blob), False)]
     i, n = 0, len(data)
     while i < n:
         j = i                                   # a long run of one byte
@@ -359,13 +384,15 @@ class Writer:
     def __init__(self, k):
         self.k = k
         self.names = {}
-        self.given = {}
+        self.given = dict(GIVEN)
         path = os.path.join(HERE, 'names.txt')
-        if os.path.exists(path):
+        if os.path.exists(path) and not GIVEN and not POINTERS:
             for line in open(path):
                 f = line.split('#')[0].split()
                 if len(f) == 2:
                     self.given[int(f[0], 16)] = f[1]
+        for size, t, plus in POINTERS.values():
+            self.names[t] = 'p_%05x' % t
         for t in k.refs:
             self.names[t] = 'd_%05x' % t
         for t in k.jumps:
@@ -394,7 +421,10 @@ class Writer:
     def build(self, sec):
         k = self.k
         items = []
-        cuts = sorted(t for t in self.names if sec.vma <= t <= sec.end and t not in self.inside)
+        cuts = set(t for t in self.names if sec.vma <= t <= sec.end and t not in self.inside)
+        for a, (size, t, plus) in POINTERS.items():
+            cuts.update((a, a + size))
+        cuts = sorted(cuts)
         ci = 0
         pos = sec.vma
         while pos < sec.end:
@@ -415,10 +445,21 @@ class Writer:
                 while cj < len(cuts) and cuts[cj] <= a:
                     cj += 1
                 b = min(end, cuts[cj]) if cj < len(cuts) else end
+                if a in POINTERS and a + POINTERS[a][0] <= end:     # an address is kept here: by its name
+                    size, t, plus = POINTERS[a]
+                    text = '%s %s' % ('dq' if size == 8 else 'dd', self.pointer_name(t))
+                    items.append(Item(a, size, text + (' + 0x%X' % plus if plus else ''), False))
+                    a += size
+                    continue
                 items.extend(data_items(a, b))
                 a = b
             pos = end
         return items
+
+    def pointer_name(self, t):
+        if t in self.inside:
+            return '%s + %d' % (self.names[self.inside[t]], t - self.inside[t])
+        return self.names[t]
 
     def render(self, it):
         n, text, bits = self.k.code[it.addr]
@@ -444,25 +485,13 @@ class Writer:
 
     def write(self, path):
         k = self.k
-        lines = [
-            '; Kernel.kasm - the NinuxOS v2.9.59 kernel: the core (with the loader in front) and the extension.',
-            '; Recovered from the compiled kernel by tools/kdis/kdis.py; it assembles to the same 220000 bytes:',
-            ';   nasm -f bin Kernel.kasm -o Kernel.bin',
-            ';',
-            '; fn_ADDR  a function (something calls it)      L_ADDR  a place jumped to',
-            '; d_ADDR   data the code points at              ADDR is the address in memory',
-            '; A line that is "db ... ; instruction" is an instruction nasm would encode in another way.',
-            '',
-        ]
+        lines = list(HEADER)
         by_inside = {}
         for t, s in self.inside.items():
             by_inside.setdefault(s, []).append(t)
         for sec, items in zip(SECTIONS, self.items):
             lines.append('')
-            if sec.name == 'core':
-                lines.append('section .core vstart=0x%X align=1' % sec.vma)
-            else:
-                lines.append('section .ext vstart=0x%X follows=.core align=1' % sec.vma)
+            lines.append(DIRECTIVES[sec.name])
             bits = 0
             for it in items:
                 if it.code:
@@ -476,7 +505,8 @@ class Writer:
                         lines.append('')
                     lines.append(nm + ':')
                 for t in by_inside.get(it.addr, ()):
-                    lines.append('%s equ %s + %d' % (self.names[t], self.names[it.addr], t - it.addr))
+                    if not POINTERS:
+                        lines.append('%s equ %s + %d' % (self.names[t], self.names[it.addr], t - it.addr))
                 it.line = len(lines) + 1
                 lines.append('        ' + (self.render(it) if it.code else it.text))
             nm = self.name(sec.end)
@@ -496,7 +526,8 @@ ERR = re.compile(r':(\d+): (?:error|fatal)')
 def assemble(src):
     out = os.path.join(WORK, 'Kernel.bin')
     lst = os.path.join(WORK, 'Kernel.lst')
-    r = subprocess.run([NASM, '-f', 'bin', '-w-all', '-o', out, '-l', lst, src], capture_output=True, text=True)
+    r = subprocess.run([NASM, '-f', 'bin', '-w-all', '-I', os.path.dirname(os.path.abspath(src)) + os.sep,
+                        '-o', out, '-l', lst, src], capture_output=True, text=True)
     errors = sorted(set(int(m.group(1)) for m in ERR.finditer(r.stderr)))
     return out, lst, errors, r.stderr
 

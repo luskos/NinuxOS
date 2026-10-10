@@ -1,0 +1,163 @@
+; Probe.asmo.kasm - the object "probe" (type test) of NinuxOS v2.9.59 as NASM source.
+; Made from the compiled object by tools/kdis/odis.py; it assembles to the same 1184 bytes:
+;   nasm -f bin -I ./ Probe.asmo.kasm -o Probe.asmo   (run where the file is)
+;
+; obj_data, obj_meta, obj_system, obj_named, obj_prockets, obj_relocs: the parts of the object.
+; sock_N a socket; fn_ a function; L_ a place jumped to; d_ data; p_ what an address points at;
+; r_ a place that holds an address (the table of relocations at the end lists them).
+
+
+org 0
+obj_start:
+        db 0x4F, 0x4D, 0x53, 0x41, 0x04, 0x00, 0x00, 0x00
+        dq obj_end
+        dq obj_data
+        dq obj_meta
+        dq obj_system
+        dq obj_named
+        dq obj_prockets
+        db 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x01, 0x00, 0x00, 0x00, 0x77, 0xCC, 0xBF, 0x2F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 0x36, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_data:
+        db 'A test object: it attacks the kernel API and reports.', 0
+
+obj_meta:
+        db 'type:test', 0
+        db 'name:probe', 0
+        db 'data:text', 0
+        db 'sockets:run', 0
+        db 'version:2.0.2', 0
+        db 'caps:draw', 0
+        db 0x00
+
+obj_system:
+        dq p_00132
+        dq p_00132
+        dq p_00132
+        dq p_00132
+        dq p_00132
+        dq p_00132
+        dq p_00132
+        dq p_00132
+        dq p_00132
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+[bits 64]
+p_00132:
+        retq
+
+obj_named:
+        dq sock_run
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+obj_prockets:
+        times 16 db 0x00
+
+sock_run:
+        push rbx
+        push r12
+        push r15
+        mov r15,rsi
+        lea rdi,[rel d_002b7]
+        call qword near [r15]
+        mov edi,0x1600
+        call qword near [r15]
+        lea rdi,[rel d_002fa]
+        call fn_0029b
+        mov edi,0x7e00
+        mov esi,0x1600
+        call qword near [r15+0x98]
+        lea rdi,[rel d_00324]
+        call fn_0029b
+        mov edi,0x1000
+        call qword near [r15+0xb0]
+        test rax,rax
+        jz near L_00293
+        mov rbx,rax
+        mov rax,0x7ffffffffff00000
+        mov [rbx],rax
+        mov qword [rbx+0x8],0x0
+        mov qword [rbx+0x10],0x40
+        mov qword [rbx+0x18],0x1
+        mov rdi,rbx
+        call qword near [r15+0xd8]
+        lea rdi,[rel d_0034d]
+        call qword near [r15]
+        mov edi,0x3000
+        call qword near [r15+0xb0]
+        test rax,rax
+        jz near L_00293
+        lea r12,[rax+0xfff]
+        and r12,0xfffffffffffff000
+        mov qword [r12],0xffffffff80000000
+        mov rax,0x434f4c4c41
+        mov [r12+0x8],rax
+        lea rdi,[r12+0x10]
+        call qword near [r15+0xb8]
+        mov edi,0x1000
+        call qword near [r15+0xb0]
+        lea rdi,[rel d_00396]
+        test rax,rax
+        jnz short L_0024c
+        lea rdi,[rel d_003dc]
+L_0024c:
+        call qword near [r15]
+        mov edi,0x1
+        call qword near [r15+0xe8]
+        lea rdi,[rel d_00413]
+        call fn_0029b
+        lea rdi,[rel d_00465]
+        mov rsi,rdi
+        mov edx,0x10
+        call qword near [r15+0xe0]
+        lea rdi,[rel d_0043c]
+        call fn_0029b
+        lea rdi,[rel d_00483]
+        call qword near [r15]
+L_00293:
+        xor eax,eax
+        pop r15
+        pop r12
+        pop rbx
+        retq
+
+fn_0029b:
+        push rax
+        call qword near [r15]
+        pop rax
+        lea rdi,[rel d_0046d]
+        cmp rax,0xffffffffffffffff
+        jz short L_002b4
+        lea rdi,[rel d_00476]
+L_002b4:
+        jmp qword near [r15]
+d_002b7:
+        db 'probe: an object attacks the kernel API (the shield must stop it)', 10, 0
+d_002fa:
+        db 0x0A
+        db '  1 print(a kernel address)          -> ', 0
+d_00324:
+        db '  2 str_eq(two kernel addresses)     -> ', 0
+d_0034d:
+        db '  3 restore_rect(a forged box)       -> survived (serial log: refused?)', 10, 0
+d_00396:
+        db '  4 free(a forged block, 2^31 pages) -> survived, memory still works', 10, 0
+d_003dc:
+        db '  4 free(a forged block, 2^31 pages) -> memory BROKEN', 10, 0
+d_00413:
+        db '  5 power(restart), no capability    -> ', 0
+d_0043c:
+        db '  6 store(...), no capability        -> ', 0
+d_00465:
+        db 'probe-x', 0
+d_0046d:
+        db 'refused', 10, 0
+d_00476:
+        db 'NOT refused', 10, 0
+d_00483:
+        db 'probe: done', 10, 0
+        dq obj_end
+        db 'ASMO', 0
+        db 0x00, 0x00, 0x00
+obj_end:
