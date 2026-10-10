@@ -3,6 +3,11 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.08** (10 October 2026)
+  - TODO.md, part 4c: NinuxOS measured against macOS, Windows, Linux and Android, area by area -
+    what it has, what is missing, what must be there before anyone else can use it; the order
+    that follows from it; Claude's notes on the owner's ideas (the governor, the wall between the
+    desktop and the shell, 5 users).
 - **v3.0.07** (10 October 2026)
   - `assets/fonts`: the three font families v2.9.59 was made with (Exo for the shell, JetBrains
     Mono, Russo One), from the owner.

@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.07 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.08 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -211,6 +211,66 @@ Looked at on 10 October 2026, against v2.9.59. Order = how much it hurts.
 - [ ] **When something goes wrong.** A fault in a program is caught and logged; there is no way
       to look inside a running program, no saved picture of a crash, no automatic tests.
 - [ ] Smaller: no clock from the network; sound out only; no printing; no Bluetooth.
+
+## 4c. Measured against macOS, Windows, Linux, Android
+
+What those systems have that a person meets every day. "Has" is what v2.9.59 shows or says of
+itself; where it was not read from the kernel it says so. **!** = without it the system cannot
+be given to someone else to use.
+
+| area | NinuxOS has | missing |
+|---|---|---|
+| **Programs that run** | windows side by side, time slices, own memory and page tables per program | **!** programs that keep running when not on the screen (services, downloads, music, alarms); a list of what runs and a way to stop it; priorities; threads inside a program; a program talking to another one (today only through objects and the clipboard) |
+| **Memory** | per-program memory, a kernel allocator, `mem`, `memtest` | **!** giving memory back; a limit for each program and a clean end when it is reached; loading a program's parts only when needed; anything when memory runs out |
+| **Keeping data** | the cabinet, drawers, a signed list for system objects, `update back`, `scan`, `recover` | **!** a second copy of the table and the kernel; writes that are whole or not at all; **!** backup and restore of the user's own objects (Time Machine, File History); snapshots; more than 63 objects in a place; a check of user objects, not only system ones; care for SSDs (TRIM) |
+| **Permissions** | users with a password and a level, age ratings, maintenance mode, locked and hidden objects, ring 3 | **!** per program: what it may read, change, start, send (Android asks; here every program may everything the table offers); each user's objects apart from the others'; asking the person before something dangerous |
+| **Trust from the start** | the Sentinel, a signed kernel and suits, a machine identity | the boot sector and the loader are checked by nobody; UEFI Secure Boot; the keys kept in the machine's chip (TPM); the whole disk encrypted; one key for all builds that survives the loss of a PC (ours is in one file) |
+| **Updates** | `update` from a stick, a backup of the old system | updates over the network; an update that cannot leave the machine half-done; the old systems must accept the new key (ours changed) |
+| **Getting programs** | objects travel by `share`, `send`, `get`, FAT32 `files` | **!** installing and removing a program as one act; where programs come from (a store, a list); who made a program and whether to trust them (today only the build's own key); versions of a program and of the functions it needs |
+| **The network** | two wired cards, DHCP, ping, Meta Net (its own pages, signed and encrypted) | **!** Wi-Fi; a way to the ordinary internet - TCP, DNS, TLS, HTTP - if not there (to be read from k_net); a firewall; the clock from the network |
+| **The web** | NET shows NinuxOS pages (HTML + CSS + PyTon) | **!** the pages of the rest of the world. No other system is used without a browser. To decide: a real browser is years of work; a bridge (a relay on another machine, as Ask does) is weeks |
+| **Hardware** | disks (ATA, AHCI, NVMe), USB (keyboard, mouse, stick, hub), PS/2, sound out, a framebuffer, virtio-gpu | **!** touchpads and touch screens (I2C, most laptops); graphics cards (everything is drawn by the processor); Bluetooth; cameras; microphones; printers; card readers; a second screen |
+| **Power** | power off, restart, the processor's clock (Tuner) | **!** sleep and wake; the battery (how much is left, a warning); the lid; brightness; heat that slows the machine down by itself |
+| **The screen** | windows, a taskbar, a start menu, themes, a wallpaper, a lock screen | letters at any size from a .ttf (now 8 by 16 dots only); screens with many dots (everything is small); notifications; drag and drop between programs; undo across the system |
+| **Text and languages** | Latin and Cyrillic, EN / BG keyboards, time zones, summer time | **!** Unicode; other scripts; writing right to left; typing languages with many signs; texts of the system in other languages |
+| **Media** | WAV, tones, pictures as raw dots | reading PNG and JPEG; MP3 / AAC / video; a mixer (two programs sounding at once) |
+| **For everyone** | - | reading the screen aloud, a magnifier, high contrast, keys instead of the mouse everywhere |
+| **When it breaks** | the shield catches a program's fault; a crash screen; a chained log; a safe start | a start that repairs (recovery) without another machine; the crash kept for later; a way back to the state as it came (factory reset) that keeps the user's objects; a watchdog for a program that hangs |
+| **Hardening** | the kernel is closed to programs, only verified code on the kernel's page tables | programs always loaded at the same address (0x1400000): no randomising; no guard against a stack that overflows; data that cannot be run (to be read: is it there?) |
+| **Making programs** | Studio, PyTon, `build` (numbers only), py2asm on a PC | **!** the whole of PyTon compiled inside the system; a description of every function a program may call, kept true (now it was dug out of old programs); looking into a running program; tests that run by themselves |
+| **Other systems' programs** | - | nothing made for another system runs. Every new system answers this somehow: its own programs only (then it needs many), a layer for one other system, or the web as the common ground |
+
+### What this says, in order
+
+1. **Not losing things** - the second copy, whole writes, backup of the user's objects, the boot
+   sector that Windows eats. Everything else is worthless on a system that can vanish.
+2. **What a program is** - one that lives on in the background, with permissions of its own, that
+   gives memory back and can be installed and removed. Socials, the keyboard on the screen, the
+   governor all need this answered first; it changes the kernel, the table of functions and py2asm.
+3. **The way out** - Wi-Fi, the ordinary internet, the web (bridge or browser), NTFS / ext4.
+4. **Unicode and letters from a .ttf** - before more is written that assumes one byte a letter.
+5. **Laptops** - sleep, battery, touchpad: without them it is a system for desktop PCs and QEMU.
+6. The rest of the table.
+
+### Claude's notes on the owner's ideas (10 October 2026)
+
+- **An instance on every disk, a governor.** Right in direction: it is what "not losing things"
+  becomes when there is more than one disk. The hard part is not copying, it is disagreement:
+  two instances that each changed something while the other was not looking. Decide first what
+  is the truth (the governor always wins? the newest? ask the person?), and whether user objects
+  are synced or only the system. A/B systems on one disk (two copies, one known-good) give most
+  of the safety on a machine with a single disk, and are the smaller first step.
+- **Nothing on the desktop reaches the shell.** It is the same thing as per-program permissions
+  (row "Permissions"): today the wall is missing for every program, not only for the shell. A
+  keyboard on the screen that types into the shell is then simply the one program that has the
+  permission "send keys to the shell" - shown, given by the administrator, taken back at will.
+  Without the permissions it is a hole; with them it is an ordinary case.
+- **`kill`, the desktop that closes everything, `cores solo`, `bench`** are one subject: how the
+  system runs programs. Read the multiplexer in the kernel source before changing any of them.
+- **At most 5 users**: easy to enforce; say what should happen to their objects when a user is
+  removed, and whether the 5 include the administrator.
+- **Order of work.** Nothing built since v2.9.59 has run (`docs/TESTS.md`, parts C and I). Until
+  a changed kernel is seen to start, every point above that touches the kernel is a plan only.
 
 ## 4b. From the owner, 10 October 2026
 
