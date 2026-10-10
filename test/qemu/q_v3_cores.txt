@@ -1,0 +1,21 @@
+# q_v3_cores.txt - cores and bench: is shared work shared (the owner: "the same results whatever is set")
+qemu -smp 4 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type cores
+wait 1
+snap c01_cores
+type cls
+type bench
+wait 14
+snap c02_bench_shared
+type cls
+type cores solo
+type bench
+wait 14
+snap c03_bench_solo
+type cls
+type cores solo
+type cores
+wait 6
+snap c04_cores_test

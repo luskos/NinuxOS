@@ -3,6 +3,14 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.21** (11 October 2026) - seen in QEMU (4 cores)
+  - **`cores solo`, `cores one`, `cores all` work outside maintenance mode**, for the session;
+    only keeping the setting on the disk needs `maint`. They used to be refused, so `bench`
+    gave the same numbers whatever was typed - that was the whole of "bench always the same".
+    With 4 cores: shared work 130 ms, one core 420 ms; after `cores solo` 410 ms.
+  - The room for new kernel code is about 24 KB, not 4.6: 0x78000 was only the crash screen's
+    idea of where kernel code ends (now 0x80000). The build stops if the extension would reach
+    the suits.
 - **v3.0.20** (11 October 2026) - tried on Windows; the programs once in QEMU
   - **PyTon programs give memory back.** The runtime looks for the blocks nothing points at any
     more and uses them again (`rt_collect` in `pyton/runtime.inc`): a program that makes and

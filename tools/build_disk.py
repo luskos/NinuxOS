@@ -767,6 +767,8 @@ def main():
         seed = build_key()
         kernel = kernel[:key_at] + public_key(seed) + kernel[key_at + 32:]
     ext_size = struct.unpack_from('<Q', kernel, ext_at + 8)[0]
+    if 0x50000 + ext_size > 0x80000:            # the extension lies at 0x50000; the first kernel suit is put at 0x80000
+        sys.exit('build: the extension of the kernel is %d bytes - it would run into the suits at 0x80000' % ext_size)
     new_hash = hashlib.sha256(kernel[ext_at:ext_at + ext_size]).digest()
     if new_hash != old_hash:
         kernel = kernel[:hash_at] + new_hash + kernel[hash_at + 32:]

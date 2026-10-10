@@ -5982,7 +5982,11 @@ L_0c556:
         jc short L_0c586
         cmp rax,0x50000
         jc short L_0c59b
+%ifdef PLAIN_KERNEL
         cmp rax,0x78000
+%else
+        cmp rax,0x80000                 ; v3.0.21: the crash screen takes the whole room of the extension for kernel code
+%endif
         jnc short L_0c59b
 
 L_0c586:
@@ -32027,7 +32031,11 @@ fn_6212a:
         jz near L_62274
 
 L_621b2:
+%ifdef PLAIN_KERNEL
         call fn_0d535
+%else
+        call near cores_maint           ; v3.0.21: outside maintenance mode the setting holds for this session
+%endif
         jnz short L_621c3
         mov eax,0x1
         pop r13
@@ -32054,7 +32062,11 @@ L_621e8:
         mov [rcx+0xa],ax
         cmp byte [rel d_1553d],0x0
         jz short L_621fa
+%ifdef PLAIN_KERNEL
         call fn_0d104
+%else
+        call near cores_save            ; v3.0.21: ... and is then not written to the disk
+%endif
 
 L_621fa:
         lea rdi,[rel d_635d5]
@@ -50336,6 +50348,27 @@ tasks_nothing:
         lea rdi,[rel tasks_says_nothing]
         call api_print
         jmp near L_0b044
+; ---- v3.0.21: `cores solo`, `cores one`, `cores all` outside maintenance mode ----------------
+; They were refused ("enter maintenance mode first") because the setting is kept in the table
+; of the cabinet - so `bench` gave the same numbers whatever was typed. Now the setting is made
+; for this session; only the writing to the disk still needs maintenance mode.
+cores_maint:                            ; stands for: call fn_0d535 (is maintenance mode on? says so if not)
+        mov byte [rel cores_session],0x0
+        cmp byte [rel d_155df],0x0
+        jnz near fn_0d535               ; on: as before (it may have run out)
+        mov byte [rel cores_session],0x1
+        lea rdi,[rel cores_says_session]
+        call api_print
+        or eax,0x1                      ; go on
+        retq
+cores_save:                             ; stands for: call fn_0d104 (write the table of the cabinet)
+        cmp byte [rel cores_session],0x0
+        jz near fn_0d104
+        retq
+cores_session:
+        db 0x00
+cores_says_session:
+        db '(For this session. In maintenance mode - ', 39, 'maint', 39, ' - it is kept.)', 10, 0
 tasks_word:
         db 'tasks', 0
 tasks_says_gap:

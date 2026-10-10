@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.20 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.21 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -59,7 +59,7 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 | 15 | A second copy of the table of the cabinet and of the kernel; writes whole or not at all | M |
 | 16 | The silent backup of the user and its pool, with a manager of the pool's space | M-L |
 | 17 | A desktop program is handed only what it needs; relays for the rest (the keyboard on the screen for the shell is one) | L |
-| 18 | `cores solo`, `bench`, all cores for programs | M |
+| 18 | **[`cores solo` / `bench` explained and changed, v3.0.21; "all cores for programs" is `cores all`, to be tried on the real machine]** `cores solo`, `bench`, all cores for programs | M |
 | 19 | **[done, v3.0.20: tried on Windows and once in QEMU]** Memory given back by PyTon programs | M |
 | 20 | Photon, Puffer, Tuner, META out of the kernel: programs of their own | L each |
 | 21 | Names for the kernel's 655 functions; the kernel cut into its parts | L |
@@ -213,9 +213,12 @@ So "leaving the desktop closes nothing" is three changes, and each has to be see
       the core, which cannot grow: the shell now asks `shell_more` (in the extension) about a
       word it does not know, before it looks for an object of that name - new commands go there.
       `help` does not list `tasks` (its text is in the core too).
-- [ ] The extension has room up to 0x78000 and ends at 0x76DC0 now: about 4.6 KB are left for
-      new kernel code. Before more is written the limit has to be understood and raised (the
-      kernel checks addresses against 0x78000; the first suit is loaded at 0x80000).
+- [x] v3.0.21: the room for new kernel code, looked at. 0x78000 was only what the crash screen
+      takes for "an address of the kernel" when it lists the calls (now 0x80000). The real
+      limits: the first suit lies at 0x80000, and the boot sector reads 480 sectors of kernel.
+      The kernel is 221248 bytes of 245760: **about 24 KB are left** (the build stops if the
+      extension would reach 0x80000). More than that needs the boot sector to read more
+      sectors and the table of the cabinet to lie further on.
 - [ ] Not tried: several kept programs at once, a full-screen one (Photon), `cores all`,
       what `update`, `maint` and `shutdown` do while programs are kept.
 - Later, for relays and music: turns also while the shell is in front, with drawing held back.
@@ -628,7 +631,14 @@ DIRECTIVE.md. Three rows of the table in 4c were written against these and are w
       the other two were used.
 - [ ] `kill NAME` is useless as long as leaving the desktop closes everything (4a, "programs do
       not live on"). Decide: programs stay open across shell / desktop.
-- [ ] `cores solo` and `bench`: the same results whatever is set - not as it should be (4a).
+- [x] `cores solo` and `bench`: the same results whatever is set. Found and changed in v3.0.21:
+      `cores solo` (and `cores one`, `cores all`) were *refused* outside maintenance mode ("This
+      changes the cabinet: enter maintenance mode first"), because the setting is kept in the
+      table of the cabinet - so nothing was set, and `bench` measured the same thing. Now the
+      setting is made for the session at once; only keeping it on the disk needs `maint`.
+      In QEMU with 4 cores: shared work 130 ms against 420 ms on one core; after `cores solo`
+      410 ms. The sharing itself works. On the owner's machine: run `cores` and `bench` again -
+      if lines 7 and 8 are still alike there, `cores` says why (a core that did not answer).
 - [ ] **At most 5 users.**
 - [ ] **An instance of the system on every physical disk.** If one dies another starts. One is
       the *governor*: it leads and starts first. `governor swap` makes another one the governor;
