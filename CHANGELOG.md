@@ -3,6 +3,11 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.06** (10 October 2026)
+  - `docs/TESTS.md`: the full list of system tests for the owner, in the order they depend on each
+    other, with what must be seen and what it means if it is not: the build, Puffus and the stick,
+    the start, the seals, the cabinet, the programs of the new py2asm, everything old, the source
+    container, and the proof that code can be added to the kernel.
 - **v3.0.05** (10 October 2026) - a source for everything that is compiled
   - The kernel: the tables of addresses in its data found and followed (the shell's commands, the
     functions for programs, 369 addresses in all) - 55.6% of the kernel is code, the rest is

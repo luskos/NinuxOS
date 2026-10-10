@@ -1,11 +1,14 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.05 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.06 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
 
 ## To try now (the owner)
+
+**The whole list, step by step, is `docs/TESTS.md`.** Nothing built since v2.9.59 has run on a
+machine; part C of that list (the start) decides whether the signing is right.
 
 1. **Does a program made on the PC get into the system?** Copy the objects of `test/try`
    (pyhello, pycalc, pychronos, pynotepad, pybags) onto a FAT32 stick. In NinuxOS: `usb on`, `mnt`, `files`,
@@ -54,6 +57,9 @@ Open:
       one that starts says which part is wrong.
 - [ ] build/key/build.key is on this PC only. Copy it somewhere safe (not into git).
 - [ ] Put a new object into a drawer, not only into the cabinet (63 places, 49 taken now).
+- [ ] An object the build adds is not in the Sentinel's list, so the shell may refuse to `run` it
+      ("runs only as a program in a window"). The build signs the list itself: give the added
+      objects lines in it (the list and the object `sentinel` grow by 48 bytes a line).
 - [ ] Take the 58 dead copies out of the image and out of docs/cabinet_objects.csv; build the
       image from nothing instead of from the base image.
 - [ ] How an identity is computed (for `id`; the system fills it in when it saves an object).
