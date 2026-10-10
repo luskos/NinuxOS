@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.15 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.16 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -55,7 +55,7 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 
 | # | what | size |
 |---|---|---|
-| 14 | Programs live on: leaving the desktop closes nothing; `tasks`; then `kill` means something | L |
+| 14 | **[written and seen in QEMU, v3.0.16; `tasks` still to do]** Programs live on: leaving the desktop closes nothing; `tasks`; then `kill` means something | L |
 | 15 | A second copy of the table of the cabinet and of the kernel; writes whole or not at all | M |
 | 16 | The silent backup of the user and its pool, with a manager of the pool's space | M-L |
 | 17 | A desktop program is handed only what it needs; relays for the rest (the keyboard on the screen for the shell is one) | L |
@@ -163,11 +163,17 @@ and `off` are). It is entered when the desktop starts and left when the desktop 
 
 So "leaving the desktop closes nothing" is three changes, and each has to be seen working:
 
-- [ ] the end of task 0 no longer marks the others; their records and memory stay (frozen: they
-      get no turns while the shell has the screen, so they cannot draw over it);
-- [ ] the next start of the desktop does not wipe the table, and the desktop (which keeps its
-      own list of windows inside its object) is told which tasks are still there;
-- [ ] `tasks` in the shell lists the eight places; `kill N` closes a frozen one.
+- [x] v3.0.16: the end of task 0 no longer closes the others when some still run; their
+      records, memory and windows stay (they get no turns while the shell has the screen);
+- [x] v3.0.16: the next start of the desktop does not wipe the table; the desktop goes under
+      the kept windows and the keys go to the window that was on top. The desktop needed no
+      telling: it asks the multiplexer for the tasks. Seen in QEMU (`test/qemu/q_v3_live.txt`):
+      Files left open, to the shell, `mem`, `desktop` - Files is there with the same line
+      chosen, takes keys, closes with Esc; leaving with nothing open ends as before.
+- [ ] `tasks` in the shell lists the eight places; `kill N` closes a kept one (today `kill NAME`
+      is the old command; not tried on a kept program).
+- [ ] Not tried: several kept programs at once, a full-screen one (Photon), `cores all`,
+      what `update`, `maint` and `shutdown` do while programs are kept.
 - Later, for relays and music: turns also while the shell is in front, with drawing held back.
 
 Not written blind: it changes what happens at every start and end of the desktop.

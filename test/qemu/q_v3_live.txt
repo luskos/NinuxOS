@@ -1,0 +1,40 @@
+# q_v3_live.txt - v3.0.16: a program lives on when the desktop is left
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type desktop
+waitlog [browser] page shown 60
+wait 2
+esc
+wait 2
+# Files: open, choose the fourth line, leave it open
+moveto 447 232
+click
+wait 4
+key down
+key down
+key down
+wait 1
+snap l01_files_open
+# to the shell (the button of the taskbar)
+moveto 60 749
+click
+wait 4
+snap l02_shell
+type mem
+type desktop
+wait 8
+snap l03_desktop_again
+key down
+wait 2
+snap l04_files_moves
+esc
+wait 3
+snap l05_files_closed
+# and the old way still works: nothing open, leave, come back
+moveto 60 749
+click
+wait 4
+type desktop
+wait 8
+snap l06_third_time

@@ -3,6 +3,13 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.16** (11 October 2026) - seen in QEMU
+  - **Programs live on.** Leaving the desktop no longer closes the programs that run: they are
+    kept as they are and the next `desktop` shows them again where they were, the keys going
+    to the window that was on top. With nothing open the desktop ends as before. In the kernel:
+    three places of the multiplexer call new code at the end of the extension (`mux_leave`,
+    `mux_begin`, `mux_order`), each call exactly as long as what it stands for;
+    `--plain-kernel` builds without it.
 - **v3.0.15** (11 October 2026) - **the first version since v2.9.59 seen running** (QEMU)
   - Tried in QEMU with the owner's leave: the system starts with the new boot sector, the
     changed kernel and our key; the Sentinel takes all 103 lines but donate; pyhello, Alt + *,

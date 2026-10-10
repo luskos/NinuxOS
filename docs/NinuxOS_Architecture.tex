@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.15.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.16.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.15 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.16 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -384,7 +384,11 @@ Read from the extension (v3.0.14): the multiplexer is one loop, entered when the
 It has eight places for tasks (state 0 free, 1 running, 2 to be closed); the desktop is task 0.
 Every running task gets a turn, again and again, as long as task 0 runs. When the desktop ends
 every other task is marked to be closed and the multiplexer is switched off --- which is why
-leaving the desktop closes every program (\file{TODO.md} has what must change).
+leaving the desktop closed every program. From v3.0.16 it does not: if programs still run
+when the desktop ends, \texttt{mux\_leave} gives back only the desktop's own task and keeps the
+rest (no turns while the shell has the screen); at the next start \texttt{mux\_begin} skips the
+wiping of the table and \texttt{mux\_order} puts the desktop under the kept windows and gives
+the keys to the one on top. The three lie at the end of the extension.
 
 The \emph{multiplexer} runs the programs of the desktop in windows, each with its own memory and
 time slices; the desktop is task 0. By default the programs take turns on the first processor core

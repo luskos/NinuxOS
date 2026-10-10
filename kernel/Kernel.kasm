@@ -16520,7 +16520,11 @@ L_53d40:
         mov r12,rdi
         cmp qword [rel d_117cb],0x0
         jz near L_53f0c
+%ifdef PLAIN_KERNEL
         call fn_53f25
+%else
+        call near mux_begin             ; v3.0.16: programs kept from the last time are taken up again
+%endif
         test eax,eax
         jz near L_53f0c
         lea rdi,[rel d_56869]
@@ -16548,9 +16552,14 @@ L_53d40:
         jz near L_53ed8
         mov qword [r13+0xa0],0x3
         mov qword [r13+0x0],0x1
+%ifdef PLAIN_KERNEL
         mov qword [rel d_56530],0x1
         mov qword [rel d_56538],0x0
         mov qword [rel d_56480],0x0
+%else
+        call near mux_order             ; v3.0.16 (the same 33 bytes as the three lines it stands for)
+        times 28 nop
+%endif
         call fn_54eab
         mov byte [rel d_56478],0x1
         call fn_56e7f
@@ -16581,7 +16590,11 @@ L_53e5a:
         call fn_55604
         jmp short L_53e23
 L_53e76:
+%ifdef PLAIN_KERNEL
         mov ebx,0x1
+%else
+        call near mux_leave             ; v3.0.16: programs that still run are kept (the same 5 bytes)
+%endif
 L_53e7b:
         cmp rbx,0x8
         jnc short L_53e9b
@@ -16639,6 +16652,7 @@ fn_53f25:
         mov [rel d_564b8],rax
         test rax,rax
         jz near L_53fdc
+mux_begin_rest:                         ; (v3.0.16: mux_begin comes in here when the tasks are kept)
         mov qword [rel d_564c0],0x0
         mov rax,[rel d_11810]
         mov [rel d_564c8],rax
@@ -42870,6 +42884,87 @@ display_attribute:
         retq
 display_dark:
         db 0x00
+
+; ---- v3.0.16: programs live on when the desktop is left ------------------------------------
+; The multiplexer (L_53d40) runs the desktop as task 0 and up to seven programs. Until now the
+; end of the desktop closed them all. Now: if programs still run when the desktop ends, they
+; are kept as they are - their records, memory and windows - and get no turns while the shell
+; has the screen. The next `desktop` takes them up again where they were.
+; Three places of the old code call in here; each call is as long as what it stands for.
+mux_leave:                              ; the desktop has ended. Stands for: mov ebx,0x1
+        xor ecx,ecx
+        mov ebx,0x1
+mux_leave_count:
+        mov rdi,rbx
+        call fn_53fdf                   ; the record of task rbx
+        cmp qword [rax],0x1             ; running
+        jnz short mux_leave_next
+        inc ecx
+mux_leave_next:
+        inc rbx
+        cmp rbx,0x8
+        jc short mux_leave_count
+        test ecx,ecx
+        jnz short mux_keep
+        mov ebx,0x1                     ; nothing runs: everything is closed and freed, as before
+        retq
+mux_keep:
+        add rsp,0x8                     ; not back to the old ending
+        call fn_56edf
+        mov byte [rel d_56478],0x0
+        call fn_54edb
+        call fn_54369                   ; what was closing is closed
+        xor edi,edi
+        call fn_543c2                   ; the desktop's own task is given back
+        mov byte [rel mux_kept],0x1
+        lea rdi,[rel mux_says_kept]
+        call api_log
+        xor eax,eax
+        jmp near L_53f1a
+
+mux_begin:                              ; the desktop starts. Stands for: call fn_53f25
+        mov byte [rel mux_again],0x0
+        cmp byte [rel mux_kept],0x0
+        jz near fn_53f25                ; nothing kept: a clean table, as before
+        mov byte [rel mux_kept],0x0
+        mov byte [rel mux_again],0x1
+        lea rdi,[rel mux_says_again]
+        call api_log
+        jmp near mux_begin_rest         ; the table of tasks is not wiped
+
+mux_order:                              ; the order of the windows, from the bottom. Stands for:
+        cmp byte [rel mux_again],0x0    ;   one window, the desktop's
+        jnz short mux_order_under
+        mov qword [rel d_56530],0x1
+        mov qword [rel d_56538],0x0
+        mov qword [rel d_56480],0x0     ; the keys go to the desktop
+        retq
+mux_order_under:                        ; the kept windows stay in their order; the desktop goes under them
+        mov byte [rel mux_again],0x0
+        mov rcx,[rel d_56530]
+        lea rax,[rel d_56538]
+mux_order_up:
+        test rcx,rcx
+        jz short mux_order_put
+        mov rdx,[rax+rcx*8-0x8]
+        mov [rax+rcx*8],rdx
+        dec rcx
+        jmp short mux_order_up
+mux_order_put:
+        mov qword [rax],0x0
+        inc qword [rel d_56530]
+        mov rcx,[rel d_56530]           ; the keys go to the window on top, as when the desktop was left
+        mov rdx,[rax+rcx*8-0x8]
+        mov [rel d_56480],rdx
+        retq
+mux_kept:
+        db 0x00
+mux_again:
+        db 0x00
+mux_says_kept:
+        db '[mux] the desktop was left: the programs that run are kept', 10, 0
+mux_says_again:
+        db '[mux] the kept programs are taken up again', 10, 0
         align 16, db 0x90
 %endif
 ext_end:
