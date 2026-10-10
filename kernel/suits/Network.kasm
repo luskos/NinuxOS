@@ -675,7 +675,7 @@ L_86b39:
         lea rdi,[rel d_89407]
         call api_print
         mov edi,r13d
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_89433]
         call api_print
         xor eax,eax
@@ -769,14 +769,14 @@ L_86c87:
         push r12
         mov rbx,rdi
         mov r12d,esi
-        mov rdx,[rel suit_start + (d_14eea - 0x86000)]
+        mov rdx,[rel suit_start + (clock_ticks - 0x86000)]
         add rdx,0x14
 L_86cb4:
         mov al,[rel d_893d9]
         sub al,[rel suit_start + (d_69594 - 0x86000)]
         cmp al,0x8
         jc short L_86cdd
-        cmp [rel suit_start + (d_14eea - 0x86000)],rdx
+        cmp [rel suit_start + (clock_ticks - 0x86000)],rdx
         jnc short L_86cd1
         pause
         jmp short L_86cb4
@@ -846,11 +846,11 @@ L_86db4:
 
 fn_86db5:
         push rbx
-        mov rbx,[rel suit_start + (d_14eea - 0x86000)]
+        mov rbx,[rel suit_start + (clock_ticks - 0x86000)]
         add rbx,rdi
 L_86dc0:
         call fn_86603
-        cmp [rel suit_start + (d_14eea - 0x86000)],rbx
+        cmp [rel suit_start + (clock_ticks - 0x86000)],rbx
         jnc short L_86dd1
         hlt
         jmp short L_86dc0
@@ -1382,14 +1382,14 @@ L_87475:
         push rbx
         push r12
         mov r12d,ecx
-        mov rbx,[rel suit_start + (d_14eea - 0x86000)]
+        mov rbx,[rel suit_start + (clock_ticks - 0x86000)]
         add rbx,rdi
 L_87485:
         call fn_86603
         movzx eax,byte [rel d_8948c]
         cmp eax,r12d
         jnc short L_874a2
-        cmp [rel suit_start + (d_14eea - 0x86000)],rbx
+        cmp [rel suit_start + (clock_ticks - 0x86000)],rbx
         jnc short L_874a2
         hlt
         jmp short L_87485
@@ -1451,7 +1451,7 @@ L_87516:
         mov [rax+0x30],edx
         mov [rax+0x20],edx
         mov [rax+0x28],edx
-        mov rcx,[rel suit_start + (d_14eea - 0x86000)]
+        mov rcx,[rel suit_start + (clock_ticks - 0x86000)]
         mov [rax+0x78],rcx
         mov eax,ebx
         pop rbx
@@ -1527,7 +1527,7 @@ L_875c3:
         mov esi,0x6
         mov edx,r13d
         call fn_87070
-        mov rax,[rel suit_start + (d_14eea - 0x86000)]
+        mov rax,[rel suit_start + (clock_ticks - 0x86000)]
         mov [rbx+0x60],rax
         pop r14
         pop r13
@@ -1756,7 +1756,7 @@ L_878c1:
 L_878f6:
         cmp rax,0x2
         jc near L_879b7
-        mov rax,[rel suit_start + (d_14eea - 0x86000)]
+        mov rax,[rel suit_start + (clock_ticks - 0x86000)]
         sub rax,[rbx+0x78]
         cmp rax,0xbb8
         jc short L_87931
@@ -1770,7 +1770,7 @@ L_87925:
 L_87931:
         cmp qword [rbx],0x4
         jz short L_8796c
-        mov rax,[rel suit_start + (d_14eea - 0x86000)]
+        mov rax,[rel suit_start + (clock_ticks - 0x86000)]
         sub rax,[rbx+0x60]
         cmp rax,0x64
         jc short L_879b7
@@ -1790,7 +1790,7 @@ L_8796c:
         mov eax,[rbx+0x28]
         cmp eax,[rbx+0x20]
         jz short L_87990
-        mov rax,[rel suit_start + (d_14eea - 0x86000)]
+        mov rax,[rel suit_start + (clock_ticks - 0x86000)]
         sub rax,[rbx+0x60]
         cmp rax,0x1e
         jc short L_87990
@@ -1886,7 +1886,7 @@ fn_87a43:
         xor edx,edx
         call fn_87543
         inc dword [rbx+0x28]
-        mov r12,[rel suit_start + (d_14eea - 0x86000)]
+        mov r12,[rel suit_start + (clock_ticks - 0x86000)]
         add r12,0x1f4
 L_87aaf:
         call fn_86603
@@ -1894,7 +1894,7 @@ L_87aaf:
         jz short L_87adb
         cmp qword [rbx],0x6
         jz short L_87acc
-        cmp [rel suit_start + (d_14eea - 0x86000)],r12
+        cmp [rel suit_start + (clock_ticks - 0x86000)],r12
         jnc short L_87acc
         hlt
         jmp short L_87aaf
@@ -1967,7 +1967,7 @@ L_87ba4:
         mov dword [rel d_89460],0x0
         mov rdi,r12
         mov esi,0x8
-        call fn_10784
+        call memory_ok
         test eax,eax
         jz near L_87cd1
         mov rdi,r12
@@ -1977,7 +1977,7 @@ L_87ba4:
         mov r12d,eax
         mov rdi,r14
         mov esi,0x1
-        call fn_10784
+        call memory_ok
         test eax,eax
         jz near L_87cd1
         xor ebx,ebx
@@ -1993,7 +1993,7 @@ L_87c03:
         jz near L_87cd1
         mov rdi,r14
         mov esi,ebx
-        call fn_10784
+        call memory_ok
         test eax,eax
         jz near L_87cd1
         mov edi,r12d
@@ -2019,7 +2019,7 @@ L_87c65:
         jc short L_87cd1
         mov rdi,r12
         mov rsi,r13
-        call fn_10784
+        call memory_ok
         test eax,eax
         jz short L_87cd1
         mov edi,[rel d_89464]
@@ -2488,7 +2488,7 @@ L_88321:
         lea rsi,[rel d_8ab48]
         mov edx,0x44
         call fn_87ae2
-        mov r14,[rel suit_start + (d_14eea - 0x86000)]
+        mov r14,[rel suit_start + (clock_ticks - 0x86000)]
         add r14,0x3e8
 L_8836b:
         call fn_86603
@@ -2501,7 +2501,7 @@ L_8836b:
         cmp qword [rbx+0x48],0xac
         jnc short L_883ab
 L_88393:
-        cmp [rel suit_start + (d_14eea - 0x86000)],r14
+        cmp [rel suit_start + (clock_ticks - 0x86000)],r14
         jnc short L_8839f
         hlt
         jmp short L_8836b
@@ -2592,13 +2592,13 @@ L_884e8:
 fn_884ef:
         push r12
         or qword [rbx+0x68],0x2
-        mov r12,[rel suit_start + (d_14eea - 0x86000)]
+        mov r12,[rel suit_start + (clock_ticks - 0x86000)]
         add r12,0x64
 L_88501:
         call fn_86603
         test qword [rbx+0x68],0x8
         jnz short L_8851c
-        cmp [rel suit_start + (d_14eea - 0x86000)],r12
+        cmp [rel suit_start + (clock_ticks - 0x86000)],r12
         jnc short L_8851c
         hlt
         jmp short L_88501
@@ -2716,7 +2716,7 @@ fn_8859d:
         rep movsb
         lea rax,[r14+0x84]
         add [rbx+0x58],rax
-        mov r12,[rel suit_start + (d_14eea - 0x86000)]
+        mov r12,[rel suit_start + (clock_ticks - 0x86000)]
         add r12,0x3e8
 L_886a8:
         call fn_86603
@@ -2724,7 +2724,7 @@ L_886a8:
         jnc short L_886c9
         cmp qword [rbx],0x6
         jz short L_886ec
-        cmp [rel suit_start + (d_14eea - 0x86000)],r12
+        cmp [rel suit_start + (clock_ticks - 0x86000)],r12
         jnc short L_886ec
         hlt
         jmp short L_886a8
@@ -3141,7 +3141,7 @@ fn_88b78:
         xor r12d,r12d
 L_88b80:
         movzx edi,bl
-        call fn_08e3b
+        call print_number
         shr ebx,byte 0x8
         inc r12d
         cmp r12d,0x4
@@ -3287,19 +3287,19 @@ L_88d74:
         lea rdi,[rel d_89a37]
         call api_print
         mov rdi,[rel d_89368]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_89a48]
         call api_print
         mov rdi,[rel d_89370]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_89a4f]
         call api_print
         mov rdi,[rel d_89380]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_89a60]
         call api_print
         mov rdi,[rel d_8bfd4]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel suit_start + (d_153bf - 0x86000)]
         call api_print
         jmp short L_88e01
@@ -3367,12 +3367,12 @@ L_88e6f:
         call fn_87037
         mov [rel d_89df4],ax
         mov byte [rel d_8948b],0x0
-        mov rbx,[rel suit_start + (d_14eea - 0x86000)]
+        mov rbx,[rel suit_start + (clock_ticks - 0x86000)]
         mov edi,r12d
         mov esi,0x1
         mov edx,0x28
         call fn_87070
-        mov rcx,[rel suit_start + (d_14eea - 0x86000)]
+        mov rcx,[rel suit_start + (clock_ticks - 0x86000)]
         add rcx,0xc8
 L_88ef3:
         push rcx
@@ -3380,17 +3380,17 @@ L_88ef3:
         pop rcx
         cmp byte [rel d_8948b],0x0
         jnz short L_88f0f
-        cmp [rel suit_start + (d_14eea - 0x86000)],rcx
+        cmp [rel suit_start + (clock_ticks - 0x86000)],rcx
         jnc short L_88f3c
         hlt
         jmp short L_88ef3
 L_88f0f:
         lea rdi,[rel d_89a82]
         call api_print
-        mov rdi,[rel suit_start + (d_14eea - 0x86000)]
+        mov rdi,[rel suit_start + (clock_ticks - 0x86000)]
         sub rdi,rbx
         imul rdi,rdi,0xa
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_89a8f]
         call api_print
         jmp short L_88f48
@@ -3639,7 +3639,7 @@ entry_11:
         lea rdi,[rel d_89668]
         call api_print
         pop rdi
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_89676]
         jmp near api_print
 L_891ee:

@@ -571,7 +571,7 @@ L_80797:
         xor edx,edx
         mov ecx,0x780
         div rcx
-        add rax,[rel suit_start + (d_14eea - 0x80000)]
+        add rax,[rel suit_start + (clock_ticks - 0x80000)]
         add rax,0x2
         mov [rel d_80bd0],rax
         cmp byte [rel d_80c14],0x1
@@ -602,7 +602,7 @@ fn_807ee:
 entry_00:
         cmp byte [rel d_80c16],0x0
         jz short L_8084a
-        mov rax,[rel suit_start + (d_14eea - 0x80000)]
+        mov rax,[rel suit_start + (clock_ticks - 0x80000)]
         cmp rax,[rel d_80bd0]
         jc short L_8084a
         mov byte [rel d_80c16],0x0
@@ -871,7 +871,7 @@ L_80b59:
         mov rdi,rsi
         push rsi
         mov rsi,rbx
-        call fn_10784
+        call memory_ok
         pop rsi
         test eax,eax
         jz short L_80bb1

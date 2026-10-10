@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.34.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.35.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.34 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.35 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -206,9 +206,11 @@ whole objects --- the other 58 are older copies the build left between the live 
 \subsection{The table twice (v3.0.24)}
 
 A copy of the table lies in the sectors right behind it (485--488; the objects start at 490).
-\texttt{cabinet\_save} writes the copy first and then the table, so a cut of the power during
-either writing leaves one of the two whole. The loader reads only the first;
-\file{tools/table\_copy.py} compares them and writes the copy back from another machine.
+The copy is written first and then the table, so a cut of the power during either writing
+leaves one of the two whole. From v3.0.35 it is \texttt{disk\_io} itself that writes the copy
+whenever a table is written to the table's sector, whoever asks; and the loader, when the first
+sector of the table is not a table, reads the copy before it gives up.
+\file{tools/table\_copy.py} compares the two and can write the copy back from another machine.
 
 \subsection{The backup pool (v3.0.25)}
 
@@ -821,6 +823,13 @@ an object is on the desk when the lowest bit at \texttt{0x50} of its header is c
 is the picture its META \texttt{icon} names, else what its socket \texttt{draw} draws.
 \file{docs/DESKTOP.md} has the parts of the old desktop and what the new one still lacks.
 
+\subsection{What a program is handed (v3.0.35)}
+
+A call of a program reaches the kernel through interrupt \texttt{0x80}; just before the function
+is called, \texttt{api\_guard} looks at its number. Power, the services of the extension, and
+closing, parking or typing into another program are given only to an object whose code is in
+the Sentinel's list (\texttt{ob\_known}); anything else gets $-1$ and a line in the log.
+
 \subsection{Names in the kernel}
 
 The recovered source has addresses for names (\texttt{fn\_53fdf}). What is understood gets a real
@@ -830,7 +839,10 @@ suits and in \file{names.txt}, and checks that the bytes stay the same. From v3.
 multiplexer reads as \texttt{mux\_run}, \texttt{mux\_task}, \texttt{mux\_turn},
 \texttt{mux\_free\_task}, \texttt{mux\_compose}; the shell as \texttt{shell\_command} and its
 table \texttt{shell\_commands}; further \texttt{ob\_find}, \texttt{ob\_call},
-\texttt{mem\_free}, \texttt{cabinet\_save}, \texttt{maint\_check}, \texttt{key\_next}.
+\texttt{mem\_free}, \texttt{cabinet\_save}, \texttt{maint\_check}, \texttt{key\_next}; from v3.0.35
+also \texttt{disk\_io}, \texttt{console\_scroll}, \texttt{screen\_memory}, \texttt{load\_table}
+and others, 91 in all. What was written after the recovery is \file{kernel/New.kasm}, included
+by \file{Kernel.kasm} at the end of the extension.
 
 \subsection{Versions}
 

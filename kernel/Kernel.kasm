@@ -26,7 +26,7 @@ core_start:
         call fn_07eac
         call fn_07e5b
         call fn_07f1d
-        call fn_080ac
+        call load_table
         call fn_08184
         mov si,d_08617
         call fn_07eac
@@ -151,7 +151,8 @@ fn_07f1d:
         pop ds
         ret
 
-fn_07f3b:
+; the loader: eax = sector, cx = how many, es = where to: read them through the BIOS
+load_sectors:
         pushad
         add eax,[0x534]
         mov [d_085ae],eax
@@ -285,7 +286,7 @@ L_08066:
         mov cx,dx
         mov bx,0x2000
         mov es,bx
-        call fn_07f3b
+        call load_sectors
         xor bx,bx
         mov es,bx
         pop edi
@@ -309,19 +310,25 @@ L_08066:
 L_080ab:
         ret
 
-fn_080ac:
+; the loader (16 bits): read the table of the cabinet, then every object it names, to 1 MB and up
+load_table:
         mov word [0x520],0x0
         movzx eax,word [0x506]
         inc eax
-        mov [d_085be],eax
+        mov [load_table_sector],eax
+table_again:                            ; (v3.0.35: the loader comes back here to read the copy of the table)
         mov bx,0x160
         mov es,bx
         mov cx,0x1
-        call fn_07f3b
+        call load_sectors
         xor bx,bx
         mov es,bx
         cmp dword [0x1600],0x4e424143
+%ifdef PLAIN_KERNEL
         jnz near L_0816b
+%else
+        jnz near table_copy             ; v3.0.35: no table there - its copy is tried before giving up
+%endif
         mov cx,[0x1608]
         cmp cx,0x1
         jna short L_080fe
@@ -331,11 +338,11 @@ fn_080ac:
 
 L_080eb:
         dec cx
-        mov eax,[d_085be]
+        mov eax,[load_table_sector]
         inc eax
         mov bx,0x180
         mov es,bx
-        call fn_07f3b
+        call load_sectors
         xor bx,bx
         mov es,bx
 
@@ -750,7 +757,8 @@ d_085ba:
 d_085bc:
         db 0x00, 0x00
 
-d_085be:
+; the loader: the sector of the table (the kernel's sectors + 1; + 4 more if the copy is read)
+load_table_sector:
         db 0x00, 0x00, 0x00, 0x00
 
 d_085c2:
@@ -776,11 +784,36 @@ d_085dc:
 d_085f0:
         db 0xB1, 0x2C, 0x00, 0x00
 
+%ifdef PLAIN_KERNEL
 d_085f4:
         db 'NinuxOS v2.9.59 - loading cabinet ', 0
-
 d_08617:
         db 'Starting graphics...', 13, 10, 0
+%else
+; v3.0.35: the loader reads the copy of the table of the cabinet when the table itself is not one.
+; The loader is in the core, which cannot grow, and its code must lie in the first 64 KB: the room
+; was made by making two of its texts shorter - the code lies in what they left, and everything
+; behind keeps its address.
+d_085f4:
+        db 'NinuxOS v2.9.59 ', 0
+[bits 16]
+table_copy:                             ; the first sector of the table is not 'CABN'
+        cmp byte [table_tried],0x0
+        jne near L_0816b                ; the copy was tried already: "No cabinet found"
+        inc byte [table_tried]
+        jmp short table_copy_read
+table_tried:
+        db 0x00
+        times 35 - ($ - d_085f4) db 0x90
+d_08617:
+        db 'Video.', 13, 10, 0
+table_copy_read:
+        add dword [load_table_sector],0x4         ; the copy lies 4 sectors on (the kernel writes it there, v3.0.24)
+        mov eax,[load_table_sector]
+        jmp near table_again
+        times 23 - ($ - d_08617) db 0x90
+[bits 64]
+%endif
 
 d_0862e:
         db 0x0D, 0x0A, 0x00
@@ -930,7 +963,7 @@ L_08754:
         call api_print
         call api_ob_count
         mov rdi,rax
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_12048]
         call api_print
         lea rdi,[rel d_1668f]
@@ -962,54 +995,54 @@ L_08914:
 fn_0893b:
         mov rax,[rel d_110b0]
         movzx ecx,byte [rax+0x10]
-        mov [rel d_117cb],rcx
+        mov [rel screen_on],rcx
         test ecx,ecx
         jz short L_089ca
         mov ecx,[rax+0x14]
-        mov [rel d_11810],rcx
+        mov [rel screen_memory],rcx
         movzx ecx,word [rax+0x18]
-        mov [rel d_11818],rcx
+        mov [rel screen_width],rcx
         movzx ecx,word [rax+0x1a]
-        mov [rel d_11820],rcx
+        mov [rel screen_height],rcx
         movzx ecx,word [rax+0x1c]
-        mov [rel d_11828],rcx
+        mov [rel screen_line_bytes],rcx
         push rax
         call fn_09642
         pop rax
-        mov rax,[rel d_11818]
+        mov rax,[rel screen_width]
         shr rax,byte 0x3
-        mov [rel d_11830],rax
-        mov rax,[rel d_11820]
+        mov [rel console_columns],rax
+        mov rax,[rel screen_height]
         shr rax,byte 0x4
-        mov [rel d_11838],rax
-        mov rax,[rel d_11818]
+        mov [rel console_rows],rax
+        mov rax,[rel screen_width]
         shr rax,1
-        mov [rel d_11870],rax
-        mov rax,[rel d_11820]
+        mov [rel mouse_at_x],rax
+        mov rax,[rel screen_height]
         shr rax,1
-        mov [rel d_11878],rax
+        mov [rel mouse_at_y],rax
         retq
 
 L_089ca:
-        mov qword [rel d_11810],0xb8000
-        mov qword [rel d_11830],0x50
-        mov qword [rel d_11838],0x19
+        mov qword [rel screen_memory],0xb8000
+        mov qword [rel console_columns],0x50
+        mov qword [rel console_rows],0x19
         retq
 
 ; says: 'Video: '
 ; says: ' x 32 bit framebuffer'
 ; says: 'Video: VGA text mode (no 32-bit VESA mode)'
 fn_089ec:
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_08a31
         lea rdi,[rel d_11ff3]
         call api_print
-        mov rdi,[rel d_11818]
-        call fn_08e3b
+        mov rdi,[rel screen_width]
+        call print_number
         mov edi,0x78
         call api_put_letter
-        mov rdi,[rel d_11820]
-        call fn_08e3b
+        mov rdi,[rel screen_height]
+        call print_number
         lea rdi,[rel d_11ffb]
         call api_print
         retq
@@ -1057,7 +1090,7 @@ fn_08a6b:
         mov eax,[rcx+0x10]
         mov [rel d_08bd0],eax
         mov eax,[rcx+0x14]
-        mov [rel d_11854],eax
+        mov [rel console_ground],eax
         jmp near fn_08c44
 
 L_08abc:
@@ -1089,7 +1122,7 @@ L_08ae4:
         mov eax,[rbx+0x10]
         mov [rel d_08bd0],eax
         mov eax,[rbx+0x14]
-        mov [rel d_11854],eax
+        mov [rel console_ground],eax
         lea rax,[rel d_08b60]
         mov rcx,rbx
         sub rcx,rax
@@ -1101,7 +1134,7 @@ L_08ae4:
         and word [rcx+0xa],0x9fff
         shl eax,byte 0xd
         or [rcx+0xa],ax
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jz short L_08b42
         call cabinet_save
 
@@ -1148,42 +1181,43 @@ d_08bf6:
         db 'colors matrix | amber | paper | classic   - the shell', 39, 's colour scheme (kept)', 10, 0
 
 fn_08c44:
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_08c6e
         xor edi,edi
         xor esi,esi
-        mov rdx,[rel d_11818]
-        mov rcx,[rel d_11820]
-        mov r8d,[rel d_11854]
+        mov rdx,[rel screen_width]
+        mov rcx,[rel screen_height]
+        mov r8d,[rel console_ground]
         call api_fill
         jmp short L_08c81
 
 L_08c6e:
-        mov rdi,[rel d_11810]
+        mov rdi,[rel screen_memory]
         mov eax,0x7200720
         mov ecx,0x3e8
         rep stosd
 
 L_08c81:
-        mov qword [rel d_11840],0x0
-        mov qword [rel d_11848],0x0
+        mov qword [rel console_column],0x0
+        mov qword [rel console_row],0x0
         retq
 
-fn_08c98:
-        cmp qword [rel d_117cb],0x0
+; rdi, rsi = column, row, rdx = a letter: draw it there
+console_letter_at:
+        cmp qword [rel screen_on],0x0
         jz short L_08cc1
         shl rdi,byte 0x3
         shl rsi,byte 0x4
         mov ecx,[rel d_11850]
         call fn_08a3e
-        mov r8d,[rel d_11854]
+        mov r8d,[rel console_ground]
         jmp near fn_092eb
 
 L_08cc1:
         imul rsi,rsi,0x50
         add rsi,rdi
         shl rsi,1
-        add rsi,[rel d_11810]
+        add rsi,[rel screen_memory]
         mov al,dl
         mov ah,0x7
         mov [rsi],ax
@@ -1198,73 +1232,74 @@ api_put_letter:
         jz short L_08d55
         cmp bl,0x8
         jz short L_08d62
-        mov rdi,[rel d_11840]
-        mov rsi,[rel d_11848]
+        mov rdi,[rel console_column]
+        mov rsi,[rel console_row]
         mov rdx,rbx
-        call fn_08c98
-        inc qword [rel d_11840]
-        mov rax,[rel d_11840]
-        cmp rax,[rel d_11830]
+        call console_letter_at
+        inc qword [rel console_column]
+        mov rax,[rel console_column]
+        cmp rax,[rel console_columns]
         jc short L_08d8b
 
 L_08d1b:
-        mov qword [rel d_11840],0x0
-        inc qword [rel d_11848]
-        mov rax,[rel d_11848]
-        cmp rax,[rel d_11838]
+        mov qword [rel console_column],0x0
+        inc qword [rel console_row]
+        mov rax,[rel console_row]
+        cmp rax,[rel console_rows]
         jc short L_08d8b
-        call fn_08d8d
-        mov rax,[rel d_11838]
+        call console_scroll
+        mov rax,[rel console_rows]
         dec rax
-        mov [rel d_11848],rax
+        mov [rel console_row],rax
         jmp short L_08d8b
 
 L_08d55:
-        mov qword [rel d_11840],0x0
+        mov qword [rel console_column],0x0
         jmp short L_08d8b
 
 L_08d62:
-        cmp qword [rel d_11840],0x0
+        cmp qword [rel console_column],0x0
         jz short L_08d8b
-        dec qword [rel d_11840]
-        mov rdi,[rel d_11840]
-        mov rsi,[rel d_11848]
+        dec qword [rel console_column]
+        mov rdi,[rel console_column]
+        mov rsi,[rel console_row]
         mov edx,0x20
-        call fn_08c98
+        call console_letter_at
 
 L_08d8b:
         pop rbx
         retq
 
-fn_08d8d:
-        cmp qword [rel d_117cb],0x0
+; the text of the console one line up, the last line cleared
+console_scroll:
+        cmp qword [rel screen_on],0x0
         jz short L_08df3
-        mov rdi,[rel d_11810]
-        mov rax,[rel d_11828]
+        mov rdi,[rel screen_memory]
+        mov rax,[rel screen_line_bytes]
         shl rax,byte 0x4
         lea rsi,[rdi+rax]
-        mov rcx,[rel d_11838]
+        mov rcx,[rel console_rows]
         dec rcx
         shl rcx,byte 0x4
-        imul rcx,[rel d_11828]
+        imul rcx,[rel screen_line_bytes]
         shr rcx,byte 0x3
         rep movsq
         xor edi,edi
-        mov rsi,[rel d_11838]
+        mov rsi,[rel console_rows]
         dec rsi
         shl rsi,byte 0x4
-        mov rdx,[rel d_11818]
+        mov rdx,[rel screen_width]
         mov ecx,0x10
-        mov r8d,[rel d_11854]
+        mov r8d,[rel console_ground]
         call api_fill
         retq
 
 L_08df3:
-        mov rdi,[rel d_11810]
+        mov rdi,[rel screen_memory]
         lea rsi,[rdi+0xa0]
         mov ecx,0x1e0
         rep movsq
-        mov rdi,[rel d_11810]
+        mov rdi,[rel screen_memory]
         add rdi,0xf00
         mov eax,0x7200720
         mov ecx,0x28
@@ -1287,7 +1322,8 @@ L_08e39:
         pop rbx
         retq
 
-fn_08e3b:
+; rdi = a number: print it in tens
+print_number:
         mov rax,rdi
         lea rsi,[rel d_11a1f]
         mov byte [rsi],0x0
@@ -1368,10 +1404,10 @@ fn_08ee6:
         xor r13d,r13d
 
 L_08ef4:
-        mov rdi,[rel d_11840]
-        mov rsi,[rel d_11848]
+        mov rdi,[rel console_column]
+        mov rsi,[rel console_row]
         mov edx,0x5f
-        call fn_08c98
+        call console_letter_at
 
 L_08f0c:
         call fn_10efc
@@ -1379,10 +1415,10 @@ L_08f0c:
         cmp rax,0x1
         jnz short L_08f0c
         push rdx
-        mov rdi,[rel d_11840]
-        mov rsi,[rel d_11848]
+        mov rdi,[rel console_column]
+        mov rsi,[rel console_row]
         mov edx,0x20
-        call fn_08c98
+        call console_letter_at
         pop rdx
         cmp dl,0xa
         jz short L_08f80
@@ -1422,7 +1458,7 @@ L_08f80:
         retq
 
 api_fill:
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz near L_0902c
         mov rax,rdi
         add rax,rdx
@@ -1453,9 +1489,9 @@ L_08ff2:
         sub r9,rsi
         jng short L_0902c
         mov r10,rsi
-        imul r10,[rel d_11828]
+        imul r10,[rel screen_line_bytes]
         lea r10,[r10+rdi*4]
-        add r10,[rel d_11810]
+        add r10,[rel screen_memory]
         mov r11,rax
         mov eax,r8d
 
@@ -1463,7 +1499,7 @@ L_09018:
         mov rdi,r10
         mov rcx,r11
         rep stosd
-        add r10,[rel d_11828]
+        add r10,[rel screen_line_bytes]
         dec r9
         jnz short L_09018
 
@@ -1471,7 +1507,7 @@ L_0902c:
         retq
 
 api_fill_round:
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jnz short L_09038
         retq
 
@@ -1618,9 +1654,9 @@ L_091f8:
         test eax,eax
         jz near L_092cc
         mov r10,rsi
-        imul r10,[rel d_11828]
+        imul r10,[rel screen_line_bytes]
         lea r10,[r10+rdi*4]
-        add r10,[rel d_11810]
+        add r10,[rel screen_memory]
         cmp eax,0xff
         jc short L_09244
         mov edx,ebx
@@ -1691,7 +1727,7 @@ L_092e0:
         retq
 
 fn_092eb:
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz near L_0948d
         cmp rdi,[rel d_11dc1]
         jl near L_0948d
@@ -1717,15 +1753,15 @@ fn_092eb:
         shl rdx,byte 0x4
         add rdx,[rel d_110b8]
         mov rax,rsi
-        imul rax,[rel d_11828]
+        imul rax,[rel screen_line_bytes]
         lea rax,[rax+rdi*4]
-        add rax,[rel d_11810]
+        add rax,[rel screen_memory]
         movd xmm4,ecx
         pshufd xmm4,xmm4,0x0
         movd xmm5,r8d
         pshufd xmm5,xmm5,0x0
         lea r10,[rel d_09490]
-        mov r11,[rel d_11828]
+        mov r11,[rel screen_line_bytes]
         mov r9d,0x10
         cmp r8d,0xffffffffffffffff
         jz short L_09404
@@ -1874,10 +1910,10 @@ api_clip:
         cmovl rdi,r9
         cmp rsi,r9
         cmovl rsi,r9
-        cmp rax,[rel d_11818]
-        cmovg rax,[rel d_11818]
-        cmp r8,[rel d_11820]
-        cmovg r8,[rel d_11820]
+        cmp rax,[rel screen_width]
+        cmovg rax,[rel screen_width]
+        cmp r8,[rel screen_height]
+        cmovg r8,[rel screen_height]
         mov [rel d_11dc1],rdi
         mov [rel d_11dc9],rsi
         mov [rel d_11dd1],rax
@@ -1887,14 +1923,14 @@ api_clip:
 fn_09642:
         mov qword [rel d_11dc1],0x0
         mov qword [rel d_11dc9],0x0
-        mov rax,[rel d_11818]
+        mov rax,[rel screen_width]
         mov [rel d_11dd1],rax
-        mov rax,[rel d_11820]
+        mov rax,[rel screen_height]
         mov [rel d_11dd9],rax
         retq
 
 fn_09675:
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz near L_0971c
         push rbx
         push rbp
@@ -2246,8 +2282,8 @@ L_0998d:
         jl short L_099f0
         cmp rax,[rel d_11dd9]
         jnl short L_099f0
-        imul rax,[rel d_11828]
-        add rax,[rel d_11810]
+        imul rax,[rel screen_line_bytes]
+        add rax,[rel screen_memory]
         xor r11d,r11d
 
 L_099c3:
@@ -2287,8 +2323,9 @@ L_09a04:
         pop rbx
         retq
 
-fn_09a0b:
-        cmp qword [rel d_117cb],0x0
+; rdi, rsi = x, y, rdx = a picture (width, height, dots), ecx bit 0: 0xFF00FF is see-through
+api_image:
+        cmp qword [rel screen_on],0x0
         jz near L_09ac4
         push rbx
         push rbp
@@ -2313,8 +2350,8 @@ L_09a3a:
         cmp r9,[rel d_11dd9]
         jnl short L_09ab5
         mov r10,r9
-        imul r10,[rel d_11828]
-        add r10,[rel d_11810]
+        imul r10,[rel screen_line_bytes]
+        add r10,[rel screen_memory]
         mov r11,r8
         imul r11,r14
         lea r11,[rbx+r11*4]
@@ -2358,8 +2395,9 @@ L_09aba:
 L_09ac4:
         retq
 
-fn_09ac5:
-        cmp qword [rel d_117cb],0x0
+; rdi, rsi, rdx, rcx = x, y, width, height, r8 = a picture: drawn to fit that rectangle
+api_image_fit:
+        cmp qword [rel screen_on],0x0
         jz near L_09bb1
         test rdx,rdx
         jng near L_09bb1
@@ -2399,8 +2437,8 @@ L_09b12:
         imul r10,rax
         lea r10,[rbx+r10*4+0x8]
         mov r11,r9
-        imul r11,[rel d_11828]
-        add r11,[rel d_11810]
+        imul r11,[rel screen_line_bytes]
+        add r11,[rel screen_memory]
         xor ecx,ecx
         xor r8d,r8d
 
@@ -2595,7 +2633,7 @@ L_09dd8:
 
 ; says: 'X...........XX..........XoX.........XooX........XoooX.......XooooX......XoooooX.....Xooooo'
 api_cursor_show:
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz near L_09ec6
         cmp byte [rel d_6f651],0x0
         jz short L_09e26
@@ -2623,13 +2661,13 @@ L_09e46:
         div ecx
         lea r8,[r13+rax+0x0]
         lea r9,[r12+rdx]
-        cmp r8,[rel d_11820]
+        cmp r8,[rel screen_height]
         jnc short L_09eb6
-        cmp r9,[rel d_11818]
+        cmp r9,[rel screen_width]
         jnc short L_09eb6
-        imul r8,[rel d_11828]
+        imul r8,[rel screen_line_bytes]
         lea r8,[r8+r9*4]
-        add r8,[rel d_11810]
+        add r8,[rel screen_memory]
         mov eax,[r8]
         lea rcx,[rel core_start + (v_41000 - 0x7E00)]
         mov [rcx+rbx*4],eax
@@ -2675,13 +2713,13 @@ L_09ed3:
         add r8,rax
         mov r9,[rel d_11860]
         add r9,rdx
-        cmp r8,[rel d_11820]
+        cmp r8,[rel screen_height]
         jnc short L_09f2c
-        cmp r9,[rel d_11818]
+        cmp r9,[rel screen_width]
         jnc short L_09f2c
-        imul r8,[rel d_11828]
+        imul r8,[rel screen_line_bytes]
         lea r8,[r8+r9*4]
-        add r8,[rel d_11810]
+        add r8,[rel screen_memory]
         lea rcx,[rel core_start + (v_41000 - 0x7E00)]
         mov eax,[rcx+rbx*4]
         mov [r8],eax
@@ -2964,7 +3002,7 @@ L_0a233:
         mov edx,eax
 
 L_0a255:
-        call fn_0a544
+        call key_modifiers
         mov eax,0x1
         pop rbx
         retq
@@ -3005,14 +3043,14 @@ L_0a2b3:
 L_0a2d5:
         movsxd r9,r9d
         movsxd r10,r10d
-        add [rel d_11870],r9
-        add [rel d_11878],r10
-        mov dword [rel d_119fc],0x8
+        add [rel mouse_at_x],r9
+        add [rel mouse_at_y],r10
+        mov dword [rel mouse_packet],0x8
         call fn_0a62f
         movzx eax,byte [rel d_118bd]
         mov r8,rax
-        mov rdx,[rel d_11870]
-        mov rcx,[rel d_11878]
+        mov rdx,[rel mouse_at_x]
+        mov rcx,[rel mouse_at_y]
         mov eax,0x2
         pop rbx
         retq
@@ -3048,7 +3086,7 @@ L_0a357:
         jmp near L_0a4cd
 
 L_0a369:
-        call fn_0a544
+        call key_modifiers
         mov eax,0x1
         pop rbx
         retq
@@ -3127,14 +3165,14 @@ L_0a467:
         jz short L_0a4cd
 
 L_0a476:
-        lea rdx,[rel d_119fc]
+        lea rdx,[rel mouse_packet]
         mov [rdx+rcx],al
         inc ecx
         cmp ecx,0x3
         jc short L_0a4c7
         mov byte [rel d_119d4],0x0
         call fn_0a62f
-        movzx eax,byte [rel d_119fc]
+        movzx eax,byte [rel mouse_packet]
         and eax,0x7
         mov ebx,eax
 
@@ -3155,8 +3193,8 @@ L_0a4ad:
 %else
         call near kb_mouse              ; v3.0.23: the keyboard on the screen of the shell (the same 5 bytes)
 %endif
-        mov rdx,[rel d_11870]
-        mov rcx,[rel d_11878]
+        mov rdx,[rel mouse_at_x]
+        mov rcx,[rel mouse_at_y]
         mov eax,0x2
         pop rbx
         retq
@@ -3208,7 +3246,8 @@ L_0a541:
 d_0a543:
         db 0x00
 
-fn_0a544:
+; -> r8 = Shift + 2 * Ctrl + 4 * Alt, as they are held now
+key_modifiers:
         movzx r8d,byte [rel key_shift]
         movzx eax,byte [rel key_ctrl]
         lea r8d,[r8+rax*2]
@@ -3229,9 +3268,9 @@ fn_0a563:
 
 L_0a581:
         call api_log
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_0a5c7
-        mov rdi,[rel d_11818]
+        mov rdi,[rel screen_width]
         sub rdi,0x40
         mov esi,0x2
         lea rdx,[rel d_118e2]
@@ -3283,7 +3322,7 @@ L_0a62e:
         retq
 
 fn_0a62f:
-        movzx eax,byte [rel d_119fc]
+        movzx eax,byte [rel mouse_packet]
         test al,0xc0
         jnz near L_0a6d2
         movzx ecx,byte [rel d_119fd]
@@ -3293,7 +3332,7 @@ fn_0a62f:
 
 L_0a64f:
         movsxd rcx,ecx
-        add [rel d_11870],rcx
+        add [rel mouse_at_x],rcx
         movzx ecx,byte [rel d_119fe]
         test al,0x20
         jz short L_0a66a
@@ -3301,29 +3340,29 @@ L_0a64f:
 
 L_0a66a:
         movsxd rcx,ecx
-        sub [rel d_11878],rcx
-        cmp qword [rel d_11870],0x0
+        sub [rel mouse_at_y],rcx
+        cmp qword [rel mouse_at_x],0x0
         jnl short L_0a689
-        mov qword [rel d_11870],0x0
+        mov qword [rel mouse_at_x],0x0
 
 L_0a689:
-        mov rcx,[rel d_11818]
+        mov rcx,[rel screen_width]
         dec rcx
-        cmp [rel d_11870],rcx
+        cmp [rel mouse_at_x],rcx
         jng short L_0a6a3
-        mov [rel d_11870],rcx
+        mov [rel mouse_at_x],rcx
 
 L_0a6a3:
-        cmp qword [rel d_11878],0x0
+        cmp qword [rel mouse_at_y],0x0
         jnl short L_0a6b8
-        mov qword [rel d_11878],0x0
+        mov qword [rel mouse_at_y],0x0
 
 L_0a6b8:
-        mov rcx,[rel d_11820]
+        mov rcx,[rel screen_height]
         dec rcx
-        cmp [rel d_11878],rcx
+        cmp [rel mouse_at_y],rcx
         jng short L_0a6d2
-        mov [rel d_11878],rcx
+        mov [rel mouse_at_y],rcx
 
 L_0a6d2:
         retq
@@ -3364,7 +3403,7 @@ fn_0a6d3:
         jz short L_0a769
         mov [rel d_119fe],al
         mov [rel d_119fd],r9b
-        mov [rel d_119fc],r8b
+        mov [rel mouse_packet],r8b
         add ecx,0x3
         and ecx,0xff
         mov [rel d_14ef8],ecx
@@ -3547,7 +3586,7 @@ L_0a8c5:
         jz short L_0a8ec
         test dword [rax+0x50],0x4
         jz short L_0a8ec
-        mov rdx,[rel d_16798]
+        mov rdx,[rel this_object]
         test rdx,rdx
         jz short L_0a8ec
         cmp dword [rdx+0x48],0x2
@@ -3781,7 +3820,7 @@ L_0aba3:
         and eax,0x7
         lea rsi,[rel d_0aaf2]
         movzx edi,byte [rsi+rax]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_0ac96]
         call api_print
         mov rax,[rel cabinet_table]
@@ -3916,7 +3955,7 @@ L_0add5:
         push rsi
         push rdx
         push rcx
-        call fn_10858
+        call ob_known
         pop rcx
         pop rdx
         pop rsi
@@ -4036,7 +4075,8 @@ L_0aebb:
         pop rbx
         retq
 
-fn_0aec6:
+; rdi = an object, rsi = the name of a socket, rdx, rcx = two values: call that socket; -1: no such socket
+api_ob_call:
         push rbx
         push r12
         push r13
@@ -4065,7 +4105,7 @@ p_0aef6:
         push r14
         mov rbx,rdi
         mov r13,rsi
-        call fn_10858
+        call ob_known
         test eax,eax
         jz short L_0af5d
         cmp dword [rbx+0x4],0x2
@@ -4124,9 +4164,9 @@ L_0af7d:
         retq
 
 api_screen_size:
-        mov rax,[rel d_11818]
-        mov rdx,[rel d_11820]
-        mov rcx,[rel d_117cb]
+        mov rax,[rel screen_width]
+        mov rdx,[rel screen_height]
+        mov rcx,[rel screen_on]
         retq
 
 ; rdi = a text -> rax = where its first letter that is no space is
@@ -4238,7 +4278,7 @@ L_0b057:
         cmp edi,0xa
         jnz short L_0b057
         inc r12
-        mov rax,[rel d_11838]
+        mov rax,[rel console_rows]
         sub rax,0x3
         cmp r12,rax
         jc short L_0b057
@@ -4287,7 +4327,7 @@ cmd_info:
         call api_print
         call api_ob_count
         mov rdi,rax
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_149a8]
         call api_print
         retq
@@ -4299,7 +4339,7 @@ p_0b117:
         push r14
         mov r14,rdi
         xor ebx,ebx
-        call fn_0f919
+        call cabinet_count
         mov r12,rax
         cmp byte [r14],0x0
         jz short L_0b19d
@@ -4319,7 +4359,7 @@ L_0b14e:
         jz short L_0b18c
         mov rsi,rax
         mov edi,0x2
-        call fn_0fe64
+        call api_cabinet_facts
         cmp rax,0xffffffffffffffff
         jz short L_0b18c
         mov rbx,rax
@@ -4359,7 +4399,7 @@ L_0b1bf:
         call fn_08eb1
         mov edi,[r13+0x14]
         shl rdi,byte 0x9
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_14a7d]
         call api_print
         mov rdi,rbx
@@ -4384,7 +4424,7 @@ L_0b1bf:
         mov rdi,[rel d_11e4c]
         add rdi,[rdi+0x10]
         movzx edi,word [rdi+0x4]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_14af9]
         call api_print
         jmp short L_0b2a4
@@ -4417,7 +4457,7 @@ L_0b2a4:
 L_0b2c2:
         cmp byte [r14],0x0
         jnz short L_0b2fd
-        call fn_0f919
+        call cabinet_count
         mov rbx,rax
         call api_ob_count
         sub rax,rbx
@@ -4426,7 +4466,7 @@ L_0b2c2:
         lea rdi,[rel d_14b02]
         call api_print
         mov rdi,r13
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_14b0d]
         call api_print
 
@@ -4531,7 +4571,7 @@ L_0b3df:
 
 L_0b3fa:
         mov rdi,r13
-        call fn_10858
+        call ob_known
         test eax,eax
         jnz short L_0b417
         lea rdi,[rel d_12209]
@@ -4540,7 +4580,7 @@ L_0b3fa:
 
 L_0b417:
         mov qword [rel d_11db9],0x0
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_0b45e
         mov rdi,r13
         lea rsi,[rel d_11c17]
@@ -4549,8 +4589,8 @@ L_0b417:
         jz short L_0b45e
         xor edi,edi
         xor esi,esi
-        mov rdx,[rel d_11818]
-        mov rcx,[rel d_11820]
+        mov rdx,[rel screen_width]
+        mov rcx,[rel screen_height]
         call api_rect_save
         mov [rel d_11db9],rax
 
@@ -4563,7 +4603,7 @@ L_0b45e:
         mov rsi,r12
         xor edx,edx
         xor ecx,ecx
-        call fn_0aec6
+        call api_ob_call
         cmp rax,0xffffffffffffffff
         jnz near L_0b5b1
         lea rdi,[rel d_14b9c]
@@ -4571,7 +4611,7 @@ L_0b45e:
         jmp near L_0b620
 
 L_0b494:
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz near L_0b550
         mov rdi,r13
         lea rsi,[rel d_12458]
@@ -4588,17 +4628,17 @@ L_0b494:
         call api_cursor_hide
         xor edi,edi
         xor esi,esi
-        mov rdx,[rel d_11818]
-        mov rcx,[rel d_11820]
+        mov rdx,[rel screen_width]
+        mov rcx,[rel screen_height]
         call api_rect_save
         mov [rel d_11db9],rax
 
 L_0b4fe:
         mov rdi,r13
         lea rsi,[rel d_12462]
-        mov rdx,[rel d_11818]
-        mov rcx,[rel d_11820]
-        call fn_0aec6
+        mov rdx,[rel screen_width]
+        mov rcx,[rel screen_height]
+        call api_ob_call
         cmp rax,0xffffffffffffffff
         jz short L_0b550
         call fn_09642
@@ -4622,13 +4662,13 @@ L_0b550:
         jz short L_0b5a3
         mov eax,0x6
         call fn_0b661
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         mov [rel d_12440],rax
         mov byte [rel d_1243a],0x1
 
 L_0b582:
         mov rdi,r13
-        call fn_10840
+        call desktop_run
         call fn_10f1a
         test eax,eax
         jnz short L_0b582
@@ -4646,7 +4686,7 @@ L_0b5a3:
 
 L_0b5b1:
         call fn_09642
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_0b620
         mov rdi,r13
         lea rsi,[rel d_11c17]
@@ -4700,7 +4740,7 @@ fn_0b642:
         jmp near api_print
 
 fn_0b661:
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jz short L_0b692
         mov rcx,[rel cabinet_table]
         cmp dword [rcx],0x4e424143
@@ -4737,12 +4777,12 @@ fn_0b6b0:
         call fn_0b735
         cmp byte [rel d_1243a],0x0
         jz short L_0b734
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         sub rax,[rel d_12440]
         cmp rax,0x3e8
         jc short L_0b734
         mov byte [rel d_1243a],0x0
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jz short L_0b734
         mov rsi,[rel cabinet_table]
         cmp dword [rsi],0x4e424143
@@ -4750,10 +4790,10 @@ fn_0b6b0:
         test word [rsi+0xa],0x4
         jz short L_0b734
         and word [rsi+0xa],0xfffffffffffffffb
-        mov rdi,[rel d_155e0]
+        mov rdi,[rel table_sector]
         movzx edx,word [rsi+0x8]
         mov ecx,0x1
-        call fn_0ce54
+        call disk_io
         lea rdi,[rel d_123fe]
         call api_log
 
@@ -4761,7 +4801,7 @@ L_0b734:
         retq
 
 fn_0b735:
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_0b7b4
         mov rax,[rel cabinet_table]
         test rax,rax
@@ -4778,12 +4818,12 @@ fn_0b735:
 L_0b76d:
         inc edi
         imul edi,edi,0xc
-        mov rdx,[rel d_11818]
+        mov rdx,[rel screen_width]
         sub rdx,rdi
-        mov rdi,[rel d_11810]
+        mov rdi,[rel screen_memory]
         lea rdi,[rdi+rdx*4]
-        add rdi,[rel d_11828]
-        add rdi,[rel d_11828]
+        add rdi,[rel screen_line_bytes]
+        add rdi,[rel screen_line_bytes]
         mov r8d,0x8
 
 L_0b79b:
@@ -4791,7 +4831,7 @@ L_0b79b:
         mov rdx,rdi
         rep stosd
         mov rdi,rdx
-        add rdi,[rel d_11828]
+        add rdi,[rel screen_line_bytes]
         dec r8d
         jnz short L_0b79b
 
@@ -4818,7 +4858,7 @@ fn_0b7ce:
         lea rdi,[rel d_12297]
         call api_print
         push rbx
-        mov rbx,[rel d_14eea]
+        mov rbx,[rel clock_ticks]
 
 L_0b801:
         call api_poll
@@ -4828,7 +4868,7 @@ L_0b801:
         jz short L_0b826
 
 L_0b811:
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         sub rax,rbx
         cmp rax,0x12c
         jc short L_0b801
@@ -4904,18 +4944,18 @@ api_power:
         out dx,ax
         pop rdx
         call api_cursor_hide
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_0b93f
         xor edi,edi
         xor esi,esi
-        mov rdx,[rel d_11818]
-        mov rcx,[rel d_11820]
+        mov rdx,[rel screen_width]
+        mov rcx,[rel screen_height]
         xor r8d,r8d
         call api_fill
-        mov rdi,[rel d_11818]
+        mov rdi,[rel screen_width]
         shr rdi,1
         sub rdi,0xb0
-        mov rsi,[rel d_11820]
+        mov rsi,[rel screen_height]
         shr rsi,1
         sub rsi,0x8
         lea rdx,[rel d_11de9]
@@ -4977,7 +5017,7 @@ L_0b9a7:
 
 ; -> rax = a number that grows with every change of the cabinet
 api_cabinet_changes:
-        mov rax,[rel d_11de1]
+        mov rax,[rel cabinet_changes]
         retq
 
 ; says: '[ninux] relocated '
@@ -4987,7 +5027,7 @@ fn_0b9b6:
         push r12
         push r13
         push r14
-        call fn_0f919
+        call cabinet_count
         mov r12,rax
         xor ebx,ebx
 
@@ -5176,7 +5216,7 @@ L_0bbe2:
         jmp near cmd_sources
 
 api_ticks:
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         retq
 
 fn_0bc03:
@@ -5186,10 +5226,10 @@ fn_0bc03:
         xor edx,edx
         mov ecx,0xa
         div rcx
-        add rax,[rel d_14eea]
+        add rax,[rel clock_ticks]
 
 L_0bc21:
-        cmp [rel d_14eea],rax
+        cmp [rel clock_ticks],rax
         jnc short L_0bc2d
         hlt
         jmp short L_0bc21
@@ -5202,15 +5242,15 @@ L_0bc2d:
 ; says: '[ninux] memory: '
 ; says: ... and 4 more texts
 fn_0bc2e:
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_0bc76
         lea rdi,[rel d_14e10]
         call api_log
-        mov rdi,[rel d_11818]
+        mov rdi,[rel screen_width]
         call fn_0be89
         lea rdi,[rel d_14e1f]
         call api_log
-        mov rdi,[rel d_11820]
+        mov rdi,[rel screen_height]
         call fn_0be89
         lea rdi,[rel d_153bf]
         call api_log
@@ -5252,7 +5292,7 @@ fn_0bceb:
         call api_print
         mov rdi,[rel d_15373]
         shr rdi,byte 0x8
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_14beb]
         call api_print
 
@@ -5271,12 +5311,12 @@ cmd_uptime:
 L_0bd32:
         lea rdi,[rel d_14c28]
         call api_print
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         xor edx,edx
         mov ecx,0x64
         div rcx
         mov rdi,rax
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_14c31]
         jmp near api_print
 
@@ -5547,9 +5587,9 @@ d_0bfce:
         push r10
         push r11
         cld
-        inc qword [rel d_14eea]
+        inc qword [rel clock_ticks]
         xor edi,edi
-        mov rsi,[rel d_14eea]
+        mov rsi,[rel clock_ticks]
         call fn_0b735
         call fn_10ff5
         call fn_0f3e1
@@ -5904,7 +5944,7 @@ L_0c3db:
 ; says: '  RIP '
 ; says: ... and 5 more texts
 fn_0c3df:
-        mov dword [rel d_11854],0x5a0f14
+        mov dword [rel console_ground],0x5a0f14
         mov dword [rel d_11850],0xffffff
         mov byte [rel d_11888],0x0
         call fn_08c44
@@ -6140,7 +6180,7 @@ fn_0c6e2:
 
 fn_0c6ee:
         push rdi
-        call fn_08e3b
+        call print_number
         pop rdi
         jmp near fn_0be89
 
@@ -6495,16 +6535,16 @@ L_0cae9:
         call api_print
         mov rdi,[rel d_15373]
         shr rdi,byte 0x8
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_15400]
         call api_print
         mov rdi,[rel d_1536b]
         shr rdi,byte 0x8
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_1540d]
         call api_print
         mov rdi,[rel d_1537b]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_15418]
         call api_print
         mov rbx,[rel d_110b0]
@@ -6698,7 +6738,8 @@ L_0cd14:
         retq
 
 ; says: '[ata] read error'
-fn_0cd15:
+; rdi = sector, rsi = memory, rdx = sectors (at most 0x80)
+disk_read:
         add rdi,[rel d_15499]
         cmp byte [rel d_154a9],0x0
         jz short L_0cd2c
@@ -6762,7 +6803,8 @@ L_0cda2:
         retq
 
 ; says: '[ata] write error'
-fn_0cda8:
+; rdi = sector, rsi = memory, rdx = sectors (at most 0x80)
+disk_write:
         add rdi,[rel d_15499]
         cmp byte [rel d_154a9],0x0
         jz short L_0cdc2
@@ -6832,10 +6874,15 @@ L_0ce4e:
         pop rbx
         retq
 
-fn_0ce54:
+; rdi = a sector of the boot disk, rsi = memory, rdx = sectors, rcx = 0 read, else write (0x80 sectors at a time); eax = 0: it failed
+disk_io:
+%ifdef PLAIN_KERNEL
         push rbx
         push r12
         push r13
+%else
+        call near table_twice           ; v3.0.35: whoever writes the table of the cabinet, its copy is written first
+%endif
         push r14
         mov r12,rdi
         mov r13,rsi
@@ -6856,11 +6903,11 @@ L_0ce7d:
         mov rsi,r13
         test rbx,rbx
         jnz short L_0ce90
-        call fn_0cd15
+        call disk_read
         jmp short L_0ce95
 
 L_0ce90:
-        call fn_0cda8
+        call disk_write
 
 L_0ce95:
         pop rdx
@@ -7005,23 +7052,23 @@ L_0cfcd:
 ; says: '[store] the ATA disk is not the boot disk: read-only'
 ; says: '[store] no ATA disk: read-only'
 fn_0cfda:
-        mov byte [rel d_1553d],0x0
+        mov byte [rel disk_writable],0x0
         mov rax,[rel d_110b0]
         mov eax,[rax+0x34]
         mov [rel d_15499],rax
         mov rax,[rel d_110b0]
         movzx eax,word [rax+0x6]
         inc eax
-        mov [rel d_155e0],rax
+        mov [rel table_sector],rax
         call fn_0ceba
         test eax,eax
         jz short L_0d07c
         mov rax,[rel d_154b0]
         mov [rel d_154a1],rax
-        mov rdi,[rel d_155e0]
+        mov rdi,[rel table_sector]
         lea rsi,[rel core_start + (v_42990 - 0x7E00)]
         mov edx,0x1
-        call fn_0cd15
+        call disk_read
         test eax,eax
         jz short L_0d069
         lea rsi,[rel core_start + (v_42990 - 0x7E00)]
@@ -7029,7 +7076,7 @@ fn_0cfda:
         mov ecx,0x2c
         repe cmpsb
         jnz short L_0d069
-        mov byte [rel d_1553d],0x1
+        mov byte [rel disk_writable],0x1
         call fn_0d0d3
         lea rdi,[rel d_15a9f]
         call api_log
@@ -7048,17 +7095,17 @@ L_0d07c:
         jmp near api_log
 
 L_0d08f:
-        mov byte [rel d_1553d],0x1
+        mov byte [rel disk_writable],0x1
         jmp short fn_0d0d3
 
 fn_0d098:
-        mov rdi,[rel d_155e0]
+        mov rdi,[rel table_sector]
         add rdi,[rel d_15499]
         mov rsi,[rel cabinet_table]
         call fn_1105d
         test eax,eax
         jnz short L_0d0d2
-        mov rdi,[rel d_155e0]
+        mov rdi,[rel table_sector]
         add rdi,[rel d_15499]
         mov rsi,[rel cabinet_table]
         call fn_1103d
@@ -7088,17 +7135,17 @@ fn_0d0e9:
 
 ; write the table of the cabinet to the disk
 cabinet_save:
-        inc qword [rel d_11de1]
-        call fn_0fc7e
+        inc qword [rel cabinet_changes]
+        call cabinet_write_objects
         test eax,eax
         jz short L_0d12f
-        mov rdi,[rel d_155e0]
+        mov rdi,[rel table_sector]
         mov rsi,[rel cabinet_table]
         movzx edx,word [rsi+0x8]
         xor ecx,ecx
         inc ecx
 %ifdef PLAIN_KERNEL
-        jmp near fn_0ce54
+        jmp near disk_io
 %else
         jmp near cabinet_save_twice     ; v3.0.24: the table is written twice
 %endif
@@ -7158,7 +7205,7 @@ fn_0d173:
         test dl,dl
         jz near L_0d33d
         mov eax,0x2
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jz near L_0d33d
         mov eax,0x5
         xor ecx,ecx
@@ -7245,7 +7292,7 @@ L_0d29c:
         mov rsi,r13
         mov rdx,r15
         mov ecx,0x1
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_0d338
         cmp rbx,0xffffffffffffffff
@@ -7346,14 +7393,14 @@ api_ob_save:
         mov byte [rel d_16e44],0x0
         mov rdi,rbx
         mov esi,0x11
-        call fn_10784
+        call memory_ok
         test eax,eax
         jz near L_0d473
         cmp r13,0x68
         jc near L_0d473
         mov rdi,r12
         mov rsi,r13
-        call fn_10784
+        call memory_ok
         test eax,eax
         jz near L_0d473
         mov rdi,r12
@@ -7365,7 +7412,7 @@ api_ob_save:
         shr ecx,byte 0x8
         and ecx,0x1f
         and dword [r12+0x50],0xffffc0ff
-        mov rdi,[rel d_16798]
+        mov rdi,[rel this_object]
         test rdi,rdi
         jz short L_0d41a
         cmp dword [rdi+0x48],0x1
@@ -7516,7 +7563,7 @@ L_0d51b:
 maint_check:
         cmp byte [rel maint_on],0x0
         jz short L_0d564
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         cmp rax,[rel d_15548]
         jc short L_0d573
         mov byte [rel maint_on],0x0
@@ -7549,7 +7596,7 @@ cmd_maint:
         jmp near api_print
 
 L_0d595:
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         add rax,0xea60
         mov [rel d_15548],rax
         mov byte [rel maint_on],0x1
@@ -7567,7 +7614,7 @@ L_0d5b9:
         call fn_10c5f
         lea rdi,[rel d_157bd]
         call api_print
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jnz short L_0d613
         lea rdi,[rel d_15820]
         jmp near api_print
@@ -7613,7 +7660,7 @@ cmd_copy:
         mov rsi,rax
         mov rdx,r13
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         pop rsi
         push rsi
         test eax,eax
@@ -7664,7 +7711,7 @@ cmd_rename:
         mov rbx,rdi
         call maint_check
         jz near L_0d7ab
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jz near L_0d789
         mov rdi,rbx
         call fn_0d4cd
@@ -7753,7 +7800,7 @@ cmd_delete:
         mov rbx,rdi
         call maint_check
         jz near L_0d84e
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jz short L_0d82c
         cmp byte [rbx],0x0
         jz short L_0d838
@@ -7850,7 +7897,7 @@ L_0d8bd:
         lea rdi,[rel d_15a65]
         call api_print
         mov rdi,r14
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_14a7d]
         call api_print
         mov rdi,r12
@@ -8046,7 +8093,7 @@ L_0dabb:
 
 ; rdi, rsi, rdx, rcx = x, y, width, height: keep what the screen shows there -> rax = the kept picture
 api_rect_save:
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz near L_0db9a
         push rbx
         push r12
@@ -8066,16 +8113,16 @@ L_0dadd:
 
 L_0dae7:
         lea rax,[rdi+rdx]
-        cmp rax,[rel d_11818]
+        cmp rax,[rel screen_width]
         jng short L_0dafe
-        mov rdx,[rel d_11818]
+        mov rdx,[rel screen_width]
         sub rdx,rdi
 
 L_0dafe:
         lea rax,[rsi+rcx]
-        cmp rax,[rel d_11820]
+        cmp rax,[rel screen_height]
         jng short L_0db15
-        mov rcx,[rel d_11820]
+        mov rcx,[rel screen_height]
         sub rcx,rsi
 
 L_0db15:
@@ -8106,9 +8153,9 @@ L_0db5d:
         cmp r8,r15
         jnc short L_0db84
         lea rsi,[r13+r8+0x0]
-        imul rsi,[rel d_11828]
+        imul rsi,[rel screen_line_bytes]
         lea rsi,[rsi+r12*4]
-        add rsi,[rel d_11810]
+        add rsi,[rel screen_memory]
         mov rcx,r14
         rep movsd
         inc r8
@@ -8152,10 +8199,10 @@ L_0dbb6:
         jnc short L_0dbe4
         mov rdi,[rbx+0x8]
         add rdi,r8
-        imul rdi,[rel d_11828]
+        imul rdi,[rel screen_line_bytes]
         mov rax,[rbx]
         lea rdi,[rdi+rax*4]
-        add rdi,[rel d_11810]
+        add rdi,[rel screen_memory]
         mov rcx,[rbx+0x10]
         rep movsd
         inc r8
@@ -8178,7 +8225,7 @@ L_0dbee:
 fn_0dbfc:
         mov rdi,rbx
         mov esi,0x20
-        call fn_10784
+        call memory_ok
         test eax,eax
         jz short L_0dc6b
         mov rax,[rbx+0x10]
@@ -8188,21 +8235,21 @@ fn_0dbfc:
         cmp rcx,0x10000
         jnc short L_0dc6b
         mov rdx,[rbx]
-        cmp rdx,[rel d_11818]
+        cmp rdx,[rel screen_width]
         jnc short L_0dc6b
         add rdx,rax
-        cmp rdx,[rel d_11818]
+        cmp rdx,[rel screen_width]
         ja short L_0dc6b
         mov rdx,[rbx+0x8]
-        cmp rdx,[rel d_11820]
+        cmp rdx,[rel screen_height]
         jnc short L_0dc6b
         add rdx,rcx
-        cmp rdx,[rel d_11820]
+        cmp rdx,[rel screen_height]
         ja short L_0dc6b
         imul rax,rcx
         lea rsi,[rax*4+0x20]
         mov rdi,rbx
-        jmp near fn_10784
+        jmp near memory_ok
 
 L_0dc6b:
         xor eax,eax
@@ -8224,7 +8271,7 @@ L_0dc89:
         retq
 
 fn_0dc8a:
-        mov rax,[rel d_155e0]
+        mov rax,[rel table_sector]
         mov rdx,[rel cabinet_table]
         movzx ecx,word [rdx+0x8]
         add rax,rcx
@@ -8400,15 +8447,15 @@ fn_0ddff:
         lea rdi,[rel d_15d25]
         call api_print
         mov edi,[rbx+0x4]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_15d2c]
         call api_print
         mov rdi,[rbx+0x8]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_15d2f]
         call api_print
         mov rdi,[rbx+0x38]
-        call fn_08e3b
+        call print_number
         mov rax,[rbx+0x38]
         cmp rax,0x3
         jna short L_0de50
@@ -8442,7 +8489,7 @@ L_0de87:
 fn_0dea6:
         call maint_check
         jz short L_0dec2
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jnz short L_0dec2
         mov eax,0x2
         call fn_0d4f9
@@ -8474,17 +8521,17 @@ L_0dee2:
         call api_print
         mov rdi,[rel d_154b0]
         shr rdi,byte 0xb
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_158ed]
         call api_print
         lea rdi,[rel d_158f2]
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jnz short L_0df39
         lea rdi,[rel d_15929]
 
 L_0df39:
         call api_print
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jz near L_0e04e
         call fn_0dd4b
         mov rbx,rax
@@ -8497,17 +8544,17 @@ L_0df39:
         call api_print
         mov rdi,rbx
         shr rdi,1
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_15d77]
         call api_print
         call api_ob_count
         mov rdi,rax
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_15d84]
         call api_print
         mov rdi,r13
         shr rdi,1
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_15da1]
         call api_print
         xor eax,eax
@@ -8520,14 +8567,14 @@ L_0df39:
 
 L_0dfca:
         mov rdi,rax
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_15da7]
         call api_print
         call fn_0dd4b
         mov rdi,[rel d_154b0]
         sub rdi,rdx
         shr rdi,1
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_15dd8]
         call api_print
         call api_ob_count
@@ -8536,7 +8583,7 @@ L_0dfca:
         pop rdx
         sub rax,rdx
         mov rdi,rax
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_153bf]
         call api_print
         test r13,r13
@@ -8581,7 +8628,7 @@ L_0e08e:
         mov rdi,rbx
         mov rsi,[rel d_15b78]
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_0e0ba
         mov rax,[rel d_15b78]
@@ -8659,7 +8706,7 @@ L_0e14d:
         mov rsi,r14
         mov rdx,r13
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_0e1d1
         inc r15
@@ -8685,7 +8732,7 @@ L_0e1eb:
         mov rdi,[rel d_15b78]
         call mem_free
         mov rdi,r15
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_15ec9]
         call api_print
         jmp short L_0e217
@@ -8756,7 +8803,7 @@ L_0e287:
         mov rsi,r14
         mov rdx,r13
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_0e331
         mov rdi,r14
@@ -8801,11 +8848,11 @@ L_0e35f:
         lea rdi,[rel d_15c2d]
         call api_print
         mov rdi,[rel d_15b80]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_15c3c]
         call api_print
         mov rdi,[rel d_15b88]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_15c65]
         call api_print
         jmp short L_0e3cb
@@ -8921,7 +8968,7 @@ L_0e484:
         lea rdi,[rel d_15c21]
         call api_print
         mov rdi,rbx
-        call fn_08e3b
+        call print_number
         mov edi,0xa
         call api_put_letter
         pop rdi
@@ -9111,7 +9158,7 @@ cmd_recover:
         mov rdi,rbx
         lea rsi,[rel core_start + (v_42990 - 0x7E00)]
         mov edx,0x1
-        call fn_0cd15
+        call disk_read
         test eax,eax
         jz near L_0e79d
         cmp dword [rel core_start + (v_42990 - 0x7E00)],0x41534d4f
@@ -9132,7 +9179,7 @@ cmd_recover:
         lea rdx,[r13+0x1ff]
         shr rdx,byte 0x9
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_0e795
         mov rdi,r14
@@ -9253,7 +9300,7 @@ L_0e866:
         lea rdi,[rel d_15fdc]
         call api_print
         mov rdi,r15
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_15fe8]
         call api_print
         lea rdi,[rel d_1604e]
@@ -9315,14 +9362,14 @@ L_0e905:
         mov rsi,r14
         mov rdx,r13
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_0e980
         mov rdi,r12
         mov rsi,r14
         mov rdx,r13
         mov ecx,0x1
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_0e980
         mov r14d,[rbx+0x10]
@@ -9336,7 +9383,7 @@ L_0e905:
         mov rdi,r14
         lea rsi,[rel core_start + (v_42b90 - 0x7E00)]
         mov edx,0x1
-        call fn_0cda8
+        call disk_write
 
 L_0e973:
         pop rdi
@@ -9431,19 +9478,19 @@ L_0e9e7:
         mov rdi,r13
         lea rsi,[rel core_start + (v_42990 - 0x7E00)]
         mov edx,0x1
-        call fn_0cd15
+        call disk_read
         test eax,eax
         jz short L_0ea8f
         mov [rel core_start + (v_429c8 - 0x7E00)],r12
         mov rdi,r13
         lea rsi,[rel core_start + (v_42990 - 0x7E00)]
         mov edx,0x1
-        call fn_0cda8
+        call disk_write
         test eax,eax
         jz short L_0ea8f
         pop rax
         mov [rax+0x38],r12
-        inc qword [rel d_11de1]
+        inc qword [rel cabinet_changes]
         mov eax,0x0
         call fn_0d4f9
         jmp short L_0eac0
@@ -9503,8 +9550,8 @@ fn_0eade:
         push qword [rel d_16218]
         push qword [rel d_161b4]
         push qword [rel d_16790]
-        push qword [rel d_16798]
-        mov [rel d_16798],rsi
+        push qword [rel this_object]
+        mov [rel this_object],rsi
         mov rax,[rel d_167a0]
         mov [rel d_16790],rax
         mov [rel d_16218],rsp
@@ -9549,7 +9596,7 @@ d_0eba1:
 
 L_0eba6:
         mov rsp,[rel d_16218]
-        pop qword [rel d_16798]
+        pop qword [rel this_object]
         pop qword [rel d_16790]
         pop qword [rel d_161b4]
         pop qword [rel d_16218]
@@ -9647,7 +9694,12 @@ L_0ecc9:
         jz short L_0ed08
 
 L_0ecf0:
+%ifdef PLAIN_KERNEL
         lea r10,[rel api_table]
+%else
+        call near api_guard             ; v3.0.35: a program the Sentinel does not know is not handed everything
+        times 2 nop
+%endif
         call qword near [r10+r11*8]
 
 L_0ecfb:
@@ -9909,13 +9961,13 @@ fn_0efb0:
         call fn_0f05a
         lea rsi,[rel d_1652c]
         call fn_0f05a
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_0f044
         call fn_09642
         call api_cursor_hide
         xor edi,edi
         xor esi,esi
-        mov rdx,[rel d_11818]
+        mov rdx,[rel screen_width]
         mov ecx,0x1a
         mov r8d,0x8e1b1b
         call api_fill
@@ -10116,9 +10168,9 @@ L_0f2bf:
         jc short L_0f2a4
         mov ebx,0x1a000
         mov qword [rbx],0x40007
-        mov rsi,[rel d_11810]
-        mov rax,[rel d_11828]
-        imul rax,[rel d_11820]
+        mov rsi,[rel screen_memory]
+        mov rax,[rel screen_line_bytes]
+        imul rax,[rel screen_height]
         lea r8,[rsi+rax]
         mov ecx,0x1
 
@@ -10132,7 +10184,7 @@ L_0f2f8:
         shl r9,byte 0xc
         cmp rax,r9
         jnc short L_0f337
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_0f332
         cmp rdx,rsi
         jna short L_0f332
@@ -10278,7 +10330,7 @@ fn_0f483:
         mov rdx,[rcx+0x20]
         mov [rel d_16790],rdx
         mov rdx,[rcx+0x28]
-        mov [rel d_16798],rdx
+        mov [rel this_object],rdx
         mov rdx,[rcx+0x30]
         mov [rel mux_turn_of],rdx
         mov rdx,[rcx+0x38]
@@ -10312,7 +10364,7 @@ fn_0f50e:
         mov [rcx+0x18],rdx
         mov rdx,[rel d_16790]
         mov [rcx+0x20],rdx
-        mov rdx,[rel d_16798]
+        mov rdx,[rel this_object]
         mov [rcx+0x28],rdx
         mov rdx,[rel mux_turn_of]
         mov [rcx+0x30],rdx
@@ -10626,7 +10678,8 @@ L_0f901:
         pop rbx
         retq
 
-fn_0f919:
+; -> rax = how many objects the cabinet itself has (the word at +6 of its table)
+cabinet_count:
         mov rax,[rel cabinet_table]
         cmp dword [rax],0x4e424143
         jnz short L_0f92d
@@ -10668,7 +10721,7 @@ api_ob_count:
         push rdx
         push rdi
         push r12
-        call fn_0f919
+        call cabinet_count
         mov r12,rax
         mov rcx,rax
         xor ebx,ebx
@@ -10700,7 +10753,7 @@ fn_0f9b0:
         push r12
         push r13
         mov r13,rdi
-        call fn_0f919
+        call cabinet_count
         mov r12,rax
         cmp r13,r12
         jnc short L_0f9e3
@@ -10830,7 +10883,7 @@ fn_0fa9b:
         mov rsi,rax
         mov edx,[rbx+0x14]
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         pop rdi
         test eax,eax
         jz short L_0fb48
@@ -10901,7 +10954,7 @@ L_0fb6e:
 fn_0fb7f:
         push rbx
         push r12
-        call fn_0f919
+        call cabinet_count
         mov r12,rax
         xor ebx,ebx
 
@@ -10935,7 +10988,7 @@ fn_0fbc0:
         push rdx
         push rdi
         push r12
-        call fn_0f919
+        call cabinet_count
         mov r12,rax
         call fn_0d0e9
         mov rcx,rax
@@ -10976,7 +11029,7 @@ fn_0fc16:
         push rbx
         push r12
         push r13
-        call fn_0f919
+        call cabinet_count
         mov r12,rax
         call fn_0d0e9
         cmp r12,rax
@@ -11018,10 +11071,11 @@ L_0fc78:
         pop rbx
         retq
 
-fn_0fc7e:
+; write every changed object of the cabinet to its place on the disk; eax = 0: one failed
+cabinet_write_objects:
         push rbx
         push r12
-        call fn_0f919
+        call cabinet_count
         mov r12,rax
         xor ebx,ebx
 
@@ -11040,7 +11094,7 @@ L_0fc8b:
         mov edx,[rax+0x14]
         mov esi,[rax+0x1c]
         mov ecx,0x1
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_0fcd2
 
@@ -11096,7 +11150,7 @@ L_0fd2d:
 
 fn_0fd30:
         push rdi
-        call fn_0f919
+        call cabinet_count
         pop rdi
         cmp rdi,rax
         jnc short L_0fd4f
@@ -11249,9 +11303,10 @@ L_0fe5e:
         pop rbx
         retq
 
-fn_0fe64:
+; rdi = a number: 0 the cabinet's own count, 1 all objects, 2 (rsi = a drawer) its first object and count, 4 an object's rating ...
+api_cabinet_facts:
         cmp rdi,0x0
-        jz near fn_0f919
+        jz near cabinet_count
         cmp rdi,0x1
         jz near api_ob_count
         cmp rdi,0x2
@@ -11280,7 +11335,7 @@ L_0febe:
         mov r13,rcx
         mov rdi,rdx
         mov esi,0x20
-        call fn_10784
+        call memory_ok
         test eax,eax
         jz short L_0feff
         mov edi,ebx
@@ -11291,7 +11346,7 @@ L_0febe:
         mov rsi,r12
         mov rdx,r13
         xor ecx,ecx
-        call fn_0aec6
+        call api_ob_call
         pop r13
         pop r12
         pop rbx
@@ -11346,7 +11401,7 @@ L_0ff5b:
         push r12
         push r13
         mov r12,rsi
-        call fn_0f919
+        call cabinet_count
         mov r13,rax
         cmp r12,rax
         jnc short L_0ffa6
@@ -11475,7 +11530,7 @@ fn_1008f:
         push r13
         push r14
         xor r14d,r14d
-        call fn_0f919
+        call cabinet_count
         mov r13,rax
         call api_ob_count
         mov r12,rax
@@ -11529,7 +11584,7 @@ cmd_room:
         lea rdi,[rel d_16bfb]
         call api_print
         pop rdi
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_16c06]
         call api_print
         jmp near L_10278
@@ -11542,17 +11597,17 @@ L_10143:
 L_10154:
         lea rdi,[rel d_16aff]
         call api_print
-        call fn_0f919
+        call cabinet_count
         mov rdi,rax
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_16b1d]
         call api_print
         call fn_0d0e9
         mov rdi,rax
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_16b22]
         call api_print
-        call fn_0f919
+        call cabinet_count
         mov r12,rax
         xor ebx,ebx
 
@@ -11575,12 +11630,12 @@ L_1019c:
         pop rax
         push rax
         movzx edi,word [rax+0x4]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_16b1d]
         call api_print
         pop rax
         movzx edi,word [rax+0x6]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_16b36]
         call api_print
 
@@ -11593,21 +11648,21 @@ L_10209:
         call api_print
         call api_ob_count
         mov rdi,rax
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_16b42]
         call api_print
         call fn_0fbc0
         mov rdi,rax
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_16b4e]
         call api_print
         call fn_1027c
         mov rdi,rax
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_16b6d]
         call api_print
         mov rdi,[rel d_16a20]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_16b8c]
         call api_print
 
@@ -11621,7 +11676,7 @@ fn_1027c:
         push r12
         push r13
         xor r13d,r13d
-        call fn_0f919
+        call cabinet_count
         mov rbx,rax
         call api_ob_count
         mov r12,rax
@@ -11737,7 +11792,7 @@ cmd_stow:
         call fn_0fd30
         test eax,eax
         jnz near L_104c0
-        call fn_0f919
+        call cabinet_count
         cmp r13,rax
         jnc near L_104ce
         mov rdi,r12
@@ -11831,7 +11886,7 @@ cmd_unstow:
         cmp rax,0xffffffffffffffff
         jz near L_105df
         mov r13,rax
-        call fn_0f919
+        call cabinet_count
         cmp r13,rax
         jc near L_105e9
         mov rax,[rel cabinet_table]
@@ -12001,11 +12056,11 @@ fn_10735:
         call api_print
         mov edi,[rel d_085dc]
         sub edi,0x7e00
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_16f2d]
         call api_print
         mov edi,(ext_end - ext_start)
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_16f41]
         cmp byte [rel d_16e45],0x0
         jnz short L_1077f
@@ -12014,7 +12069,8 @@ fn_10735:
 L_1077f:
         jmp near api_print
 
-fn_10784:
+; rdi = an address a program handed over, rsi = how many bytes: eax = 1 if the program may use them
+memory_ok:
         cmp byte [rel d_16e44],0x0
         jnz short L_107f7
         cmp rdi,0x100000
@@ -12025,9 +12081,9 @@ fn_10784:
         mov rcx,0x100000000
         cmp rax,rcx
         ja short L_107d0
-        mov rcx,[rel d_11810]
-        mov rdx,[rel d_11828]
-        imul rdx,[rel d_11820]
+        mov rcx,[rel screen_memory]
+        mov rdx,[rel screen_line_bytes]
+        imul rdx,[rel screen_height]
         add rdx,rcx
         cmp rax,rcx
         jna short L_107d3
@@ -12054,7 +12110,8 @@ L_107f7:
         mov eax,0x1
         retq
 
-p_107fd:
+; the services of the kernel's extension (a number in rsi says which); 0 if the extension is not trusted
+api_extension:
         cmp byte [rel d_16e45],0x0
         jnz near L_50010
         test rcx,rcx
@@ -12062,7 +12119,7 @@ p_107fd:
         push rcx
         mov rdi,rcx
         mov esi,0x80
-        call fn_10784
+        call memory_ok
         pop rcx
         test eax,eax
         jz short L_10825
@@ -12078,7 +12135,8 @@ api_programs:
         mov rax,0xffffffffffffffff
         retq
 
-fn_10840:
+; rdi = the desktop object: under the multiplexer if the extension is trusted, else alone
+desktop_run:
         cmp byte [rel d_16e45],0x0
         jnz near mux_run
         xor esi,esi
@@ -12086,7 +12144,8 @@ fn_10840:
         xor ecx,ecx
         jmp near ob_call
 
-fn_10858:
+; rdi = an object: eax = 1 if its code is in the Sentinel's list
+ob_known:
         cmp byte [rel d_10c5e],0x0
         jz short L_10864
         xor eax,eax
@@ -12728,8 +12787,8 @@ api_table:
         dq api_put_letter
         dq api_screen_size
         dq api_fill
-        dq fn_09a0b
-        dq fn_09ac5
+        dq api_image
+        dq api_image_fit
         dq api_text
         dq api_window
         dq api_poll
@@ -12740,7 +12799,7 @@ api_table:
         dq api_ob_by_name
         dq api_ob_meta
         dq ob_call
-        dq fn_0aec6
+        dq api_ob_call
         dq p_0aef6
         dq api_random
         dq shell_same_word
@@ -12757,8 +12816,8 @@ api_table:
         dq api_cabinet_changes
         dq fn_09675
         dq api_clip
-        dq p_107fd
-        dq fn_0fe64
+        dq api_extension
+        dq api_cabinet_facts
         dq api_programs
         dq p_11099
         dq api_system_text
@@ -12951,7 +13010,8 @@ shell_commands:
         dq cmd_sgpu
         times 16 db 0x00
 
-d_117cb:
+; not 0: there is a graphics mode
+screen_on:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 d_117d3:
@@ -12981,34 +13041,43 @@ d_11800:
 d_11808:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0xE0, 0x6F, 0x40
 
-d_11810:
+; where the dots of the screen lie (what is drawn into)
+screen_memory:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_11818:
+; in dots
+screen_width:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_11820:
+; in dots
+screen_height:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_11828:
+; bytes a line of dots takes
+screen_line_bytes:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_11830:
+; how many letters fit a line
+console_columns:
         db 0x50, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_11838:
+; how many lines the console has
+console_rows:
         db 0x19, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_11840:
+; where the next letter goes
+console_column:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_11848:
+; ...
+console_row:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 d_11850:
         db 0xF5, 0xEC, 0xEC, 0x00
 
-d_11854:
+; the colour behind the letters
+console_ground:
         db 0x1E, 0x0A, 0x0C, 0x00
 
 d_11858:
@@ -13020,10 +13089,12 @@ d_11860:
 d_11868:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_11870:
+; where the mouse is
+mouse_at_x:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_11878:
+; ...
+mouse_at_y:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 d_11880:
@@ -13115,7 +13186,8 @@ d_119d8:
 d_119dc:
         times 32 db 0x00
 
-d_119fc:
+; the last three bytes the mouse sent (the first: its buttons)
+mouse_packet:
         db 0x00
 
 d_119fd:
@@ -13389,7 +13461,8 @@ d_11dd1:
 d_11dd9:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_11de1:
+; grows with every change of the cabinet
+cabinet_changes:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 d_11de9:
@@ -13900,7 +13973,8 @@ d_14ee0:
 d_14ee2:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_14eea:
+; 100 a second since the start
+clock_ticks:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 d_14ef2:
@@ -14238,7 +14312,8 @@ d_154fa:
 d_1550d:
         db '[store] restore_rect: a bad buffer was refused', 10, 0
 
-d_1553d:
+; 1: the boot disk can be written
+disk_writable:
         db 0x00
 
 d_1553e:
@@ -14260,7 +14335,8 @@ d_1559b:
 maint_on:
         db 0x00
 
-d_155e0:
+; the sector of the table of the cabinet (481 of the system)
+table_sector:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 d_155e8:
@@ -14713,7 +14789,8 @@ d_16789:
 d_16790:
         db 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
 
-d_16798:
+; the object whose code is running now, 0 if none
+this_object:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 d_167a0:
@@ -14998,7 +15075,7 @@ L_50020:
         jz short L_50060
         mov rdi,r15
         mov esi,0x80
-        call fn_10784
+        call memory_ok
         test eax,eax
         jnz short L_50060
         xor r15d,r15d
@@ -15098,7 +15175,7 @@ L_5016a:
 L_5017d:
         test byte [rel d_52120],0x4
         jz short L_501a2
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jnz short L_501a2
         lea rdi,[rel d_524da]
         call fn_5025c
@@ -15455,18 +15532,18 @@ L_50552:
         push rdi
         lea rsi,[rel core_start + (v_42990 - 0x7E00)]
         mov edx,0x1
-        call fn_0cd15
+        call disk_read
         pop rdi
         test eax,eax
         jz short L_505d4
         mov [rel core_start + (v_429c8 - 0x7E00)],rbx
         lea rsi,[rel core_start + (v_42990 - 0x7E00)]
         mov edx,0x1
-        call fn_0cda8
+        call disk_write
         test eax,eax
         jz short L_505d4
         mov [r12+0x38],rbx
-        inc qword [rel d_11de1]
+        inc qword [rel cabinet_changes]
         mov rdi,rbp
         call fn_5025c
         call fn_50293
@@ -15574,7 +15651,7 @@ L_5070d:
         mov rdi,rbx
         mov rsi,r13
         mov ecx,0x1
-        call fn_0ce54
+        call disk_io
         pop rdx
         test eax,eax
         jz short L_5073a
@@ -16000,7 +16077,7 @@ fn_50baf:
         mov rsi,rax
         mov rdx,[rel d_52138]
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_50c32
         mov rdi,[rel d_52140]
@@ -16037,7 +16114,7 @@ fn_50c57:
         mov rsi,[rel d_52140]
         mov rdx,[rel d_52138]
         mov ecx,0x1
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_50cb4
         mov rdi,[rel d_52140]
@@ -16047,7 +16124,7 @@ fn_50c57:
         mov rdx,[rel d_52140]
         mov [rax+0x1c],edx
         mov qword [rel d_52140],0x0
-        inc qword [rel d_11de1]
+        inc qword [rel cabinet_changes]
         mov eax,0x1
         retq
 
@@ -16153,7 +16230,7 @@ fn_50d2a:
         jnz short L_50dfb
         lea rdi,[rel d_521f8]
         call fn_50f32
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jz short L_50df3
         call cabinet_save
 
@@ -16218,7 +16295,7 @@ fn_50e46:
         call fn_510b0
         lea rdi,[rel d_52c32]
         call fn_5025c
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jz short L_50efa
         call cabinet_save
         test eax,eax
@@ -16249,7 +16326,7 @@ fn_50f32:
         push rbx
         mov rbx,rdi
         rdtsc
-        xor eax,[rel d_14eea]
+        xor eax,[rel clock_ticks]
         rol eax,byte 0xd
         xor eax,edx
         or eax,0x80000000
@@ -16434,7 +16511,7 @@ fn_51130:
         mov rdi,rbx
         lea rsi,[rel core_start + (v_42990 - 0x7E00)]
         mov edx,0x1
-        call fn_0cd15
+        call disk_read
         test eax,eax
         jz near L_51209
         cmp dword [rel core_start + (v_42990 - 0x7E00)],0x41534d4f
@@ -16462,7 +16539,7 @@ fn_51130:
         mov rsi,rax
         mov rdx,[rel d_52138]
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_51204
         mov rdi,[rel d_52140]
@@ -16522,7 +16599,7 @@ p_5125c:
         push r13
         mov rdi,r14
         mov esi,0x400
-        call fn_10784
+        call memory_ok
         test eax,eax
         jz near L_513a1
         cmp byte [rel d_15498],0x0
@@ -16955,7 +17032,7 @@ fn_51773:
         mov [rel d_52123],dl
         mov [rel d_52124],cl
         xor eax,eax
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz near L_51bd9
         lea rdi,[rel d_523fe]
         call api_log
@@ -16963,11 +17040,11 @@ fn_51773:
         call api_log
         lea rdi,[rel d_153bf]
         call api_log
-        mov rax,[rel d_11818]
+        mov rax,[rel screen_width]
         sub rax,0x208
         shr rax,1
         mov [rel d_52188],rax
-        mov rax,[rel d_11820]
+        mov rax,[rel screen_height]
         sub rax,0xbe
         shr rax,1
         mov [rel d_52190],rax
@@ -17082,8 +17159,8 @@ L_519cb:
         mov r8,0xffffffffffffffff
         call api_text
         call fn_51c7e
-        mov r12,[rel d_11870]
-        mov r13,[rel d_11878]
+        mov r12,[rel mouse_at_x]
+        mov r13,[rel mouse_at_y]
         mov rdi,r12
         mov rsi,r13
         call api_cursor_show
@@ -17369,7 +17446,7 @@ fn_51dfa:
         jnz short L_51e31
         lea rdi,[rel d_5264b]
         call api_log
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jnz near L_51f06
         lea rdi,[rel d_5264b]
         call api_print
@@ -17381,22 +17458,22 @@ L_51e31:
         lea rdi,[rel d_52604]
         call fn_6de02
         xor ebx,ebx
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_51ebb
         call api_cursor_hide
         xor edi,edi
         xor esi,esi
-        mov rdx,[rel d_11818]
-        mov rcx,[rel d_11820]
+        mov rdx,[rel screen_width]
+        mov rcx,[rel screen_height]
         call api_rect_save
         mov rbx,rax
         xor edi,edi
         xor esi,esi
-        mov rdx,[rel d_11818]
-        mov rcx,[rel d_11820]
+        mov rdx,[rel screen_width]
+        mov rcx,[rel screen_height]
         mov r8d,0xb0c14
         call api_fill
-        mov rdi,[rel d_11818]
+        mov rdi,[rel screen_width]
         shr rdi,1
         sub rdi,0x78
         mov esi,0x28
@@ -17418,12 +17495,12 @@ L_51ebb:
         jmp short L_51f06
 
 L_51edf:
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_51f06
         xor edi,edi
         xor esi,esi
-        mov rdx,[rel d_11818]
-        mov rcx,[rel d_11820]
+        mov rdx,[rel screen_width]
+        mov rcx,[rel screen_height]
         mov r8d,0x12131c
         call api_fill
 
@@ -18238,7 +18315,7 @@ fn_53240:
         shl rdx,byte 0x20
         or rax,rdx
         mov [rel d_539f0],rax
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         mov [rel d_539f8],rax
         inc qword [rel d_53a00]
         lea rdi,[rel d_539d0]
@@ -18842,7 +18919,7 @@ mux_run:
         push r14
         push r15
         mov r12,rdi
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz near L_53f0c
 %ifdef PLAIN_KERNEL
         call mux_init
@@ -18869,8 +18946,8 @@ mux_run:
         test eax,eax
         jz near L_53ed8
         mov rdi,r13
-        mov rsi,[rel d_564d8]
-        mov rdx,[rel d_564e0]
+        mov rsi,[rel mux_screen_width]
+        mov rdx,[rel mux_screen_height]
         call mux_task_surface
         test eax,eax
         jz near L_53ed8
@@ -18916,9 +18993,9 @@ L_53e5a:
         jnz short L_53e76
         call mux_reap
 %ifdef PLAIN_KERNEL
-        call fn_55604
+        call mux_input
 %else
-        call near split_step            ; v3.0.32: the screen split in 4 or 9 (else: fn_55604, as before)
+        call near split_step            ; v3.0.32: the screen split in 4 or 9 (else: mux_input, as before)
 %endif
         jmp short L_53e23
 
@@ -18994,22 +19071,22 @@ mux_init:
         jz near L_53fdc
 mux_begin_rest:                         ; (v3.0.16: mux_begin comes in here when the tasks are kept)
         mov qword [rel d_564c0],0x0
-        mov rax,[rel d_11810]
-        mov [rel d_564c8],rax
-        mov rax,[rel d_11828]
-        mov [rel d_564d0],rax
-        mov rax,[rel d_11818]
-        mov [rel d_564d8],rax
-        mov rax,[rel d_11820]
-        mov [rel d_564e0],rax
-        mov rax,[rel d_11870]
+        mov rax,[rel screen_memory]
+        mov [rel mux_screen],rax
+        mov rax,[rel screen_line_bytes]
+        mov [rel mux_screen_line_bytes],rax
+        mov rax,[rel screen_width]
+        mov [rel mux_screen_width],rax
+        mov rax,[rel screen_height]
+        mov [rel mux_screen_height],rax
+        mov rax,[rel mouse_at_x]
         mov [rel d_564e8],rax
-        mov rax,[rel d_11878]
+        mov rax,[rel mouse_at_y]
         mov [rel d_564f0],rax
         mov qword [rel d_564f8],0x0
         mov qword [rel d_56500],0xffffffffffffffff
         mov qword [rel mux_turn_of],0xffffffffffffffff
-        inc qword [rel d_56488]
+        inc qword [rel mux_changes]
         mov eax,0x1
         retq
 
@@ -19120,11 +19197,11 @@ mux_turn:
         push qword [rel d_16220]
         push qword [rel d_16228]
         push qword [rel d_16790]
-        push qword [rel d_16798]
+        push qword [rel this_object]
         mov rax,[rbx+0xe8]
         mov [rel d_16790],rax
         mov rax,[rbx+0x178]
-        mov [rel d_16798],rax
+        mov [rel this_object],rax
         mov rax,[rbx+0x20]
         mov [rel d_16218],rax
         mov rax,[rbx+0x28]
@@ -19155,7 +19232,7 @@ L_54196:
         mov cr3,rax
 
 L_541ba:
-        mov rax,[rel d_16798]
+        mov rax,[rel this_object]
         mov [rbx+0x178],rax
         mov rax,[rel d_16790]
         mov [rbx+0xe8],rax
@@ -19165,7 +19242,7 @@ L_541ba:
         mov [rbx+0x28],rax
         mov rax,[rel d_16220]
         mov [rbx+0x30],rax
-        pop qword [rel d_16798]
+        pop qword [rel this_object]
         pop qword [rel d_16790]
         pop qword [rel d_16228]
         pop qword [rel d_16220]
@@ -19258,7 +19335,7 @@ d_5430e:
         mov rsi,[rbx+0x50]
         test rsi,rsi
         jz short L_54339
-        call fn_0aec6
+        call api_ob_call
         jmp short L_5433e
 
 L_54339:
@@ -19368,7 +19445,7 @@ L_5444f:
         mov qword [rel d_56500],0xffffffffffffffff
 
 L_54463:
-        inc qword [rel d_56488]
+        inc qword [rel mux_changes]
         pop rcx
         pop rdx
         pop rsi
@@ -19379,7 +19456,7 @@ L_54463:
         jz short L_54487
         add rdx,rdi
         add rcx,rsi
-        call fn_545df
+        call mux_repaint
 
 L_54487:
         pop r12
@@ -19450,7 +19527,7 @@ mux_focus:
         cmp [rel mux_focused],rbx
         jz short L_54537
         mov [rel mux_focused],rbx
-        inc qword [rel d_56488]
+        inc qword [rel mux_changes]
         mov rdi,rbx
         call mux_order_front
         mov rdi,rbx
@@ -19506,9 +19583,10 @@ fn_545bc:
         mov rcx,[rax+0x78]
         add rdx,rdi
         add rcx,rsi
-        jmp short fn_545df
+        jmp short mux_repaint
 
-fn_545df:
+; rdi, rsi, rdx, rcx = left, top, right, bottom: draw that part of the screen again from the windows
+mux_repaint:
         push rbx
         push rbp
         push r12
@@ -19520,10 +19598,10 @@ fn_545df:
         cmovl rdi,rax
         cmp rsi,rax
         cmovl rsi,rax
-        cmp rdx,[rel d_564d8]
-        cmovg rdx,[rel d_564d8]
-        cmp rcx,[rel d_564e0]
-        cmovg rcx,[rel d_564e0]
+        cmp rdx,[rel mux_screen_width]
+        cmovg rdx,[rel mux_screen_width]
+        cmp rcx,[rel mux_screen_height]
+        cmovg rcx,[rel mux_screen_height]
         cmp rdi,rdx
         jnl near L_546be
         cmp rsi,rcx
@@ -19611,9 +19689,9 @@ L_54741:
         shl rsi,byte 0x2
         add rsi,[rbx+0x68]
         mov rdi,r13
-        imul rdi,[rel d_564d0]
+        imul rdi,[rel mux_screen_line_bytes]
         lea rdi,[rdi+r12*4]
-        add rdi,[rel d_564c8]
+        add rdi,[rel mux_screen]
         mov rcx,r14
         sub rcx,r12
         rep movsd
@@ -19703,9 +19781,9 @@ L_5488f:
         shl rsi,byte 0x2
         add rsi,[rbx+0x68]
         mov rdi,r13
-        imul rdi,[rel d_564d0]
+        imul rdi,[rel mux_screen_line_bytes]
         lea rdi,[rdi+r12*4]
-        add rdi,[rel d_564c8]
+        add rdi,[rel mux_screen]
         cmp qword [rel d_54798],0xffffffffffffffff
         jz short L_54909
         cmp qword [rbx+0xa0],0x3
@@ -19804,9 +19882,9 @@ L_549f5:
         shl rsi,byte 0x2
         add rsi,[rbx+0x68]
         mov rdi,r13
-        imul rdi,[rel d_564d0]
+        imul rdi,[rel mux_screen_line_bytes]
         lea rdi,[rdi+r12*4]
-        add rdi,[rel d_564c8]
+        add rdi,[rel mux_screen]
         mov rcx,r14
         sub rcx,r12
         rep movsd
@@ -19909,13 +19987,13 @@ L_54b21:
         cmp qword [r12],0x0
         jz near L_54d77
         mov rax,[r12+0x68]
-        mov [rel d_11810],rax
+        mov [rel screen_memory],rax
         mov rax,[r12+0x70]
-        mov [rel d_11818],rax
+        mov [rel screen_width],rax
         shl rax,byte 0x2
-        mov [rel d_11828],rax
+        mov [rel screen_line_bytes],rax
         mov rax,[r12+0x78]
-        mov [rel d_11820],rax
+        mov [rel screen_height],rax
         mov rax,[r12+0xc8]
         mov [rel d_11dc1],rax
         mov rax,[r12+0xd0]
@@ -19976,7 +20054,7 @@ L_54c51:
         call fn_54dfa
         pop rcx
         pop rdx
-        call fn_09a0b
+        call api_image
         jmp near L_54d77
 
 L_54c71:
@@ -19984,7 +20062,7 @@ L_54c71:
         mov rcx,[rbx+0x28]
         mov r8,[rbx+0x30]
         call fn_54dfa
-        call fn_09ac5
+        call api_image_fit
         jmp near L_54d77
 
 L_54c8c:
@@ -20070,7 +20148,7 @@ L_54d81:
         mov rsi,[rel d_565a0]
         mov rdx,[rel d_565a8]
         mov rcx,[rel d_565b0]
-        call fn_545df
+        call mux_repaint
 
 L_54db2:
         pop r15
@@ -20082,14 +20160,14 @@ L_54db2:
         retq
 
 fn_54dbd:
-        mov rax,[rel d_564c8]
-        mov [rel d_11810],rax
-        mov rax,[rel d_564d0]
-        mov [rel d_11828],rax
-        mov rax,[rel d_564d8]
-        mov [rel d_11818],rax
-        mov rax,[rel d_564e0]
-        mov [rel d_11820],rax
+        mov rax,[rel mux_screen]
+        mov [rel screen_memory],rax
+        mov rax,[rel mux_screen_line_bytes]
+        mov [rel screen_line_bytes],rax
+        mov rax,[rel mux_screen_width]
+        mov [rel screen_width],rax
+        mov rax,[rel mux_screen_height]
+        mov [rel screen_height],rax
         jmp near fn_09642
 
 fn_54dfa:
@@ -20222,8 +20300,8 @@ fn_54f16:
         push rcx
         push r8
         mov rdi,rax
-        mov rsi,[rel d_564d8]
-        mov rdx,[rel d_564e0]
+        mov rsi,[rel mux_screen_width]
+        mov rdx,[rel mux_screen_height]
         call mux_task_surface
         mov rax,[rsp+0x28]
         mov qword [rax+0xa0],0x1
@@ -20314,7 +20392,7 @@ p_5501e:
         call mux_this_task
         pop rdi
         test rax,rax
-        jz near fn_09a0b
+        jz near api_image
         call fn_54f16
         push rdi
         push rsi
@@ -20341,7 +20419,7 @@ p_5505d:
         call mux_this_task
         pop rdi
         test rax,rax
-        jz near fn_09ac5
+        jz near api_image_fit
         call fn_54f16
         push rdi
         push rsi
@@ -20467,12 +20545,12 @@ p_5514e:
         lea rdi,[rbx+0x120]
         mov rsi,[rsp]
         call fn_55391
-        inc qword [rel d_56488]
+        inc qword [rel mux_changes]
         mov rdi,[rel d_565b8]
         mov rsi,[rel d_565c0]
         mov rdx,[rel d_565c8]
         mov rcx,[rel d_565d0]
-        call fn_545df
+        call mux_repaint
         pop r8
         pop rcx
         pop rdx
@@ -20572,7 +20650,7 @@ L_55328:
         retq
 
 fn_5532c:
-        mov rax,[rel d_564d8]
+        mov rax,[rel mux_screen_width]
         sub rax,[rbx+0x70]
         cmp [rbx+0x80],rax
         jng short L_55347
@@ -20584,7 +20662,7 @@ L_55347:
         mov qword [rbx+0x80],0x0
 
 L_5535c:
-        mov rax,[rel d_564e0]
+        mov rax,[rel mux_screen_height]
         sub rax,0x22
         sub rax,[rbx+0x78]
         cmp [rbx+0x88],rax
@@ -20676,7 +20754,7 @@ p_553f5:
         add rdx,rdi
         mov rcx,[rel d_565d0]
         add rcx,rsi
-        call fn_545df
+        call mux_repaint
         pop r12
         pop rbx
 L_55495:
@@ -20684,13 +20762,13 @@ L_55495:
 
 fn_55496:
         mov rax,[rbx+0x68]
-        mov [rel d_11810],rax
+        mov [rel screen_memory],rax
         mov rax,[rbx+0x70]
-        mov [rel d_11818],rax
+        mov [rel screen_width],rax
         shl rax,byte 0x2
-        mov [rel d_11828],rax
+        mov [rel screen_line_bytes],rax
         mov rax,[rbx+0x78]
-        mov [rel d_11820],rax
+        mov [rel screen_height],rax
         jmp near fn_09642
 p_554c7:
         retq
@@ -20788,11 +20866,11 @@ p_555b4:
         xor edx,edx
         mov ecx,0xa
         div rcx
-        add rax,[rel d_14eea]
+        add rax,[rel clock_ticks]
         mov rbx,rax
 L_555ed:
         call fn_542ec
-        cmp [rel d_14eea],rbx
+        cmp [rel clock_ticks],rbx
         jc short L_555ed
         pop rbx
         retq
@@ -20802,7 +20880,8 @@ L_555fd:
         retq
 
 ; says: '[mux] a window was closed by its close box'
-fn_55604:
+; once round the loop: a key or the mouse to the program they are for; clicks on windows and their buttons
+mux_input:
         push rbx
         push r12
         push r13
@@ -20841,7 +20920,7 @@ L_55658:
 L_5566f:
         xor edi,edi
         mov edx,0x9c
-        call fn_0a544
+        call key_modifiers
         mov esi,0x1
         xor ecx,ecx
         call fn_5554c
@@ -20854,7 +20933,7 @@ L_5568c:
         xor edi,edi
 
 L_5569d:
-        call fn_0a544
+        call key_modifiers
         mov esi,0x1
         xor ecx,ecx
         call fn_5554c
@@ -21110,7 +21189,7 @@ fn_55a20:
         mov rsi,[rel d_565c0]
         mov rdx,[rel d_565c8]
         mov rcx,[rel d_565d0]
-        call fn_545df
+        call mux_repaint
         mov rdi,[rel d_56500]
         call fn_545bc
         pop rbx
@@ -21216,7 +21295,7 @@ L_55bd5:
         mov qword [rel d_54798],0xffffffffffffffff
 
 L_55be0:
-        inc qword [rel d_56488]
+        inc qword [rel mux_changes]
 
 L_55be7:
         xor eax,eax
@@ -21264,7 +21343,7 @@ L_55c8e:
         mov rsi,[rel d_57048]
         mov rdx,[rel d_57050]
         mov rcx,[rel d_57058]
-        call fn_545df
+        call mux_repaint
         xor eax,eax
         retq
 
@@ -21296,7 +21375,7 @@ L_55cf3:
         retq
 
 L_55cf9:
-        mov rax,[rel d_56488]
+        mov rax,[rel mux_changes]
         retq
 
 L_55d01:
@@ -21334,7 +21413,7 @@ L_55d60:
         push rsi
         mov rdi,rsi
         mov esi,0x10
-        call fn_10784
+        call memory_ok
         pop rdi
         test eax,eax
         jz near L_55b31
@@ -21354,7 +21433,7 @@ L_55d7c:
         push rax
         push rdi
         mov esi,0x30
-        call fn_10784
+        call memory_ok
         pop rdi
         pop rsi
         test eax,eax
@@ -21442,7 +21521,7 @@ fn_55e4e:
         mov qword [rel mux_focused],0x0
 
 L_55e76:
-        inc qword [rel d_56488]
+        inc qword [rel mux_changes]
         mov rdi,rbx
         call fn_545bc
         pop rbx
@@ -21511,11 +21590,11 @@ fn_55f20:
         mov [rbx+0x198],rax
         mov rax,[rbx+0x88]
         mov [rbx+0x1a0],rax
-        mov rax,[rel d_564d8]
+        mov rax,[rel mux_screen_width]
         sub rax,[rbx+0x70]
         sar rax,1
         mov [rbx+0x80],rax
-        mov rax,[rel d_564e0]
+        mov rax,[rel mux_screen_height]
         sub rax,0x22
         sub rax,[rbx+0x78]
         sar rax,1
@@ -21535,7 +21614,7 @@ L_55fb3:
         mov rsi,[rel d_565c0]
         mov rdx,[rel d_565c8]
         mov rcx,[rel d_565d0]
-        call fn_545df
+        call mux_repaint
         mov rdi,r12
         call fn_545bc
         pop r12
@@ -21585,12 +21664,12 @@ L_56052:
         mov qword [rel mux_focused],0x0
 
 L_56062:
-        inc qword [rel d_56488]
+        inc qword [rel mux_changes]
         xor edi,edi
         xor esi,esi
-        mov rdx,[rel d_564d8]
-        mov rcx,[rel d_564e0]
-        call fn_545df
+        mov rdx,[rel mux_screen_width]
+        mov rcx,[rel mux_screen_height]
+        call mux_repaint
         mov rax,r12
         pop r12
         pop rbx
@@ -21646,12 +21725,12 @@ L_560eb:
 L_56103:
         test r13,r13
         jz short L_56126
-        inc qword [rel d_56488]
+        inc qword [rel mux_changes]
         xor edi,edi
         xor esi,esi
-        mov rdx,[rel d_564d8]
-        mov rcx,[rel d_564e0]
-        call fn_545df
+        mov rdx,[rel mux_screen_width]
+        mov rcx,[rel mux_screen_height]
+        call mux_repaint
 
 L_56126:
         mov rax,r13
@@ -21738,7 +21817,7 @@ L_561a4:
         mov rbp,rax
         mov rdi,r13
         mov esi,0x20
-        call fn_10784
+        call memory_ok
         test eax,eax
         jz near L_56362
         mov ebx,0x1
@@ -21821,7 +21900,7 @@ L_5629f:
         mov [rdx+rcx*8],rbx
         inc qword [rel mux_order_count]
         mov [rel mux_focused],rbx
-        inc qword [rel d_56488]
+        inc qword [rel mux_changes]
         lea rdi,[rel d_568df]
         call api_log
         mov rax,[rel d_56490]
@@ -21885,7 +21964,7 @@ L_563bf:
         mov rsi,rbx
         mov edx,[r13+0x14]
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_5640b
         cmp dword [rbx],0x41534d4f
@@ -21957,7 +22036,8 @@ mux_on:
 mux_focused:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_56488:
+; grows whenever a program starts, ends or comes to the front
+mux_changes:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 d_56490:
@@ -21982,16 +22062,20 @@ mux_draw_list:
 d_564c0:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_564c8:
+; where the multiplexer puts the finished picture: the screen (or memory, while it is split)
+mux_screen:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_564d0:
+; bytes a line of it takes
+mux_screen_line_bytes:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_564d8:
+; in dots
+mux_screen_width:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_564e0:
+; in dots
+mux_screen_height:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 d_564e8:
@@ -22424,7 +22508,7 @@ p_56c67:
         mov rcx,[rax+0x160]
         test rcx,rcx
         jz near api_memory
-        mov rdx,[rel d_16798]
+        mov rdx,[rel this_object]
         cmp rdx,rcx
         jc near api_memory
         lea r8,[rcx+0x800000]
@@ -26552,7 +26636,7 @@ L_59969:
         mov rbx,rdi
         call maint_check
         jz near L_59adb
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jz near L_59ad1
         lea rdi,[rel d_5aa23]
         call api_print
@@ -26627,11 +26711,11 @@ L_59a7b:
         lea rdi,[rel d_5aaa8]
         call api_print
         mov rdi,[rel d_5a098]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_5aab1]
         call api_print
         mov rdi,[rel d_5a090]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_5aab6]
         call api_print
         jmp short L_59adb
@@ -26804,7 +26888,7 @@ L_59c58:
         call api_print
         mov rdi,[rel d_5a000]
         sub rdi,0x450
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_5aa78]
         call api_print
         lea rdi,[rel d_5ab0d]
@@ -26828,7 +26912,7 @@ L_59d33:
         lea rdi,[rel d_5aa90]
         call api_print
         mov rdi,[rel d_5a080]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_5aaa5]
         call api_print
         mov rdi,[rel d_5a078]
@@ -27611,7 +27695,7 @@ fn_5b1ae:
         mov r13,rsi
         mov rdi,r13
         mov esi,0x40
-        call fn_10784
+        call memory_ok
         test eax,eax
         jz short L_5b22e
         lea rdi,[rel d_5d960]
@@ -27766,11 +27850,11 @@ p_5b333:
 
 p_5b370:
         call fn_5b289
-        mov rax,[rel d_11818]
+        mov rax,[rel screen_width]
         call fn_5b25d
         lea rsi,[rel d_5da19]
         call fn_5b23b
-        mov rax,[rel d_11820]
+        mov rax,[rel screen_height]
         jmp near fn_5b25d
 
 p_5b399:
@@ -27807,7 +27891,7 @@ p_5b3e8:
         jmp near fn_5b23b
 
 L_5b40d:
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         cmp rax,[rel d_5b8c2]
         jnc short L_5b41e
         retq
@@ -27855,9 +27939,9 @@ L_5b456:
         mov esi,0x370
         mov edx,0x9c4
         call fn_6d908
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_5b50a
-        mov rdi,[rel d_11818]
+        mov rdi,[rel screen_width]
         shr rdi,1
         sub rdi,0x6c
         mov esi,0x2
@@ -28274,12 +28358,12 @@ L_5db07:
 L_5db18:
         lea rdi,[rel d_5dc1d]
         call api_print
-        mov rdi,[rel d_11818]
-        call fn_08e3b
+        mov rdi,[rel screen_width]
+        call print_number
         lea rdi,[rel d_5da19]
         call api_print
-        mov rdi,[rel d_11820]
-        call fn_08e3b
+        mov rdi,[rel screen_height]
+        call print_number
         lea rdi,[rel d_5dc2a]
         call api_print
         mov rcx,[rel cabinet_table]
@@ -28291,12 +28375,12 @@ L_5db18:
         jmp short L_5db92
 
 L_5db71:
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_5da19]
         call api_print
         mov rcx,[rel cabinet_table]
         movzx edi,word [rcx+0xe]
-        call fn_08e3b
+        call print_number
 
 L_5db92:
         lea rdi,[rel d_5dc35]
@@ -28315,12 +28399,12 @@ L_5dbb8:
         jnc short L_5dc01
         mov rax,[rel d_110b0]
         movzx edi,word [rax+rbx*4+0x80]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_5dc18]
         call api_print
         mov rax,[rel d_110b0]
         movzx edi,word [rax+rbx*4+0x82]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_5dc1a]
         call api_print
         inc ebx
@@ -28376,7 +28460,7 @@ fn_5dce7:
         mov qword [rel d_5e658],0x0
         mov qword [rel d_5e660],0x1
         mov qword [rel d_5ee80],0x0
-        mov rax,[rel d_11de1]
+        mov rax,[rel cabinet_changes]
         mov [rel d_5ee88],rax
         call fn_5e054
         lea rdi,[rel d_5f2c8]
@@ -28444,7 +28528,7 @@ L_5ddf3:
         mov rsi,rax
         mov edx,[rbx+0x14]
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz near L_5def1
         mov rdi,[rel d_5e668]
@@ -28536,7 +28620,7 @@ fn_5df85:
         mov rsi,rbx
         mov edx,0x1
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         movzx edx,word [rbx+0x1b4]
         push rdx
         mov rdi,rbx
@@ -28559,7 +28643,7 @@ fn_5df85:
         mov rsi,rbx
         mov rdx,[rel d_5f584]
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_5e048
         mov rdi,rbx
@@ -28700,7 +28784,7 @@ L_5e16a:
         mov r12,rdi
         cmp byte [rel d_15498],0x0
         jz near L_5e207
-        mov rax,[rel d_11de1]
+        mov rax,[rel cabinet_changes]
         cmp rax,[rel d_5ee88]
         jz short L_5e1ad
         cmp byte [rel d_5f5ac],0x0
@@ -28795,7 +28879,7 @@ fn_5e23b:
         mov rsi,rax
         mov edx,[r12+0x14]
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz near L_5e411
         mov rdi,[rel d_5e668]
@@ -29021,7 +29105,7 @@ L_5e4d7:
         lea rdi,[rel d_5f2f7]
         call api_print
         mov rdi,[rel d_5e658]
-        call fn_08e3b
+        call print_number
         cmp qword [rel d_5e650],0x0
         jnz short L_5e519
         lea rdi,[rel d_5f302]
@@ -29032,7 +29116,7 @@ L_5e519:
         lea rdi,[rel d_5f32a]
         call api_print
         mov rdi,[rel d_5e650]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_5f345]
         call api_print
         mov dword [rel d_11850],0xececf5
@@ -29273,7 +29357,7 @@ d_5f664:
         db 0x00
 
 L_5fcf8:
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jz short L_5fd0b
         call fn_5fd0c
         jmp near L_5fe02
@@ -29310,7 +29394,7 @@ L_5fd59:
         rdtsc
         shl rdx,byte 0x20
         or rax,rdx
-        xor rax,[rel d_14eea]
+        xor rax,[rel clock_ticks]
         mov [rdi*8+d_603b0],rax            ; (an address of the kernel, by its name)
         mov ecx,0x7d0
 
@@ -29661,7 +29745,7 @@ L_601f9:
         lea rdi,[rel d_605ad]
         call api_print
         mov edi,[rbx+0x28]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_605bc]
         call api_print
         mov rax,[rbx+0x18]
@@ -29677,7 +29761,7 @@ L_6023f:
         lea rdi,[rel d_60694]
         call api_print
         mov edi,[rbx+0x30]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_606a2]
         call api_print
         call fn_5fecb
@@ -30322,12 +30406,12 @@ L_60f86:
         retq
 
 fn_60f95:
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         add rax,rdi
         inc rax
 
 L_60fa2:
-        cmp [rel d_14eea],rax
+        cmp [rel clock_ticks],rax
         jnc short L_60fc1
         pause
         cmp byte [rel d_14ef2],0x0
@@ -31584,12 +31668,12 @@ L_61a32:
         lea rdi,[rel d_63043]
         call api_print
         mov rdi,rbx
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_6304b]
         call api_print
         lea rax,[rel d_63118]
         mov edi,[rax+rbx*8]
-        call fn_08e3b
+        call print_number
         lea rax,[rel d_62cd0]
         mov rax,[rax+rbx*8]
         lea rdi,[rel d_63065]
@@ -31613,12 +31697,12 @@ L_61ad0:
         call api_print
         lea rax,[rel d_62dd0]
         mov rdi,[rax+rbx*8]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_630b2]
         call api_print
         lea rax,[rel d_62e50]
         mov rdi,[rax+rbx*8]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_630c1]
         call api_print
 
@@ -31630,16 +31714,16 @@ L_61b15:
         lea rdi,[rel d_630c3]
         call api_print
         mov edi,[abs 0x50d8]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_630ed]
         call api_print
         mov rdi,[rel d_623d0]
         dec rdi
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_630f2]
         call api_print
         mov edi,[abs 0x50dc]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_630c1]
         call api_print
         movzx eax,byte [rel d_62fea]
@@ -31656,15 +31740,15 @@ L_61b15:
 L_61b96:
         call api_print
         mov rdi,[rel d_62ed0]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_63290]
         call api_print
         mov rdi,[rel d_62ed8]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_63295]
         call api_print
         mov rdi,[rel d_62ee0]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_630c1]
         call api_print
 
@@ -31799,7 +31883,7 @@ L_61d71:
         lock add [rdx+rcx*8],rax
 
 L_61d8f:
-        mov rbx,[rel d_14eea]
+        mov rbx,[rel clock_ticks]
         xor ecx,ecx
 
 L_61d98:
@@ -31849,7 +31933,7 @@ fn_61df9:
         inc ecx
         cmp ecx,0x11e1a300
         jnc short L_61e19
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         sub rax,rbx
         cmp rax,0x1f4
         jnc short L_61e19
@@ -31886,11 +31970,11 @@ L_61e6e:
         lea rdi,[rel d_636e7]
         call api_print
         mov rdi,[rel d_623d0]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_636f3]
         call api_print
         mov rdi,[rel d_623d8]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_63711]
         jmp near api_print
 
@@ -31930,11 +32014,11 @@ L_61edb:
         lea rdi,[rel d_636e7]
         call api_print
         mov rdi,[rel d_623d0]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_636f3]
         call api_print
         mov rdi,[rel d_623d8]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_636fc]
         call api_print
         xor r12d,r12d
@@ -31944,7 +32028,7 @@ L_61f2f:
         jnc short L_61f57
         lea rax,[rel d_623f0]
         mov edi,[rax+r12*4]
-        call fn_08e3b
+        call print_number
         mov edi,0x20
         call api_put_letter
         inc r12
@@ -31957,7 +32041,7 @@ L_61f57:
         call api_print
         mov rdi,[rel d_62c78]
         inc rdi
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_6373c]
         call api_print
         mov edi,0x20
@@ -31999,12 +32083,12 @@ L_61fe8:
         call shell_same_word
         test eax,eax
         jz near L_62124
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz near L_62124
         xor edi,edi
         xor esi,esi
-        mov rdx,[rel d_11818]
-        mov rcx,[rel d_11820]
+        mov rdx,[rel screen_width]
+        mov rcx,[rel screen_height]
         call api_rect_save
         mov rbx,rax
         mov qword [rel d_62c80],0x1
@@ -32028,16 +32112,16 @@ L_62083:
         call api_print
         mov rdi,r12
         imul rdi,rdi,0xa
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_63798]
         call api_print
         mov rdi,[rel d_623d8]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_6379e]
         call api_print
         mov rdi,r13
         imul rdi,rdi,0xa
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_637a6]
         call api_print
         test r13,r13
@@ -32051,7 +32135,7 @@ L_62083:
         mov ecx,0xa
         div rcx
         mov rdi,rax
-        call fn_08e3b
+        call print_number
         mov edi,0x2e
         call api_put_letter
         pop rax
@@ -32059,7 +32143,7 @@ L_62083:
         mov ecx,0xa
         div rcx
         mov rdi,rdx
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_637ad]
         call api_print
 
@@ -32136,7 +32220,7 @@ L_621e5:
 
 L_621e8:
         mov [rcx+0xa],ax
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jz short L_621fa
 %ifdef PLAIN_KERNEL
         call cabinet_save
@@ -32167,7 +32251,7 @@ L_6223d:
 
 L_62250:
         call api_print
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jnz short L_6226a
         lea rdi,[rel d_63621]
         call api_print
@@ -32186,7 +32270,7 @@ L_62274:
 
 fn_6227b:
         push rbx
-        mov rbx,[rel d_14eea]
+        mov rbx,[rel clock_ticks]
         lea rdi,[rel fn_622c2]
         mov esi,0x50
         xor edx,edx
@@ -32209,7 +32293,7 @@ L_622b1:
         call fn_61cb7
 
 L_622b6:
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         sub rax,rbx
         pop rbx
         retq
@@ -32269,15 +32353,15 @@ L_6236b:
 
 L_6237d:
         mov rdi,r12
-        add rdi,[rel d_11820]
+        add rdi,[rel screen_height]
         sub rdi,0x168
-        imul rdi,[rel d_11828]
-        mov rsi,[rel d_11818]
+        imul rdi,[rel screen_line_bytes]
+        mov rsi,[rel screen_width]
         sub rsi,0x200
         shr rsi,1
         add rsi,r14
         lea rdi,[rdi+rsi*4]
-        add rdi,[rel d_11810]
+        add rdi,[rel screen_memory]
         mov [rdi],eax
         inc r14
         jmp near L_622e2
@@ -32869,14 +32953,14 @@ L_63b3f:
         jmp near L_63a4f
 
 L_63b51:
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_63b8d
         lea rdi,[rel d_642a2]
         call api_print
-        mov rdi,[rel d_11810]
+        mov rdi,[rel screen_memory]
         shr rdi,byte 0x10
         call fn_0da79
-        mov rdi,[rel d_11810]
+        mov rdi,[rel screen_memory]
         call fn_0da79
         mov edi,0xa
         call api_put_letter
@@ -32923,11 +33007,11 @@ L_63bf2:
         jz short L_63c40
         test r14d,r14d
         jnz near L_63ca4
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz near L_63ca4
         mov eax,r13d
         and eax,0xfffffffffffffff0
-        cmp rax,[rel d_11810]
+        cmp rax,[rel screen_memory]
         ja near L_63ca4
         mov rcx,[rel d_642d0]
         cmp rcx,0xffffffffffffffff
@@ -33849,7 +33933,7 @@ fn_64f8c:
         lea rdi,[rel d_65032]
         call api_print
         movzx edi,byte [rel d_65030]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_65055]
         call api_print
         cmp byte [rel d_65030],0x0
@@ -34268,7 +34352,7 @@ d_65743:
 ; says: '(writing the image this start began with)'
 fn_65788:
         mov qword [rel d_66a18],0x0
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jz near L_6587a
         push rbx
         push rbp
@@ -34307,10 +34391,10 @@ L_657d3:
         mov rsi,rax
         mov rdx,rbp
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_65855
-        mov rax,[rel d_155e0]
+        mov rax,[rel table_sector]
         shl rax,byte 0x9
         add rax,[rel d_66a18]
         cmp dword [rax],0x4e424143
@@ -34321,7 +34405,7 @@ L_657d3:
         call api_print
         mov rdi,rbp
         shr rdi,byte 0xb
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_669c0]
         call api_print
         jmp short L_65878
@@ -34353,7 +34437,7 @@ fn_6587b:
         mov rsi,rbx
         mov edx,0x1
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_658c8
         mov rax,[rbx+0x3]
@@ -34563,7 +34647,7 @@ L_65b55:
         mov rsi,rbx
         mov edx,0x80
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz near L_65d0a
         mov r9d,0x80
@@ -34620,14 +34704,14 @@ L_65c23:
         lea rdi,[rel d_6687f]
         call api_print
         mov rdi,r15
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_66887]
         call api_print
         mov rdi,r15
         call fn_65d8a
         mov rdi,rax
         shr rdi,byte 0xb
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_6688a]
         call api_print
         mov rdi,r15
@@ -34806,7 +34890,7 @@ L_65e1f:
 
 L_65e27:
         xor eax,eax
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jz short L_65e1e
         cmp byte [rel d_154ab],0x0
         jnz short L_65e1e
@@ -35199,7 +35283,7 @@ fn_66338:
         push r12
         cmp qword [rel d_15499],0x0
         jz near L_6640b
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jz near L_6640b
         mov edi,0x1000
         call api_memory
@@ -35210,7 +35294,7 @@ fn_66338:
         sub rdi,[rel d_15499]
         mov rsi,rbx
         mov edx,0x1
-        call fn_0cd15
+        call disk_read
         test eax,eax
         jz near L_66419
         cmp byte [rbx+0x1c2],0xee
@@ -35242,7 +35326,7 @@ L_663c8:
         sub rdi,[rel d_15499]
         mov rsi,rbx
         mov edx,0x1
-        call fn_0cda8
+        call disk_write
         test eax,eax
         jz short L_66419
         lea rdi,[rel d_664f7]
@@ -35540,7 +35624,7 @@ L_66cad:
         call api_print
         call fn_66cff
         mov rdi,rax
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_6a5db]
         call api_print
         jmp short L_66cf5
@@ -35695,15 +35779,15 @@ L_66ebb:
         lea rdi,[rel d_6a8e6]
         call api_print
         mov rdi,[rel d_69759]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_6a8ee]
         call api_print
         mov rdi,[rel d_697e0]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_6a8f1]
         call api_print
         mov rdi,[rel d_69840]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_6a8fa]
         call api_print
         mov eax,0x1
@@ -36005,7 +36089,7 @@ fn_67267:
         push rbx
         push r12
         mov r12d,edi
-        mov rbx,[rel d_14eea]
+        mov rbx,[rel clock_ticks]
         add rbx,0x64
 
 L_67278:
@@ -36037,7 +36121,7 @@ L_672b7:
         jmp short L_67278
 
 L_672c5:
-        cmp [rel d_14eea],rbx
+        cmp [rel clock_ticks],rbx
         jnc short L_672d2
         pause
         jmp short L_67278
@@ -36532,7 +36616,7 @@ fn_678ce:
         cmp byte [rel d_6958a],0x0
         jz short L_678f2
         mov edi,ebx
-        call fn_08e3b
+        call print_number
 
 L_678f2:
         mov edi,ebx
@@ -37693,7 +37777,7 @@ L_68897:
         mov rdi,[rdx+0x70]
         test rdi,rdi
         jz short L_688dd
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         cmp rax,[rdx+0x78]
         jc short L_688dd
         add rax,0x3
@@ -38150,7 +38234,7 @@ L_68e74:
         call api_print
         mov rdi,[rel d_6b1a1]
         shr rdi,byte 0xb
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_6a2f5]
         call api_print
         jmp short L_68eb3
@@ -38306,12 +38390,12 @@ L_6902c:
         mov edi,[rbx+0x98]
         mov edx,[rbx+0xa0]
         call fn_6919b
-        imul rax,[rel d_11818]
+        imul rax,[rel screen_width]
         mov r8,[rbx+0xf0]
         inc r8
         xor edx,edx
         div r8
-        sub rax,[rel d_11870]
+        sub rax,[rel mouse_at_x]
         movsxd rcx,dword [rel d_69791]
         sub rax,rcx
         push rax
@@ -38319,12 +38403,12 @@ L_6902c:
         mov edi,[rbx+0xa8]
         mov edx,[rbx+0xb0]
         call fn_6919b
-        imul rax,[rel d_11820]
+        imul rax,[rel screen_height]
         mov r8,[rbx+0xf8]
         inc r8
         xor edx,edx
         div r8
-        sub rax,[rel d_11878]
+        sub rax,[rel mouse_at_y]
         movsxd rcx,dword [rel d_69795]
         sub rax,rcx
         mov rdx,rax
@@ -38502,7 +38586,7 @@ L_6924e:
         jnz short L_6928a
         call fn_692b6
         mov [rbx+0x70],rdi
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         add rax,0x32
         mov [rbx+0x78],rax
         xor esi,esi
@@ -38711,7 +38795,7 @@ fn_69464:
         call api_print
         call fn_66cff
         mov rdi,rax
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_6a5be]
         call api_print
         xor r12d,r12d
@@ -38732,11 +38816,11 @@ L_694b0:
         lea rdi,[rel d_6aa97]
         call api_print
         mov rdi,r12
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_6aa9f]
         call api_print
         mov rdi,[rbx+0x58]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_6aaa6]
         cmp qword [rbx+0x8],0x1
         jz short L_6951d
@@ -38748,11 +38832,11 @@ L_694b0:
 L_6951d:
         call api_print
         mov edi,[rbx+0xb8]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_6aaf2]
         call api_print
         mov edi,[rbx+0xc0]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_6aafc]
         cmp qword [rbx+0xc8],0x2
         jnz short L_6955c
@@ -39582,7 +39666,7 @@ L_6b048:
         retq
 
 L_6b052:
-        cmp byte [rel d_1553d],0x0
+        cmp byte [rel disk_writable],0x0
         jnz near L_6b12f
         cmp byte [rel d_69588],0x0
         jnz short L_6b06d
@@ -39601,7 +39685,7 @@ L_6b07b:
         test rax,rax
         jz near L_6b12f
         push rax
-        mov rdi,[rel d_155e0]
+        mov rdi,[rel table_sector]
         add rdi,[rel d_15499]
         mov rsi,rax
         mov edx,0x1
@@ -39619,7 +39703,7 @@ L_6b07b:
         push rsi
         mov byte [rel d_154a9],0x1
         mov byte [rel d_15498],0x1
-        mov byte [rel d_1553d],0x1
+        mov byte [rel disk_writable],0x1
         mov rax,[rel d_6b1a1]
         mov [rel d_154b0],rax
         call fn_0d0d3
@@ -42960,7 +43044,7 @@ fn_6e555:
         push r13
         cmp byte [rel d_6f650],0x0
         jnz near L_6e8d1
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz near L_6e8df
         xor ecx,ecx
 
@@ -43041,8 +43125,8 @@ L_6e5a3:
         mov [rel d_6f608],rax
         mov eax,[rel d_6f2a4]
         mov [rel d_6f610],rax
-        mov rax,[rel d_11818]
-        imul rax,[rel d_11820]
+        mov rax,[rel screen_width]
+        imul rax,[rel screen_height]
         shl rax,byte 0x2
         mov [rel d_6f620],rax
         mov rdi,rax
@@ -43055,9 +43139,9 @@ L_6e5a3:
         mov dword [rel d_6f200],0x101
         mov dword [rel d_6f218],0x1
         mov dword [rel d_6f21c],0x2
-        mov eax,[rel d_11818]
+        mov eax,[rel screen_width]
         mov [rel d_6f220],eax
-        mov eax,[rel d_11820]
+        mov eax,[rel screen_height]
         mov [rel d_6f224],eax
         mov esi,0x28
         call fn_6e4ff
@@ -43078,16 +43162,16 @@ L_6e5a3:
         cmp eax,0x1100
         jnz near L_6e8fb
         mov rdi,[rel d_6f618]
-        mov rsi,[rel d_11810]
-        mov rcx,[rel d_11820]
+        mov rsi,[rel screen_memory]
+        mov rcx,[rel screen_height]
 
 L_6e7dc:
         push rcx
         push rsi
-        mov rcx,[rel d_11818]
+        mov rcx,[rel screen_width]
         rep movsd
         pop rsi
-        add rsi,[rel d_11828]
+        add rsi,[rel screen_line_bytes]
         pop rcx
         dec rcx
         jnz short L_6e7dc
@@ -43101,17 +43185,17 @@ L_6e7dc:
         call fn_6e4ff
         cmp eax,0x1100
         jnz near L_6e8fb
-        mov eax,[rel d_11818]
+        mov eax,[rel screen_width]
         mov [rel d_6f4e0],eax
         mov [rel d_6f538],eax
-        mov eax,[rel d_11820]
+        mov eax,[rel screen_height]
         mov [rel d_6f4e4],eax
         mov [rel d_6f53c],eax
         mov rax,[rel d_6f618]
-        mov [rel d_11810],rax
-        mov rax,[rel d_11818]
+        mov [rel screen_memory],rax
+        mov rax,[rel screen_width]
         shl rax,byte 0x2
-        mov [rel d_11828],rax
+        mov [rel screen_line_bytes],rax
         call fn_6e953
         mov byte [rel d_6f650],0x1
         lea rdi,[rel d_6fc86]
@@ -43119,11 +43203,11 @@ L_6e7dc:
         lea rdi,[rel d_6fa56]
         call api_print
         mov rdi,[rel d_6f608]
-        call fn_08e3b
+        call print_number
         mov edi,0x78
         call api_put_letter
         mov rdi,[rel d_6f610]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_6fa7c]
         call api_print
         jmp short L_6e913
@@ -43166,9 +43250,9 @@ fn_6e919:
 fn_6e926:
         mov dword [rel d_6f218],0x0
         mov dword [rel d_6f21c],0x0
-        mov eax,[rel d_11818]
+        mov eax,[rel screen_width]
         mov [rel d_6f220],eax
-        mov eax,[rel d_11820]
+        mov eax,[rel screen_height]
         mov [rel d_6f224],eax
         retq
 
@@ -43302,8 +43386,8 @@ L_6eaaa:
         mov esi,0x38
         call fn_6e4ff
         mov byte [rel d_6f651],0x1
-        mov rdi,[rel d_11870]
-        mov rsi,[rel d_11878]
+        mov rdi,[rel mouse_at_x]
+        mov rsi,[rel mouse_at_y]
         mov edx,0x300
         call fn_6ebb7
         lea rdi,[rel d_6fb73]
@@ -43455,11 +43539,11 @@ L_6ed83:
         lea rdi,[rel d_6fc64]
         call api_print
         mov rdi,[rel d_6f648]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_6fc76]
         call api_print
         mov rdi,[rel d_6f630]
-        call fn_08e3b
+        call print_number
         mov edi,0xa
         call api_put_letter
 
@@ -43578,7 +43662,7 @@ L_6ee95:
         lea rdi,[rel d_6f8cf]
         call api_print
         mov edi,r12d
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_6f8dc]
         call api_print
         lea rdi,[rel d_6f8e8]
@@ -44118,13 +44202,13 @@ L_6fcfe:
 fn_6fcff:
         cmp byte [rel d_712a0],0x0
         jz short L_6fd74
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_6fd74
         cmp byte [rel d_6f650],0x0
         jnz short L_6fd74
-        mov rax,[rel d_11810]
-        mov rcx,[rel d_11828]
-        imul rcx,[rel d_11820]
+        mov rax,[rel screen_memory]
+        mov rcx,[rel screen_line_bytes]
+        imul rcx,[rel screen_height]
         lea rdx,[rax+rcx-0x1]
         shr rax,byte 0x15
         shr rdx,byte 0x15
@@ -44156,11 +44240,11 @@ L_6fd74:
 fn_6fd75:
         cmp qword [rel d_71138],0x0
         jnz near L_6fe6f
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz near L_6fe75
-        mov rax,[rel d_11818]
+        mov rax,[rel screen_width]
         mov [rel d_71148],rax
-        mov rax,[rel d_11820]
+        mov rax,[rel screen_height]
         mov [rel d_71150],rax
         mov rdi,[rel d_71148]
         imul rdi,[rel d_71150]
@@ -44682,10 +44766,10 @@ L_70490:
         mov rsi,[rel d_71138]
         lea rsi,[rsi+rax*4]
         mov rdi,r12
-        imul rdi,[rel d_11828]
+        imul rdi,[rel screen_line_bytes]
         mov rax,[rsp]
         lea rdi,[rdi+rax*4]
-        add rdi,[rel d_11810]
+        add rdi,[rel screen_memory]
         mov rcx,[rsp+0x10]
         sub rcx,rax
         rep movsd
@@ -45144,19 +45228,19 @@ L_70b6d:
         lea rdi,[rel d_71684]
         call api_print
         mov rdi,[rel d_71148]
-        call fn_08e3b
+        call print_number
         mov edi,0x78
         call api_put_letter
         mov rdi,[rel d_71150]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_71695]
         call api_print
         mov rdi,[rel d_71160]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_71698]
         call api_print
         mov rdi,[rel d_623d8]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_716ac]
         call api_print
         lea rdi,[rel d_716d0]
@@ -45222,7 +45306,7 @@ L_70c9b:
         lea rdi,[rel d_71714]
         call api_print
         mov rdi,[rel d_623d8]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_7171e]
         call api_print
         lea rdi,[rel d_71768]
@@ -45300,7 +45384,7 @@ L_70d76:
         lea rdi,[rel d_717da]
         call api_print
         mov rdi,[rel d_623d8]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_717e0]
         call api_print
         mov rdi,r15
@@ -45318,7 +45402,7 @@ L_70d76:
 fn_70e75:
         push rbx
         mov byte [rel d_712a3],0x0
-        mov rbx,[rel d_14eea]
+        mov rbx,[rel clock_ticks]
         push r12
         xor r12d,r12d
 
@@ -45330,7 +45414,7 @@ L_70e89:
         cmp r12,0x14
         jc short L_70e89
         pop r12
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         sub rax,rbx
         imul rax,rax,0x32
         pop rbx
@@ -45341,7 +45425,7 @@ fn_70eb5:
         push r12
         push r13
         mov r13d,edi
-        mov rbx,[rel d_14eea]
+        mov rbx,[rel clock_ticks]
         xor r12d,r12d
 
 L_70ec7:
@@ -45354,7 +45438,7 @@ L_70ec7:
         inc r12
         cmp r12,0x4
         jc short L_70ec7
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         sub rax,rbx
         imul rax,rax,0xfa
         pop r13
@@ -45372,7 +45456,7 @@ fn_70f01:
         div rcx
         mov rbx,rdx
         mov rdi,rax
-        call fn_08e3b
+        call print_number
         mov edi,0x2e
         call api_put_letter
         cmp rbx,0xa
@@ -45382,12 +45466,12 @@ fn_70f01:
 
 L_70f34:
         mov rdi,rbx
-        call fn_08e3b
+        call print_number
         pop rbx
         retq
 
 L_70f3e:
-        mov r12,[rel d_14eea]
+        mov r12,[rel clock_ticks]
         mov r13,r12
         xor r14d,r14d
         mov r15d,0x2
@@ -45395,7 +45479,7 @@ L_70f3e:
         mov qword [rel d_71178],0x18
         xor edi,edi
         xor esi,esi
-        mov rdx,[rel d_11818]
+        mov rdx,[rel screen_width]
         mov ecx,0x18
         mov r8d,0x202020
         call api_fill
@@ -45406,7 +45490,7 @@ L_70f3e:
         call fn_6fe78
 
 L_70f97:
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         sub rax,r12
         imul eax,eax,0xa
         mov edi,eax
@@ -45415,13 +45499,13 @@ L_70f97:
         mov esi,r15d
         call fn_6fe78
         inc r14
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         sub rax,r13
         cmp rax,0x64
         jc short L_70fde
         mov [rel d_71170],r14
         xor r14d,r14d
-        mov r13,[rel d_14eea]
+        mov r13,[rel clock_ticks]
 
 L_70fde:
         call fn_71060
@@ -45456,7 +45540,7 @@ L_71027:
         lea rdi,[rel d_71802]
         call api_print
         mov rdi,[rel d_71170]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_71824]
         call api_print
         jmp near L_71129
@@ -47857,7 +47941,7 @@ L_737fb:
 
 L_73812:
         xor eax,eax
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_73869
         mov byte [rel d_7477e],0x4
         mov eax,0x1
@@ -47865,7 +47949,7 @@ L_73812:
 
 L_7382b:
         xor eax,eax
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_73869
         mov byte [rel d_7477e],0x3
         mov eax,0x1
@@ -47878,7 +47962,7 @@ L_73844:
 
 L_73851:
         xor eax,eax
-        cmp qword [rel d_117cb],0x0
+        cmp qword [rel screen_on],0x0
         jz short L_73869
         mov byte [rel d_7477e],0x1
         mov eax,0x1
@@ -48072,7 +48156,7 @@ L_73a31:
         shl rdx,byte 0x20
         or rax,rdx
         mov r13,rax
-        mov r12,[rel d_14eea]
+        mov r12,[rel clock_ticks]
         xor ebx,ebx
 
 L_73a66:
@@ -48088,7 +48172,7 @@ L_73a66:
         shl rdx,byte 0x20
         or rax,rdx
         sub rax,r13
-        mov rcx,[rel d_14eea]
+        mov rcx,[rel clock_ticks]
         sub rcx,r12
         mov [rel d_742a0],rcx
         imul rcx,rcx,0xa
@@ -48183,7 +48267,7 @@ L_73bab:
         lea rsi,[rel d_744c8]
         call fn_73d07
         and dword [rel d_742cc],0xffffffffffffffef
-        mov r12,[rel d_14eea]
+        mov r12,[rel clock_ticks]
         xor ebx,ebx
 
 L_73c74:
@@ -48195,7 +48279,7 @@ L_73c74:
         inc ebx
         cmp ebx,0xa
         jc short L_73c74
-        mov rcx,[rel d_14eea]
+        mov rcx,[rel clock_ticks]
         sub rcx,r12
         or dword [rel d_742cc],0x10
         lea rdi,[rel d_744c8]
@@ -48251,33 +48335,33 @@ fn_73d22:
         test eax,eax
         jz near L_73e81
         call fn_71cab
-        mov r12,[rel d_14eea]
+        mov r12,[rel clock_ticks]
         mov r13,r12
         xor r14d,r14d
         mov qword [rel d_74298],0x0
         mov qword [rel d_71178],0x18
         xor edi,edi
         xor esi,esi
-        mov rdx,[rel d_11818]
+        mov rdx,[rel screen_width]
         mov ecx,0x18
         mov r8d,0x202020
         call api_fill
 
 L_73d7b:
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         sub rax,r12
         imul eax,eax,0xa
         mov edi,eax
         xor esi,esi
         call fn_738f2
         inc r14
-        mov rax,[rel d_14eea]
+        mov rax,[rel clock_ticks]
         sub rax,r13
         cmp rax,0x64
         jc short L_73db5
         mov [rel d_74298],r14
         xor r14d,r14d
-        mov r13,[rel d_14eea]
+        mov r13,[rel clock_ticks]
 
 L_73db5:
         call fn_73e97
@@ -48342,7 +48426,7 @@ L_73e4b:
         lea rdi,[rel d_7471a]
         call api_print
         mov rdi,[rel d_74298]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_7473b]
         call api_print
         jmp short L_73e8d
@@ -50205,1464 +50289,7 @@ L_76930:
         jmp near L_642f0
         db 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
 %ifndef PLAIN_KERNEL
-; ---- v3.0.11: the first code written into the kernel after the recovery --------------------
-; Alt + * - the star of the number keys, or Alt + Shift + 8 - turns the display off, and on
-; again. Every key of the built-in and of the USB keyboards passes api_poll (the shell, the
-; desktop and the programs all read keys there), so it works everywhere.
-; It lies at the end of the extension, so that nothing that was there before has moved; the
-; extension may reach 0x78000. tools/build_disk.py --plain-kernel builds without it.
-;
-; The picture is switched off in the display adapter by its VGA registers. A machine whose
-; adapter does not obey them keeps its picture; the lamp behind a laptop's screen stays on
-; (that needs the graphics driver or ACPI: TODO.md, "sleep, the lid, brightness").
-display_key:                            ; al = the key that went down (its scan code)
-        cmp byte [rel kb_on],0x0        ; (v3.0.23: with the keyboard on the screen, a key that is typed
-        jz display_key_look             ; takes the mouse arrow away - the text may scroll under it)
-        cmp byte [rel mux_on],0x0
-        jnz display_key_look
-        call kb_arrow_off
-display_key_look:
-        cmp al,0x37                     ; the star of the number keys
-        jz short display_key_alt
-        cmp al,0x09                     ; the 8 of the top row: a star with Shift
-        jnz short display_key_no
-        cmp byte [rel key_shift],0x0      ; Shift is held
-        jz short display_key_no
-display_key_alt:
-        cmp byte [rel key_alt],0x0      ; Alt is held
-        jz short display_key_no
-        call display_toggle
-        add rsp,0x8                     ; the key is used up: api_poll says "nothing came"
-        jmp near L_0a4cd
-display_key_no:
-        movzx ecx,al                    ; what api_poll did here before
-        cmp ecx,0x3a
-        retq
-
-display_toggle:
-        push rax
-        push rdx
-        xor byte [rel display_dark],0x1
-        mov dx,0x3c4                    ; the sequencer, register 1: bit 5 = no picture
-        mov al,0x1
-        out dx,al
-        inc dx
-        in al,dx
-        and al,0xdf
-        cmp byte [rel display_dark],0x0
-        jz short display_sequencer
-        or al,0x20
-display_sequencer:
-        out dx,al
-        mov dx,0x3da                    ; the attribute controller: reading here makes 0x3C0 take
-        in al,dx                        ; an index; bit 5 of the index = the picture is shown
-        mov dx,0x3c0
-        mov al,0x20
-        cmp byte [rel display_dark],0x0
-        jz short display_attribute
-        xor al,al
-display_attribute:
-        out dx,al
-        pop rdx
-        pop rax
-        retq
-display_dark:
-        db 0x00
-
-; ---- v3.0.16: programs live on when the desktop is left ------------------------------------
-; The multiplexer (mux_run) runs the desktop as task 0 and up to seven programs. Until now the
-; end of the desktop closed them all. Now: if programs still run when the desktop ends, they
-; are kept as they are - their records, memory and windows - and get no turns while the shell
-; has the screen. The next `desktop` takes them up again where they were.
-; Three places of the old code call in here; each call is as long as what it stands for.
-mux_leave:                              ; the desktop has ended. Stands for: mov ebx,0x1
-        call split_off                  ; (v3.0.32: the screen is whole again)
-        xor ecx,ecx
-        mov ebx,0x1
-mux_leave_count:
-        mov rdi,rbx
-        call mux_task                   ; the record of task rbx
-        cmp qword [rax],0x1             ; running
-        jnz short mux_leave_next
-        inc ecx
-mux_leave_next:
-        inc rbx
-        cmp rbx,0x8
-        jc short mux_leave_count
-        test ecx,ecx
-        jnz short mux_keep
-        mov ebx,0x1                     ; nothing runs: everything is closed and freed, as before
-        retq
-mux_keep:
-        add rsp,0x8                     ; not back to the old ending
-        call fn_56edf
-        mov byte [rel mux_on],0x0
-        call mux_hooks_off
-        call mux_reap                   ; what was closing is closed
-        xor edi,edi
-        call mux_free_task                   ; the desktop's own task is given back
-        mov byte [rel mux_kept],0x1
-        lea rdi,[rel mux_says_kept]
-        call api_log
-        xor eax,eax
-        jmp near L_53f1a
-
-mux_begin:                              ; the desktop starts. Stands for: call mux_init
-        mov byte [rel mux_again],0x0
-        cmp byte [rel mux_kept],0x0
-        jz near mux_init                ; nothing kept: a clean table, as before
-        mov byte [rel mux_kept],0x0
-        mov byte [rel mux_again],0x1
-        lea rdi,[rel mux_says_again]
-        call api_log
-        jmp near mux_begin_rest         ; the table of tasks is not wiped
-
-mux_order:                              ; the order of the windows, from the bottom. Stands for:
-        cmp byte [rel mux_again],0x0    ;   one window, the desktop's
-        jnz short mux_order_under
-        mov qword [rel mux_order_count],0x1
-        mov qword [rel mux_order_list],0x0
-        mov qword [rel mux_focused],0x0     ; the keys go to the desktop
-        retq
-mux_order_under:                        ; the kept windows stay in their order; the desktop goes under them
-        mov byte [rel mux_again],0x0
-        mov rcx,[rel mux_order_count]
-        lea rax,[rel mux_order_list]
-mux_order_up:
-        test rcx,rcx
-        jz short mux_order_put
-        mov rdx,[rax+rcx*8-0x8]
-        mov [rax+rcx*8],rdx
-        dec rcx
-        jmp short mux_order_up
-mux_order_put:
-        mov qword [rax],0x0
-        inc qword [rel mux_order_count]
-        mov rcx,[rel mux_order_count]           ; the keys go to the window on top, as when the desktop was left
-        mov rdx,[rax+rcx*8-0x8]
-        mov [rel mux_focused],rdx
-        retq
-; ---- v3.0.19: `tasks` - the programs that are kept while the shell has the screen -----------
-;       tasks             a line a kept program: its number and its name
-;       tasks close N     close the kept program number N (what it had not saved is lost)
-; The table of the shell's commands is in the core, which cannot grow. So the shell comes here
-; when a word is not in that table, before it looks for an object of that name.
-shell_more:                             ; rbx = the word, r12 = what follows it
-        lea rsi,[rel tasks_word]        ; stands for: mov rdi,rbx / call ob_find
-        mov rdi,rbx
-        call same_word_any_case                   ; the same word?
-        test eax,eax
-        jnz near tasks_command
-        lea rsi,[rel kb_word]
-        mov rdi,rbx
-        call same_word_any_case
-        test eax,eax
-        jnz near kb_command
-        lea rsi,[rel backup_word]
-        mov rdi,rbx
-        call same_word_any_case
-        test eax,eax
-        jnz near backup_command
-        lea rsi,[rel desk_word]
-        mov rdi,rbx
-        call same_word_any_case
-        test eax,eax
-        jnz near desk_command
-        mov rdi,rbx                     ; not ours: on with what the shell did here
-        jmp near ob_find
-tasks_command:
-        add rsp,0x8                     ; the command is done here: back to the end of the shell's function
-        cmp byte [rel mux_kept],0x0
-        jz near tasks_nothing
-        cmp byte [r12],0x0
-        jnz near tasks_close
-        mov ebx,0x1
-tasks_line:
-        mov rdi,rbx
-        call mux_task                   ; the record of task rbx
-        mov r13,rax
-        cmp qword [r13],0x1
-        jnz near tasks_next
-        lea rdi,[rel tasks_says_gap]
-        call api_print
-        lea edi,[rbx+0x30]
-        call api_put_letter
-        lea rdi,[rel tasks_says_gap]
-        call api_print
-        lea rdi,[r13+0x120]             ; its name
-        call api_print
-        lea rdi,[rel tasks_says_end]
-        call api_print
-tasks_next:
-        inc rbx
-        cmp rbx,0x8
-        jc near tasks_line
-        lea rdi,[rel tasks_says_how]
-        call api_print
-        jmp near L_0b044
-tasks_close:                            ; the first of the digits 1 .. 7 in what was typed
-        mov al,[r12]
-        test al,al
-        jz near tasks_usage
-        inc r12
-        cmp al,0x31
-        jc near tasks_close
-        cmp al,0x37
-        ja near tasks_close
-        movzx ebx,al
-        sub ebx,0x30
-        mov rdi,rbx
-        call mux_task
-        cmp qword [rax],0x1
-        jnz near tasks_no_such
-        mov rdi,rbx
-        call mux_free_task                   ; its memory, its window, its place
-        mov ebx,0x1                     ; was it the last one?
-tasks_left:
-        mov rdi,rbx
-        call mux_task
-        cmp qword [rax],0x1
-        jz near tasks_closed
-        inc rbx
-        cmp rbx,0x8
-        jc near tasks_left
-        mov rdi,[rel mux_draw_list]           ; nothing is kept any more: the multiplexer's own memory goes too
-        call mem_free
-        mov qword [rel mux_draw_list],0x0
-        mov byte [rel mux_kept],0x0
-tasks_closed:
-        lea rdi,[rel tasks_says_closed]
-        call api_print
-        jmp near L_0b044
-tasks_no_such:
-        lea rdi,[rel tasks_says_no_such]
-        call api_print
-        jmp near L_0b044
-tasks_usage:
-        lea rdi,[rel tasks_says_usage]
-        call api_print
-        jmp near L_0b044
-tasks_nothing:
-        lea rdi,[rel tasks_says_nothing]
-        call api_print
-        jmp near L_0b044
-; ---- v3.0.23: `keyboard` - a keyboard on the screen of the shell --------------------------------
-; For a machine without keys that work (a tablet, a broken keyboard): the mouse or a finger types.
-;       keyboard          on / off
-;       a click in the bottom right corner of the screen (32 dots) brings it too, when it is off
-; The bottom 11 lines of the screen become five rows of keys; the text keeps to the lines above.
-; A click on a key comes out of api_poll as that key, so everything that reads keys in the shell
-; takes it. Shift holds for one key. It is the first relay: what types is not a program that was
-; given the way to the shell, but a part of the system the shell itself switched on.
-KB_LINES equ 11                         ; 176 dots: 8, five rows of 32, 8
-kb_command:
-        add rsp,0x8
-        xor byte [rel kb_on],0x1
-        jz kb_command_off
-        call kb_turn_on
-        lea rdi,[rel kb_says_on]
-        call api_print
-        jmp near L_0b044
-kb_command_off:
-        call kb_turn_off
-        lea rdi,[rel kb_says_off]
-        call api_print
-        jmp near L_0b044
-
-kb_turn_on:                             ; the keys come on the screen (kb_on is 1 already)
-        mov rax,[rel d_11838]           ; the line being written must be above the keys
-        sub rax,KB_LINES
-        cmp [rel d_11848],rax
-        jb kb_turn_on_room
-        call fn_08d8d                   ; the text goes up a line
-        dec qword [rel d_11848]
-        jmp kb_turn_on
-kb_turn_on_room:
-        mov [rel d_11838],rax
-        mov byte [rel kb_shift],0x0
-        jmp kb_draw
-kb_turn_off:                            ; the keys are wiped, the lines are the text's again
-        call kb_arrow_off
-        mov rsi,[rel d_11838]
-        shl rsi,0x4
-        add qword [rel d_11838],KB_LINES
-        xor edi,edi
-        mov rdx,[rel d_11818]
-        mov ecx,KB_LINES * 16
-        mov r8d,[rel d_11854]
-        jmp near api_fill
-
-kb_arrow_off:                           ; the mouse arrow off the screen; keeps every register
-        push rax
-        push rcx
-        push rdx
-        push rsi
-        push rdi
-        push r8
-        push r9
-        push r10
-        push r11
-        call api_cursor_hide
-        pop r11
-        pop r10
-        pop r9
-        pop r8
-        pop rdi
-        pop rsi
-        pop rdx
-        pop rcx
-        pop rax
-        retq
-
-kb_draw:                                ; the five rows of keys
-        push rbx
-        push rbp
-        push r12
-        push r13
-        push r14
-        push r15
-        mov r14,[rel d_11838]           ; the first dot line of the keys
-        shl r14,0x4
-        xor edi,edi
-        mov rsi,r14
-        mov rdx,[rel d_11818]
-        mov ecx,KB_LINES * 16
-        mov r8d,0x16151F
-        call api_fill
-        mov rax,[rel d_11818]           ; a key is a fourteenth of the screen wide
-        xor edx,edx
-        mov ecx,14
-        div rcx
-        mov r15,rax
-        lea rbp,[rel kb_keys]
-        cmp byte [rel kb_shift],0x0
-        jz kb_draw_rows
-        lea rbp,[rel kb_keys_shift]
-kb_draw_rows:
-        xor r12d,r12d                   ; the row
-kb_draw_row:
-        xor r13d,r13d                   ; the column
-kb_draw_key:
-        imul eax,r12d,14
-        add eax,r13d
-        movzx ebx,byte [rbp+rax]        ; what this key types
-        mov ecx,0x1                     ; how many places the same key takes
-kb_draw_wide:
-        lea edx,[r13+rcx]
-        cmp edx,14
-        jae kb_draw_one
-        lea edx,[rax+rcx]
-        cmp bl,[rbp+rdx]
-        jne kb_draw_one
-        inc ecx
-        jmp kb_draw_wide
-kb_draw_one:
-        push rcx
-        test ebx,ebx
-        jz kb_draw_next
-        mov rdi,r13                     ; x, y, width, height, colour
-        imul rdi,r15
-        add rdi,2
-        mov rsi,r12
-        shl rsi,0x5
-        lea rsi,[rsi+r14+10]
-        mov rdx,rcx
-        imul rdx,r15
-        sub rdx,4
-        mov ecx,28
-        mov r8d,0x2A2840
-        cmp ebx,0x1
-        jne kb_draw_fill
-        cmp byte [rel kb_shift],0x0
-        jz kb_draw_fill
-        mov r8d,0x7B5CFF                ; Shift is held
-kb_draw_fill:
-        push rdi
-        push rsi
-        push rdx
-        call api_fill
-        pop rdx
-        pop rsi
-        pop rdi
-        lea rax,[rel kb_one]            ; its name: the letter itself, or a word
-        mov [rax],bl
-        mov ecx,0x1
-        lea r8,[rel kb_names]
-kb_draw_name:
-        cmp byte [r8],0x0
-        jz kb_draw_text
-        cmp bl,[r8]
-        jne kb_draw_name_next
-        lea rax,[r8+2]
-        movzx ecx,byte [r8+1]
-        jmp kb_draw_text
-kb_draw_name_next:
-        movzx r9d,byte [r8+1]
-        lea r8,[r8+r9+3]
-        jmp kb_draw_name
-kb_draw_text:
-        shl ecx,0x2                     ; in the middle of the key
-        shr rdx,0x1
-        add rdi,rdx
-        sub rdi,rcx
-        add rsi,6
-        mov rdx,rax
-        mov ecx,0xF5F4FF
-        mov r8,-1
-        call api_text
-kb_draw_next:
-        pop rcx
-        add r13d,ecx
-        cmp r13d,14
-        jb kb_draw_key
-        inc r12d
-        cmp r12d,5
-        jb kb_draw_row
-        pop r15
-        pop r14
-        pop r13
-        pop r12
-        pop rbp
-        pop rbx
-        retq
-
-kb_mouse:                               ; the mouse moved or a button changed: ebx = the buttons
-        mov eax,ebx                     ; stands for: mov eax,ebx / mov r8,rax
-        mov r8,rax
-        cmp byte [rel mux_on],0x0       ; the desktop has its own
-        jnz kb_mouse_no
-        push rax
-        push r8
-        push r12
-        push r13
-        mov eax,ebx                     ; api_poll takes every packet of the mouse that waits at once and
-        or al,[rel kb_any]              ; tells only the buttons of the first: a quick click is down and up
-        and eax,0x1                     ; in one go. kb_packet has kept whether the button was down in any
-        mov byte [rel kb_any],0x0
-        mov cl,[rel kb_button]
-        movzx edx,byte [rel d_119fc]    ; the buttons of the last packet: how it is now
-        and dl,0x1
-        mov [rel kb_button],dl
-        xor r13d,r13d                   ; r13 = 1: the button went down just now
-        test eax,eax
-        jz kb_mouse_state
-        test cl,cl
-        jnz kb_mouse_state
-        inc r13d
-kb_mouse_state:
-        cmp byte [rel kb_on],0x0
-        jnz kb_mouse_on
-        test r13d,r13d                  ; the keys are not there: a click in the bottom right corner of
-        jz kb_mouse_out                 ; the screen (32 dots) brings them - for a machine without keys
-        mov rax,[rel d_11818]
-        sub rax,32
-        cmp [rel d_11870],rax
-        jb kb_mouse_out
-        mov rax,[rel d_11838]
-        shl rax,0x4
-        sub rax,32
-        cmp [rel d_11878],rax
-        jb kb_mouse_out
-        mov byte [rel kb_on],0x1
-        call kb_turn_on
-        jmp kb_mouse_out
-kb_mouse_on:
-        mov rdi,[rel d_11870]           ; the arrow, where the mouse is
-        mov rsi,[rel d_11878]
-        call api_cursor_show
-        test r13d,r13d
-        jz kb_mouse_out                 ; a click: which key?
-        mov rax,[rel d_11838]
-        shl rax,0x4
-        add rax,8
-        mov r12,[rel d_11878]
-        sub r12,rax
-        js kb_mouse_out
-        shr r12,0x5                     ; the row
-        cmp r12,5
-        jae kb_mouse_out
-        mov rax,[rel d_11818]
-        xor edx,edx
-        mov ecx,14
-        div rcx
-        mov rcx,rax
-        mov rax,[rel d_11870]
-        xor edx,edx
-        div rcx                         ; the column
-        cmp rax,14
-        jae kb_mouse_out
-        imul r12,r12,14
-        add r12,rax
-        lea rax,[rel kb_keys]
-        cmp byte [rel kb_shift],0x0
-        jz kb_mouse_key
-        lea rax,[rel kb_keys_shift]
-kb_mouse_key:
-        movzx r13d,byte [rax+r12]
-        test r13d,r13d
-        jz kb_mouse_out
-        cmp r13d,0x1
-        jne kb_mouse_types
-        xor byte [rel kb_shift],0x1     ; Shift: for the next key
-        call api_cursor_hide
-        call kb_draw
-        jmp kb_mouse_out
-kb_mouse_types:
-        call api_cursor_hide            ; the text may scroll under the arrow
-        cmp byte [rel kb_shift],0x0
-        jz kb_mouse_typed
-        mov byte [rel kb_shift],0x0
-        call kb_draw
-kb_mouse_typed:
-        mov edx,r13d                    ; it leaves api_poll as a key that was typed
-        pop r13
-        pop r12
-        add rsp,0x18                    ; (the two kept registers, and the way back into api_poll)
-        xor r8d,r8d
-        xor ecx,ecx
-        mov eax,0x1
-        pop rbx
-        retq
-kb_mouse_out:
-        pop r13
-        pop r12
-        pop r8
-        pop rax
-kb_mouse_no:
-        retq
-
-kb_packet:                              ; stands for: call fn_0a62f (one more packet of the mouse is taken)
-        mov al,[rel d_119fc]
-        and al,0x1
-        or [rel kb_any],al
-        jmp near fn_0a62f
-kb_any:
-        db 0x00
-kb_on:
-        db 0x00
-kb_shift:
-        db 0x00
-kb_button:
-        db 0x00
-kb_one:
-        db 0x00, 0x00
-kb_word:
-        db 'keyboard', 0
-kb_says_on:
-        db 'The keyboard is on the screen: click the keys. ', 39, 'keyboard', 39, ' again takes it away.', 10, 0
-kb_says_off:
-        db 'The keyboard is off the screen.', 10, 0
-; what a key types: 1 = Shift, 8 = back, 10 = Enter (what the shell takes for it), 27 = Esc, 0x80 / 0x81 = up / down, 0 = no key.
-; A key that is wider stands in every place it covers.
-kb_keys:
-        db '1234567890-=', 8, 8
-        db 'qwertyuiop[]\`'
-        db 'asdfghjkl;', 39, 10, 10, 10
-        db 1, 1, 'zxcvbnm,./', 1, 1
-        db 27, 27, '        ', 0x80, 0x80, 0x81, 0x81
-kb_keys_shift:
-        db '!@#$%^&*()_+', 8, 8
-        db 'QWERTYUIOP{}|~'
-        db 'ASDFGHJKL:"', 10, 10, 10
-        db 1, 1, 'ZXCVBNM<>?', 1, 1
-        db 27, 27, '        ', 0x80, 0x80, 0x81, 0x81
-kb_names:                               ; the key, the length of its name, the name, 0
-        db 1, 5, 'Shift', 0
-        db 8, 4, 'Back', 0
-        db 10, 5, 'Enter', 0
-        db 27, 3, 'Esc', 0
-        db ' ', 5, 'Space', 0
-        db 0x80, 2, 'Up', 0
-        db 0x81, 4, 'Down', 0
-        db 0
-; ---- v3.0.32: the screen split in 4 or 9 --------------------------------------------------
-; Every program that runs, and the desk, each in a part of the screen, all at once, made small
-; to fit (never bigger than it is). A click on one makes the screen whole again with that one in
-; front; ESC makes it whole as it was.
-; How: while the screen is split the multiplexer draws as always - but into memory of its own
-; instead of the screen (its "screen" is moved there). split_show then draws every task's
-; picture, made small, onto the real screen, about 25 times a second. Keys and the mouse do
-; not reach the programs meanwhile: split_step takes them.
-;   programs function, number 0x0F: rsi = 0 whole, 4 or 9 parts
-split_service:                          ; stands for the end of the programs function: "no such number: -1"
-        cmp rdi,0xf
-        jne split_service_no
-        cmp byte [rel mux_on],0x0
-        jz split_service_no
-        test rsi,rsi
-        jz split_service_off
-        cmp byte [rel split_parts],0x0
-        jnz split_service_done          ; already split
-        push rbx
-        mov rbx,rsi
-        mov rdi,[rel d_564d0]           ; memory as big as the screen
-        imul rdi,[rel d_564e0]
-        call api_memory
-        test rax,rax
-        jz split_service_none
-        mov rcx,[rel d_564c8]
-        mov [rel split_screen],rcx      ; the real screen
-        mov [rel split_memory],rax
-        mov [rel d_564c8],rax           ; the multiplexer's screen is that memory now
-        cmp [rel d_11810],rcx
-        jne split_service_on
-        mov [rel d_11810],rax
-split_service_on:
-        mov eax,0x2
-        cmp rbx,0x4
-        je split_service_side
-        mov eax,0x3
-split_service_side:
-        mov [rel split_parts],al        ; the parts along one side: 2 or 3
-        xor edi,edi
-        call mux_focus                  ; the desk has the keys
-        pop rbx
-split_service_done:
-        xor eax,eax
-        retq
-split_service_none:
-        pop rbx
-split_service_no:
-        mov rax,0xffffffffffffffff
-        retq
-split_service_off:
-        call split_off
-        xor eax,eax
-        retq
-
-split_off:                              ; the screen whole again; keeps every register
-        cmp byte [rel split_parts],0x0
-        jz split_off_not
-        push rax
-        push rcx
-        push rdx
-        push rsi
-        push rdi
-        push r8
-        push r9
-        push r10
-        push r11
-        mov byte [rel split_parts],0x0
-        mov rax,[rel split_screen]
-        mov rcx,[rel split_memory]
-        mov [rel d_564c8],rax
-        cmp [rel d_11810],rcx
-        jne split_off_free
-        mov [rel d_11810],rax
-split_off_free:
-        mov rdi,rcx
-        call mem_free
-        xor edi,edi                     ; everything is drawn again
-        xor esi,esi
-        mov rdx,[rel d_564d8]
-        mov rcx,[rel d_564e0]
-        call fn_545df
-        pop r11
-        pop r10
-        pop r9
-        pop r8
-        pop rdi
-        pop rsi
-        pop rdx
-        pop rcx
-        pop rax
-split_off_not:
-        retq
-
-split_step:                             ; stands for: call fn_55604 (keys and the mouse, once round the loop)
-        cmp byte [rel split_parts],0x0
-        jz near fn_55604
-        push rbx
-        push r12
-        push r13
-        call api_poll
-        cmp rax,0x1
-        jne split_step_mouse
-        cmp edx,27                      ; ESC: whole again, as it was
-        jne split_step_show
-        call split_off
-        jmp split_step_out
-split_step_mouse:
-        cmp rax,0x2
-        jne split_step_show
-        mov [rel split_x],rdx
-        mov [rel split_y],rcx
-        mov rbx,r8
-        and ebx,0x1
-        mov al,[rel split_button]
-        mov [rel split_button],bl
-        test ebx,ebx
-        jz split_step_show
-        test al,al
-        jnz split_step_show
-        movzx r12d,byte [rel split_parts]       ; a click: which part, and whose it is
-        mov rax,[rel split_y]
-        imul rax,r12
-        xor edx,edx
-        div qword [rel d_564e0]
-        mov r13,rax
-        imul r13,r12
-        mov rax,[rel split_x]
-        imul rax,r12
-        xor edx,edx
-        div qword [rel d_564d8]
-        add r13,rax                             ; the number of the part
-        xor ebx,ebx
-split_step_whose:
-        cmp rbx,0x8
-        jae split_step_show                     ; an empty part
-        mov rdi,rbx
-        call mux_task
-        cmp qword [rax],0x1
-        jne split_step_next
-        cmp qword [rax+0x68],0x0
-        je split_step_next
-        test r13,r13
-        jz split_step_pick
-        dec r13
-split_step_next:
-        inc rbx
-        jmp split_step_whose
-split_step_pick:
-        call split_off
-        mov rdi,rbx
-        call mux_focus
-        jmp split_step_out
-split_step_show:
-        mov rax,[rel d_14eea]           ; the clock: 100 ticks a second
-        sub rax,[rel split_shown]
-        cmp rax,0x4
-        jb split_step_out
-        mov rax,[rel d_14eea]
-        mov [rel split_shown],rax
-        call split_show
-split_step_out:
-        pop r13
-        pop r12
-        pop rbx
-        retq
-
-split_show:                             ; every task's picture, made small, in its part of the real screen
-        push rbx
-        push rbp
-        push r12
-        push r13
-        push r14
-        push r15
-        movzx r12d,byte [rel split_parts]
-        xor r13d,r13d                   ; the part
-        xor ebx,ebx                     ; the task
-split_show_task:
-        mov rax,r12
-        imul rax,r12
-        cmp r13,rax
-        jae split_show_arrow
-        cmp rbx,0x8
-        jae split_show_empty
-        mov rdi,rbx
-        call mux_task
-        inc rbx
-        cmp qword [rax],0x1
-        jne split_show_task
-        mov r14,[rax+0x68]              ; its picture, and how big it is
-        test r14,r14
-        jz split_show_task
-        mov r15,[rax+0x70]
-        mov rbp,[rax+0x78]
-        test r15,r15
-        jz split_show_task
-        test rbp,rbp
-        jz split_show_task
-        call split_part
-        inc r13
-        jmp split_show_task
-split_show_empty:
-        xor r14d,r14d                   ; a part nothing is in
-        call split_part
-        inc r13
-        jmp split_show_task
-split_show_arrow:                       ; the mouse: a small white square with a dark edge
-        mov rdi,[rel split_x]
-        mov rsi,[rel split_y]
-        mov edx,10
-        mov ecx,10
-        xor r8d,r8d
-        call split_fill
-        mov rdi,[rel split_x]
-        mov rsi,[rel split_y]
-        inc rdi
-        inc rsi
-        mov edx,8
-        mov ecx,8
-        mov r8d,0xFFFFFF
-        call split_fill
-        pop r15
-        pop r14
-        pop r13
-        pop r12
-        pop rbp
-        pop rbx
-        retq
-
-split_fill:                             ; rdi, rsi, rdx, rcx = x, y, width, height, r8d = colour: on the real screen
-        mov rax,rdi
-        add rax,rdx
-        cmp rax,[rel d_564d8]
-        ja split_fill_out
-        mov rax,rsi
-        add rax,rcx
-        cmp rax,[rel d_564e0]
-        ja split_fill_out
-        mov r9,rsi
-        imul r9,[rel d_564d0]
-        add r9,[rel split_screen]
-        lea r9,[r9+rdi*4]
-        mov eax,r8d
-split_fill_row:
-        test rcx,rcx
-        jz split_fill_out
-        mov rdi,r9
-        push rcx
-        mov rcx,rdx
-        rep stosd
-        pop rcx
-        add r9,[rel d_564d0]
-        dec rcx
-        jmp split_fill_row
-split_fill_out:
-        retq
-
-split_part:                             ; the part r13 of r12 x r12: r14 = a picture (0: none), r15 x rbp its size
-        push rbx
-        push r12
-        push r13
-        push r14
-        push r15
-        push rbp
-        sub rsp,0x40
-        mov rax,[rel d_564d8]           ; the part: [rsp] x, +8 y, +16 width, +24 height
-        xor edx,edx
-        div r12
-        mov [rsp+16],rax
-        mov rax,[rel d_564e0]
-        xor edx,edx
-        div r12
-        mov [rsp+24],rax
-        mov rax,r13
-        xor edx,edx
-        div r12                         ; rax the row, rdx the column
-        imul rdx,[rsp+16]
-        mov [rsp],rdx
-        imul rax,[rsp+24]
-        mov [rsp+8],rax
-        mov rdi,[rsp]                   ; its ground, with a dark line round it
-        mov rsi,[rsp+8]
-        mov rdx,[rsp+16]
-        mov rcx,[rsp+24]
-        mov r8d,0x05050A
-        call split_fill
-        mov rdi,[rsp]
-        mov rsi,[rsp+8]
-        add rdi,2
-        add rsi,2
-        mov rdx,[rsp+16]
-        mov rcx,[rsp+24]
-        sub rdx,4
-        sub rcx,4
-        mov r8d,0x16151F
-        call split_fill
-        test r14,r14
-        jz split_part_out
-        mov rbx,[rsp+16]                ; how big it is shown: never bigger than it is, and in its shape
-        sub rbx,8                       ; rbx the room's width, r12 its height
-        mov r12,[rsp+24]
-        sub r12,8
-        cmp r15,rbx
-        ja split_part_small
-        cmp rbp,r12
-        ja split_part_small
-        mov rbx,r15
-        mov r12,rbp
-        jmp split_part_place
-split_part_small:
-        mov rax,r15                     ; width * room's height against height * room's width
-        imul rax,r12
-        mov rcx,rbp
-        imul rcx,rbx
-        cmp rax,rcx
-        jb split_part_tall
-        mov rax,rbp                     ; as wide as the room
-        imul rax,rbx
-        xor edx,edx
-        div r15
-        mov r12,rax
-        jmp split_part_place
-split_part_tall:
-        mov rax,r15                     ; as high as the room
-        imul rax,r12
-        xor edx,edx
-        div rbp
-        mov rbx,rax
-split_part_place:
-        test rbx,rbx
-        jz split_part_out
-        test r12,r12
-        jz split_part_out
-        mov rax,[rsp+16]                ; in the middle of the part
-        sub rax,rbx
-        shr rax,1
-        add [rsp],rax
-        mov rax,[rsp+24]
-        sub rax,r12
-        shr rax,1
-        add [rsp+8],rax
-        mov rax,r15                     ; how far to step in the picture for a dot of the screen (16 bits behind the point)
-        shl rax,16
-        xor edx,edx
-        div rbx
-        mov [rsp+32],rax
-        mov rax,rbp
-        shl rax,16
-        xor edx,edx
-        div r12
-        mov [rsp+40],rax
-        xor r13d,r13d                   ; the row
-split_part_row:
-        cmp r13,r12
-        jae split_part_out
-        mov rax,r13
-        imul rax,[rsp+40]
-        shr rax,16
-        imul rax,r15
-        lea rsi,[r14+rax*4]             ; the row of the picture
-        mov rdi,[rsp+8]
-        add rdi,r13
-        imul rdi,[rel d_564d0]
-        add rdi,[rel split_screen]
-        mov rax,[rsp]
-        lea rdi,[rdi+rax*4]
-        xor ecx,ecx
-        xor r8d,r8d
-        mov r9,[rsp+32]
-split_part_dot:
-        cmp rcx,rbx
-        jae split_part_next
-        mov rax,r8
-        shr rax,16
-        mov eax,[rsi+rax*4]
-        mov [rdi+rcx*4],eax
-        add r8,r9
-        inc rcx
-        jmp split_part_dot
-split_part_next:
-        inc r13
-        jmp split_part_row
-split_part_out:
-        add rsp,0x40
-        pop rbp
-        pop r15
-        pop r14
-        pop r13
-        pop r12
-        pop rbx
-        retq
-
-split_parts:
-        db 0x00
-split_button:
-        db 0x00
-        align 8, db 0
-split_screen:
-        dq 0
-split_memory:
-        dq 0
-split_x:
-        dq 0
-split_y:
-        dq 0
-split_shown:
-        dq 0
-
-; ---- v3.0.28: `desk NAME` - another object as the desktop -----------------------------------
-; The shell runs an object under the multiplexer (as task 0, with programs in windows) only when
-; the word typed is "desktop". So that a desktop written anew can be tried beside the old one:
-;       desk NAME         runs the object NAME the way `desktop` runs Desktop
-desk_command:                           ; r12 = the name
-        add rsp,0x8
-        cmp byte [r12],0x0
-        jz desk_usage
-        mov byte [rel desk_any],0x1
-        mov rdi,r12
-        call ob_run_as_command
-        mov byte [rel desk_any],0x0
-        jmp near L_0b044
-desk_usage:
-        lea rdi,[rel desk_says_usage]
-        call api_print
-        jmp near L_0b044
-desk_is:                                ; stands for: call shell_same_word (is the word typed "desktop"?)
-        cmp byte [rel desk_any],0x0
-        jz near shell_same_word
-        mov byte [rel desk_any],0x0
-        mov eax,0x1
-        retq
-desk_any:
-        db 0x00
-desk_word:
-        db 'desk', 0
-desk_says_usage:
-        db 'Usage: desk NAME   runs the object NAME as the desktop (', 39, 'desktop', 39, ' runs the usual one)', 10, 0
-
-; ---- v3.0.25: the silent backup of what the user saves -----------------------------------------
-; Every object a program saves (api_ob_save: a text of Notepad, a picture of Paint, a page ...)
-; is at once written a second time, into the backup pool - a part of the disk outside the
-; cabinet, so that what happens to the cabinet does not happen to it. Nothing is asked and
-; nothing is said. It needs no maintenance mode: the pool is not the cabinet.
-;       backup            what the pool holds: a line a save, the newest last
-;       backup get N      bring save number N back as an object of the cabinet (under its name)
-;       backup clear      empty the pool
-; The pool: POOL_SIZE sectors, POOL_AT sectors from the start of the system (32 MB each).
-;   its first sector: 'NXPOOL1', 0; +8 the sector the next save goes to; +16 saves ever made;
-;                     +24 its size in sectors; +32 how many times it was full and began anew
-;   a save: a sector 'NXBK', +4 its data sectors, +8 its size in bytes, +16 the name (16),
-;           +32 its number, +40 the clock (ticks since the start); then the object itself
-; When the pool is full the next save goes to its start again: the oldest are written over.
-; A disk too small for it (less than 64 MB) has no pool; saving works as before.
-POOL_AT   equ 65536
-POOL_SIZE equ 65536
-
-backup_save:                            ; stands for the first lines of api_ob_save:
-        pop rax                         ;   push rbx / push r12 / push r13 / mov rbx,rdi
-        push rbx
-        push r12
-        push r13
-        mov rbx,rdi
-        push rax
-        push rdi
-        push rsi
-        push rdx
-        call backup_write
-        pop rdx
-        pop rsi
-        pop rdi
-        retq
-
-backup_io:                              ; rdi = a sector of the pool, rsi = memory, edx = sectors, ecx = 1: write
-        add rdi,[rel d_155e0]           ; (d_155e0: where the table of the cabinet lies, sector 481 of the system)
-        add rdi,POOL_AT - 481
-        jmp near fn_0ce54
-
-backup_head:                            ; the pool's first sector into backup_sector (made, if it is not one);
-        cmp byte [rel backup_none],0x0  ; eax = 0: this disk has no pool
-        jnz backup_head_no
-        cmp byte [rel d_1553d],0x0      ; no disk that can be written
-        jz backup_head_no
-        xor edi,edi
-        lea rsi,[rel backup_sector]
-        mov edx,0x1
-        xor ecx,ecx
-        call backup_io
-        test eax,eax
-        jz backup_head_none
-        lea rax,[rel backup_sector]
-        mov rcx,0x00314C4F4F50584E      ; 'NXPOOL1', 0
-        cmp [rax],rcx
-        je backup_head_ok
-backup_head_new:
-        lea rdi,[rel backup_sector]
-        push rdi
-        xor eax,eax
-        mov ecx,64
-        rep stosq
-        pop rax
-        mov rcx,0x00314C4F4F50584E
-        mov [rax],rcx
-        mov qword [rax+8],0x1
-        mov qword [rax+24],POOL_SIZE
-backup_head_ok:
-        mov eax,0x1
-        retq
-backup_head_none:
-        mov byte [rel backup_none],0x1  ; it cannot be read there: not asked again in this session
-backup_head_no:
-        xor eax,eax
-        retq
-
-backup_write:                           ; rdi = the name, rsi = the object, rdx = its size; keeps rbx, rbp, r12-r15
-        push rbx
-        push rbp
-        push r12
-        push r13
-        push r14
-        push r15
-        mov r12,rdi
-        mov r13,rsi
-        mov r14,rdx
-        cmp r14,0x68
-        jb backup_write_out
-        cmp r14,0x400000                ; 4 MB at most
-        ja backup_write_out
-        mov byte [rel d_16e44],0x0
-        mov rdi,r12                     ; what a program hands over is looked at as api_ob_save looks at it
-        mov esi,0x11
-        call fn_10784
-        test eax,eax
-        jz backup_write_out
-        mov rdi,r13
-        mov rsi,r14
-        call fn_10784
-        test eax,eax
-        jz backup_write_out
-        cmp dword [r13],0x41534d4f
-        jne backup_write_out
-        call backup_head
-        test eax,eax
-        jz backup_write_out
-        lea r15,[r14+511]               ; its data sectors
-        shr r15,0x9
-        lea rbp,[rel backup_sector]
-        mov rbx,[rbp+8]                 ; where it goes
-        lea rax,[rbx+r15+1]
-        cmp rax,POOL_SIZE
-        jbe backup_write_place
-        mov ebx,0x1                     ; the pool is full: from its start again
-        inc qword [rbp+32]
-backup_write_place:
-        mov rdi,r14                     ; the whole sectors of the object, straight from where it lies
-        shr rdi,0x9
-        test rdi,rdi
-        jz backup_write_tail
-        mov rdx,rdi
-        lea rdi,[rbx+1]
-        mov rsi,r13
-        mov ecx,0x1
-        call backup_io
-        test eax,eax
-        jz backup_write_out
-backup_write_tail:                      ; the rest of it, in a sector of its own
-        mov rcx,r14
-        and ecx,511
-        jz backup_write_record
-        lea rdi,[rel backup_record]
-        push rdi
-        push rcx
-        xor eax,eax
-        mov ecx,64
-        rep stosq
-        pop rcx
-        pop rdi
-        mov rsi,r14
-        and rsi,-512
-        add rsi,r13
-        rep movsb
-        mov rdi,r14
-        shr rdi,0x9
-        lea rdi,[rdi+rbx+1]
-        lea rsi,[rel backup_record]
-        mov edx,0x1
-        mov ecx,0x1
-        call backup_io
-        test eax,eax
-        jz backup_write_out
-backup_write_record:                    ; the sector that says what it is
-        lea rdi,[rel backup_record]
-        xor eax,eax
-        mov ecx,64
-        rep stosq
-        lea rax,[rel backup_record]
-        mov dword [rax],0x4B42584E      ; 'NXBK'
-        mov [rax+4],r15d
-        mov [rax+8],r14
-        xor ecx,ecx
-backup_write_name:
-        mov dl,[r12+rcx]
-        test dl,dl
-        jz backup_write_named
-        mov [rax+rcx+16],dl
-        inc ecx
-        cmp ecx,15
-        jb backup_write_name
-backup_write_named:
-        mov rcx,[rbp+16]
-        inc rcx
-        mov [rax+32],rcx
-        mov rcx,[rel d_14eea]
-        mov [rax+40],rcx
-        mov rdi,rbx
-        mov rsi,rax
-        mov edx,0x1
-        mov ecx,0x1
-        call backup_io
-        test eax,eax
-        jz backup_write_out
-        inc qword [rbp+16]              ; and the pool's first sector: where the next one goes
-        lea rax,[rbx+r15+1]
-        mov [rbp+8],rax
-        xor edi,edi
-        mov rsi,rbp
-        mov edx,0x1
-        mov ecx,0x1
-        call backup_io
-backup_write_out:
-        pop r15
-        pop r14
-        pop r13
-        pop r12
-        pop rbp
-        pop rbx
-        retq
-
-backup_command:                         ; r12 = what was typed after the word
-        add rsp,0x8
-        call backup_head
-        test eax,eax
-        jz near backup_says_no_pool
-        mov al,[r12]
-        cmp al,0x0
-        je backup_list
-        or al,0x20
-        cmp al,0x67                     ; g(et)
-        je backup_get
-        cmp al,0x63                     ; c(lear)
-        jne near backup_usage
-        call backup_head_new            ; clear: a new first sector
-        xor edi,edi
-        lea rsi,[rel backup_sector]
-        mov edx,0x1
-        mov ecx,0x1
-        call backup_io
-        lea rdi,[rel backup_text_cleared]
-        call api_print
-        jmp near L_0b044
-
-backup_next:                            ; rbx = the sector of a save -> its sector into backup_record;
-        lea rax,[rel backup_sector]     ; eax = 0 when there is none there (the end of what is kept)
-        cmp rbx,[rax+8]
-        jae backup_next_no
-        mov rdi,rbx
-        lea rsi,[rel backup_record]
-        mov edx,0x1
-        xor ecx,ecx
-        call backup_io
-        test eax,eax
-        jz backup_next_no
-        lea rax,[rel backup_record]
-        cmp dword [rax],0x4B42584E
-        jne backup_next_no
-        mov eax,0x1
-        retq
-backup_next_no:
-        xor eax,eax
-        retq
-
-backup_list:
-        mov ebx,0x1                     ; the sector
-        xor r13d,r13d                   ; the number in the list
-backup_list_line:
-        call backup_next
-        test eax,eax
-        jz backup_list_end
-        inc r13
-        lea rdi,[rel tasks_says_gap]
-        call api_print
-        mov rdi,r13
-        call fn_08e3b
-        lea rdi,[rel tasks_says_gap]
-        call api_print
-        lea rdi,[rel backup_record + 16]
-        call api_print
-        lea rdi,[rel tasks_says_gap]
-        call api_print
-        lea rax,[rel backup_record]
-        mov rdi,[rax+8]
-        call fn_08e3b
-        lea rdi,[rel backup_text_bytes]
-        call api_print
-        lea rax,[rel backup_record]
-        mov eax,[rax+4]
-        lea rbx,[rbx+rax+1]
-        jmp backup_list_line
-backup_list_end:
-        mov rdi,r13
-        call fn_08e3b
-        lea rdi,[rel backup_text_kept]
-        call api_print
-        lea rax,[rel backup_sector]
-        mov rdi,[rax+8]
-        shr rdi,0x1
-        call fn_08e3b
-        lea rdi,[rel backup_text_of]
-        call api_print
-        jmp near L_0b044
-
-backup_get:                             ; the number after the word
-        xor r13d,r13d
-backup_get_digits:
-        movzx eax,byte [r12]
-        test eax,eax
-        jz backup_get_find
-        inc r12
-        sub eax,0x30
-        cmp eax,0x9
-        ja backup_get_digits
-        imul r13,r13,10
-        add r13,rax
-        jmp backup_get_digits
-backup_get_find:
-        test r13,r13
-        jz near backup_usage
-        mov ebx,0x1
-backup_get_step:
-        call backup_next
-        test eax,eax
-        jz near backup_says_no_such
-        dec r13
-        jz backup_get_it
-        lea rax,[rel backup_record]
-        mov eax,[rax+4]
-        lea rbx,[rbx+rax+1]
-        jmp backup_get_step
-backup_get_it:                          ; memory for its name and for the object, read, saved as an object
-        lea rax,[rel backup_record]
-        mov r13d,[rax+4]                ; its data sectors
-        mov rdi,r13
-        shl rdi,0x9
-        add rdi,32
-        call api_memory
-        test rax,rax
-        jz near backup_says_no_such
-        mov r12,rax
-        lea rsi,[rel backup_record + 16]
-        mov rdi,r12
-        mov ecx,16
-        rep movsb
-        lea rdi,[rbx+1]
-        lea rsi,[r12+32]
-        mov rdx,r13
-        xor ecx,ecx
-        call backup_io
-        test eax,eax
-        jz backup_get_free
-        lea rax,[rel backup_record]
-        mov rdx,[rax+8]
-        mov rdi,r12
-        lea rsi,[r12+32]
-        call api_ob_save
-        lea rdi,[rel backup_text_back]
-        call api_print
-        mov rdi,r12
-        call api_print
-        lea rdi,[rel tasks_says_end]
-        call api_print
-backup_get_free:
-        mov rdi,r12
-        call mem_free
-        jmp near L_0b044
-backup_says_no_such:
-        lea rdi,[rel backup_text_no_such]
-        call api_print
-        jmp near L_0b044
-backup_usage:
-        lea rdi,[rel backup_text_usage]
-        call api_print
-        jmp near L_0b044
-backup_says_no_pool:
-        lea rdi,[rel backup_text_no_pool]
-        call api_print
-        jmp near L_0b044
-
-backup_none:
-        db 0x00
-backup_word:
-        db 'backup', 0
-backup_text_bytes:
-        db ' bytes', 10, 0
-backup_text_kept:
-        db ' saves are kept, in ', 0
-backup_text_of:
-        db ' KB of the 32768 KB of the pool. backup get N brings one back.', 10, 0
-backup_text_back:
-        db 'Brought back as it was saved: ', 0
-backup_text_cleared:
-        db 'The backup pool is empty.', 10, 0
-backup_text_no_such:
-        db 'No save has that number (or it could not be read).', 10, 0
-backup_text_usage:
-        db 'Usage: backup | backup get N | backup clear', 10, 0
-backup_text_no_pool:
-        db 'No backup pool here: no disk that can be written, or it is smaller than 64 MB.', 10, 0
-        align 8, db 0
-backup_sector:
-        times 512 db 0
-backup_record:
-        times 512 db 0
-
-; ---- v3.0.24: the table of the cabinet is kept twice ----------------------------------------
-; The table says where every object lies; if the sectors it is in are lost, everything is.
-; A copy lies in the sectors right behind it (the table is 4 sectors, the objects start 9
-; sectors after its start). The copy is written first, then the table: if the power goes
-; during the first writing the table is still the old one, whole; during the second, the copy
-; is the new one, whole. tools/table_copy.py looks at both and can put the copy back.
-; (The loader does not read the copy yet: it is in the core, which cannot grow.)
-cabinet_save_twice:                     ; rdi = the sector of the table, rsi = the table, edx = its sectors, ecx = 1: write
-        push rdi                        ; stands for: jmp near fn_0ce54
-        push rsi
-        push rdx
-        push rcx
-        add rdi,rdx
-        call fn_0ce54
-        pop rcx
-        pop rdx
-        pop rsi
-        pop rdi
-        jmp near fn_0ce54
-
-; ---- v3.0.21: `cores solo`, `cores one`, `cores all` outside maintenance mode ----------------
-; They were refused ("enter maintenance mode first") because the setting is kept in the table
-; of the cabinet - so `bench` gave the same numbers whatever was typed. Now the setting is made
-; for this session; only the writing to the disk still needs maintenance mode.
-cores_maint:                            ; stands for: call maint_check (is maintenance mode on? says so if not)
-        mov byte [rel cores_session],0x0
-        cmp byte [rel maint_on],0x0
-        jnz near maint_check               ; on: as before (it may have run out)
-        mov byte [rel cores_session],0x1
-        lea rdi,[rel cores_says_session]
-        call api_print
-        or eax,0x1                      ; go on
-        retq
-cores_save:                             ; stands for: call cabinet_save (write the table of the cabinet)
-        cmp byte [rel cores_session],0x0
-        jz near cabinet_save
-        retq
-cores_session:
-        db 0x00
-cores_says_session:
-        db '(For this session. In maintenance mode - ', 39, 'maint', 39, ' - it is kept.)', 10, 0
-tasks_word:
-        db 'tasks', 0
-tasks_says_gap:
-        db '  ', 0
-tasks_says_end:
-        db 10, 0
-tasks_says_how:
-        db 'They wait until the desktop is started again. tasks close N closes one.', 10, 0
-tasks_says_nothing:
-        db 'No programs are kept. Leave the desktop with programs open and they wait here.', 10, 0
-tasks_says_usage:
-        db 'Usage: tasks | tasks close N   (N = the number tasks shows)', 10, 0
-tasks_says_no_such:
-        db 'No kept program has that number.', 10, 0
-tasks_says_closed:
-        db 'Closed.', 10, 0
-mux_kept:
-        db 0x00
-mux_again:
-        db 0x00
-mux_says_kept:
-        db '[mux] the desktop was left: the programs that run are kept', 10, 0
-mux_says_again:
-        db '[mux] the kept programs are taken up again', 10, 0
-        align 16, db 0x90
+%include "New.kasm"                     ; what was written after the recovery
 %endif
 ext_end:
 

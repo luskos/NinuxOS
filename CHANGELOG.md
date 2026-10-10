@@ -3,6 +3,16 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.35** (11 October 2026) - seen in QEMU
+  - **A damaged table of the cabinet no longer stops the system**: the loader reads the copy.
+    An image with the table's sector wiped starts with all its objects (it started with none).
+    And every writer of the table now keeps the copy, not only `cabinet_save`.
+    The start says "NinuxOS v3.0.35 ...." and "Video." - two texts of the loader were made
+    shorter to make room for this in the part of the kernel that cannot grow.
+  - **A program the Sentinel does not know is not handed everything**: power, the services of
+    the extension, closing and typing into other programs are refused to it.
+  - **Names**: 45 more in the kernel (91 now) - the disk, the console, the screen, the loader.
+    What was written after the recovery lies in a file of its own, `kernel/New.kasm`.
 - **v3.0.34** (11 October 2026) - seen in QEMU
   - **Letters of other sizes**: `text_big(x, y, text, colour, times)` draws the system's letters
     2, 3, 4 ... times as big (py2asm; no kernel change). The clock of Desk2's curtain and the

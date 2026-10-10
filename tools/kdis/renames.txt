@@ -52,3 +52,49 @@ fn_0db9d   api_rect_restore   ; rdi = a kept picture (api_rect_save): put it bac
 fn_095e9   api_clip           ; rdi, rsi, rdx, rcx = x, y, width, height: draw only inside this rectangle (kept within the screen)
 p_0b9ae    api_cabinet_changes ; -> rax = a number that grows with every change of the cabinet
 L_0b89f    api_power          ; rdi = 0: power off; else: restart
+# ---- the disk, the console, the screen, the loader (v3.0.35)
+fn_0ce54   disk_io            ; rdi = a sector of the boot disk, rsi = memory, rdx = sectors, rcx = 0 read, else write (0x80 sectors at a time); eax = 0: it failed
+fn_0cd15   disk_read          ; rdi = sector, rsi = memory, rdx = sectors (at most 0x80)
+fn_0cda8   disk_write         ; rdi = sector, rsi = memory, rdx = sectors (at most 0x80)
+fn_0fc7e   cabinet_write_objects ; write every changed object of the cabinet to its place on the disk; eax = 0: one failed
+fn_0f919   cabinet_count      ; -> rax = how many objects the cabinet itself has (the word at +6 of its table)
+fn_0fe64   api_cabinet_facts  ; rdi = a number: 0 the cabinet's own count, 1 all objects, 2 (rsi = a drawer) its first object and count, 4 an object's rating ...
+fn_0aec6   api_ob_call        ; rdi = an object, rsi = the name of a socket, rdx, rcx = two values: call that socket; -1: no such socket
+fn_09a0b   api_image          ; rdi, rsi = x, y, rdx = a picture (width, height, dots), ecx bit 0: 0xFF00FF is see-through
+fn_09ac5   api_image_fit      ; rdi, rsi, rdx, rcx = x, y, width, height, r8 = a picture: drawn to fit that rectangle
+p_107fd    api_extension      ; the services of the kernel's extension (a number in rsi says which); 0 if the extension is not trusted
+fn_10784   memory_ok          ; rdi = an address a program handed over, rsi = how many bytes: eax = 1 if the program may use them
+fn_10858   ob_known           ; rdi = an object: eax = 1 if its code is in the Sentinel's list
+fn_08e3b   print_number       ; rdi = a number: print it in tens
+fn_0a544   key_modifiers      ; -> r8 = Shift + 2 * Ctrl + 4 * Alt, as they are held now
+fn_08d8d   console_scroll     ; the text of the console one line up, the last line cleared
+fn_08c98   console_letter_at  ; rdi, rsi = column, row, rdx = a letter: draw it there
+d_11830    console_columns    ; how many letters fit a line
+d_11838    console_rows       ; how many lines the console has
+d_11840    console_column     ; where the next letter goes
+d_11848    console_row        ; ...
+d_11854    console_ground     ; the colour behind the letters
+d_11810    screen_memory      ; where the dots of the screen lie (what is drawn into)
+d_11818    screen_width       ; in dots
+d_11820    screen_height      ; in dots
+d_11828    screen_line_bytes  ; bytes a line of dots takes
+d_117cb    screen_on          ; not 0: there is a graphics mode
+d_14eea    clock_ticks        ; 100 a second since the start
+d_155e0    table_sector       ; the sector of the table of the cabinet (481 of the system)
+d_1553d    disk_writable      ; 1: the boot disk can be written
+d_16798    this_object        ; the object whose code is running now, 0 if none
+d_11870    mouse_at_x         ; where the mouse is
+d_11878    mouse_at_y         ; ...
+d_119fc    mouse_packet       ; the last three bytes the mouse sent (the first: its buttons)
+d_11de1    cabinet_changes    ; grows with every change of the cabinet
+fn_545df   mux_repaint        ; rdi, rsi, rdx, rcx = left, top, right, bottom: draw that part of the screen again from the windows
+fn_55604   mux_input          ; once round the loop: a key or the mouse to the program they are for; clicks on windows and their buttons
+fn_10840   desktop_run        ; rdi = the desktop object: under the multiplexer if the extension is trusted, else alone
+d_564c8    mux_screen         ; where the multiplexer puts the finished picture: the screen (or memory, while it is split)
+d_564d0    mux_screen_line_bytes ; bytes a line of it takes
+d_564d8    mux_screen_width   ; in dots
+d_564e0    mux_screen_height  ; in dots
+d_56488    mux_changes        ; grows whenever a program starts, ends or comes to the front
+fn_080ac   load_table         ; the loader (16 bits): read the table of the cabinet, then every object it names, to 1 MB and up
+fn_07f3b   load_sectors       ; the loader: eax = sector, cx = how many, es = where to: read them through the BIOS
+d_085be    load_table_sector  ; the loader: the sector of the table (the kernel's sectors + 1; + 4 more if the copy is read)

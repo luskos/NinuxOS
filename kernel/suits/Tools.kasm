@@ -136,7 +136,7 @@ entry_20:
         xor edi,edi
         call fn_30121
         mov ebx,[rel suit_start + (d_119d8 - 0x30000)]
-        mov r12,[rel suit_start + (d_14eea - 0x30000)]
+        mov r12,[rel suit_start + (clock_ticks - 0x30000)]
         add r12,0x1770
 L_301c8:
         call fn_300f8
@@ -172,7 +172,7 @@ L_30241:
         call api_print
         jmp short L_301cd
 L_30248:
-        cmp [rel suit_start + (d_14eea - 0x30000)],r12
+        cmp [rel suit_start + (clock_ticks - 0x30000)],r12
         jnc near L_3031f
         call key_next
         jc near L_301c8
@@ -323,7 +323,7 @@ L_3061a:
         call entry_12
 L_30638:
         lea rdi,[rel d_31979]
-        cmp byte [rel suit_start + (d_1553d - 0x30000)],0x0
+        cmp byte [rel suit_start + (disk_writable - 0x30000)],0x0
         jz near L_30996
         lea rdi,[rel d_319a4]
         cmp byte [rel suit_start + (d_154a9 - 0x30000)],0x0
@@ -375,7 +375,7 @@ L_306f7:
 L_30700:
         cmp qword [rel d_315a0],0x0
         jz short L_30732
-        mov rax,[rel suit_start + (d_155e0 - 0x30000)]
+        mov rax,[rel suit_start + (table_sector - 0x30000)]
         dec rax
         cmp rax,[rel d_31568]
         jz short L_30732
@@ -466,7 +466,7 @@ L_3086a:
         jnz short L_308b6
         lea rdi,[rel d_31bf8]
         call api_print
-        mov rax,[rel suit_start + (d_155e0 - 0x30000)]
+        mov rax,[rel suit_start + (table_sector - 0x30000)]
         dec rax
         cmp rax,[rel d_31568]
         jz short L_308aa
@@ -501,7 +501,7 @@ L_308e5:
         call api_print
 L_3091a:
         mov rdi,[rel d_315a8]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_3206c]
         call api_print
         mov rdi,[rel d_315b0]
@@ -509,7 +509,7 @@ L_3091a:
         jz short L_30946
         inc rdi
 L_30946:
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_32078]
         call api_print
         lea rdi,[rel d_32083]
@@ -551,7 +551,7 @@ L_309ce:
 fn_309d8:
         push rbx
         push rbp
-        mov rbp,[rel suit_start + (d_155e0 - 0x30000)]
+        mov rbp,[rel suit_start + (table_sector - 0x30000)]
         add rbp,0x10
         call api_ob_count
         mov r8,rax
@@ -587,7 +587,7 @@ fn_30a1d:
         jz short L_30a96
         mov [rel d_31600],rax
 L_30a3d:
-        cmp byte [rel suit_start + (d_1553d - 0x30000)],0x0
+        cmp byte [rel suit_start + (disk_writable - 0x30000)],0x0
         jz short L_30a96
         mov rdi,[rel suit_start + (d_154b0 - 0x30000)]
         cmp rdi,0x20000
@@ -596,7 +596,7 @@ L_30a3d:
         mov rsi,[rel d_31600]
         mov edx,0x1
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_30a96
         mov rsi,[rel d_31600]
@@ -683,7 +683,7 @@ L_30b14:
         mov rsi,rbx
         mov rdx,r12
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz near L_30c9f
         mov rax,r12
@@ -737,14 +737,14 @@ L_30c47:
         mov rsi,rbx
         mov rdx,r12
         mov ecx,0x1
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_30c9f
         mov rdi,r13
         mov rsi,[rel d_31608]
         mov edx,0x1
         mov ecx,0x1
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_30c9f
         mov rdi,rbx
@@ -807,7 +807,7 @@ fn_30cbb:
         mov rsi,rbx
         mov rdx,r12
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz near L_30e31
         mov rdi,rbx
@@ -834,14 +834,14 @@ L_30d7e:
         mov rsi,rbx
         mov rdx,r12
         mov ecx,0x1
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_30e0f
         lea rdi,[rel d_31911]
         call api_print
-        mov rbx,[rel suit_start + (d_14eea - 0x30000)]
+        mov rbx,[rel suit_start + (clock_ticks - 0x30000)]
 L_30de4:
-        mov rax,[rel suit_start + (d_14eea - 0x30000)]
+        mov rax,[rel suit_start + (clock_ticks - 0x30000)]
         sub rax,rbx
         cmp rax,0x12c
         jnc short L_30e03
@@ -1368,14 +1368,14 @@ L_3148f:
         mov rsi,rbx
         mov rdx,[rel d_31568]
         mov ecx,0x1
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_314d4
         mov edi,0x1
         mov rsi,r15
         mov rdx,[rel d_31568]
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_314e0
         mov rdi,r15
@@ -1642,7 +1642,7 @@ L_32208:
         call api_print
         mov rdi,[rel suit_start + (d_6b1a1 - 0x30000)]
         shr rdi,byte 0xb
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_32955]
         jmp near L_3249b
 L_32275:
@@ -1756,7 +1756,7 @@ L_32403:
         mov rsi,rbx
         mov edx,0x80
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_32485
         mov rdi,r15
@@ -1840,7 +1840,7 @@ L_3254e:
         retq
 
 fn_3254f:
-        mov rax,[rel suit_start + (d_155e0 - 0x30000)]
+        mov rax,[rel suit_start + (table_sector - 0x30000)]
         lea rdx,[rax+0x1]
         cmp rdx,[rel d_32710]
         ja short L_325b8
@@ -1854,7 +1854,7 @@ fn_3254f:
         lea rsi,[rbx+0x6]
         call fn_325b9
         movzx eax,word [rbx+0x8]
-        mov rdx,[rel suit_start + (d_155e0 - 0x30000)]
+        mov rdx,[rel suit_start + (table_sector - 0x30000)]
         add rdx,rax
         cmp rdx,[rel d_32710]
         ja short L_325b1
@@ -2675,7 +2675,7 @@ L_33483:
         lea rdi,[rel d_33a9b]
         call api_print
         mov edi,[rbx+0x1c]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_33a9e]
         call api_print
 L_334a3:
@@ -2916,7 +2916,7 @@ d_33ca2:
 
 ; says: 'META needs the graphics screen.'
 entry_04:
-        cmp qword [rel suit_start + (d_117cb - 0x30000)],0x0
+        cmp qword [rel suit_start + (screen_on - 0x30000)],0x0
         jnz short entry_05
         lea rdi,[rel d_33f8e]
         jmp near api_print
@@ -2937,7 +2937,7 @@ L_33ce8:
         lea rdi,[rel d_33faf]
         call api_print
         mov dword [rel suit_start + (d_11850 - 0x30000)],0xececf5
-        call fn_0f919
+        call cabinet_count
         mov r12,rax
         xor ebx,ebx
         xor r13d,r13d
@@ -2963,7 +2963,7 @@ L_33d1f:
         lea rdi,[rel d_33fdd]
         call api_print
         lea rdi,[r13+0x1]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_33fe1]
         call api_print
         mov rdi,r14
@@ -3021,9 +3021,9 @@ L_33e5b:
         call api_log
         mov rdi,r14
         lea rsi,[rel suit_start + (d_12462 - 0x30000)]
-        mov rdx,[rel suit_start + (d_11818 - 0x30000)]
-        mov rcx,[rel suit_start + (d_11820 - 0x30000)]
-        call fn_0aec6
+        mov rdx,[rel suit_start + (screen_width - 0x30000)]
+        mov rcx,[rel suit_start + (screen_height - 0x30000)]
+        call api_ob_call
         call fn_09642
         jmp near L_33ce8
 L_33e8e:
@@ -3081,12 +3081,12 @@ entry_06:
         lea rdi,[rel d_34514]
         call api_print
         xor r15d,r15d
-        cmp qword [rel suit_start + (d_117cb - 0x30000)],0x0
+        cmp qword [rel suit_start + (screen_on - 0x30000)],0x0
         jz short L_3408c
         xor edi,edi
         xor esi,esi
-        mov rdx,[rel suit_start + (d_11818 - 0x30000)]
-        mov rcx,[rel suit_start + (d_11820 - 0x30000)]
+        mov rdx,[rel suit_start + (screen_width - 0x30000)]
+        mov rcx,[rel suit_start + (screen_height - 0x30000)]
         call api_rect_save
         mov r15,rax
 L_3408c:
@@ -3140,15 +3140,15 @@ L_34118:
 L_3413d:
         mov qword [rel d_34368],0x0
         mov qword [rel d_34370],0x0
-        cmp qword [rel suit_start + (d_117cb - 0x30000)],0x0
+        cmp qword [rel suit_start + (screen_on - 0x30000)],0x0
         jz near L_341e3
         call fn_3430e
         xor r12d,r12d
 L_34169:
         xor edi,edi
         xor esi,esi
-        mov rdx,[rel suit_start + (d_11818 - 0x30000)]
-        mov rcx,[rel suit_start + (d_11820 - 0x30000)]
+        mov rdx,[rel suit_start + (screen_width - 0x30000)]
+        mov rcx,[rel suit_start + (screen_height - 0x30000)]
         mov r8d,r12d
         imul r8d,r8d,0x50b11
         and r8d,0xffffff
@@ -3177,7 +3177,7 @@ L_341e3:
         mov qword [rel d_34378],0x0
         test r14,r14
         jz short L_34248
-        cmp byte [rel suit_start + (d_1553d - 0x30000)],0x0
+        cmp byte [rel suit_start + (disk_writable - 0x30000)],0x0
         jz short L_34248
         call fn_3430e
         xor r12d,r12d
@@ -3186,14 +3186,14 @@ L_34204:
         mov rsi,r14
         mov edx,0x800
         xor ecx,ecx
-        call fn_0ce54
+        call disk_io
         test eax,eax
         jz short L_34223
         inc r12
         call fn_34328
         jc short L_34204
 L_34223:
-        mov rax,[rel suit_start + (d_14eea - 0x30000)]
+        mov rax,[rel suit_start + (clock_ticks - 0x30000)]
         sub rax,r13
         test rax,rax
         jz short L_34248
@@ -3206,7 +3206,7 @@ L_34223:
 L_34248:
         mov qword [rel d_34380],0x0
         mov qword [rel d_34388],0x0
-        cmp qword [rel suit_start + (d_117cb - 0x30000)],0x0
+        cmp qword [rel suit_start + (screen_on - 0x30000)],0x0
         jz short L_3429e
         mov qword [rel suit_start + (d_62c80 - 0x30000)],0x1
         call fn_6227b
@@ -3250,16 +3250,16 @@ L_342c1:
         retq
 
 fn_3430e:
-        mov rax,[rel suit_start + (d_14eea - 0x30000)]
+        mov rax,[rel suit_start + (clock_ticks - 0x30000)]
 L_34315:
         pause
-        cmp rax,[rel suit_start + (d_14eea - 0x30000)]
+        cmp rax,[rel suit_start + (clock_ticks - 0x30000)]
         jz short L_34315
-        mov r13,[rel suit_start + (d_14eea - 0x30000)]
+        mov r13,[rel suit_start + (clock_ticks - 0x30000)]
         retq
 
 fn_34328:
-        mov rax,[rel suit_start + (d_14eea - 0x30000)]
+        mov rax,[rel suit_start + (clock_ticks - 0x30000)]
         sub rax,r13
         cmp rax,0x64
         retq
@@ -3272,7 +3272,7 @@ fn_34337:
 
 fn_34343:
         push rdi
-        call fn_08e3b
+        call print_number
         pop rdi
         jmp near fn_0be89
         db 0x90
@@ -3338,11 +3338,11 @@ entry_07:
         push r15
         push rbp
         mov [rel d_34810],rdi
-        cmp qword [rel suit_start + (d_117cb - 0x30000)],0x0
+        cmp qword [rel suit_start + (screen_on - 0x30000)],0x0
         jz near L_347e3
-        mov r12,[rel suit_start + (d_11818 - 0x30000)]
+        mov r12,[rel suit_start + (screen_width - 0x30000)]
         shr r12,1
-        mov r13,[rel suit_start + (d_11820 - 0x30000)]
+        mov r13,[rel suit_start + (screen_height - 0x30000)]
         shr r13,1
         mov rbp,r12
         imul rbp,r13
@@ -3369,7 +3369,7 @@ entry_07:
         mov [rbx+0x68],r12d
         mov [rbx+0x6c],r13d
         lea rdi,[rbx+0x70]
-        mov rsi,[rel suit_start + (d_11810 - 0x30000)]
+        mov rsi,[rel suit_start + (screen_memory - 0x30000)]
         xor edx,edx
 L_346ba:
         xor ecx,ecx
@@ -3380,7 +3380,7 @@ L_346bc:
         inc rcx
         cmp rcx,r12
         jc short L_346bc
-        mov rax,[rel suit_start + (d_11828 - 0x30000)]
+        mov rax,[rel suit_start + (screen_line_bytes - 0x30000)]
         lea rsi,[rsi+rax*2]
         inc rdx
         cmp rdx,r13
@@ -3707,7 +3707,7 @@ L_34c81:
         mov ebx,eax
         sub eax,[rel d_35f9c]
         mov [rel d_35f9c],ebx
-        mov rbx,[rel suit_start + (d_14eea - 0x30000)]
+        mov rbx,[rel suit_start + (clock_ticks - 0x30000)]
         mov rcx,rbx
         sub rcx,[rel d_35f38]
         mov [rel d_35f38],rbx
@@ -3954,7 +3954,7 @@ entry_10:
         jnz short L_350b6
         retq
 L_350b6:
-        mov rax,[rel suit_start + (d_14eea - 0x30000)]
+        mov rax,[rel suit_start + (clock_ticks - 0x30000)]
         cmp rax,[rel d_35f20]
         jc short L_350e7
         add rax,0x19
@@ -3990,7 +3990,7 @@ entry_08:
         call fn_34984
         cmp byte [rbx],0x0
         jnz short L_35139
-        cmp qword [rel suit_start + (d_117cb - 0x30000)],0x0
+        cmp qword [rel suit_start + (screen_on - 0x30000)],0x0
         jz near L_35306
         call entry_09
         call fn_08c44
@@ -4130,23 +4130,23 @@ L_35320:
         lea rdi,[rel d_367e9]
         call api_print
         mov edi,[rel d_35f74]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_36807]
         call api_print
         mov edi,[rel d_35f70]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_36807]
         call api_print
         mov edi,[rel d_35f78]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_3680a]
         call api_print
         mov edi,[rel d_35f7c]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_3681e]
         call api_print
         mov edi,[rel d_35f6c]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_36838]
         call api_print
 L_353c2:
@@ -4209,7 +4209,7 @@ entry_09:
         push r14
         push r15
         push rbp
-        cmp qword [rel suit_start + (d_117cb - 0x30000)],0x0
+        cmp qword [rel suit_start + (screen_on - 0x30000)],0x0
         jz near L_3560a
         call fn_34984
         mov byte [rel d_35feb],0x1
@@ -4217,8 +4217,8 @@ entry_09:
         call fn_09642
         xor edi,edi
         xor esi,esi
-        mov rdx,[rel suit_start + (d_11818 - 0x30000)]
-        mov rcx,[rel suit_start + (d_11820 - 0x30000)]
+        mov rdx,[rel suit_start + (screen_width - 0x30000)]
+        mov rcx,[rel suit_start + (screen_height - 0x30000)]
         mov r8d,0xb0c12
         call api_fill
         mov edi,0x10
@@ -4228,7 +4228,7 @@ entry_09:
         mov r8d,0xb0c12
         call api_text
         mov edi,0x10
-        mov rsi,[rel suit_start + (d_11820 - 0x30000)]
+        mov rsi,[rel suit_start + (screen_height - 0x30000)]
         sub rsi,0x18
         lea rdx,[rel d_36503]
         mov ecx,0x9aa0b6
@@ -4299,7 +4299,7 @@ L_355aa:
         jnz short L_355ce
         mov rax,[rel d_35f20]
         sub rax,0x4
-        cmp [rel suit_start + (d_14eea - 0x30000)],rax
+        cmp [rel suit_start + (clock_ticks - 0x30000)],rax
         jnc short L_355ce
         sti
         hlt
@@ -4336,7 +4336,7 @@ fn_35615:
         push rbx
         push r12
         push r13
-        mov rax,[rel suit_start + (d_11818 - 0x30000)]
+        mov rax,[rel suit_start + (screen_width - 0x30000)]
         sub rax,0x1c4
         cmp rax,0xf0
         jnl short L_35634
@@ -4344,7 +4344,7 @@ fn_35615:
 L_35634:
         mov [rel d_35fc4],eax
         mov dword [rel d_35fbc],0x10
-        mov rbx,[rel suit_start + (d_11820 - 0x30000)]
+        mov rbx,[rel suit_start + (screen_height - 0x30000)]
         sub rbx,0x5c
         mov r12,rbx
         shr r12,1
@@ -4653,7 +4653,7 @@ fn_35a0b:
 ; says: ... and 34 more texts
 fn_35a34:
         push rbx
-        mov rax,[rel suit_start + (d_11818 - 0x30000)]
+        mov rax,[rel suit_start + (screen_width - 0x30000)]
         sub rax,0x1a4
         mov [rel d_35fe0],eax
         mov dword [rel d_35fe4],0x2c
@@ -5310,7 +5310,7 @@ L_38364:
 
 ; says: 'chainlog'
 fn_3836a:
-        cmp byte [rel suit_start + (d_1553d - 0x30000)],0x0
+        cmp byte [rel suit_start + (disk_writable - 0x30000)],0x0
         jz short L_38392
         mov byte [rel suit_start + (d_1553e - 0x30000)],0x1
         lea rdi,[rel d_38bd1]
@@ -5380,11 +5380,11 @@ L_3843e:
         lea rdi,[rel d_39170]
         call api_print
         mov edi,[rbx+0x4]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_3917c]
         call api_print
         mov edi,[rbx+0x8]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_3918c]
         call api_print
         xor r12d,r12d
@@ -5401,7 +5401,7 @@ L_38482:
         lea rdi,[rel d_391b7]
         call api_print
         mov edi,[r13+0x0]
-        call fn_08e3b
+        call print_number
         mov edi,0x2d
         call api_put_letter
         movzx eax,byte [r13+0x4]
@@ -5433,7 +5433,7 @@ L_38525:
         lea rdi,[rel d_391f7]
         call api_print
         lea edi,[r14d+0x1]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_39207]
 L_3854f:
         call api_print
@@ -5491,7 +5491,7 @@ L_385f9:
         mov rsi,[rel d_38e60]
         mov rdx,rbx
         mov ecx,0x1
-        call fn_0ce54
+        call disk_io
         add r12,rbx
         sub r13,rbx
         jmp short L_385e3
@@ -6033,7 +6033,7 @@ L_3990b:
 
 ; says: 'accounts'
 fn_3990e:
-        cmp byte [rel suit_start + (d_1553d - 0x30000)],0x0
+        cmp byte [rel suit_start + (disk_writable - 0x30000)],0x0
         jz short L_39936
         mov byte [rel suit_start + (d_1553e - 0x30000)],0x1
         lea rdi,[rel d_39e70]
@@ -6222,7 +6222,7 @@ L_39b74:
         jnz short L_39b74
 L_39b7e:
         rdtsc
-        xor eax,[rel suit_start + (d_14eea - 0x30000)]
+        xor eax,[rel suit_start + (clock_ticks - 0x30000)]
         or eax,0x1
         mov [rbx+0x10],eax
         mov [rbx+0x14],r14d
@@ -6277,7 +6277,7 @@ L_39c3d:
         and eax,0x7
         lea rcx,[rel suit_start + (d_0aaf2 - 0x30000)]
         movzx edi,byte [rcx+rax]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel suit_start + (d_153bf - 0x30000)]
         call api_print
 L_39c84:
@@ -6314,13 +6314,13 @@ entry_18:
         call fn_39991
         test eax,eax
         jz near L_39e17
-        cmp qword [rel suit_start + (d_117cb - 0x30000)],0x0
+        cmp qword [rel suit_start + (screen_on - 0x30000)],0x0
         jz short L_39d15
         call api_cursor_hide
         xor edi,edi
         xor esi,esi
-        mov rdx,[rel suit_start + (d_11818 - 0x30000)]
-        mov rcx,[rel suit_start + (d_11820 - 0x30000)]
+        mov rdx,[rel suit_start + (screen_width - 0x30000)]
+        mov rcx,[rel suit_start + (screen_height - 0x30000)]
         mov r8d,0xb0c14
         call api_fill
 L_39d15:

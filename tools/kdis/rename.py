@@ -28,7 +28,8 @@ import build_disk                                                   # noqa: E402
 
 WORK = os.path.join(ROOT, 'build', 'work')
 KERNEL = os.path.join(ROOT, 'kernel', 'Kernel.kasm')
-FILES = [KERNEL, os.path.join(ROOT, 'kernel', 'Kernel.sym.inc'), os.path.join(HERE, 'names.txt')] \
+FILES = [KERNEL, os.path.join(ROOT, 'kernel', 'New.kasm'), os.path.join(ROOT, 'kernel', 'Kernel.sym.inc'),
+         os.path.join(HERE, 'names.txt')] \
     + sorted(glob.glob(os.path.join(ROOT, 'kernel', 'suits', '*.kasm')))
 
 

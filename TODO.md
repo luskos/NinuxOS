@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.34 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.35 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -56,13 +56,13 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 | # | what | size |
 |---|---|---|
 | 14 | **[done: v3.0.16 and `tasks` in v3.0.19, seen in QEMU]** Programs live on: leaving the desktop closes nothing; `tasks`; then `kill` means something | L |
-| 15 | **[the table is written twice, v3.0.24, seen in QEMU; the loader does not read the copy, the kernel has no second copy, writes of objects are as before]** A second copy of the table of the cabinet and of the kernel; writes whole or not at all | M |
+| 15 | **[v3.0.35: the loader reads the copy when the table is damaged, and every writer of the table writes the copy - both seen in QEMU; a second copy of the kernel and whole-or-nothing writes of objects are not done]** A second copy of the table of the cabinet and of the kernel; writes whole or not at all | M |
 | 16 | **[written and seen in QEMU, v3.0.25: saves go to a pool of 32 MB outside the cabinet; `backup`, `backup get N`, `backup clear`]** The silent backup of the user and its pool, with a manager of the pool's space | M-L |
-| 17 | **[the keyboard on the screen of the shell is there, v3.0.23, seen in QEMU; the smaller table of functions and relays between programs are not]** A desktop program is handed only what it needs; relays for the rest (the keyboard on the screen for the shell is one) | L |
+| 17 | **[v3.0.35: a program the Sentinel does not know is refused power, the extension's services, closing and typing into other programs; the keyboard on the screen, v3.0.23; a relay object between two programs is not written]** A desktop program is handed only what it needs; relays for the rest (the keyboard on the screen for the shell is one) | L |
 | 18 | **[`cores solo` / `bench` explained and changed, v3.0.21; "all cores for programs" is `cores all`, to be tried on the real machine]** `cores solo`, `bench`, all cores for programs | M |
 | 19 | **[done, v3.0.20: tried on Windows and once in QEMU]** Memory given back by PyTon programs | M |
 | 20 | Photon, Puffer, Tuner, META out of the kernel: programs of their own | L each |
-| 21 | **[begun, v3.0.22: 41 names (the multiplexer, the shell, objects, keys) - `tools/kdis/renames.txt`; about 900 functions still have addresses for names]** Names for the kernel's 655 functions; the kernel cut into its parts | L |
+| 21 | **[v3.0.35: 91 names, and what was written after the recovery lies in kernel/New.kasm; begun, v3.0.22: 41 names (the multiplexer, the shell, objects, keys) - `tools/kdis/renames.txt`; about 900 functions still have addresses for names]** Names for the kernel's 655 functions; the kernel cut into its parts | L |
 
 **Step 4 - the desktop itself** (Desktop has only a machine-read source: to be rewritten first)
 
@@ -233,11 +233,19 @@ Not written blind: it changes what happens at every start and end of the desktop
       `copy hello hello2` in maintenance mode, then both tables on the disk hold 54 objects
       and are the same. `python tools/table_copy.py check|restore DISK` looks at them and puts
       the copy back from another machine.
-- [ ] The loader reads only the first table: with it damaged the system does not start by
-      itself. It needs code in the 16-bit loader, which is in the core that cannot grow -
-      either room is found there (a text made shorter), or the loader is written anew.
-- [ ] Other code that writes the table without `cabinet_save` (`update`, the installer in
-      k_tools) does not write the copy yet. To read through.
+- [x] v3.0.35: **the loader reads the copy.** When the first sector of the table is not a
+      table, it reads the one 4 sectors on, once, before saying "No cabinet found". The room
+      for it in the loader was made by making two of its texts shorter (the start now says
+      "NinuxOS v3.0.35 ...." without "- loading cabinet", and "Video." for "Starting
+      graphics..."). Seen in QEMU: an image whose sector 481 was wiped starts with all 122
+      objects; before, it came up with none.
+- [x] v3.0.35: **every writer keeps the copy.** The copy is now written by the function all
+      reading and writing of the disk goes through (`disk_io`), whenever it is asked to write
+      a table to the table's sector - so `update`, the installer and anything else do it too,
+      without having been read.
+- [ ] Found on the way: why the core cannot grow - at `NINUX-EXT-LOAD::` the loader keeps
+      0x17010, where the extension lies in memory before it is moved (0x7E00 + the size of the
+      core), as a number. Written as a name there, the core could be let grow and be tried.
 - [ ] A second copy of the kernel on the disk, and a boot sector that takes it when the first
       does not check: not begun.
 - [ ] An object is still written over its old place: a cut during that loses the object. The
@@ -285,6 +293,39 @@ Not written blind: it changes what happens at every start and end of the desktop
 - [ ] A part shows a program's window, not a desktop of its own: "each on its own desktop,
       full screen" (the owner's example) would be programs that take the whole screen each.
 - [ ] No name under a part; the mouse is a plain square there.
+
+### 17, what a program is handed (v3.0.35)
+
+- [x] `api_guard`, in the one place every call of a program passes (the gate of interrupt
+      0x80): a program whose code is not in the Sentinel's list is refused, with -1 and a line
+      in the log - power off and restart; the services of the kernel's extension; closing
+      another program, sending it keys, parking it, splitting the screen. Programs of the
+      build are in the list and are handed everything, as before (seen in QEMU: the old
+      desktop's programs and Desk2 work with it). The refusal itself was not seen: there is no
+      program outside the list in the image to ask.
+- [ ] It is the same table for all, with a few places closed to strangers - not yet "each
+      program its own small table". Saving over another program's object is still judged by
+      api_ob_save's own rules, which were not read.
+- [ ] A relay between two programs: `ob_call` reaches a socket of another object, but a relay
+      object that carries a parcel from one running program to another (docs/PROTOCOLS.md)
+      is not written - it needs to be known what a called object remembers between calls.
+- [ ] The keyboard on the screen: Cyrillic, Ctrl and Alt are not on it.
+
+### 21, names and parts (v3.0.35)
+
+- [x] 91 names now (`tools/kdis/renames.txt`): the multiplexer, the shell, objects, keys, and
+      new: the disk (`disk_io`, `disk_read`, `disk_write`), the console (`console_rows`,
+      `console_scroll` ...), the screen (`screen_memory`, `screen_width` ...), the loader
+      (`load_table`, `load_sectors`), the functions a program is handed that were read for the
+      desktop (`api_image`, `api_image_fit`, `api_ob_call`, `api_cabinet_facts`, `api_extension`).
+- [x] The first cut of the kernel into parts: everything written after the recovery is in
+      `kernel/New.kasm` (1557 lines, each part with what it is for), included by Kernel.kasm;
+      Kernel.kasm is the kernel of v2.9.59 with the places that call into New.kasm.
+- [ ] About 850 functions still have addresses for names; Kernel.kasm itself is one file of
+      50000 lines - cutting it by what the code does (the loader, the console, the cabinet,
+      the multiplexer, the drivers) is the next cut, when more of it has names.
+- [ ] tools/kdis/handwork.py has not been tried since New.kasm was cut out and the loader's
+      texts were changed; it must be before the kernel is read again by kdis.py.
 
 ## If the disk is lost again - where everything is
 

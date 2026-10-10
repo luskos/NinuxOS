@@ -577,11 +577,11 @@ entry_03:
         lea rdi,[rel d_82908]
         call api_print
         mov rdi,[rel d_82890]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_82917]
         call api_print
         mov rdi,[rel d_82898]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_82928]
         call api_print
 L_8286e:
@@ -1239,7 +1239,7 @@ L_83416:
         mov rdi,[rdx+0x70]
         test rdi,rdi
         jz short L_8344c
-        mov rax,[rel suit_start + (d_14eea - 0x82000)]
+        mov rax,[rel suit_start + (clock_ticks - 0x82000)]
         cmp rax,[rdx+0x78]
         jc short L_8344c
         add rax,0x3
@@ -1266,7 +1266,7 @@ entry_04:
         lea rdi,[rel d_8368d]
         call api_print
         mov rdi,[rel d_834e8]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel d_836a3]
         call api_print
         xor ebx,ebx
@@ -1285,7 +1285,7 @@ L_834b8:
         pop rax
         lea rdx,[rel d_836f0]
         mov rdi,[rdx+rax+0xb8]
-        call fn_08e3b
+        call print_number
         lea rdi,[rel suit_start + (d_153bf - 0x82000)]
         call api_print
         inc rbx

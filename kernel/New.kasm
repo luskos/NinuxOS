@@ -1,0 +1,1557 @@
+; New.kasm - what was written into the kernel after the recovery (NinuxOS v3).
+; Included by Kernel.kasm at the end of the extension, just in front of ext_end; the rest of
+; Kernel.kasm is the kernel of v2.9.59 as it was read back from the compiled one.
+; Each part says what it is for and which place of the old code calls it; every such call is
+; exactly as long as the instructions it stands for, so nothing that was there has moved.
+; python tools/build_disk.py --plain-kernel builds the kernel without this file.
+
+; ---- v3.0.11: the first code written into the kernel after the recovery --------------------
+; Alt + * - the star of the number keys, or Alt + Shift + 8 - turns the display off, and on
+; again. Every key of the built-in and of the USB keyboards passes api_poll (the shell, the
+; desktop and the programs all read keys there), so it works everywhere.
+; It lies at the end of the extension, so that nothing that was there before has moved; the
+; extension may reach 0x78000. tools/build_disk.py --plain-kernel builds without it.
+;
+; The picture is switched off in the display adapter by its VGA registers. A machine whose
+; adapter does not obey them keeps its picture; the lamp behind a laptop's screen stays on
+; (that needs the graphics driver or ACPI: TODO.md, "sleep, the lid, brightness").
+display_key:                            ; al = the key that went down (its scan code)
+        cmp byte [rel kb_on],0x0        ; (v3.0.23: with the keyboard on the screen, a key that is typed
+        jz display_key_look             ; takes the mouse arrow away - the text may scroll under it)
+        cmp byte [rel mux_on],0x0
+        jnz display_key_look
+        call kb_arrow_off
+display_key_look:
+        cmp al,0x37                     ; the star of the number keys
+        jz short display_key_alt
+        cmp al,0x09                     ; the 8 of the top row: a star with Shift
+        jnz short display_key_no
+        cmp byte [rel key_shift],0x0      ; Shift is held
+        jz short display_key_no
+display_key_alt:
+        cmp byte [rel key_alt],0x0      ; Alt is held
+        jz short display_key_no
+        call display_toggle
+        add rsp,0x8                     ; the key is used up: api_poll says "nothing came"
+        jmp near L_0a4cd
+display_key_no:
+        movzx ecx,al                    ; what api_poll did here before
+        cmp ecx,0x3a
+        retq
+
+display_toggle:
+        push rax
+        push rdx
+        xor byte [rel display_dark],0x1
+        mov dx,0x3c4                    ; the sequencer, register 1: bit 5 = no picture
+        mov al,0x1
+        out dx,al
+        inc dx
+        in al,dx
+        and al,0xdf
+        cmp byte [rel display_dark],0x0
+        jz short display_sequencer
+        or al,0x20
+display_sequencer:
+        out dx,al
+        mov dx,0x3da                    ; the attribute controller: reading here makes 0x3C0 take
+        in al,dx                        ; an index; bit 5 of the index = the picture is shown
+        mov dx,0x3c0
+        mov al,0x20
+        cmp byte [rel display_dark],0x0
+        jz short display_attribute
+        xor al,al
+display_attribute:
+        out dx,al
+        pop rdx
+        pop rax
+        retq
+display_dark:
+        db 0x00
+
+; ---- v3.0.16: programs live on when the desktop is left ------------------------------------
+; The multiplexer (mux_run) runs the desktop as task 0 and up to seven programs. Until now the
+; end of the desktop closed them all. Now: if programs still run when the desktop ends, they
+; are kept as they are - their records, memory and windows - and get no turns while the shell
+; has the screen. The next `desktop` takes them up again where they were.
+; Three places of the old code call in here; each call is as long as what it stands for.
+mux_leave:                              ; the desktop has ended. Stands for: mov ebx,0x1
+        call split_off                  ; (v3.0.32: the screen is whole again)
+        xor ecx,ecx
+        mov ebx,0x1
+mux_leave_count:
+        mov rdi,rbx
+        call mux_task                   ; the record of task rbx
+        cmp qword [rax],0x1             ; running
+        jnz short mux_leave_next
+        inc ecx
+mux_leave_next:
+        inc rbx
+        cmp rbx,0x8
+        jc short mux_leave_count
+        test ecx,ecx
+        jnz short mux_keep
+        mov ebx,0x1                     ; nothing runs: everything is closed and freed, as before
+        retq
+mux_keep:
+        add rsp,0x8                     ; not back to the old ending
+        call fn_56edf
+        mov byte [rel mux_on],0x0
+        call mux_hooks_off
+        call mux_reap                   ; what was closing is closed
+        xor edi,edi
+        call mux_free_task                   ; the desktop's own task is given back
+        mov byte [rel mux_kept],0x1
+        lea rdi,[rel mux_says_kept]
+        call api_log
+        xor eax,eax
+        jmp near L_53f1a
+
+mux_begin:                              ; the desktop starts. Stands for: call mux_init
+        mov byte [rel mux_again],0x0
+        cmp byte [rel mux_kept],0x0
+        jz near mux_init                ; nothing kept: a clean table, as before
+        mov byte [rel mux_kept],0x0
+        mov byte [rel mux_again],0x1
+        lea rdi,[rel mux_says_again]
+        call api_log
+        jmp near mux_begin_rest         ; the table of tasks is not wiped
+
+mux_order:                              ; the order of the windows, from the bottom. Stands for:
+        cmp byte [rel mux_again],0x0    ;   one window, the desktop's
+        jnz short mux_order_under
+        mov qword [rel mux_order_count],0x1
+        mov qword [rel mux_order_list],0x0
+        mov qword [rel mux_focused],0x0     ; the keys go to the desktop
+        retq
+mux_order_under:                        ; the kept windows stay in their order; the desktop goes under them
+        mov byte [rel mux_again],0x0
+        mov rcx,[rel mux_order_count]
+        lea rax,[rel mux_order_list]
+mux_order_up:
+        test rcx,rcx
+        jz short mux_order_put
+        mov rdx,[rax+rcx*8-0x8]
+        mov [rax+rcx*8],rdx
+        dec rcx
+        jmp short mux_order_up
+mux_order_put:
+        mov qword [rax],0x0
+        inc qword [rel mux_order_count]
+        mov rcx,[rel mux_order_count]           ; the keys go to the window on top, as when the desktop was left
+        mov rdx,[rax+rcx*8-0x8]
+        mov [rel mux_focused],rdx
+        retq
+; ---- v3.0.19: `tasks` - the programs that are kept while the shell has the screen -----------
+;       tasks             a line a kept program: its number and its name
+;       tasks close N     close the kept program number N (what it had not saved is lost)
+; The table of the shell's commands is in the core, which cannot grow. So the shell comes here
+; when a word is not in that table, before it looks for an object of that name.
+shell_more:                             ; rbx = the word, r12 = what follows it
+        lea rsi,[rel tasks_word]        ; stands for: mov rdi,rbx / call ob_find
+        mov rdi,rbx
+        call same_word_any_case                   ; the same word?
+        test eax,eax
+        jnz near tasks_command
+        lea rsi,[rel kb_word]
+        mov rdi,rbx
+        call same_word_any_case
+        test eax,eax
+        jnz near kb_command
+        lea rsi,[rel backup_word]
+        mov rdi,rbx
+        call same_word_any_case
+        test eax,eax
+        jnz near backup_command
+        lea rsi,[rel desk_word]
+        mov rdi,rbx
+        call same_word_any_case
+        test eax,eax
+        jnz near desk_command
+        mov rdi,rbx                     ; not ours: on with what the shell did here
+        jmp near ob_find
+tasks_command:
+        add rsp,0x8                     ; the command is done here: back to the end of the shell's function
+        cmp byte [rel mux_kept],0x0
+        jz near tasks_nothing
+        cmp byte [r12],0x0
+        jnz near tasks_close
+        mov ebx,0x1
+tasks_line:
+        mov rdi,rbx
+        call mux_task                   ; the record of task rbx
+        mov r13,rax
+        cmp qword [r13],0x1
+        jnz near tasks_next
+        lea rdi,[rel tasks_says_gap]
+        call api_print
+        lea edi,[rbx+0x30]
+        call api_put_letter
+        lea rdi,[rel tasks_says_gap]
+        call api_print
+        lea rdi,[r13+0x120]             ; its name
+        call api_print
+        lea rdi,[rel tasks_says_end]
+        call api_print
+tasks_next:
+        inc rbx
+        cmp rbx,0x8
+        jc near tasks_line
+        lea rdi,[rel tasks_says_how]
+        call api_print
+        jmp near L_0b044
+tasks_close:                            ; the first of the digits 1 .. 7 in what was typed
+        mov al,[r12]
+        test al,al
+        jz near tasks_usage
+        inc r12
+        cmp al,0x31
+        jc near tasks_close
+        cmp al,0x37
+        ja near tasks_close
+        movzx ebx,al
+        sub ebx,0x30
+        mov rdi,rbx
+        call mux_task
+        cmp qword [rax],0x1
+        jnz near tasks_no_such
+        mov rdi,rbx
+        call mux_free_task                   ; its memory, its window, its place
+        mov ebx,0x1                     ; was it the last one?
+tasks_left:
+        mov rdi,rbx
+        call mux_task
+        cmp qword [rax],0x1
+        jz near tasks_closed
+        inc rbx
+        cmp rbx,0x8
+        jc near tasks_left
+        mov rdi,[rel mux_draw_list]           ; nothing is kept any more: the multiplexer's own memory goes too
+        call mem_free
+        mov qword [rel mux_draw_list],0x0
+        mov byte [rel mux_kept],0x0
+tasks_closed:
+        lea rdi,[rel tasks_says_closed]
+        call api_print
+        jmp near L_0b044
+tasks_no_such:
+        lea rdi,[rel tasks_says_no_such]
+        call api_print
+        jmp near L_0b044
+tasks_usage:
+        lea rdi,[rel tasks_says_usage]
+        call api_print
+        jmp near L_0b044
+tasks_nothing:
+        lea rdi,[rel tasks_says_nothing]
+        call api_print
+        jmp near L_0b044
+; ---- v3.0.23: `keyboard` - a keyboard on the screen of the shell --------------------------------
+; For a machine without keys that work (a tablet, a broken keyboard): the mouse or a finger types.
+;       keyboard          on / off
+;       a click in the bottom right corner of the screen (32 dots) brings it too, when it is off
+; The bottom 11 lines of the screen become five rows of keys; the text keeps to the lines above.
+; A click on a key comes out of api_poll as that key, so everything that reads keys in the shell
+; takes it. Shift holds for one key. It is the first relay: what types is not a program that was
+; given the way to the shell, but a part of the system the shell itself switched on.
+KB_LINES equ 11                         ; 176 dots: 8, five rows of 32, 8
+kb_command:
+        add rsp,0x8
+        xor byte [rel kb_on],0x1
+        jz kb_command_off
+        call kb_turn_on
+        lea rdi,[rel kb_says_on]
+        call api_print
+        jmp near L_0b044
+kb_command_off:
+        call kb_turn_off
+        lea rdi,[rel kb_says_off]
+        call api_print
+        jmp near L_0b044
+
+kb_turn_on:                             ; the keys come on the screen (kb_on is 1 already)
+        mov rax,[rel console_rows]           ; the line being written must be above the keys
+        sub rax,KB_LINES
+        cmp [rel console_row],rax
+        jb kb_turn_on_room
+        call console_scroll                   ; the text goes up a line
+        dec qword [rel console_row]
+        jmp kb_turn_on
+kb_turn_on_room:
+        mov [rel console_rows],rax
+        mov byte [rel kb_shift],0x0
+        jmp kb_draw
+kb_turn_off:                            ; the keys are wiped, the lines are the text's again
+        call kb_arrow_off
+        mov rsi,[rel console_rows]
+        shl rsi,0x4
+        add qword [rel console_rows],KB_LINES
+        xor edi,edi
+        mov rdx,[rel screen_width]
+        mov ecx,KB_LINES * 16
+        mov r8d,[rel console_ground]
+        jmp near api_fill
+
+kb_arrow_off:                           ; the mouse arrow off the screen; keeps every register
+        push rax
+        push rcx
+        push rdx
+        push rsi
+        push rdi
+        push r8
+        push r9
+        push r10
+        push r11
+        call api_cursor_hide
+        pop r11
+        pop r10
+        pop r9
+        pop r8
+        pop rdi
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rax
+        retq
+
+kb_draw:                                ; the five rows of keys
+        push rbx
+        push rbp
+        push r12
+        push r13
+        push r14
+        push r15
+        mov r14,[rel console_rows]           ; the first dot line of the keys
+        shl r14,0x4
+        xor edi,edi
+        mov rsi,r14
+        mov rdx,[rel screen_width]
+        mov ecx,KB_LINES * 16
+        mov r8d,0x16151F
+        call api_fill
+        mov rax,[rel screen_width]           ; a key is a fourteenth of the screen wide
+        xor edx,edx
+        mov ecx,14
+        div rcx
+        mov r15,rax
+        lea rbp,[rel kb_keys]
+        cmp byte [rel kb_shift],0x0
+        jz kb_draw_rows
+        lea rbp,[rel kb_keys_shift]
+kb_draw_rows:
+        xor r12d,r12d                   ; the row
+kb_draw_row:
+        xor r13d,r13d                   ; the column
+kb_draw_key:
+        imul eax,r12d,14
+        add eax,r13d
+        movzx ebx,byte [rbp+rax]        ; what this key types
+        mov ecx,0x1                     ; how many places the same key takes
+kb_draw_wide:
+        lea edx,[r13+rcx]
+        cmp edx,14
+        jae kb_draw_one
+        lea edx,[rax+rcx]
+        cmp bl,[rbp+rdx]
+        jne kb_draw_one
+        inc ecx
+        jmp kb_draw_wide
+kb_draw_one:
+        push rcx
+        test ebx,ebx
+        jz kb_draw_next
+        mov rdi,r13                     ; x, y, width, height, colour
+        imul rdi,r15
+        add rdi,2
+        mov rsi,r12
+        shl rsi,0x5
+        lea rsi,[rsi+r14+10]
+        mov rdx,rcx
+        imul rdx,r15
+        sub rdx,4
+        mov ecx,28
+        mov r8d,0x2A2840
+        cmp ebx,0x1
+        jne kb_draw_fill
+        cmp byte [rel kb_shift],0x0
+        jz kb_draw_fill
+        mov r8d,0x7B5CFF                ; Shift is held
+kb_draw_fill:
+        push rdi
+        push rsi
+        push rdx
+        call api_fill
+        pop rdx
+        pop rsi
+        pop rdi
+        lea rax,[rel kb_one]            ; its name: the letter itself, or a word
+        mov [rax],bl
+        mov ecx,0x1
+        lea r8,[rel kb_names]
+kb_draw_name:
+        cmp byte [r8],0x0
+        jz kb_draw_text
+        cmp bl,[r8]
+        jne kb_draw_name_next
+        lea rax,[r8+2]
+        movzx ecx,byte [r8+1]
+        jmp kb_draw_text
+kb_draw_name_next:
+        movzx r9d,byte [r8+1]
+        lea r8,[r8+r9+3]
+        jmp kb_draw_name
+kb_draw_text:
+        shl ecx,0x2                     ; in the middle of the key
+        shr rdx,0x1
+        add rdi,rdx
+        sub rdi,rcx
+        add rsi,6
+        mov rdx,rax
+        mov ecx,0xF5F4FF
+        mov r8,-1
+        call api_text
+kb_draw_next:
+        pop rcx
+        add r13d,ecx
+        cmp r13d,14
+        jb kb_draw_key
+        inc r12d
+        cmp r12d,5
+        jb kb_draw_row
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbp
+        pop rbx
+        retq
+
+kb_mouse:                               ; the mouse moved or a button changed: ebx = the buttons
+        mov eax,ebx                     ; stands for: mov eax,ebx / mov r8,rax
+        mov r8,rax
+        cmp byte [rel mux_on],0x0       ; the desktop has its own
+        jnz kb_mouse_no
+        push rax
+        push r8
+        push r12
+        push r13
+        mov eax,ebx                     ; api_poll takes every packet of the mouse that waits at once and
+        or al,[rel kb_any]              ; tells only the buttons of the first: a quick click is down and up
+        and eax,0x1                     ; in one go. kb_packet has kept whether the button was down in any
+        mov byte [rel kb_any],0x0
+        mov cl,[rel kb_button]
+        movzx edx,byte [rel mouse_packet]    ; the buttons of the last packet: how it is now
+        and dl,0x1
+        mov [rel kb_button],dl
+        xor r13d,r13d                   ; r13 = 1: the button went down just now
+        test eax,eax
+        jz kb_mouse_state
+        test cl,cl
+        jnz kb_mouse_state
+        inc r13d
+kb_mouse_state:
+        cmp byte [rel kb_on],0x0
+        jnz kb_mouse_on
+        test r13d,r13d                  ; the keys are not there: a click in the bottom right corner of
+        jz kb_mouse_out                 ; the screen (32 dots) brings them - for a machine without keys
+        mov rax,[rel screen_width]
+        sub rax,32
+        cmp [rel mouse_at_x],rax
+        jb kb_mouse_out
+        mov rax,[rel console_rows]
+        shl rax,0x4
+        sub rax,32
+        cmp [rel mouse_at_y],rax
+        jb kb_mouse_out
+        mov byte [rel kb_on],0x1
+        call kb_turn_on
+        jmp kb_mouse_out
+kb_mouse_on:
+        mov rdi,[rel mouse_at_x]           ; the arrow, where the mouse is
+        mov rsi,[rel mouse_at_y]
+        call api_cursor_show
+        test r13d,r13d
+        jz kb_mouse_out                 ; a click: which key?
+        mov rax,[rel console_rows]
+        shl rax,0x4
+        add rax,8
+        mov r12,[rel mouse_at_y]
+        sub r12,rax
+        js kb_mouse_out
+        shr r12,0x5                     ; the row
+        cmp r12,5
+        jae kb_mouse_out
+        mov rax,[rel screen_width]
+        xor edx,edx
+        mov ecx,14
+        div rcx
+        mov rcx,rax
+        mov rax,[rel mouse_at_x]
+        xor edx,edx
+        div rcx                         ; the column
+        cmp rax,14
+        jae kb_mouse_out
+        imul r12,r12,14
+        add r12,rax
+        lea rax,[rel kb_keys]
+        cmp byte [rel kb_shift],0x0
+        jz kb_mouse_key
+        lea rax,[rel kb_keys_shift]
+kb_mouse_key:
+        movzx r13d,byte [rax+r12]
+        test r13d,r13d
+        jz kb_mouse_out
+        cmp r13d,0x1
+        jne kb_mouse_types
+        xor byte [rel kb_shift],0x1     ; Shift: for the next key
+        call api_cursor_hide
+        call kb_draw
+        jmp kb_mouse_out
+kb_mouse_types:
+        call api_cursor_hide            ; the text may scroll under the arrow
+        cmp byte [rel kb_shift],0x0
+        jz kb_mouse_typed
+        mov byte [rel kb_shift],0x0
+        call kb_draw
+kb_mouse_typed:
+        mov edx,r13d                    ; it leaves api_poll as a key that was typed
+        pop r13
+        pop r12
+        add rsp,0x18                    ; (the two kept registers, and the way back into api_poll)
+        xor r8d,r8d
+        xor ecx,ecx
+        mov eax,0x1
+        pop rbx
+        retq
+kb_mouse_out:
+        pop r13
+        pop r12
+        pop r8
+        pop rax
+kb_mouse_no:
+        retq
+
+kb_packet:                              ; stands for: call fn_0a62f (one more packet of the mouse is taken)
+        mov al,[rel mouse_packet]
+        and al,0x1
+        or [rel kb_any],al
+        jmp near fn_0a62f
+kb_any:
+        db 0x00
+kb_on:
+        db 0x00
+kb_shift:
+        db 0x00
+kb_button:
+        db 0x00
+kb_one:
+        db 0x00, 0x00
+kb_word:
+        db 'keyboard', 0
+kb_says_on:
+        db 'The keyboard is on the screen: click the keys. ', 39, 'keyboard', 39, ' again takes it away.', 10, 0
+kb_says_off:
+        db 'The keyboard is off the screen.', 10, 0
+; what a key types: 1 = Shift, 8 = back, 10 = Enter (what the shell takes for it), 27 = Esc, 0x80 / 0x81 = up / down, 0 = no key.
+; A key that is wider stands in every place it covers.
+kb_keys:
+        db '1234567890-=', 8, 8
+        db 'qwertyuiop[]\`'
+        db 'asdfghjkl;', 39, 10, 10, 10
+        db 1, 1, 'zxcvbnm,./', 1, 1
+        db 27, 27, '        ', 0x80, 0x80, 0x81, 0x81
+kb_keys_shift:
+        db '!@#$%^&*()_+', 8, 8
+        db 'QWERTYUIOP{}|~'
+        db 'ASDFGHJKL:"', 10, 10, 10
+        db 1, 1, 'ZXCVBNM<>?', 1, 1
+        db 27, 27, '        ', 0x80, 0x80, 0x81, 0x81
+kb_names:                               ; the key, the length of its name, the name, 0
+        db 1, 5, 'Shift', 0
+        db 8, 4, 'Back', 0
+        db 10, 5, 'Enter', 0
+        db 27, 3, 'Esc', 0
+        db ' ', 5, 'Space', 0
+        db 0x80, 2, 'Up', 0
+        db 0x81, 4, 'Down', 0
+        db 0
+; ---- v3.0.35: a program is handed what it needs --------------------------------------------
+; Every program gets the same table of the system's functions. Until now that was all of it,
+; whoever the program was. Now a program whose code the Sentinel does not know (it is not in
+; the signed list of the build: something the user made, or was sent) is refused, with -1:
+;       power off and restart                                  (place +0xE8 of the table)
+;       the services of the kernel's extension                 (+0x108)
+;       closing another program, sending it keys, parking it,
+;       splitting the screen                                    (+0x118, numbers 0x0A, 0x0C, 0x0E, 0x0F)
+; Everything a program needs for its own work stays: drawing, keys and the mouse, memory, its
+; objects, starting a program. The refusal is in the one place every call of a program passes
+; (the gate of interrupt 0x80), so it cannot be gone round. Programs of the build - the desktop,
+; NET, Studio, Bags, Files - are in the list and are handed everything, as before.
+api_guard:                              ; r11 = the number of the function asked for. Stands for: lea r10,[rel api_table]
+        cmp r11,0x1d                    ; +0xE8
+        je api_guard_ask
+        cmp r11,0x21                    ; +0x108
+        je api_guard_ask
+        cmp r11,0x23                    ; +0x118
+        jne api_guard_yes
+        cmp rdi,0xa
+        je api_guard_ask
+        cmp rdi,0xc
+        je api_guard_ask
+        cmp rdi,0xe
+        je api_guard_ask
+        cmp rdi,0xf
+        jne api_guard_yes
+api_guard_ask:
+        push rax
+        push rcx
+        push rdx
+        push rsi
+        push rdi
+        push r8
+        push r9
+        push r11
+        mov rdi,[rel this_object]           ; the object whose code is running
+        xor eax,eax
+        test rdi,rdi
+        jz api_guard_known              ; none: the kernel itself
+        call ob_known                   ; is its code in the Sentinel's list?
+        test eax,eax
+        jnz api_guard_known
+        lea rdi,[rel api_guard_says]
+        call api_log
+        pop r11
+        pop r9
+        pop r8
+        pop rdi
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rax
+        add rsp,0x8                     ; not to the function: -1, as for a number that does not exist
+        jmp near L_0ed08
+api_guard_known:
+        pop r11
+        pop r9
+        pop r8
+        pop rdi
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rax
+api_guard_yes:
+        lea r10,[rel api_table]
+        retq
+api_guard_says:
+        db '[shield] a program the Sentinel does not know asked for power, a service of the extension or another program: refused', 10, 0
+
+; ---- v3.0.32: the screen split in 4 or 9 --------------------------------------------------
+; Every program that runs, and the desk, each in a part of the screen, all at once, made small
+; to fit (never bigger than it is). A click on one makes the screen whole again with that one in
+; front; ESC makes it whole as it was.
+; How: while the screen is split the multiplexer draws as always - but into memory of its own
+; instead of the screen (its "screen" is moved there). split_show then draws every task's
+; picture, made small, onto the real screen, about 25 times a second. Keys and the mouse do
+; not reach the programs meanwhile: split_step takes them.
+;   programs function, number 0x0F: rsi = 0 whole, 4 or 9 parts
+split_service:                          ; stands for the end of the programs function: "no such number: -1"
+        cmp rdi,0xf
+        jne split_service_no
+        cmp byte [rel mux_on],0x0
+        jz split_service_no
+        test rsi,rsi
+        jz split_service_off
+        cmp byte [rel split_parts],0x0
+        jnz split_service_done          ; already split
+        push rbx
+        mov rbx,rsi
+        mov rdi,[rel mux_screen_line_bytes]           ; memory as big as the screen
+        imul rdi,[rel mux_screen_height]
+        call api_memory
+        test rax,rax
+        jz split_service_none
+        mov rcx,[rel mux_screen]
+        mov [rel split_screen],rcx      ; the real screen
+        mov [rel split_memory],rax
+        mov [rel mux_screen],rax           ; the multiplexer's screen is that memory now
+        cmp [rel screen_memory],rcx
+        jne split_service_on
+        mov [rel screen_memory],rax
+split_service_on:
+        mov eax,0x2
+        cmp rbx,0x4
+        je split_service_side
+        mov eax,0x3
+split_service_side:
+        mov [rel split_parts],al        ; the parts along one side: 2 or 3
+        xor edi,edi
+        call mux_focus                  ; the desk has the keys
+        pop rbx
+split_service_done:
+        xor eax,eax
+        retq
+split_service_none:
+        pop rbx
+split_service_no:
+        mov rax,0xffffffffffffffff
+        retq
+split_service_off:
+        call split_off
+        xor eax,eax
+        retq
+
+split_off:                              ; the screen whole again; keeps every register
+        cmp byte [rel split_parts],0x0
+        jz split_off_not
+        push rax
+        push rcx
+        push rdx
+        push rsi
+        push rdi
+        push r8
+        push r9
+        push r10
+        push r11
+        mov byte [rel split_parts],0x0
+        mov rax,[rel split_screen]
+        mov rcx,[rel split_memory]
+        mov [rel mux_screen],rax
+        cmp [rel screen_memory],rcx
+        jne split_off_free
+        mov [rel screen_memory],rax
+split_off_free:
+        mov rdi,rcx
+        call mem_free
+        xor edi,edi                     ; everything is drawn again
+        xor esi,esi
+        mov rdx,[rel mux_screen_width]
+        mov rcx,[rel mux_screen_height]
+        call mux_repaint
+        pop r11
+        pop r10
+        pop r9
+        pop r8
+        pop rdi
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rax
+split_off_not:
+        retq
+
+split_step:                             ; stands for: call mux_input (keys and the mouse, once round the loop)
+        cmp byte [rel split_parts],0x0
+        jz near mux_input
+        push rbx
+        push r12
+        push r13
+        call api_poll
+        cmp rax,0x1
+        jne split_step_mouse
+        cmp edx,27                      ; ESC: whole again, as it was
+        jne split_step_show
+        call split_off
+        jmp split_step_out
+split_step_mouse:
+        cmp rax,0x2
+        jne split_step_show
+        mov [rel split_x],rdx
+        mov [rel split_y],rcx
+        mov rbx,r8
+        and ebx,0x1
+        mov al,[rel split_button]
+        mov [rel split_button],bl
+        test ebx,ebx
+        jz split_step_show
+        test al,al
+        jnz split_step_show
+        movzx r12d,byte [rel split_parts]       ; a click: which part, and whose it is
+        mov rax,[rel split_y]
+        imul rax,r12
+        xor edx,edx
+        div qword [rel mux_screen_height]
+        mov r13,rax
+        imul r13,r12
+        mov rax,[rel split_x]
+        imul rax,r12
+        xor edx,edx
+        div qword [rel mux_screen_width]
+        add r13,rax                             ; the number of the part
+        xor ebx,ebx
+split_step_whose:
+        cmp rbx,0x8
+        jae split_step_show                     ; an empty part
+        mov rdi,rbx
+        call mux_task
+        cmp qword [rax],0x1
+        jne split_step_next
+        cmp qword [rax+0x68],0x0
+        je split_step_next
+        test r13,r13
+        jz split_step_pick
+        dec r13
+split_step_next:
+        inc rbx
+        jmp split_step_whose
+split_step_pick:
+        call split_off
+        mov rdi,rbx
+        call mux_focus
+        jmp split_step_out
+split_step_show:
+        mov rax,[rel clock_ticks]           ; the clock: 100 ticks a second
+        sub rax,[rel split_shown]
+        cmp rax,0x4
+        jb split_step_out
+        mov rax,[rel clock_ticks]
+        mov [rel split_shown],rax
+        call split_show
+split_step_out:
+        pop r13
+        pop r12
+        pop rbx
+        retq
+
+split_show:                             ; every task's picture, made small, in its part of the real screen
+        push rbx
+        push rbp
+        push r12
+        push r13
+        push r14
+        push r15
+        movzx r12d,byte [rel split_parts]
+        xor r13d,r13d                   ; the part
+        xor ebx,ebx                     ; the task
+split_show_task:
+        mov rax,r12
+        imul rax,r12
+        cmp r13,rax
+        jae split_show_arrow
+        cmp rbx,0x8
+        jae split_show_empty
+        mov rdi,rbx
+        call mux_task
+        inc rbx
+        cmp qword [rax],0x1
+        jne split_show_task
+        mov r14,[rax+0x68]              ; its picture, and how big it is
+        test r14,r14
+        jz split_show_task
+        mov r15,[rax+0x70]
+        mov rbp,[rax+0x78]
+        test r15,r15
+        jz split_show_task
+        test rbp,rbp
+        jz split_show_task
+        call split_part
+        inc r13
+        jmp split_show_task
+split_show_empty:
+        xor r14d,r14d                   ; a part nothing is in
+        call split_part
+        inc r13
+        jmp split_show_task
+split_show_arrow:                       ; the mouse: a small white square with a dark edge
+        mov rdi,[rel split_x]
+        mov rsi,[rel split_y]
+        mov edx,10
+        mov ecx,10
+        xor r8d,r8d
+        call split_fill
+        mov rdi,[rel split_x]
+        mov rsi,[rel split_y]
+        inc rdi
+        inc rsi
+        mov edx,8
+        mov ecx,8
+        mov r8d,0xFFFFFF
+        call split_fill
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbp
+        pop rbx
+        retq
+
+split_fill:                             ; rdi, rsi, rdx, rcx = x, y, width, height, r8d = colour: on the real screen
+        mov rax,rdi
+        add rax,rdx
+        cmp rax,[rel mux_screen_width]
+        ja split_fill_out
+        mov rax,rsi
+        add rax,rcx
+        cmp rax,[rel mux_screen_height]
+        ja split_fill_out
+        mov r9,rsi
+        imul r9,[rel mux_screen_line_bytes]
+        add r9,[rel split_screen]
+        lea r9,[r9+rdi*4]
+        mov eax,r8d
+split_fill_row:
+        test rcx,rcx
+        jz split_fill_out
+        mov rdi,r9
+        push rcx
+        mov rcx,rdx
+        rep stosd
+        pop rcx
+        add r9,[rel mux_screen_line_bytes]
+        dec rcx
+        jmp split_fill_row
+split_fill_out:
+        retq
+
+split_part:                             ; the part r13 of r12 x r12: r14 = a picture (0: none), r15 x rbp its size
+        push rbx
+        push r12
+        push r13
+        push r14
+        push r15
+        push rbp
+        sub rsp,0x40
+        mov rax,[rel mux_screen_width]           ; the part: [rsp] x, +8 y, +16 width, +24 height
+        xor edx,edx
+        div r12
+        mov [rsp+16],rax
+        mov rax,[rel mux_screen_height]
+        xor edx,edx
+        div r12
+        mov [rsp+24],rax
+        mov rax,r13
+        xor edx,edx
+        div r12                         ; rax the row, rdx the column
+        imul rdx,[rsp+16]
+        mov [rsp],rdx
+        imul rax,[rsp+24]
+        mov [rsp+8],rax
+        mov rdi,[rsp]                   ; its ground, with a dark line round it
+        mov rsi,[rsp+8]
+        mov rdx,[rsp+16]
+        mov rcx,[rsp+24]
+        mov r8d,0x05050A
+        call split_fill
+        mov rdi,[rsp]
+        mov rsi,[rsp+8]
+        add rdi,2
+        add rsi,2
+        mov rdx,[rsp+16]
+        mov rcx,[rsp+24]
+        sub rdx,4
+        sub rcx,4
+        mov r8d,0x16151F
+        call split_fill
+        test r14,r14
+        jz split_part_out
+        mov rbx,[rsp+16]                ; how big it is shown: never bigger than it is, and in its shape
+        sub rbx,8                       ; rbx the room's width, r12 its height
+        mov r12,[rsp+24]
+        sub r12,8
+        cmp r15,rbx
+        ja split_part_small
+        cmp rbp,r12
+        ja split_part_small
+        mov rbx,r15
+        mov r12,rbp
+        jmp split_part_place
+split_part_small:
+        mov rax,r15                     ; width * room's height against height * room's width
+        imul rax,r12
+        mov rcx,rbp
+        imul rcx,rbx
+        cmp rax,rcx
+        jb split_part_tall
+        mov rax,rbp                     ; as wide as the room
+        imul rax,rbx
+        xor edx,edx
+        div r15
+        mov r12,rax
+        jmp split_part_place
+split_part_tall:
+        mov rax,r15                     ; as high as the room
+        imul rax,r12
+        xor edx,edx
+        div rbp
+        mov rbx,rax
+split_part_place:
+        test rbx,rbx
+        jz split_part_out
+        test r12,r12
+        jz split_part_out
+        mov rax,[rsp+16]                ; in the middle of the part
+        sub rax,rbx
+        shr rax,1
+        add [rsp],rax
+        mov rax,[rsp+24]
+        sub rax,r12
+        shr rax,1
+        add [rsp+8],rax
+        mov rax,r15                     ; how far to step in the picture for a dot of the screen (16 bits behind the point)
+        shl rax,16
+        xor edx,edx
+        div rbx
+        mov [rsp+32],rax
+        mov rax,rbp
+        shl rax,16
+        xor edx,edx
+        div r12
+        mov [rsp+40],rax
+        xor r13d,r13d                   ; the row
+split_part_row:
+        cmp r13,r12
+        jae split_part_out
+        mov rax,r13
+        imul rax,[rsp+40]
+        shr rax,16
+        imul rax,r15
+        lea rsi,[r14+rax*4]             ; the row of the picture
+        mov rdi,[rsp+8]
+        add rdi,r13
+        imul rdi,[rel mux_screen_line_bytes]
+        add rdi,[rel split_screen]
+        mov rax,[rsp]
+        lea rdi,[rdi+rax*4]
+        xor ecx,ecx
+        xor r8d,r8d
+        mov r9,[rsp+32]
+split_part_dot:
+        cmp rcx,rbx
+        jae split_part_next
+        mov rax,r8
+        shr rax,16
+        mov eax,[rsi+rax*4]
+        mov [rdi+rcx*4],eax
+        add r8,r9
+        inc rcx
+        jmp split_part_dot
+split_part_next:
+        inc r13
+        jmp split_part_row
+split_part_out:
+        add rsp,0x40
+        pop rbp
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbx
+        retq
+
+split_parts:
+        db 0x00
+split_button:
+        db 0x00
+        align 8, db 0
+split_screen:
+        dq 0
+split_memory:
+        dq 0
+split_x:
+        dq 0
+split_y:
+        dq 0
+split_shown:
+        dq 0
+
+; ---- v3.0.28: `desk NAME` - another object as the desktop -----------------------------------
+; The shell runs an object under the multiplexer (as task 0, with programs in windows) only when
+; the word typed is "desktop". So that a desktop written anew can be tried beside the old one:
+;       desk NAME         runs the object NAME the way `desktop` runs Desktop
+desk_command:                           ; r12 = the name
+        add rsp,0x8
+        cmp byte [r12],0x0
+        jz desk_usage
+        mov byte [rel desk_any],0x1
+        mov rdi,r12
+        call ob_run_as_command
+        mov byte [rel desk_any],0x0
+        jmp near L_0b044
+desk_usage:
+        lea rdi,[rel desk_says_usage]
+        call api_print
+        jmp near L_0b044
+desk_is:                                ; stands for: call shell_same_word (is the word typed "desktop"?)
+        cmp byte [rel desk_any],0x0
+        jz near shell_same_word
+        mov byte [rel desk_any],0x0
+        mov eax,0x1
+        retq
+desk_any:
+        db 0x00
+desk_word:
+        db 'desk', 0
+desk_says_usage:
+        db 'Usage: desk NAME   runs the object NAME as the desktop (', 39, 'desktop', 39, ' runs the usual one)', 10, 0
+
+; ---- v3.0.25: the silent backup of what the user saves -----------------------------------------
+; Every object a program saves (api_ob_save: a text of Notepad, a picture of Paint, a page ...)
+; is at once written a second time, into the backup pool - a part of the disk outside the
+; cabinet, so that what happens to the cabinet does not happen to it. Nothing is asked and
+; nothing is said. It needs no maintenance mode: the pool is not the cabinet.
+;       backup            what the pool holds: a line a save, the newest last
+;       backup get N      bring save number N back as an object of the cabinet (under its name)
+;       backup clear      empty the pool
+; The pool: POOL_SIZE sectors, POOL_AT sectors from the start of the system (32 MB each).
+;   its first sector: 'NXPOOL1', 0; +8 the sector the next save goes to; +16 saves ever made;
+;                     +24 its size in sectors; +32 how many times it was full and began anew
+;   a save: a sector 'NXBK', +4 its data sectors, +8 its size in bytes, +16 the name (16),
+;           +32 its number, +40 the clock (ticks since the start); then the object itself
+; When the pool is full the next save goes to its start again: the oldest are written over.
+; A disk too small for it (less than 64 MB) has no pool; saving works as before.
+POOL_AT   equ 65536
+POOL_SIZE equ 65536
+
+backup_save:                            ; stands for the first lines of api_ob_save:
+        pop rax                         ;   push rbx / push r12 / push r13 / mov rbx,rdi
+        push rbx
+        push r12
+        push r13
+        mov rbx,rdi
+        push rax
+        push rdi
+        push rsi
+        push rdx
+        call backup_write
+        pop rdx
+        pop rsi
+        pop rdi
+        retq
+
+backup_io:                              ; rdi = a sector of the pool, rsi = memory, edx = sectors, ecx = 1: write
+        add rdi,[rel table_sector]           ; (table_sector: where the table of the cabinet lies, sector 481 of the system)
+        add rdi,POOL_AT - 481
+        jmp near disk_io
+
+backup_head:                            ; the pool's first sector into backup_sector (made, if it is not one);
+        cmp byte [rel backup_none],0x0  ; eax = 0: this disk has no pool
+        jnz backup_head_no
+        cmp byte [rel disk_writable],0x0      ; no disk that can be written
+        jz backup_head_no
+        xor edi,edi
+        lea rsi,[rel backup_sector]
+        mov edx,0x1
+        xor ecx,ecx
+        call backup_io
+        test eax,eax
+        jz backup_head_none
+        lea rax,[rel backup_sector]
+        mov rcx,0x00314C4F4F50584E      ; 'NXPOOL1', 0
+        cmp [rax],rcx
+        je backup_head_ok
+backup_head_new:
+        lea rdi,[rel backup_sector]
+        push rdi
+        xor eax,eax
+        mov ecx,64
+        rep stosq
+        pop rax
+        mov rcx,0x00314C4F4F50584E
+        mov [rax],rcx
+        mov qword [rax+8],0x1
+        mov qword [rax+24],POOL_SIZE
+backup_head_ok:
+        mov eax,0x1
+        retq
+backup_head_none:
+        mov byte [rel backup_none],0x1  ; it cannot be read there: not asked again in this session
+backup_head_no:
+        xor eax,eax
+        retq
+
+backup_write:                           ; rdi = the name, rsi = the object, rdx = its size; keeps rbx, rbp, r12-r15
+        push rbx
+        push rbp
+        push r12
+        push r13
+        push r14
+        push r15
+        mov r12,rdi
+        mov r13,rsi
+        mov r14,rdx
+        cmp r14,0x68
+        jb backup_write_out
+        cmp r14,0x400000                ; 4 MB at most
+        ja backup_write_out
+        mov byte [rel d_16e44],0x0
+        mov rdi,r12                     ; what a program hands over is looked at as api_ob_save looks at it
+        mov esi,0x11
+        call memory_ok
+        test eax,eax
+        jz backup_write_out
+        mov rdi,r13
+        mov rsi,r14
+        call memory_ok
+        test eax,eax
+        jz backup_write_out
+        cmp dword [r13],0x41534d4f
+        jne backup_write_out
+        call backup_head
+        test eax,eax
+        jz backup_write_out
+        lea r15,[r14+511]               ; its data sectors
+        shr r15,0x9
+        lea rbp,[rel backup_sector]
+        mov rbx,[rbp+8]                 ; where it goes
+        lea rax,[rbx+r15+1]
+        cmp rax,POOL_SIZE
+        jbe backup_write_place
+        mov ebx,0x1                     ; the pool is full: from its start again
+        inc qword [rbp+32]
+backup_write_place:
+        mov rdi,r14                     ; the whole sectors of the object, straight from where it lies
+        shr rdi,0x9
+        test rdi,rdi
+        jz backup_write_tail
+        mov rdx,rdi
+        lea rdi,[rbx+1]
+        mov rsi,r13
+        mov ecx,0x1
+        call backup_io
+        test eax,eax
+        jz backup_write_out
+backup_write_tail:                      ; the rest of it, in a sector of its own
+        mov rcx,r14
+        and ecx,511
+        jz backup_write_record
+        lea rdi,[rel backup_record]
+        push rdi
+        push rcx
+        xor eax,eax
+        mov ecx,64
+        rep stosq
+        pop rcx
+        pop rdi
+        mov rsi,r14
+        and rsi,-512
+        add rsi,r13
+        rep movsb
+        mov rdi,r14
+        shr rdi,0x9
+        lea rdi,[rdi+rbx+1]
+        lea rsi,[rel backup_record]
+        mov edx,0x1
+        mov ecx,0x1
+        call backup_io
+        test eax,eax
+        jz backup_write_out
+backup_write_record:                    ; the sector that says what it is
+        lea rdi,[rel backup_record]
+        xor eax,eax
+        mov ecx,64
+        rep stosq
+        lea rax,[rel backup_record]
+        mov dword [rax],0x4B42584E      ; 'NXBK'
+        mov [rax+4],r15d
+        mov [rax+8],r14
+        xor ecx,ecx
+backup_write_name:
+        mov dl,[r12+rcx]
+        test dl,dl
+        jz backup_write_named
+        mov [rax+rcx+16],dl
+        inc ecx
+        cmp ecx,15
+        jb backup_write_name
+backup_write_named:
+        mov rcx,[rbp+16]
+        inc rcx
+        mov [rax+32],rcx
+        mov rcx,[rel clock_ticks]
+        mov [rax+40],rcx
+        mov rdi,rbx
+        mov rsi,rax
+        mov edx,0x1
+        mov ecx,0x1
+        call backup_io
+        test eax,eax
+        jz backup_write_out
+        inc qword [rbp+16]              ; and the pool's first sector: where the next one goes
+        lea rax,[rbx+r15+1]
+        mov [rbp+8],rax
+        xor edi,edi
+        mov rsi,rbp
+        mov edx,0x1
+        mov ecx,0x1
+        call backup_io
+backup_write_out:
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbp
+        pop rbx
+        retq
+
+backup_command:                         ; r12 = what was typed after the word
+        add rsp,0x8
+        call backup_head
+        test eax,eax
+        jz near backup_says_no_pool
+        mov al,[r12]
+        cmp al,0x0
+        je backup_list
+        or al,0x20
+        cmp al,0x67                     ; g(et)
+        je backup_get
+        cmp al,0x63                     ; c(lear)
+        jne near backup_usage
+        call backup_head_new            ; clear: a new first sector
+        xor edi,edi
+        lea rsi,[rel backup_sector]
+        mov edx,0x1
+        mov ecx,0x1
+        call backup_io
+        lea rdi,[rel backup_text_cleared]
+        call api_print
+        jmp near L_0b044
+
+backup_next:                            ; rbx = the sector of a save -> its sector into backup_record;
+        lea rax,[rel backup_sector]     ; eax = 0 when there is none there (the end of what is kept)
+        cmp rbx,[rax+8]
+        jae backup_next_no
+        mov rdi,rbx
+        lea rsi,[rel backup_record]
+        mov edx,0x1
+        xor ecx,ecx
+        call backup_io
+        test eax,eax
+        jz backup_next_no
+        lea rax,[rel backup_record]
+        cmp dword [rax],0x4B42584E
+        jne backup_next_no
+        mov eax,0x1
+        retq
+backup_next_no:
+        xor eax,eax
+        retq
+
+backup_list:
+        mov ebx,0x1                     ; the sector
+        xor r13d,r13d                   ; the number in the list
+backup_list_line:
+        call backup_next
+        test eax,eax
+        jz backup_list_end
+        inc r13
+        lea rdi,[rel tasks_says_gap]
+        call api_print
+        mov rdi,r13
+        call print_number
+        lea rdi,[rel tasks_says_gap]
+        call api_print
+        lea rdi,[rel backup_record + 16]
+        call api_print
+        lea rdi,[rel tasks_says_gap]
+        call api_print
+        lea rax,[rel backup_record]
+        mov rdi,[rax+8]
+        call print_number
+        lea rdi,[rel backup_text_bytes]
+        call api_print
+        lea rax,[rel backup_record]
+        mov eax,[rax+4]
+        lea rbx,[rbx+rax+1]
+        jmp backup_list_line
+backup_list_end:
+        mov rdi,r13
+        call print_number
+        lea rdi,[rel backup_text_kept]
+        call api_print
+        lea rax,[rel backup_sector]
+        mov rdi,[rax+8]
+        shr rdi,0x1
+        call print_number
+        lea rdi,[rel backup_text_of]
+        call api_print
+        jmp near L_0b044
+
+backup_get:                             ; the number after the word
+        xor r13d,r13d
+backup_get_digits:
+        movzx eax,byte [r12]
+        test eax,eax
+        jz backup_get_find
+        inc r12
+        sub eax,0x30
+        cmp eax,0x9
+        ja backup_get_digits
+        imul r13,r13,10
+        add r13,rax
+        jmp backup_get_digits
+backup_get_find:
+        test r13,r13
+        jz near backup_usage
+        mov ebx,0x1
+backup_get_step:
+        call backup_next
+        test eax,eax
+        jz near backup_says_no_such
+        dec r13
+        jz backup_get_it
+        lea rax,[rel backup_record]
+        mov eax,[rax+4]
+        lea rbx,[rbx+rax+1]
+        jmp backup_get_step
+backup_get_it:                          ; memory for its name and for the object, read, saved as an object
+        lea rax,[rel backup_record]
+        mov r13d,[rax+4]                ; its data sectors
+        mov rdi,r13
+        shl rdi,0x9
+        add rdi,32
+        call api_memory
+        test rax,rax
+        jz near backup_says_no_such
+        mov r12,rax
+        lea rsi,[rel backup_record + 16]
+        mov rdi,r12
+        mov ecx,16
+        rep movsb
+        lea rdi,[rbx+1]
+        lea rsi,[r12+32]
+        mov rdx,r13
+        xor ecx,ecx
+        call backup_io
+        test eax,eax
+        jz backup_get_free
+        lea rax,[rel backup_record]
+        mov rdx,[rax+8]
+        mov rdi,r12
+        lea rsi,[r12+32]
+        call api_ob_save
+        lea rdi,[rel backup_text_back]
+        call api_print
+        mov rdi,r12
+        call api_print
+        lea rdi,[rel tasks_says_end]
+        call api_print
+backup_get_free:
+        mov rdi,r12
+        call mem_free
+        jmp near L_0b044
+backup_says_no_such:
+        lea rdi,[rel backup_text_no_such]
+        call api_print
+        jmp near L_0b044
+backup_usage:
+        lea rdi,[rel backup_text_usage]
+        call api_print
+        jmp near L_0b044
+backup_says_no_pool:
+        lea rdi,[rel backup_text_no_pool]
+        call api_print
+        jmp near L_0b044
+
+backup_none:
+        db 0x00
+backup_word:
+        db 'backup', 0
+backup_text_bytes:
+        db ' bytes', 10, 0
+backup_text_kept:
+        db ' saves are kept, in ', 0
+backup_text_of:
+        db ' KB of the 32768 KB of the pool. backup get N brings one back.', 10, 0
+backup_text_back:
+        db 'Brought back as it was saved: ', 0
+backup_text_cleared:
+        db 'The backup pool is empty.', 10, 0
+backup_text_no_such:
+        db 'No save has that number (or it could not be read).', 10, 0
+backup_text_usage:
+        db 'Usage: backup | backup get N | backup clear', 10, 0
+backup_text_no_pool:
+        db 'No backup pool here: no disk that can be written, or it is smaller than 64 MB.', 10, 0
+        align 8, db 0
+backup_sector:
+        times 512 db 0
+backup_record:
+        times 512 db 0
+
+; ---- v3.0.24: the table of the cabinet is kept twice ----------------------------------------
+; The table says where every object lies; if the sectors it is in are lost, everything is.
+; A copy lies in the sectors right behind it (the table is 4 sectors, the objects start 9
+; sectors after its start). The copy is written first, then the table: if the power goes
+; during the first writing the table is still the old one, whole; during the second, the copy
+; is the new one, whole. tools/table_copy.py looks at both and can put the copy back.
+; (The loader does not read the copy yet: it is in the core, which cannot grow.)
+cabinet_save_twice:                     ; (v3.0.24 wrote the copy here; from v3.0.35 table_twice does it for every writer)
+        jmp near disk_io
+
+; v3.0.35: the copy is written by the function every reading and writing of the disk goes
+; through (disk_io: rdi = sector, rsi = memory, rdx = sectors, rcx = 0 read, else write), so
+; that `update`, the installer and whatever else writes the table keep the copy too.
+table_twice:                            ; stands for the first lines of disk_io: push rbx / push r12 / push r13
+        pop rax
+        push rbx
+        push r12
+        push r13
+        push rax
+        test rcx,rcx
+        jz table_twice_no               ; reading
+        cmp rdi,[rel table_sector]
+        jne table_twice_no              ; not the table
+        cmp rdx,0x4
+        ja table_twice_no
+        test rdx,rdx
+        jz table_twice_no
+        cmp dword [rsi],0x4e424143      ; and it is a table that is written
+        jne table_twice_no
+        push rdi
+        push rsi
+        push rdx
+        push rcx
+        add rdi,rdx                     ; the copy lies right behind the table; this call is not the table's sector
+        call disk_io
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+table_twice_no:
+        retq
+
+; ---- v3.0.21: `cores solo`, `cores one`, `cores all` outside maintenance mode ----------------
+; They were refused ("enter maintenance mode first") because the setting is kept in the table
+; of the cabinet - so `bench` gave the same numbers whatever was typed. Now the setting is made
+; for this session; only the writing to the disk still needs maintenance mode.
+cores_maint:                            ; stands for: call maint_check (is maintenance mode on? says so if not)
+        mov byte [rel cores_session],0x0
+        cmp byte [rel maint_on],0x0
+        jnz near maint_check               ; on: as before (it may have run out)
+        mov byte [rel cores_session],0x1
+        lea rdi,[rel cores_says_session]
+        call api_print
+        or eax,0x1                      ; go on
+        retq
+cores_save:                             ; stands for: call cabinet_save (write the table of the cabinet)
+        cmp byte [rel cores_session],0x0
+        jz near cabinet_save
+        retq
+cores_session:
+        db 0x00
+cores_says_session:
+        db '(For this session. In maintenance mode - ', 39, 'maint', 39, ' - it is kept.)', 10, 0
+tasks_word:
+        db 'tasks', 0
+tasks_says_gap:
+        db '  ', 0
+tasks_says_end:
+        db 10, 0
+tasks_says_how:
+        db 'They wait until the desktop is started again. tasks close N closes one.', 10, 0
+tasks_says_nothing:
+        db 'No programs are kept. Leave the desktop with programs open and they wait here.', 10, 0
+tasks_says_usage:
+        db 'Usage: tasks | tasks close N   (N = the number tasks shows)', 10, 0
+tasks_says_no_such:
+        db 'No kept program has that number.', 10, 0
+tasks_says_closed:
+        db 'Closed.', 10, 0
+mux_kept:
+        db 0x00
+mux_again:
+        db 0x00
+mux_says_kept:
+        db '[mux] the desktop was left: the programs that run are kept', 10, 0
+mux_says_again:
+        db '[mux] the kept programs are taken up again', 10, 0
+        align 16, db 0x90

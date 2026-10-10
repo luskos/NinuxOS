@@ -1,0 +1,10 @@
+# q_v3_tablecopy.txt - v3.0.35: give it an image whose table (sector 481) is wiped: the loader takes the copy
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type ls
+snap tc01_ls
+esc
+type sentinel
+wait 3
+snap tc02_sentinel
