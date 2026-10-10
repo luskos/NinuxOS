@@ -3,6 +3,15 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.28** (11 October 2026) - seen in QEMU
+  - **Desk2: the desktop written anew, in PyTon** (`apps/Desk2.asmo`, 230 lines - the source is
+    there to be read and changed). `desk desk2` in the shell runs it; `desktop` still runs the
+    old one. It has the wallpaper, the icons, drawers, programs in windows, pages, a taskbar
+    with the running programs and the clock. Not yet: the start menu, the card, the context
+    menu, dragging.
+  - The kernel: `desk NAME` runs any object as the desktop (under the multiplexer).
+  - py2asm: `cabinet_top`, `drawer_first`, `drawer_count`, `ob_flags`, `ob_state`, `open_with`,
+    `task_name`, `task_focus`, `tasks_changes`, `task_focused`.
 - **v3.0.27** (11 October 2026) - seen in QEMU
   - **py2asm: pictures and more of what the desktop stands on** - `image`, `image_fit`, `clip`,
     `clip_off`, `rect_save`, `rect_restore`, `cabinet_changes`, `power`, `ob_call` - each read

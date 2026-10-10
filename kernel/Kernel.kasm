@@ -4613,7 +4613,11 @@ L_0b4fe:
 L_0b550:
         mov rdi,rbx
         lea rsi,[rel d_11c1e]
+%ifdef PLAIN_KERNEL
         call shell_same_word
+%else
+        call near desk_is               ; v3.0.28: `desk NAME` runs another object as the desktop
+%endif
         test eax,eax
         jz short L_0b5a3
         mov eax,0x6
@@ -50349,6 +50353,11 @@ shell_more:                             ; rbx = the word, r12 = what follows it
         call same_word_any_case
         test eax,eax
         jnz near backup_command
+        lea rsi,[rel desk_word]
+        mov rdi,rbx
+        call same_word_any_case
+        test eax,eax
+        jnz near desk_command
         mov rdi,rbx                     ; not ours: on with what the shell did here
         jmp near ob_find
 tasks_command:
@@ -50756,6 +50765,36 @@ kb_names:                               ; the key, the length of its name, the n
         db 0x80, 2, 'Up', 0
         db 0x81, 4, 'Down', 0
         db 0
+; ---- v3.0.28: `desk NAME` - another object as the desktop -----------------------------------
+; The shell runs an object under the multiplexer (as task 0, with programs in windows) only when
+; the word typed is "desktop". So that a desktop written anew can be tried beside the old one:
+;       desk NAME         runs the object NAME the way `desktop` runs Desktop
+desk_command:                           ; r12 = the name
+        add rsp,0x8
+        cmp byte [r12],0x0
+        jz desk_usage
+        mov byte [rel desk_any],0x1
+        mov rdi,r12
+        call ob_run_as_command
+        mov byte [rel desk_any],0x0
+        jmp near L_0b044
+desk_usage:
+        lea rdi,[rel desk_says_usage]
+        call api_print
+        jmp near L_0b044
+desk_is:                                ; stands for: call shell_same_word (is the word typed "desktop"?)
+        cmp byte [rel desk_any],0x0
+        jz near shell_same_word
+        mov byte [rel desk_any],0x0
+        mov eax,0x1
+        retq
+desk_any:
+        db 0x00
+desk_word:
+        db 'desk', 0
+desk_says_usage:
+        db 'Usage: desk NAME   runs the object NAME as the desktop (', 39, 'desktop', 39, ' runs the usual one)', 10, 0
+
 ; ---- v3.0.25: the silent backup of what the user saves -----------------------------------------
 ; Every object a program saves (api_ob_save: a text of Notepad, a picture of Paint, a page ...)
 ; is at once written a second time, into the backup pool - a part of the disk outside the

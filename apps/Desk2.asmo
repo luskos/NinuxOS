@@ -1,0 +1,264 @@
+# desk2.py - the desktop written anew (NinuxOS v3.0.28). Second step of docs/DESKTOP.md: the desk.
+#
+# In the shell:  desk desk2      (the usual `desktop` still runs the old one)
+#
+# What is there: the wallpaper, an icon for every object of the cabinet that is on the desk,
+# drawers that open, programs and pages that start with a click, a taskbar with a button for
+# every program that runs and the clock, ESC or the button "shell" to leave.
+# What the old one does and this one does not yet: places the user gives the icons (they stand
+# in the order of the cabinet), the card of an object, the context menu, the start menu, the
+# taskbar as a page, messages of the system.
+#
+# Everything here is plain PyTon over the system's functions - this file is the source.
+
+META = {"type": "desktop", "label": "Desk2", "screen": "full"}
+
+TB = 34         # the height of the taskbar
+CW = 96         # an icon's cell
+CH = 92
+ITEMS = []      # the numbers of the objects that have icons, in the order they are drawn
+KIND = []       # for each: 0 a program, 1 a script, 2 a page, 3 a drawer, 4 "back" out of a drawer
+TASKS = []      # the places of the multiplexer that have buttons on the taskbar
+drawer = -1     # the number of the drawer that is open, -1: the cabinet itself
+sw = 0
+sh = 0
+rows = 1
+msg = "Desk2: the new desktop. ESC or 'shell': leave."
+seen_cabinet = -1
+seen_tasks = -1
+
+
+def _collect():
+    global drawer
+    while len(ITEMS) > 0:
+        ITEMS.pop()
+        KIND.pop()
+    first = 0
+    n = cabinet_top()
+    if drawer >= 0:
+        first = drawer_first(drawer)
+        if first < 0:
+            drawer = -1
+            first = 0
+        else:
+            n = drawer_count(drawer)
+            ITEMS.append(drawer)
+            KIND.append(4)
+    i = first
+    while i < first + n:
+        if ob_flags(i) % 2 == 0:
+            t = ob_meta(i, "type")
+            k = -1
+            if t == "icon":
+                k = 0
+            elif t == "script":
+                k = 1
+            elif t == "cabinet":
+                k = 3
+            elif t == "page" and ob_meta(i, "desktop") != "no":
+                k = 2
+            if k >= 0:
+                ITEMS.append(i)
+                KIND.append(k)
+        i = i + 1
+
+
+def _label(x, y, s):
+    if len(s) > 11:
+        s = s[:11]
+    text(x + 48 - len(s) * 4, y + 58, s, 0xFFFFFF)
+
+
+def _tile(x, y, colour, letter):
+    fill_round(x + 24, y + 4, 48, 48, 0x1A1828, 12)
+    fill_round(x + 28, y + 8, 40, 40, colour, 10)
+    text(x + 44, y + 20, letter, 0x12131C)
+
+
+def _icon(n):
+    x = 16 + (n // rows) * CW
+    y = 18 + (n % rows) * CH
+    i = ITEMS[n]
+    k = KIND[n]
+    if k == 4:
+        _tile(x, y, 0x9AA0B6, "<")
+        _label(x, y, "back")
+        return 0
+    name = ob_meta(i, "name")
+    lab = ob_meta(i, "label")
+    if len(lab) == 0:
+        lab = name
+    icon = ob_meta(i, "icon")
+    if len(icon) > 0 and len(meta_of(icon, "type")) > 0:
+        image(x + 24, y + 4, icon)
+        _label(x, y, lab)
+    elif k == 0 and "draw" in ob_meta(i, "sockets"):
+        ob_call(name, "draw", x, y)             # it draws itself, its name too
+    else:
+        c = code(lab, 0)
+        if c >= 97 and c <= 122:
+            c = c - 32
+        colour = 0x2FB7FF
+        if k == 3:
+            colour = 0xFFB020
+        elif k == 2:
+            colour = 0x00D6B4
+        elif k == 1:
+            colour = 0xA3E635
+        _tile(x, y, colour, char(c))
+        _label(x, y, lab)
+    return 1
+
+
+def _clock():
+    t = system("time")
+    fill_round(sw - 152, sh - TB + 5, 144, 24, 0x33305A, 8)
+    text(sw - 80 - len(t) * 4, sh - TB + 9, t, 0xFFFFFF)
+
+
+def _taskbar():
+    fill(0, sh - TB, sw, TB, 0x1C1A32)
+    fill_round(8, sh - TB + 5, 60, 24, 0x7B5CFF, 8)
+    text(18, sh - TB + 9, "shell", 0xFFFFFF)
+    while len(TASKS) > 0:
+        TASKS.pop()
+    now = task_focused()
+    x = 80
+    slot = 1
+    while slot < 8:
+        name = task_name(slot)
+        if len(name) > 0:
+            if len(name) > 11:
+                name = name[:11]
+            c = 0x2A2840
+            if slot == now:
+                c = 0x7B5CFF
+            fill_round(x, sh - TB + 5, 104, 24, c, 8)
+            text(x + 52 - len(name) * 4, sh - TB + 9, name, 0xF5F4FF)
+            TASKS.append(slot)
+            x = x + 112
+        slot = slot + 1
+    m = msg
+    room = (sw - 170 - x) // 8
+    if room < 0:
+        room = 0
+    if len(m) > room:
+        m = m[:room]
+    text(x + 8, sh - TB + 9, m, 0xFFB020)
+    _clock()
+
+
+def _all():
+    global seen_cabinet, seen_tasks
+    cursor_hide()
+    image_fit(0, 0, sw, sh, "desktop")          # the wallpaper is the DATA of the old desktop object
+    n = 0
+    while n < len(ITEMS):
+        _icon(n)
+        n = n + 1
+    _taskbar()
+    seen_cabinet = cabinet_changes()
+    seen_tasks = tasks_changes()
+
+
+def _say(s):
+    global msg
+    msg = s
+    cursor_hide()
+    _taskbar()
+
+
+def _open(n):
+    global drawer
+    i = ITEMS[n]
+    k = KIND[n]
+    name = ob_meta(i, "name")
+    if k == 4:
+        drawer = -1
+    elif k == 3:
+        drawer = i
+    elif ob_state(i) == 3:
+        _say("Locked: " + name)
+        return 0
+    elif k == 2:
+        if open_with("net", "show", name) < 0:
+            _say("NET is not in the cabinet: the page cannot be shown.")
+        return 0
+    elif k == 1:
+        if open_with("studio", "run", name) < 0:
+            _say("Studio is not in the cabinet: the script cannot be run.")
+        return 0
+    else:
+        kind = ob_meta(i, "kind")
+        if kind == "app" or kind == "game":
+            if spawn(name) < 0:
+                _say("'" + name + "' could not be started.")
+            return 0
+        cursor_hide()
+        ob_call(name, "open", sw, sh)           # it takes the whole screen until it is closed
+    _collect()
+    _all()
+    return 1
+
+
+def _click(mx, my):
+    # 1: leave the desktop
+    if my >= sh - TB:
+        if mx < 72:
+            return 1
+        j = (mx - 80) // 112
+        if mx >= 80 and j < len(TASKS):
+            task_focus(TASKS[j])
+        return 0
+    if mx < 16 or my < 18:
+        return 0
+    col = (mx - 16) // CW
+    row = (my - 18) // CH
+    if row >= rows:
+        return 0
+    n = col * rows + row
+    if n < len(ITEMS):
+        _open(n)
+    return 0
+
+
+def run(a, b):
+    global sw, sh, rows, seen_tasks
+    sw = screen_w()
+    sh = screen_h()
+    rows = (sh - TB - 18) // CH
+    if rows < 1:
+        rows = 1
+    _collect()
+    _all()
+    log("[desk2] started")
+    old_b = 0
+    last = ticks()
+    while True:
+        e = poll()
+        if e == 1:
+            if key() == 27:
+                break
+        elif e == 2:
+            mx = mouse_x()
+            my = mouse_y()
+            b2 = mouse_buttons()
+            if b2 == 1 and old_b == 0:
+                cursor_hide()
+                if _click(mx, my) == 1:
+                    break
+            old_b = b2
+            cursor_show(mx, my)
+        else:
+            if cabinet_changes() != seen_cabinet:
+                _collect()
+                _all()
+            elif tasks_changes() != seen_tasks:
+                cursor_hide()
+                _taskbar()
+                seen_tasks = tasks_changes()
+            elif ticks() - last >= 100:
+                last = ticks()
+                _clock()
+    log("[desk2] closed")
+    return 0

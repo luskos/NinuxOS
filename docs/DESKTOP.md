@@ -76,6 +76,20 @@ desktop that can be started and tried beside the old one:
    about the cabinet (+110), the multiplexer's numbers (+118), the META lines (+C8), the
    procket (+88), +148, and +F8 (five values; not the clip).
 
+   *v3.0.28:* also `cabinet_top`, `drawer_first`, `drawer_count` (+110: the objects of a drawer
+   are numbered after the cabinet's own), `ob_flags`, `ob_state`, `open_with(program, socket,
+   object)`, `task_name`, `task_focus`, `tasks_changes`, `task_focused` (+118, numbers 2-5).
+   How the shell starts the desktop was read: only the word `desktop` runs an object under
+   the multiplexer - so `desk NAME` was added to the kernel, which runs any object that way.
+
+   **Step 2 is done: `apps/Desk2.asmo`**, 230 lines of PyTon, seen in QEMU (`desk desk2`): the
+   wallpaper, an icon for everything on the desk (its picture, or what its socket `draw`
+   draws, or a coloured tile), drawers that open with a way back, programs in windows, pages
+   in NET, a taskbar with a button a program and the clock, ESC or "shell" to leave.
+   Of step 3 it already has opening things and the taskbar's buttons. Not yet: the start menu,
+   the taskbar as a page, the card, the context menu, dragging and kept places, the system's
+   messages. The old desktop is untouched and is still what `desktop` runs.
+
 1. **py2asm gets the functions above** that it does not have (pictures, the rectangle kept and
    put back, clip, power, the cabinet's counter, the page drawing, the multiplexer's numbers,
    calling a socket). Each has to be read whole in the kernel first - guessing a function that

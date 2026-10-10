@@ -1,0 +1,33 @@
+# q_v3_desk2.txt - v3.0.28: the desktop written anew, run beside the old one
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type desk desk2
+wait 8
+snap d01_desk2
+# Calc (a program in a window)
+moveto 64 500
+click
+wait 5
+snap d02_calc
+esc
+wait 3
+# a drawer: archive
+moveto 160 45
+click
+wait 4
+snap d03_drawer
+moveto 64 45
+click
+wait 3
+# a page: Support
+moveto 64 595
+click
+wait 6
+snap d04_page
+esc
+wait 3
+snap d05_back
+esc
+wait 3
+snap d06_shell

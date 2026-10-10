@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.27.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.28.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.27 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.28 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -795,6 +795,17 @@ number of lines is made smaller by as many, so the text keeps above them. Every 
 key (Enter is 10, as the shell takes it). \texttt{api\_poll} reads every waiting packet of the
 mouse at once and reports the buttons of the first only, so \texttt{kb\_packet} keeps whether
 the button was down in any of them.
+
+\subsection{The desktop written anew (v3.0.28)}
+
+\file{apps/Desk2.asmo} is a desktop in PyTon, compiled by py2asm: an object of type
+\texttt{desktop} with one socket, \texttt{run}. The shell runs an object under the multiplexer
+only when the word typed is \cmd{desktop}; \cmd{desk NAME} (new in the kernel) does the same
+for any object, so \cmd{desk desk2} runs the new one and \cmd{desktop} the old. The objects of
+a drawer are numbered after the cabinet's own (\texttt{drawer\_first}, \texttt{drawer\_count});
+an object is on the desk when the lowest bit at \texttt{0x50} of its header is clear; its icon
+is the picture its META \texttt{icon} names, else what its socket \texttt{draw} draws.
+\file{docs/DESKTOP.md} has the parts of the old desktop and what the new one still lacks.
 
 \subsection{Names in the kernel}
 

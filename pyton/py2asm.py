@@ -76,6 +76,9 @@ SYSTEM = {
     'image': ('iis', 'n'), 'image_fit': ('iiiis', 'n'), 'clip': ('iiii', 'n'), 'clip_off': ('', 'n'),
     'rect_save': ('iiii', 'i'), 'rect_restore': ('i', 'n'), 'cabinet_changes': ('', 'i'),
     'power': ('i', 'n'), 'ob_call': ('ssii', 'i'),
+    'cabinet_top': ('', 'i'), 'drawer_first': ('i', 'i'), 'drawer_count': ('i', 'i'),
+    'ob_flags': ('i', 'i'), 'ob_state': ('i', 'i'), 'open_with': ('sss', 'i'),
+    'task_name': ('i', 's'), 'task_focus': ('i', 'n'), 'tasks_changes': ('', 'i'), 'task_focused': ('', 'i'),
 }
 
 # a built-in function of Python -> the function of prelude.py that does it

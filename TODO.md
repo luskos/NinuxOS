@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.27 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.28 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -68,7 +68,7 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 
 | # | what | size |
 |---|---|---|
-| 22 | **[step 1 of 5 partly done, v3.0.27: pictures, clip, the kept rectangle, power, calling a socket are in py2asm; begun, v3.0.26: the object read through and named - docs/DESKTOP.md has its parts and the five steps of the rewriting; no line of the new one is written yet]** Desktop rewritten as source meant to be read (PyTon + pages) | L |
+| 22 | **[steps 1 and 2 of 5 done, v3.0.28: the new desktop Desk2 (apps/Desk2.asmo, 230 lines of PyTon) runs beside the old one - `desk desk2`; step 1 partly, v3.0.27: pictures, clip, the kept rectangle, power, calling a socket are in py2asm; begun, v3.0.26: the object read through and named - docs/DESKTOP.md has its parts and the five steps of the rewriting; no line of the new one is written yet]** Desktop rewritten as source meant to be read (PyTon + pages) | L |
 | 23 | More desktops: slide for a new one as on a phone; or one endless desktop that scrolls like a film strip, a column a frame, more added when needed | M after 22 |
 | 24 | The desktop split in 4 or 9 instances at once (multiboxing) | L |
 

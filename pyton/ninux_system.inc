@@ -23,6 +23,10 @@
 ;       +0xD0 / +0xD8  keep what the screen shows in a rectangle / put it back (and free it)
 ;       +0xE8  power: rdi = 0 off, else restart      +0xF0  the cabinet's counter of changes
 ;       +0x100 draw only inside a rectangle
+;       +0x110 the cabinet's facts: edi = 0 how many objects it has itself; 2 (rsi = the number of a
+;              drawer) -> rax its first object's number, rdx how many; 4 an object's rating; 7 ...
+;       +0x118 more: edi = 2 (rsi place, rdx room of 48) the name of a task; 3 focus; 4 the counter of
+;              changes; 5 the focused place; 6 whose turn it is; 1 how many places (8)
 ;   meaning not known yet: +0xA8 +0xF8
 ; v3.0.11, from the same places: ob_size, ob_data (+0x60), own_len, own_code (+0x70, +0x68),
 ;       text_meta (+0x70, +0x30), data_dump (+0x68, +0xE0).
@@ -546,6 +550,101 @@ sys_ob_call:                            ; (name of an object, name of a socket, 
 ninux_call_none:
         mov rax, -1
         ret
+
+sys_cabinet_top:                        ; how many objects the cabinet itself has (the drawers' ones follow them)
+        xor edi, edi
+        NINUX_API 0x110
+sys_drawer_first:                       ; (the number of a drawer object) -> the number of its first object; -1: no drawer
+        mov rsi, rdi
+        mov edi, 2
+        NINUX_API 0x110
+sys_drawer_count:                       ; (the number of a drawer object) -> how many objects it holds
+        mov rsi, rdi
+        mov edi, 2
+        mov rax, [rel ninux_api]
+        call [rax + 0x110]
+        cmp rax, -1
+        je ninux_nothing_zero
+        mov rax, rdx
+        ret
+ninux_nothing_zero:
+        xor eax, eax
+        ret
+sys_ob_flags:                           ; (number of the object) -> the number at 0x50 of its header (bit 0: not on the desk)
+        mov rax, [rel ninux_api]
+        call [rax + 0x60]
+        test rax, rax
+        jz ninux_nothing
+        mov eax, [rax + 0x50]
+        ret
+sys_ob_state:                           ; (number of the object) -> the number at 0x38 of its header (3: locked)
+        mov rax, [rel ninux_api]
+        call [rax + 0x60]
+        test rax, rax
+        jz ninux_nothing
+        mov rax, [rax + 0x38]
+        ret
+sys_open_with:                          ; (a program, one of its sockets, an object): start the program as a task
+        push rbx                        ; on that object ("net", "show", a page) -> -1: one of them is not there
+        push r12
+        push r13
+        mov r12, rsi
+        mov r13, rdx
+        mov rax, [rel ninux_api]
+        call [rax + 0x68]
+        test rax, rax
+        jz ninux_with_none
+        mov rbx, rax
+        mov rdi, r13
+        mov rax, [rel ninux_api]
+        call [rax + 0x68]
+        test rax, rax
+        jz ninux_with_none
+        mov rcx, rax
+        xor edi, edi
+        mov rsi, rbx
+        mov rdx, r12
+        xor r8d, r8d
+        mov rax, [rel ninux_api]
+        call [rax + 0x118]
+        jmp ninux_with_out
+ninux_with_none:
+        mov rax, -1
+ninux_with_out:
+        pop r13
+        pop r12
+        pop rbx
+        ret
+sys_task_name:                          ; (a place of the multiplexer, 1 .. 7) -> the name of the program there, "" if none
+        push rbx
+        push r12
+        mov rbx, rdi
+        mov edi, 0x40
+        call rt_alloc
+        mov r12, rax
+        mov edi, 2
+        mov rsi, rbx
+        mov rdx, r12
+        mov rax, [rel ninux_api]
+        call [rax + 0x118]
+        cmp rax, 1
+        je ninux_task_named
+        mov byte [r12], 0
+ninux_task_named:
+        mov rax, r12
+        pop r12
+        pop rbx
+        ret
+sys_task_focus:                         ; (a place): the keys go to that program, its window comes to the top
+        mov rsi, rdi
+        mov edi, 3
+        NINUX_API 0x118
+sys_tasks_changes:                      ; -> a number that grows whenever a program starts, ends or comes to the top
+        mov edi, 4
+        NINUX_API 0x118
+sys_task_focused:                       ; -> the place of the program the keys go to (0: the desktop)
+        mov edi, 5
+        NINUX_API 0x118
 
 sys_data_dump:                          ; (name of an object, a new name): its DATA out, as an object of
         push rsi                        ; its own; the object keeps them. -> 0 no such object or no DATA
