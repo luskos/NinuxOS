@@ -777,6 +777,10 @@ def main():
         signed = sign_suits(img, tables, seed)
         sealed = '%d kernel suits signed; ' % signed + seal(img, base, tables, seed, old_public, added)
 
+    # the table of the cabinet twice: the copy lies right behind it (the kernel keeps it so from v3.0.24)
+    table_bytes = struct.unpack_from('<H', img, TABLE_AT + 8)[0] * SECTOR
+    if TABLE_AT + 2 * table_bytes <= 490 * SECTOR:
+        img[TABLE_AT + table_bytes:TABLE_AT + 2 * table_bytes] = img[TABLE_AT:TABLE_AT + table_bytes]
     with open(a.out, 'wb') as f:
         f.write(img)
     try:                                    # the whole source goes with every build

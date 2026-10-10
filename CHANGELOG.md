@@ -3,6 +3,13 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.24** (11 October 2026) - seen in QEMU
+  - **The table of the cabinet is written twice.** A copy lies right behind it and is written
+    first; a cut of the power during a writing leaves one of the two whole.
+    `tools/table_copy.py check|restore` looks at both and puts the copy back.
+  - **A click in the bottom right corner of the screen brings the keyboard** in the shell: a
+    machine without keys can call it.
+  - `tools/qemu/qrun.py --write`: what the system writes reaches the image (for a copy).
 - **v3.0.23** (11 October 2026) - seen in QEMU
   - **`keyboard`: a keyboard on the screen of the shell.** Five rows of keys on the bottom of
     the screen, typed with the mouse (or a finger, where the screen is a mouse to the system);

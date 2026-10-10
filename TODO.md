@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.23 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.24 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -56,7 +56,7 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 | # | what | size |
 |---|---|---|
 | 14 | **[done: v3.0.16 and `tasks` in v3.0.19, seen in QEMU]** Programs live on: leaving the desktop closes nothing; `tasks`; then `kill` means something | L |
-| 15 | A second copy of the table of the cabinet and of the kernel; writes whole or not at all | M |
+| 15 | **[the table is written twice, v3.0.24, seen in QEMU; the loader does not read the copy, the kernel has no second copy, writes of objects are as before]** A second copy of the table of the cabinet and of the kernel; writes whole or not at all | M |
 | 16 | The silent backup of the user and its pool, with a manager of the pool's space | M-L |
 | 17 | **[the keyboard on the screen of the shell is there, v3.0.23, seen in QEMU; the smaller table of functions and relays between programs are not]** A desktop program is handed only what it needs; relays for the rest (the keyboard on the screen for the shell is one) | L |
 | 18 | **[`cores solo` / `bench` explained and changed, v3.0.21; "all cores for programs" is `cores all`, to be tried on the real machine]** `cores solo`, `bench`, all cores for programs | M |
@@ -224,6 +224,25 @@ So "leaving the desktop closes nothing" is three changes, and each has to be see
 - Later, for relays and music: turns also while the shell is in front, with drawing held back.
 
 Not written blind: it changes what happens at every start and end of the desktop.
+
+### 15, what is done and what is not (v3.0.24)
+
+- [x] The table of the cabinet is written twice: a copy in the four sectors right behind it
+      (485-488; the objects start at 490), the copy first, then the table - if the power goes
+      during either writing, one of the two is whole. The build writes both. Seen in QEMU:
+      `copy hello hello2` in maintenance mode, then both tables on the disk hold 54 objects
+      and are the same. `python tools/table_copy.py check|restore DISK` looks at them and puts
+      the copy back from another machine.
+- [ ] The loader reads only the first table: with it damaged the system does not start by
+      itself. It needs code in the 16-bit loader, which is in the core that cannot grow -
+      either room is found there (a text made shorter), or the loader is written anew.
+- [ ] Other code that writes the table without `cabinet_save` (`update`, the installer in
+      k_tools) does not write the copy yet. To read through.
+- [ ] A second copy of the kernel on the disk, and a boot sector that takes it when the first
+      does not check: not begun.
+- [ ] An object is still written over its old place: a cut during that loses the object. The
+      whole answer is "write the new one elsewhere, then change the table" - the table being
+      safe now is the first half of it.
 
 ## If the disk is lost again - where everything is
 
@@ -653,8 +672,9 @@ DIRECTIVE.md. Three rows of the table in 4c were written against these and are w
       Seen in QEMU with the PS/2 mouse (`test/qemu/q_v3_keyboard.txt`).
       Not there: Cyrillic on it; Ctrl and Alt keys; a USB mouse and a touch screen were not
       tried (their clicks come the same way out of api_poll, so they should work); a machine
-      with no keys at all cannot type `keyboard` - it needs a way to come on by itself (a
-      setting, or a click in a corner of the screen).
+      v3.0.24: a click in the bottom right corner of the screen (32 dots) brings it, so a
+      machine with no keys at all can call it. (No mouse arrow is shown in the shell while
+      the keyboard is off - with a finger that does not matter, with a mouse one aims blind.)
 - [ ] **Nothing on the desktop may reach the kernel or the shell.** Today `NAME` in the shell
       starts a program of the desktop (calc ...) and a program can send keys (Keys does). The one
       exception wanted: a keyboard on the screen that can type into the shell - decide how far

@@ -3,7 +3,8 @@
 #
 #   python tools/qemu/qrun.py SCRIPT.txt [--img disk.img] [--out test/qemu/out] [--show]
 #
-# The disk image is opened with snapshot=on: nothing the system writes reaches the file.
+# The disk image is opened with snapshot=on: nothing the system writes reaches the file
+# (--write: it does - for a copy of the image, to look at what the system wrote).
 # One command a line (the same words as the old test/qemu/q_*.txt scripts):
 #   qemu ARGS            more arguments for QEMU (only as the first line; default: -smp 2 -m 512M)
 #   waitlog TEXT [N]     wait until TEXT comes in the serial log, at most N seconds (default 30)
@@ -60,7 +61,7 @@ class Machine:
         port = s.getsockname()[1]
         s.close()
         args = [find_qemu()] + (extra or ['-smp', '2', '-m', '512M']) + [
-            '-drive', 'file=%s,format=raw,snapshot=on' % img, '-serial', 'file:' + self.log,
+            '-drive', 'file=%s,format=raw%s' % (img, '' if os.environ.get('QRUN_WRITE') else ',snapshot=on'), '-serial', 'file:' + self.log,
             '-monitor', 'tcp:127.0.0.1:%d,server,nowait' % port, '-no-reboot']
         if not show:
             args += ['-display', 'none']
@@ -211,7 +212,10 @@ def main():
     ap.add_argument('--img', default=os.path.join(ROOT, 'disk.img'))
     ap.add_argument('--out', default=os.path.join(ROOT, 'test', 'qemu', 'out'))
     ap.add_argument('--show', action='store_true', help='open the QEMU window')
+    ap.add_argument('--write', action='store_true', help='what the system writes reaches the image (give it a copy)')
     a = ap.parse_args()
+    if a.write:
+        os.environ['QRUN_WRITE'] = '1'
     run(a.script, a.img, a.out, a.show)
 
 

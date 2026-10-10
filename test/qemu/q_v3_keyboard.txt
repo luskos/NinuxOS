@@ -4,7 +4,9 @@ waitlog [chain] the system started 90
 wait 1
 type ls
 esc
-type keyboard
+# a click in the bottom right corner brings the keys
+moveto 1015 760
+click
 wait 1
 snap k01_on
 # m e m Enter, with the mouse

@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.23.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.24.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.23 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.24 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -202,6 +202,13 @@ v2.9.59 has three: \texttt{archive} (27 objects: the sources), \texttt{samples} 
 So the system has 107 objects: 47 in the cabinet and 60 in the drawers. The image holds 165
 whole objects --- the other 58 are older copies the build left between the live ones (a second
 \texttt{deskmenu}, the forty sample pages, an older Desktop); no table points at them.
+
+\subsection{The table twice (v3.0.24)}
+
+A copy of the table lies in the sectors right behind it (485--488; the objects start at 490).
+\texttt{cabinet\_save} writes the copy first and then the table, so a cut of the power during
+either writing leaves one of the two whole. The loader reads only the first;
+\file{tools/table\_copy.py} compares them and writes the copy back from another machine.
 
 \subsection{What seals a build}
 

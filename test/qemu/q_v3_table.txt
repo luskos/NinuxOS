@@ -1,0 +1,19 @@
+# q_v3_table.txt - v3.0.24: the table of the cabinet is written twice (run with --write on a COPY of the image)
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type maint
+wait 2
+text ninux1
+enter
+wait 2
+text ninux1
+enter
+wait 2
+type copy hello hello2
+wait 2
+type ls
+esc
+type shutdown
+wait 6
+snap tb01

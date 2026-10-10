@@ -7090,7 +7090,11 @@ cabinet_save:
         movzx edx,word [rsi+0x8]
         xor ecx,ecx
         inc ecx
+%ifdef PLAIN_KERNEL
         jmp near fn_0ce54
+%else
+        jmp near cabinet_save_twice     ; v3.0.24: the table is written twice
+%endif
 
 L_0d12f:
         retq
@@ -50411,6 +50415,7 @@ tasks_nothing:
 ; ---- v3.0.23: `keyboard` - a keyboard on the screen of the shell --------------------------------
 ; For a machine without keys that work (a tablet, a broken keyboard): the mouse or a finger types.
 ;       keyboard          on / off
+;       a click in the bottom right corner of the screen (32 dots) brings it too, when it is off
 ; The bottom 11 lines of the screen become five rows of keys; the text keeps to the lines above.
 ; A click on a key comes out of api_poll as that key, so everything that reads keys in the shell
 ; takes it. Shift holds for one key. It is the first relay: what types is not a program that was
@@ -50420,34 +50425,38 @@ kb_command:
         add rsp,0x8
         xor byte [rel kb_on],0x1
         jz kb_command_off
-kb_command_room:                        ; the line being written must be above the keys
-        mov rax,[rel d_11838]
-        sub rax,KB_LINES
-        cmp [rel d_11848],rax
-        jb kb_command_on
-        call fn_08d8d                   ; the text goes up a line
-        dec qword [rel d_11848]
-        jmp kb_command_room
-kb_command_on:
-        mov [rel d_11838],rax
-        mov byte [rel kb_shift],0x0
-        call kb_draw
+        call kb_turn_on
         lea rdi,[rel kb_says_on]
         call api_print
         jmp near L_0b044
 kb_command_off:
+        call kb_turn_off
+        lea rdi,[rel kb_says_off]
+        call api_print
+        jmp near L_0b044
+
+kb_turn_on:                             ; the keys come on the screen (kb_on is 1 already)
+        mov rax,[rel d_11838]           ; the line being written must be above the keys
+        sub rax,KB_LINES
+        cmp [rel d_11848],rax
+        jb kb_turn_on_room
+        call fn_08d8d                   ; the text goes up a line
+        dec qword [rel d_11848]
+        jmp kb_turn_on
+kb_turn_on_room:
+        mov [rel d_11838],rax
+        mov byte [rel kb_shift],0x0
+        jmp kb_draw
+kb_turn_off:                            ; the keys are wiped, the lines are the text's again
         call kb_arrow_off
-        mov rsi,[rel d_11838]           ; the keys are wiped, the lines are the text's again
+        mov rsi,[rel d_11838]
         shl rsi,0x4
         add qword [rel d_11838],KB_LINES
         xor edi,edi
         mov rdx,[rel d_11818]
         mov ecx,KB_LINES * 16
         mov r8d,[rel d_11854]
-        call api_fill
-        lea rdi,[rel kb_says_off]
-        call api_print
-        jmp near L_0b044
+        jmp near api_fill
 
 kb_arrow_off:                           ; the mouse arrow off the screen; keeps every register
         push rax
@@ -50586,17 +50595,12 @@ kb_draw_next:
 kb_mouse:                               ; the mouse moved or a button changed: ebx = the buttons
         mov eax,ebx                     ; stands for: mov eax,ebx / mov r8,rax
         mov r8,rax
-        cmp byte [rel kb_on],0x0
-        jz kb_mouse_no
         cmp byte [rel mux_on],0x0       ; the desktop has its own
         jnz kb_mouse_no
         push rax
         push r8
         push r12
         push r13
-        mov rdi,[rel d_11870]           ; the arrow, where the mouse is
-        mov rsi,[rel d_11878]
-        call api_cursor_show
         mov eax,ebx                     ; api_poll takes every packet of the mouse that waits at once and
         or al,[rel kb_any]              ; tells only the buttons of the first: a quick click is down and up
         and eax,0x1                     ; in one go. kb_packet has kept whether the button was down in any
@@ -50605,10 +50609,35 @@ kb_mouse:                               ; the mouse moved or a button changed: e
         movzx edx,byte [rel d_119fc]    ; the buttons of the last packet: how it is now
         and dl,0x1
         mov [rel kb_button],dl
+        xor r13d,r13d                   ; r13 = 1: the button went down just now
         test eax,eax
-        jz kb_mouse_out
+        jz kb_mouse_state
         test cl,cl
-        jnz kb_mouse_out                ; the button went down just now: which key?
+        jnz kb_mouse_state
+        inc r13d
+kb_mouse_state:
+        cmp byte [rel kb_on],0x0
+        jnz kb_mouse_on
+        test r13d,r13d                  ; the keys are not there: a click in the bottom right corner of
+        jz kb_mouse_out                 ; the screen (32 dots) brings them - for a machine without keys
+        mov rax,[rel d_11818]
+        sub rax,32
+        cmp [rel d_11870],rax
+        jb kb_mouse_out
+        mov rax,[rel d_11838]
+        shl rax,0x4
+        sub rax,32
+        cmp [rel d_11878],rax
+        jb kb_mouse_out
+        mov byte [rel kb_on],0x1
+        call kb_turn_on
+        jmp kb_mouse_out
+kb_mouse_on:
+        mov rdi,[rel d_11870]           ; the arrow, where the mouse is
+        mov rsi,[rel d_11878]
+        call api_cursor_show
+        test r13d,r13d
+        jz kb_mouse_out                 ; a click: which key?
         mov rax,[rel d_11838]
         shl rax,0x4
         add rax,8
@@ -50712,6 +50741,26 @@ kb_names:                               ; the key, the length of its name, the n
         db 0x80, 2, 'Up', 0
         db 0x81, 4, 'Down', 0
         db 0
+; ---- v3.0.24: the table of the cabinet is kept twice ----------------------------------------
+; The table says where every object lies; if the sectors it is in are lost, everything is.
+; A copy lies in the sectors right behind it (the table is 4 sectors, the objects start 9
+; sectors after its start). The copy is written first, then the table: if the power goes
+; during the first writing the table is still the old one, whole; during the second, the copy
+; is the new one, whole. tools/table_copy.py looks at both and can put the copy back.
+; (The loader does not read the copy yet: it is in the core, which cannot grow.)
+cabinet_save_twice:                     ; rdi = the sector of the table, rsi = the table, edx = its sectors, ecx = 1: write
+        push rdi                        ; stands for: jmp near fn_0ce54
+        push rsi
+        push rdx
+        push rcx
+        add rdi,rdx
+        call fn_0ce54
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        jmp near fn_0ce54
+
 ; ---- v3.0.21: `cores solo`, `cores one`, `cores all` outside maintenance mode ----------------
 ; They were refused ("enter maintenance mode first") because the setting is kept in the table
 ; of the cabinet - so `bench` gave the same numbers whatever was typed. Now the setting is made
