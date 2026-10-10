@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.24.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.25.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.24 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.25 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -209,6 +209,16 @@ A copy of the table lies in the sectors right behind it (485--488; the objects s
 \texttt{cabinet\_save} writes the copy first and then the table, so a cut of the power during
 either writing leaves one of the two whole. The loader reads only the first;
 \file{tools/table\_copy.py} compares them and writes the copy back from another machine.
+
+\subsection{The backup pool (v3.0.25)}
+
+Sectors 65536--131071 of the system (32 MB, 32 MB from its start) are the backup pool; the
+cabinet must stay below it. Its first sector: \texttt{NXPOOL1}; at 8 the sector the next save
+goes to; at 16 how many saves were ever made; at 24 its size; at 32 how many times it began
+anew. A save is one sector --- \texttt{NXBK}, at 4 its data sectors, at 8 its size in bytes,
+at 16 its name, at 32 its number, at 40 the clock --- and then the object itself.
+\texttt{api\_ob\_save} begins with \texttt{backup\_save}, which writes the object there before
+the cabinet takes it. \cmd{backup}, \cmd{backup get N}, \cmd{backup clear} in the shell.
 
 \subsection{What seals a build}
 

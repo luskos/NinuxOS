@@ -7325,10 +7325,15 @@ L_0d379:
         retq
 
 api_ob_save:
+%ifdef PLAIN_KERNEL
         push rbx
         push r12
         push r13
         mov rbx,rdi
+%else
+        call near backup_save           ; v3.0.25: every object that is saved is also kept in the backup pool
+        times 3 nop                     ; (the same 8 bytes; backup_save does what stood here)
+%endif
         mov r12,rsi
         mov r13,rdx
         mov byte [rel d_16e44],0x0
@@ -50334,6 +50339,11 @@ shell_more:                             ; rbx = the word, r12 = what follows it
         call same_word_any_case
         test eax,eax
         jnz near kb_command
+        lea rsi,[rel backup_word]
+        mov rdi,rbx
+        call same_word_any_case
+        test eax,eax
+        jnz near backup_command
         mov rdi,rbx                     ; not ours: on with what the shell did here
         jmp near ob_find
 tasks_command:
@@ -50741,6 +50751,390 @@ kb_names:                               ; the key, the length of its name, the n
         db 0x80, 2, 'Up', 0
         db 0x81, 4, 'Down', 0
         db 0
+; ---- v3.0.25: the silent backup of what the user saves -----------------------------------------
+; Every object a program saves (api_ob_save: a text of Notepad, a picture of Paint, a page ...)
+; is at once written a second time, into the backup pool - a part of the disk outside the
+; cabinet, so that what happens to the cabinet does not happen to it. Nothing is asked and
+; nothing is said. It needs no maintenance mode: the pool is not the cabinet.
+;       backup            what the pool holds: a line a save, the newest last
+;       backup get N      bring save number N back as an object of the cabinet (under its name)
+;       backup clear      empty the pool
+; The pool: POOL_SIZE sectors, POOL_AT sectors from the start of the system (32 MB each).
+;   its first sector: 'NXPOOL1', 0; +8 the sector the next save goes to; +16 saves ever made;
+;                     +24 its size in sectors; +32 how many times it was full and began anew
+;   a save: a sector 'NXBK', +4 its data sectors, +8 its size in bytes, +16 the name (16),
+;           +32 its number, +40 the clock (ticks since the start); then the object itself
+; When the pool is full the next save goes to its start again: the oldest are written over.
+; A disk too small for it (less than 64 MB) has no pool; saving works as before.
+POOL_AT   equ 65536
+POOL_SIZE equ 65536
+
+backup_save:                            ; stands for the first lines of api_ob_save:
+        pop rax                         ;   push rbx / push r12 / push r13 / mov rbx,rdi
+        push rbx
+        push r12
+        push r13
+        mov rbx,rdi
+        push rax
+        push rdi
+        push rsi
+        push rdx
+        call backup_write
+        pop rdx
+        pop rsi
+        pop rdi
+        retq
+
+backup_io:                              ; rdi = a sector of the pool, rsi = memory, edx = sectors, ecx = 1: write
+        add rdi,[rel d_155e0]           ; (d_155e0: where the table of the cabinet lies, sector 481 of the system)
+        add rdi,POOL_AT - 481
+        jmp near fn_0ce54
+
+backup_head:                            ; the pool's first sector into backup_sector (made, if it is not one);
+        cmp byte [rel backup_none],0x0  ; eax = 0: this disk has no pool
+        jnz backup_head_no
+        cmp byte [rel d_1553d],0x0      ; no disk that can be written
+        jz backup_head_no
+        xor edi,edi
+        lea rsi,[rel backup_sector]
+        mov edx,0x1
+        xor ecx,ecx
+        call backup_io
+        test eax,eax
+        jz backup_head_none
+        lea rax,[rel backup_sector]
+        mov rcx,0x00314C4F4F50584E      ; 'NXPOOL1', 0
+        cmp [rax],rcx
+        je backup_head_ok
+backup_head_new:
+        lea rdi,[rel backup_sector]
+        push rdi
+        xor eax,eax
+        mov ecx,64
+        rep stosq
+        pop rax
+        mov rcx,0x00314C4F4F50584E
+        mov [rax],rcx
+        mov qword [rax+8],0x1
+        mov qword [rax+24],POOL_SIZE
+backup_head_ok:
+        mov eax,0x1
+        retq
+backup_head_none:
+        mov byte [rel backup_none],0x1  ; it cannot be read there: not asked again in this session
+backup_head_no:
+        xor eax,eax
+        retq
+
+backup_write:                           ; rdi = the name, rsi = the object, rdx = its size; keeps rbx, rbp, r12-r15
+        push rbx
+        push rbp
+        push r12
+        push r13
+        push r14
+        push r15
+        mov r12,rdi
+        mov r13,rsi
+        mov r14,rdx
+        cmp r14,0x68
+        jb backup_write_out
+        cmp r14,0x400000                ; 4 MB at most
+        ja backup_write_out
+        mov byte [rel d_16e44],0x0
+        mov rdi,r12                     ; what a program hands over is looked at as api_ob_save looks at it
+        mov esi,0x11
+        call fn_10784
+        test eax,eax
+        jz backup_write_out
+        mov rdi,r13
+        mov rsi,r14
+        call fn_10784
+        test eax,eax
+        jz backup_write_out
+        cmp dword [r13],0x41534d4f
+        jne backup_write_out
+        call backup_head
+        test eax,eax
+        jz backup_write_out
+        lea r15,[r14+511]               ; its data sectors
+        shr r15,0x9
+        lea rbp,[rel backup_sector]
+        mov rbx,[rbp+8]                 ; where it goes
+        lea rax,[rbx+r15+1]
+        cmp rax,POOL_SIZE
+        jbe backup_write_place
+        mov ebx,0x1                     ; the pool is full: from its start again
+        inc qword [rbp+32]
+backup_write_place:
+        mov rdi,r14                     ; the whole sectors of the object, straight from where it lies
+        shr rdi,0x9
+        test rdi,rdi
+        jz backup_write_tail
+        mov rdx,rdi
+        lea rdi,[rbx+1]
+        mov rsi,r13
+        mov ecx,0x1
+        call backup_io
+        test eax,eax
+        jz backup_write_out
+backup_write_tail:                      ; the rest of it, in a sector of its own
+        mov rcx,r14
+        and ecx,511
+        jz backup_write_record
+        lea rdi,[rel backup_record]
+        push rdi
+        push rcx
+        xor eax,eax
+        mov ecx,64
+        rep stosq
+        pop rcx
+        pop rdi
+        mov rsi,r14
+        and rsi,-512
+        add rsi,r13
+        rep movsb
+        mov rdi,r14
+        shr rdi,0x9
+        lea rdi,[rdi+rbx+1]
+        lea rsi,[rel backup_record]
+        mov edx,0x1
+        mov ecx,0x1
+        call backup_io
+        test eax,eax
+        jz backup_write_out
+backup_write_record:                    ; the sector that says what it is
+        lea rdi,[rel backup_record]
+        xor eax,eax
+        mov ecx,64
+        rep stosq
+        lea rax,[rel backup_record]
+        mov dword [rax],0x4B42584E      ; 'NXBK'
+        mov [rax+4],r15d
+        mov [rax+8],r14
+        xor ecx,ecx
+backup_write_name:
+        mov dl,[r12+rcx]
+        test dl,dl
+        jz backup_write_named
+        mov [rax+rcx+16],dl
+        inc ecx
+        cmp ecx,15
+        jb backup_write_name
+backup_write_named:
+        mov rcx,[rbp+16]
+        inc rcx
+        mov [rax+32],rcx
+        mov rcx,[rel d_14eea]
+        mov [rax+40],rcx
+        mov rdi,rbx
+        mov rsi,rax
+        mov edx,0x1
+        mov ecx,0x1
+        call backup_io
+        test eax,eax
+        jz backup_write_out
+        inc qword [rbp+16]              ; and the pool's first sector: where the next one goes
+        lea rax,[rbx+r15+1]
+        mov [rbp+8],rax
+        xor edi,edi
+        mov rsi,rbp
+        mov edx,0x1
+        mov ecx,0x1
+        call backup_io
+backup_write_out:
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbp
+        pop rbx
+        retq
+
+backup_command:                         ; r12 = what was typed after the word
+        add rsp,0x8
+        call backup_head
+        test eax,eax
+        jz near backup_says_no_pool
+        mov al,[r12]
+        cmp al,0x0
+        je backup_list
+        or al,0x20
+        cmp al,0x67                     ; g(et)
+        je backup_get
+        cmp al,0x63                     ; c(lear)
+        jne near backup_usage
+        call backup_head_new            ; clear: a new first sector
+        xor edi,edi
+        lea rsi,[rel backup_sector]
+        mov edx,0x1
+        mov ecx,0x1
+        call backup_io
+        lea rdi,[rel backup_text_cleared]
+        call api_print
+        jmp near L_0b044
+
+backup_next:                            ; rbx = the sector of a save -> its sector into backup_record;
+        lea rax,[rel backup_sector]     ; eax = 0 when there is none there (the end of what is kept)
+        cmp rbx,[rax+8]
+        jae backup_next_no
+        mov rdi,rbx
+        lea rsi,[rel backup_record]
+        mov edx,0x1
+        xor ecx,ecx
+        call backup_io
+        test eax,eax
+        jz backup_next_no
+        lea rax,[rel backup_record]
+        cmp dword [rax],0x4B42584E
+        jne backup_next_no
+        mov eax,0x1
+        retq
+backup_next_no:
+        xor eax,eax
+        retq
+
+backup_list:
+        mov ebx,0x1                     ; the sector
+        xor r13d,r13d                   ; the number in the list
+backup_list_line:
+        call backup_next
+        test eax,eax
+        jz backup_list_end
+        inc r13
+        lea rdi,[rel tasks_says_gap]
+        call api_print
+        mov rdi,r13
+        call fn_08e3b
+        lea rdi,[rel tasks_says_gap]
+        call api_print
+        lea rdi,[rel backup_record + 16]
+        call api_print
+        lea rdi,[rel tasks_says_gap]
+        call api_print
+        lea rax,[rel backup_record]
+        mov rdi,[rax+8]
+        call fn_08e3b
+        lea rdi,[rel backup_text_bytes]
+        call api_print
+        lea rax,[rel backup_record]
+        mov eax,[rax+4]
+        lea rbx,[rbx+rax+1]
+        jmp backup_list_line
+backup_list_end:
+        mov rdi,r13
+        call fn_08e3b
+        lea rdi,[rel backup_text_kept]
+        call api_print
+        lea rax,[rel backup_sector]
+        mov rdi,[rax+8]
+        shr rdi,0x1
+        call fn_08e3b
+        lea rdi,[rel backup_text_of]
+        call api_print
+        jmp near L_0b044
+
+backup_get:                             ; the number after the word
+        xor r13d,r13d
+backup_get_digits:
+        movzx eax,byte [r12]
+        test eax,eax
+        jz backup_get_find
+        inc r12
+        sub eax,0x30
+        cmp eax,0x9
+        ja backup_get_digits
+        imul r13,r13,10
+        add r13,rax
+        jmp backup_get_digits
+backup_get_find:
+        test r13,r13
+        jz near backup_usage
+        mov ebx,0x1
+backup_get_step:
+        call backup_next
+        test eax,eax
+        jz near backup_says_no_such
+        dec r13
+        jz backup_get_it
+        lea rax,[rel backup_record]
+        mov eax,[rax+4]
+        lea rbx,[rbx+rax+1]
+        jmp backup_get_step
+backup_get_it:                          ; memory for its name and for the object, read, saved as an object
+        lea rax,[rel backup_record]
+        mov r13d,[rax+4]                ; its data sectors
+        mov rdi,r13
+        shl rdi,0x9
+        add rdi,32
+        call api_memory
+        test rax,rax
+        jz near backup_says_no_such
+        mov r12,rax
+        lea rsi,[rel backup_record + 16]
+        mov rdi,r12
+        mov ecx,16
+        rep movsb
+        lea rdi,[rbx+1]
+        lea rsi,[r12+32]
+        mov rdx,r13
+        xor ecx,ecx
+        call backup_io
+        test eax,eax
+        jz backup_get_free
+        lea rax,[rel backup_record]
+        mov rdx,[rax+8]
+        mov rdi,r12
+        lea rsi,[r12+32]
+        call api_ob_save
+        lea rdi,[rel backup_text_back]
+        call api_print
+        mov rdi,r12
+        call api_print
+        lea rdi,[rel tasks_says_end]
+        call api_print
+backup_get_free:
+        mov rdi,r12
+        call mem_free
+        jmp near L_0b044
+backup_says_no_such:
+        lea rdi,[rel backup_text_no_such]
+        call api_print
+        jmp near L_0b044
+backup_usage:
+        lea rdi,[rel backup_text_usage]
+        call api_print
+        jmp near L_0b044
+backup_says_no_pool:
+        lea rdi,[rel backup_text_no_pool]
+        call api_print
+        jmp near L_0b044
+
+backup_none:
+        db 0x00
+backup_word:
+        db 'backup', 0
+backup_text_bytes:
+        db ' bytes', 10, 0
+backup_text_kept:
+        db ' saves are kept, in ', 0
+backup_text_of:
+        db ' KB of the 32768 KB of the pool. backup get N brings one back.', 10, 0
+backup_text_back:
+        db 'Brought back as it was saved: ', 0
+backup_text_cleared:
+        db 'The backup pool is empty.', 10, 0
+backup_text_no_such:
+        db 'No save has that number (or it could not be read).', 10, 0
+backup_text_usage:
+        db 'Usage: backup | backup get N | backup clear', 10, 0
+backup_text_no_pool:
+        db 'No backup pool here: no disk that can be written, or it is smaller than 64 MB.', 10, 0
+        align 8, db 0
+backup_sector:
+        times 512 db 0
+backup_record:
+        times 512 db 0
+
 ; ---- v3.0.24: the table of the cabinet is kept twice ----------------------------------------
 ; The table says where every object lies; if the sectors it is in are lost, everything is.
 ; A copy lies in the sectors right behind it (the table is 4 sectors, the objects start 9

@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.24 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.25 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -57,7 +57,7 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 |---|---|---|
 | 14 | **[done: v3.0.16 and `tasks` in v3.0.19, seen in QEMU]** Programs live on: leaving the desktop closes nothing; `tasks`; then `kill` means something | L |
 | 15 | **[the table is written twice, v3.0.24, seen in QEMU; the loader does not read the copy, the kernel has no second copy, writes of objects are as before]** A second copy of the table of the cabinet and of the kernel; writes whole or not at all | M |
-| 16 | The silent backup of the user and its pool, with a manager of the pool's space | M-L |
+| 16 | **[written and seen in QEMU, v3.0.25: saves go to a pool of 32 MB outside the cabinet; `backup`, `backup get N`, `backup clear`]** The silent backup of the user and its pool, with a manager of the pool's space | M-L |
 | 17 | **[the keyboard on the screen of the shell is there, v3.0.23, seen in QEMU; the smaller table of functions and relays between programs are not]** A desktop program is handed only what it needs; relays for the rest (the keyboard on the screen for the shell is one) | L |
 | 18 | **[`cores solo` / `bench` explained and changed, v3.0.21; "all cores for programs" is `cores all`, to be tried on the real machine]** `cores solo`, `bench`, all cores for programs | M |
 | 19 | **[done, v3.0.20: tried on Windows and once in QEMU]** Memory given back by PyTon programs | M |
@@ -243,6 +243,30 @@ Not written blind: it changes what happens at every start and end of the desktop
 - [ ] An object is still written over its old place: a cut during that loses the object. The
       whole answer is "write the new one elsewhere, then change the table" - the table being
       safe now is the first half of it.
+
+### 16, the silent backup: what is there and what is not (v3.0.25)
+
+- [x] Every object a program saves (api_ob_save) is written at once a second time into the
+      **backup pool**: 32 MB of the disk, 32 MB from the start of the system - outside the
+      cabinet, so what happens to the cabinet does not happen to it. Nothing is asked, nothing
+      is said, no maintenance mode is needed. A full pool begins anew at its start (the oldest
+      saves are written over). A disk under 64 MB has no pool and saving works as before.
+- [x] The manager: `backup` (a line a save: number, name, size; how much of the pool is used),
+      `backup get N` (that save back into the cabinet, under its name), `backup clear`.
+      Seen in QEMU on a 70 MB image (`test/qemu/q_v3_backup.txt`): two saves of Bags listed,
+      the first brought back; on the 23 MB image: "No backup pool here", nothing breaks.
+- [ ] The pool has one fixed place and size. "A pool of changing size" and a place at the end
+      of the disk need the size of the disk, which the kernel knows differently for each kind
+      of disk (ATA, AHCI, NVMe, USB) - to read. Until then: the cabinet must stay under
+      sector 65536 (it is at 14100; the build stops there, the system itself does not check).
+- [ ] What a save shows: its name and size. The clock is kept with it (ticks since the start)
+      but not shown; the date is not kept. After the pool began anew, only the saves of the
+      present round are listed.
+- [ ] Only saves of programs (api_ob_save). What the shell does to objects in maintenance mode
+      (`copy`, `rename`, `delete`, `inject`) does not pass it.
+- [ ] `backup get` puts the save over the object of that name; "as another name" is not there.
+- [ ] Puffus does not know of the pool: writing a new system to the stick leaves the pool where
+      it is (the image is 23 MB), which is right - but nothing tells the user it is there.
 
 ## If the disk is lost again - where everything is
 

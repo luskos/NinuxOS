@@ -777,6 +777,8 @@ def main():
         signed = sign_suits(img, tables, seed)
         sealed = '%d kernel suits signed; ' % signed + seal(img, base, tables, seed, old_public, added)
 
+    if free_sector(img, tables) >= 65536:        # the backup pool starts there (kernel: POOL_AT)
+        sys.exit('build: the objects of the cabinet reach sector 65536, where the backup pool starts')
     # the table of the cabinet twice: the copy lies right behind it (the kernel keeps it so from v3.0.24)
     table_bytes = struct.unpack_from('<H', img, TABLE_AT + 8)[0] * SECTOR
     if TABLE_AT + 2 * table_bytes <= 490 * SECTOR:

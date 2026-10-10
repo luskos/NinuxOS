@@ -3,6 +3,11 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.25** (11 October 2026) - seen in QEMU
+  - **The silent backup.** Every object a program saves is at once written a second time into
+    a backup pool of 32 MB outside the cabinet - nothing asked, nothing said, no maintenance
+    mode. `backup` lists what is kept, `backup get N` brings a save back into the cabinet,
+    `backup clear` empties the pool. A disk under 64 MB has no pool; saving works as before.
 - **v3.0.24** (11 October 2026) - seen in QEMU
   - **The table of the cabinet is written twice.** A copy lies right behind it and is written
     first; a cut of the power during a writing leaves one of the two whole.
