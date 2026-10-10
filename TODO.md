@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.09 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.10 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -21,6 +21,77 @@ machine; part C of that list (the start) decides whether the signing is right.
    start a PC from it. Then `python tools/source_container.py check \\.\PhysicalDriveN`.
 3. `python pyton/test.py` - after the last change (prelude.py got its own names) the two
    examples were only assembled, not run.
+
+## The order of work
+
+Sorted on 10 October 2026: what matters most, gives something that works, and is the least work
+comes first, so that most gets done in one go. S = hours, M = days, L = weeks, XL = more.
+"kernel" = needs a changed kernel, and that waits for step 1. The parts below hold the details.
+
+**Step 1 - the gate (the owner, `docs/TESTS.md`)**
+
+| # | what | size |
+|---|---|---|
+| 1 | Parts C-G: does v3.0.10 start, are the seals right, are `pyhello` and `pycalc` there | S |
+| 2 | Part I: one `nop` in the kernel - may code be added to it | S |
+
+**Step 2 - no kernel needed: can be written now**
+
+| # | what | size | why here |
+|---|---|---|---|
+| 3 | The boot sector no longer looks like a FAT12 diskette (Windows eats the stick) | S | critical, one small file we have as source |
+| 4 | The build: added objects get lines in the Sentinel's list; an object or suit of another size; `objects/*.asmo.kasm` assembled into the image | M | without it nothing new is "genuine" |
+| 5 | `tools/make_font.py` again (a .ttf -> the object `font`), Exo for the shell | M | the fonts are back; needed for Greek and for other sizes |
+| 6 | How a page finds its PyTon script and what it may call - read it from NET | S | opens the next four |
+| 7 | Settings as a curtain pulled down from the top of the screen (a page: HTML + CSS + PyTon): screen, wallpaper, themes, sound, network | M | pages are source we have |
+| 8 | A file manager that explains itself (a page / ASMO object) | M | |
+| 9 | Bags as it was meant: folders on the desktop like on a phone - a small icon that shows what is inside, a click opens it; a home for clutter in the bottom right corner | M | Bags has a source; today it only faults |
+| 10 | `data dump` in the context menu: the DATA out of an object, kept as a thing of its own | S-M | the context menu is a page |
+| 11 | The last functions for py2asm: images, a sound object, the network -> Paint, Nest, PyNamp, Ask compile | M | 16 of 20 programs compile today |
+| 12 | The 20 programs compiled by the new py2asm, each beside the old one on the screen | M | proves py2asm in the system |
+| 13 | At most 5 users | S | if it is a check in a program or a page; kernel if in `user` |
+
+**Step 3 - the kernel, once step 1 has passed**
+
+| # | what | size |
+|---|---|---|
+| 14 | Programs live on: leaving the desktop closes nothing; `tasks`; then `kill` means something | L |
+| 15 | A second copy of the table of the cabinet and of the kernel; writes whole or not at all | M |
+| 16 | The silent backup of the user and its pool, with a manager of the pool's space | M-L |
+| 17 | A desktop program is handed only what it needs; relays for the rest (the keyboard on the screen for the shell is one) | L |
+| 18 | `cores solo`, `bench`, all cores for programs | M |
+| 19 | Memory given back by PyTon programs | M |
+| 20 | Photon, Puffer, Tuner, META out of the kernel: programs of their own | L each |
+| 21 | Names for the kernel's 655 functions; the kernel cut into its parts | L |
+
+**Step 4 - the desktop itself** (Desktop has only a machine-read source: to be rewritten first)
+
+| # | what | size |
+|---|---|---|
+| 22 | Desktop rewritten as source meant to be read (PyTon + pages) | L |
+| 23 | More desktops: slide for a new one as on a phone; or one endless desktop that scrolls like a film strip, a column a frame, more added when needed | M after 22 |
+| 24 | The desktop split in 4 or 9 instances at once (multiboxing) | L |
+
+**Step 5 - machines and the world**
+
+| # | what | size |
+|---|---|---|
+| 25 | Touchpads and touch screens (I2C HID) | L |
+| 26 | The battery meter (needs the machine's ACPI tables read and run) | L |
+| 27 | Unicode; languages; letters of any size | L |
+| 28 | Wi-Fi; Bluetooth; tether from another device | XL |
+| 29 | winlolz / linlolz: read NTFS, ext4 | L each |
+| 30 | Sleep, the lid, brightness | L |
+
+**Step 6 - what NinuxOS is for**
+
+| # | what | size |
+|---|---|---|
+| 31 | The protocols: messages, pictures, video, files between two programs that only share a handle | L |
+| 32 | The chain of machines: each registers when installed, cloned, copied; where the data of NET and META lie | XL |
+| 33 | An instance of the system on every disk; the governor (`swap`, `sync`) | L |
+| 34 | The vDNA constructor: a universal one from the demo in the repository vDNA; closed programs as chains it builds into an ASMO object; an AI checks them | XL |
+| 35 | Socials | L |
 
 ## If the disk is lost again - where everything is
 
@@ -337,6 +408,25 @@ DIRECTIVE.md. Three rows of the table in 4c were written against these and are w
   person or an AI can read - the same work as the source of the compiled objects (part 4).
 - The chain of machines starts from what exists: `whoami` already keeps an ID, a generation, a
   parent and how many clones were made; the chained log is there.
+
+## 4e. More from the owner, 10 October 2026 (third)
+
+- **Bags are folders, as on Android:** a small icon that shows what it holds; a click and the
+  programs inside are there. That is what Bags is for: when the desktop is cluttered everything
+  goes inside. A place for it in the bottom right corner.
+- **More than one desktop.** Either: slide, as on a phone, and a new desktop opens. Or: a
+  parallax desktop without an end, scrolled like a film strip - every column one frame of the
+  strip, more added when needed.
+- **Settings as the curtain of a phone**, on the PC too: pull the top of the screen, it comes
+  down, pick the setting.
+- **vDNA is the form for closed code.** A universal constructor will be made from the demo that
+  is in git (the repository vDNA). A program or a file in this form cannot start by itself: it is
+  like a strand of DNA with the materials needed to make the program object, without showing
+  them to the user. The constructor makes it and starts it - and what it makes is again an ASMO
+  object. Because users cannot see the code, programs and files in this form are checked by an
+  AI for anything wrong.
+- Open question (Claude): `data dump` - do the data come out as a new object in the cabinet, or
+  as a file to the outside (a stick)? The PNG example fits both.
 
 ## 4b. From the owner, 10 October 2026 (first notes)
 

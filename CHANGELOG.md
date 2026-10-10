@@ -3,6 +3,11 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.10** (10 October 2026)
+  - TODO.md begins with "The order of work": 35 things in six steps - the gate (the owner's
+    tests), what needs no kernel, the kernel, the desktop, machines, what NinuxOS is for - each
+    with its size. Part 4e: Bags as folders, more desktops (slide or film strip), settings as a
+    curtain, vDNA as the form for closed code with a universal constructor.
 - **v3.0.09** (10 October 2026)
   - TODO.md, part 4d, and DIRECTIVE.md: the owner's design, where NinuxOS is not like the other
     systems - no installing (a program is a whole object), no permissions (relays instead), open
