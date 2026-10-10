@@ -20,6 +20,22 @@ State on 10 October 2026, v2.9.60. Order = importance.
       Find out whether the system uses them or the old build left them.
 - [ ] The version in the kernel (v2.9.59 -> the real one) once the two checks above are solved.
 
+## 1a. PyTon: the new py2asm (pyton/)
+
+- [ ] **Try it.** Nothing in `pyton/` has been run yet. First on Windows: `pyton/examples/basics.py`
+      under Python and compiled (the commands are at its top) - the two outputs should match.
+- [ ] **The system's functions for NinuxOS.** The old programs reach the system through a table of
+      functions; 8 places are known, 13 are not (`pyton/platform_ninux.inc`). fill, fill_round,
+      window, poll, key, mouse_x/y/buttons, load_text, save_text, ticks, system, ob_meta ... must be
+      found in the old runtime (it is the same ~8 KB in every compiled program) before a program
+      with a window can be compiled.
+- [ ] A way in: a new object cannot be put into the cabinet from outside yet (part 1), and its
+      identity (0x4C) is left 0.
+- [ ] The language, next: class, try / except, import, lambda, nested def, *args, sets;
+      giving memory back; fractions printed as Python prints them (now up to 6 digits).
+- [ ] Pages: HTML + CSS with PyTon scripts (type:script) go through the kernel's own small
+      compiler today; they should go through py2asm too.
+
 ## 2. The kernel source
 
 - [ ] `kernel/Kernel.kasm` is 55% code, 45% `db`. Follow the code through the tables: the shell

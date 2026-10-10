@@ -16,6 +16,10 @@ kernel carries in itself.
   - `tools/qemu/qrun.py` and `test/qemu/q_v2959_*.txt`: the system in QEMU, driven by scripts
   - `docs/NinuxOS_Architecture.tex`: the system and the files of the project, described anew
   - `TODO.md`, and `docs/chat`: the conversation in which all this was done
+  - `pyton/py2asm.py`, written anew: PyTon is read with Python's own parser and compiled to assembly.
+    for, break, continue, +=, dicts, tuples, fractions, slices, f-strings, default values, the methods
+    of texts, lists and dicts. Most of it is written in PyTon itself (`pyton/prelude.py`) on a small
+    assembly core (`pyton/runtime.inc`). Not tried yet; see TODO.md
 - **v2.9.51 - v2.9.59** - the kernel carries no line about these. What is known: Keys is
   "NinuxOS v2.9.59", Ask is "v2.9.56" (the dates in their sources).
 
