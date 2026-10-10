@@ -730,9 +730,14 @@ def main():
         if os.path.normcase(os.path.abspath(path)) in have:
             continue                            # a page the cabinet does not have: a new object
         name = os.path.splitext(os.path.basename(path))[0].lower()
-        page = make_object(open(path, 'rb').read(),
-                           ['type:page', 'name:' + name, 'label:' + name, 'kind:page', 'lang:html',
-                            'data:HTML page (CSS inside or linked)', 'desktop:no', 'made:build_disk.py'])
+        text = open(path, 'rb').read()
+        title = text.split(b'<title>')[1].split(b'</title>')[0].decode('latin-1') if b'<title>' in text else name
+        lines = ['type:page', 'name:' + name, 'label:' + title, 'kind:page', 'lang:html',
+                 'data:HTML page (CSS inside or linked)']
+        if b'name="desktop" content="no"' in text:      # not an icon of the desk (the taskbar opens only those)
+            lines.append('desktop:no')
+        # the number at 0x50 of the header: its lowest bit hides an object from the desk (read from Desktop)
+        page = make_object(text, lines + ['made:build_disk.py'], level=5 if 'desktop:no' in lines else 0)
         said, line = add_object(img, tables, page, name)
         changed.append('a new page: ' + said)
         added.append(line)

@@ -36,7 +36,7 @@ page = 0
 mode = 0        # 0 the things, 1 choosing what goes in
 want = 0
 ptop = 0
-status = "A click starts. +: put in. Right button: out."
+status = "Click: start. +: put in. Right: out."
 
 
 def draw(x, y):

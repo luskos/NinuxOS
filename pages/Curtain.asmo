@@ -1,12 +1,12 @@
 <html>
 <head>
   <title>Settings</title>
-  <meta name="desktop" content="no">
   <link rel="stylesheet" href="theme">
   <style>
     /* v3.0.11: the settings, as the curtain of a phone: a row of tiles on top, under them the
        part that was picked. Opened by the button "Settings" of the taskbar (the page taskbar
-       names this object: onclick="curtain").
+       names this object: onclick="curtain"). The taskbar opens only what is on the desk,
+       so this page has an icon there too (no "desktop: no").
        Pulling it down from the top edge of the screen is the desktop's work and is not there
        yet (TODO.md): until then it opens as a page in a window.
        A page may call: set_text, set_style, show, hide, value, use_theme, reload, close,

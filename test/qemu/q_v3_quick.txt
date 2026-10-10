@@ -1,0 +1,36 @@
+# q_v3_quick.txt - v3: does it start, are the seals right, are the new things there
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 2
+snap v3_00_start
+type cls
+type version
+type sentinel
+wait 3
+snap v3_01_sentinel
+type cls
+type ls
+snap v3_02_ls
+esc
+type cls
+type run pyhello
+type run pyhello numbers
+type meta bags
+snap v3_03_pyhello
+type cls
+type view directive
+snap v3_04_view
+esc
+key alt-kp_multiply
+wait 1
+snap v3_05_dark
+key alt-kp_multiply
+wait 1
+snap v3_06_light
+type cls
+type desktop
+wait 6
+snap v3_07_desktop
+esc
+wait 2
+snap v3_08_desktop2

@@ -1,0 +1,71 @@
+# q_v3_apps.txt - v3: Bags, Files, Settings, Socials, the drawer project
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type desktop
+waitlog [browser] page shown 60
+wait 2
+esc
+wait 2
+# Bags: open, put Calc in, look, close, look at the icon
+moveto 351 510
+click
+wait 4
+snap a01_bags_open
+moveto 390 265
+click
+wait 2
+snap a02_bags_chooser
+moveto 400 300
+click
+wait 2
+snap a03_bags_one
+esc
+wait 3
+snap a04_desktop_after_bags
+# Files
+moveto 447 140
+click
+wait 4
+snap a05_files
+key down
+key down
+key down
+text t
+wait 2
+snap a06_files_type
+text t
+text t
+text t
+text t
+text t
+wait 1
+text d
+wait 2
+snap a07_files_dump
+esc
+wait 3
+# Socials
+moveto 447 325
+click
+wait 4
+snap a08_socials
+esc
+wait 3
+# Settings
+moveto 781 749
+click
+wait 4
+snap a09_settings
+moveto 300 200
+wait 1
+esc
+wait 3
+# the drawer project
+moveto 447 418
+click
+wait 4
+snap a10_project
+esc
+wait 2
+snap a11_end

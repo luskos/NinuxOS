@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.14 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.15 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -93,6 +93,33 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 | 34 | The vDNA constructor: a universal one from the demo in the repository vDNA; closed programs as chains it builds into an ASMO object; an AI checks them | XL |
 | 35 | **[the empty program is there, v3.0.11]** Socials | L |
 | 36 | The other dialects over the one back end: c2asm, c++2asm, c#2asm, java2asm, js2asm - plain code only, no OOP (part 2a) | XL |
+
+### Seen in QEMU on 11 October 2026 (v3.0.15; the owner allowed one quick test)
+
+`test/qemu/q_v3_quick.txt`, `q_v3_apps.txt`, `q_v3_settings.txt`; pictures in `test/qemu/out_v3`.
+
+- [x] The system starts with the new boot sector, the changed kernel (extension 158144 bytes,
+      `SHA-256 ok`), our key: `sentinel` says 103 checked, 1 CHANGED (donate, as always);
+      `k_tools` is taken; the added lines (curtain, files, pycalc, pyhello, socials) are `genuine`.
+- [x] `run pyhello`, `run pyhello numbers`: the new py2asm's program gives exactly the expected
+      lines inside NinuxOS (lists, dicts, try/except, floats, f-strings).
+- [x] **Alt + \*** : the screen goes black and comes back (QEMU's adapter).
+- [x] Bags: the folder icon is drawn by its socket; it opens, a thing is put in and kept, Esc
+      closes **without the old page fault**, the icon then shows a tile for the thing inside.
+      A program that does not call `window()` gets the whole screen, black: the panel stands
+      on black, not over the desktop. A panel over the desktop needs the desktop's help (22).
+- [x] Files: the list, one type only (T), what the object says of itself, `data dump` (D)
+      made `donate_data`. Socials: its icon and window.
+- [x] Settings: the taskbar opens only what is on the desk ("Not on the desk: curtain"), and
+      the number at 0x50 of an object's header hides it when its lowest bit is set - so the
+      page is on the desk now, as "Settings", and the button opens it. The tiles change the part.
+- [x] `view directive` from the drawer `project` works; `view` shows only the first lines of a
+      long text, so the papers are there to be kept and opened in Notepad or Studio, not read
+      whole in the shell.
+- Objects are read from the disk "on first use", not all at the start: a big object
+  (`--source-inside`) should not slow the start. Not tried.
+- Not tried: the stick and Windows (K2), five users, the vault, the drawer `compare`, a real
+  machine's display with Alt + \*.
 
 ### Where the order stands after v3.0.11 (10 October 2026)
 

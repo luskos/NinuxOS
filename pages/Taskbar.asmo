@@ -26,6 +26,7 @@
     .title { color: #C9CEDE; padding-left: 6px; }
     .msg { color: #FFB020; padding-left: 6px; padding-right: 6px; }
     .hint { color: #C9CEDE; }
+    .set { color: #F5F4FF; padding: 3px 6px; }
     .clock { border-radius: 10px; background: rgba(123, 92, 255, 0.45); color: #FFFFFF; padding: 3px 10px; }
   </style>
 </head>
@@ -35,7 +36,7 @@
     <div class="btn" onclick="system.shell"><img src="ico_shell" width="20" height="20"></div>
     {{tasks}}<span class="title">{{title}}</span><span class="msg">{{msg}}</span>
   </div>
-  <div class="right"><span class="hint">{{hint}}</span><div class="task" onclick="curtain">Settings</div><span class="clock">{{clock}}</span>
+  <div class="right"><span class="hint">{{hint}}</span><div class="btn" onclick="curtain"><span class="set">Settings</span></div><span class="clock">{{clock}}</span>
     <div class="btn" onclick="donate"><img src="ico_heart" width="20" height="20"></div>
     <div class="btn" onclick="system.stone"><img src="ico_stone" width="20" height="20"></div></div>
 </body>

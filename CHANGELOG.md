@@ -3,6 +3,14 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.15** (11 October 2026) - **the first version since v2.9.59 seen running** (QEMU)
+  - Tried in QEMU with the owner's leave: the system starts with the new boot sector, the
+    changed kernel and our key; the Sentinel takes all 103 lines but donate; pyhello, Alt + *,
+    Bags (no page fault any more), Files with data dump, Socials work. TODO.md has the list.
+  - Settings: the page is on the desk now (the taskbar opens only what is there; an object
+    whose header has the lowest bit at 0x50 set is hidden from the desk), so the button works.
+  - Bags: a shorter first line of help (it ran over the panel).
+  - test/qemu/q_v3_quick.txt, q_v3_apps.txt, q_v3_settings.txt.
 - **v3.0.14** (11 October 2026) - nothing in the image changed but the version
   - The build makes `kernel/Kernel.sym.inc` anew from the kernel it has just assembled: the
     suits follow when code is added anywhere in the kernel, not only at the end of the extension.
