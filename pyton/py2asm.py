@@ -61,7 +61,11 @@ SYSTEM = {
     'window': ('iiiis', 'n'), 'poll': ('', 'i'), 'key': ('', 'i'), 'key_mods': ('', 'i'),
     'mouse_x': ('', 'i'), 'mouse_y': ('', 'i'), 'mouse_buttons': ('', 'i'),
     'cursor_show': ('ii', 'n'), 'cursor_hide': ('', 'n'), 'ticks': ('', 'i'),
-    'log': ('s', 'n'), 'meta': ('s', 's'),
+    'log': ('s', 'n'), 'meta': ('s', 's'), 'screen_w': ('', 'i'), 'screen_h': ('', 'i'),
+    'random': ('i', 'i'), 'ob_count': ('', 'i'), 'ob_meta': ('is', 's'), 'meta_of': ('ss', 's'),
+    'load_text': ('s', 's'), 'save_text': ('ss', 'i'), 'save_page': ('ss', 'i'), 'save_rating': ('i', 'n'),
+    'system': ('s', 's'), 'logline': ('i', 's'), 'spawn': ('s', 'i'), 'kill': ('s', 'i'),
+    'key_send': ('ii', 'n'), 'play': ('ii', 'n'), 'sound_stop': ('', 'n'),
 }
 
 # a built-in function of Python -> the function of prelude.py that does it
@@ -607,7 +611,7 @@ class Compiler:
         name = f.id
         if self.find(name):
             self.call_function(node, self.find(name), node.args, node.keywords)
-        elif name in SYSTEM and not self.fn.prelude:
+        elif name in SYSTEM:
             self.call_system(node, name)
         elif name in INTRINSICS and self.fn.prelude:
             label, count = INTRINSICS[name]

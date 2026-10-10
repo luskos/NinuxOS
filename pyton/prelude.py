@@ -1600,3 +1600,26 @@ def textof(codes):
         _sset(r, i, _lget(codes, i))
         i = i + 1
     return r
+
+
+def textl(x, y, codes, start, count, colour):
+    # draw count letters of a list of letter codes, from number start (as the PyTon of v2.9 did)
+    n = len(codes)
+    if start < 0:
+        start = 0
+    if count > n - start:
+        count = n - start
+    if count > 255:
+        count = 255
+    if count < 0:
+        count = 0
+    r = _str_new(count)
+    i = 0
+    while i < count:
+        c = _lget(codes, start + i)
+        if c < 32:
+            c = 32
+        _sset(r, i, c)
+        i = i + 1
+    text(x, y, r, colour)
+    return None

@@ -1,13 +1,13 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.01 (the system on the disk is still the v2.9.59 kernel).
+State on 10 October 2026, project v3.0.02 (the system on the disk is still the v2.9.59 kernel).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
 
 ## To try now (the owner)
 
-1. **Does a program made on the PC get into the system?** Copy `test/try/pyhello.asmo` and
-   `test/try/pycalc.asmo` onto a FAT32 stick. In NinuxOS: `usb on`, `mnt`, `files`,
+1. **Does a program made on the PC get into the system?** Copy the objects of `test/try`
+   (pyhello, pycalc, pychronos, pynotepad, pybags) onto a FAT32 stick. In NinuxOS: `usb on`, `mnt`, `files`,
    `files get pyhello.asmo` (try also the short name the stick shows), then `ls`, `meta pyhello`,
    `run pyhello`, `run pyhello numbers`; for pycalc: start it from the desktop.
    Write down every answer of the system - each one says what the build must do.
@@ -56,16 +56,20 @@ No class, on purpose: a program is made of objects (ASMO), not of classes.
 - [x] v3.0.01: fill, fill_round, text, window, poll, key, key_mods, mouse_x/y/buttons,
       cursor_show/hide, ticks, log, meta are connected (`pyton/platform_ninux.inc`, py2asm: SYSTEM).
       Calc and ASMONCRAFT go through the new py2asm; nothing has run in the system yet.
-- [ ] **The rest of the system's functions**, in the order the programs need them: save_text and
-      load_text (9 programs), ob_count / ob_meta (5), system (7), textl, spawn, kill, key_send,
-      load_image / save_image, save_rating, save_page, random, time, play / sound_play / sound_stop,
-      logline, meta_of, net_ask / net_answer / net_state. Method that worked: count the calls of a
-      name in each program's source and the call sites of each runtime function in its object -
-      equal counts name the function; then read its few lines for the place in the table.
-      Likely but not sure: ticks (+0x10), cursor_show (+0x48), key_mods (the third value of poll),
-      memory (+0xB0).
-- [ ] Compile all 20 programs of `apps/` with the new py2asm and compare them on the screen
-      with the old ones.
+- [x] v3.0.02: save_text, save_page, load_text, ob_count, ob_meta, meta_of, system, logline,
+      random, spawn, kill, key_send, play, sound_stop, save_rating, screen_w / screen_h, textl,
+      textof (`pyton/ninux_system.inc`). ticks is +0xA0 and key_mods the second value of poll
+      (v3.0.01 had them wrong). 16 of the 20 programs of `apps/` compile and assemble.
+- [ ] **The last functions:** load_image / save_image (Paint, Nest: the pixels of an image object
+      to and from a list; an image's DATA is width, height, then 4 bytes a pixel), sound_play
+      (PyNamp: place +0x138 with 1), net_ask / net_answer / net_state (Ask: place +0x150 with
+      1, 2, 0), time. Method that worked: count the calls of a name in each program's source and
+      the call sites of each runtime function in its object - equal counts name the function;
+      then read its few lines.
+- [ ] **The old programs on the screen.** They compile, but they were written for the old PyTon.
+      Run each one compiled by the new py2asm beside the old one and note what differs
+      (the owner; `test/try` has the first ones). Known risk: the old PyTon kept typed text as
+      lists of letter codes and had its own len() / str() behaviour.
 - [ ] A way in: a new object cannot be put into the cabinet from outside yet (part 1), and its
       identity (0x4C) is left 0.
 - [ ] **Pages.** HTML + CSS with PyTon scripts (type:script) go through the kernel's own small

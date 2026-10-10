@@ -3,6 +3,17 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.02** (10 October 2026)
+  - py2asm: the rest of the system's functions found in the old runtime and connected
+    (`pyton/ninux_system.inc`): save_text, save_page, load_text, ob_count, ob_meta, meta_of,
+    system, logline, random, spawn, kill, key_send, play, sound_stop, save_rating, screen_w,
+    screen_h; textl and textof in prelude.py. 16 of the 20 programs of v2.9.59 compile and
+    assemble; Paint, Nest (images), PyNamp (a sound object) and Ask (the network) wait.
+  - Corrected from v3.0.01: ticks is place +0xA0 (not +0x10, which is the size of the screen);
+    key_mods is the second value poll gives.
+  - Learned on the way: a program that saves a text builds the whole object itself and leaves
+    the identity 0 - the system fills it in when it saves.
+  - `test/try`: pyhello, pycalc, pychronos, pynotepad, pybags as objects. Nothing was run.
 - **v3.0.01** (10 October 2026)
   - The project moved to the folder `NinuxOS_v3`; `DIRECTIVE.md` says how the work goes.
   - py2asm reaches NinuxOS: fill, fill_round, text, window, poll, key, the mouse, the cursor, ticks,

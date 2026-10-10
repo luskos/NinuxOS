@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.01.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.02.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.01 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.02 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -359,27 +359,44 @@ places of that table known so far (read from the runtime of the old programs):
 \toprule
 place & function \\ \midrule
 \texttt{+0x00}, \texttt{+0x08} & write a text / one letter to the screen of the shell \\
-\texttt{+0x10} & the clock (ticks, 100 a second) --- likely \\
+\texttt{+0x10} & the screen: width and height (\texttt{screen\_w()}, \texttt{screen\_h()}) \\
 \texttt{+0x18} & \texttt{fill(x, y, w, h, colour)} \\
 \texttt{+0x30} & \texttt{text(x, y, text, colour)}; a fifth value is the background, $-1$ for none \\
 \texttt{+0x38} & \texttt{window(x, y, w, h, title)} \\
-\texttt{+0x40} & \texttt{poll()}: 0 nothing, 1 a key, 2 the mouse; with it come the key, or x, y and
-                 the buttons, which \texttt{key()}, \texttt{mouse\_x()}, \texttt{mouse\_y()},
+\texttt{+0x40} & \texttt{poll()}: 0 nothing, 1 a key, 2 the mouse; with it come three values: the key
+                 and its Shift/Ctrl/Alt, or x, y and the buttons, which \texttt{key()},
+                 \texttt{key\_mods()}, \texttt{mouse\_x()}, \texttt{mouse\_y()},
                  \texttt{mouse\_buttons()} then give \\
-\texttt{+0x48}, \texttt{+0x50} & \texttt{cursor\_show(x, y)} (likely), \texttt{cursor\_hide()} \\
-\texttt{+0x70} & the META value of an object: \texttt{meta(key)} \\
+\texttt{+0x48}, \texttt{+0x50} & \texttt{cursor\_show(x, y)}, \texttt{cursor\_hide()} \\
+\texttt{+0x58} & \texttt{ob\_count()}: how many objects the cabinet has \\
+\texttt{+0x60}, \texttt{+0x68} & the object with this number / this name $\to$ its address in memory;
+                 its DATA starts at the address plus the header's field \texttt{0x10}
+                 (\texttt{load\_text(name)} reads it) \\
+\texttt{+0x70} & a META value of an object: \texttt{meta(key)}, \texttt{ob\_meta(n, key)},
+                 \texttt{meta\_of(name, key)} \\
+\texttt{+0x90} & \texttt{random(n)} \\
+\texttt{+0xA0} & \texttt{ticks()}, 100 a second \\
 \texttt{+0xB0} & memory --- likely \\
 \texttt{+0xC0} & a text to the serial log: \texttt{log(text)} \\
-\texttt{+0xE0} & save an object (name, address, size) --- likely \\
+\texttt{+0xE0} & save an object (name, address, size): \texttt{save\_text}, \texttt{save\_page}.
+                 The program builds the whole object itself --- header, DATA, META, the end ---
+                 with the identity 0; the system gives the identity \\
+\texttt{+0x118} & programs: open one (\texttt{spawn(name)}), close one (\texttt{kill(name)}),
+                 send a key to the window underneath (\texttt{key\_send(key, mods)}) \\
+\texttt{+0x128} & a short text from the system: \texttt{system("hour")} --- the names are cpu,
+                 cores, memory, screen, graphics, disk, version, year, month, day, hour, minute,
+                 second, time --- and \texttt{logline(n)} \\
+\texttt{+0x138} & sound: \texttt{play(hertz, ms)}, \texttt{sound\_stop()} \\
 \texttt{+0x140} & \texttt{fill\_round(x, y, w, h, colour, radius)} \\
+\texttt{+0x150} & the network (state, ask, answer) --- not connected yet \\
 \bottomrule
 \end{longtable}
 
-\noindent Not found yet: \texttt{load\_text}, \texttt{save\_text}, \texttt{load\_image},
-\texttt{save\_image}, \texttt{ob\_count}, \texttt{ob\_meta}, \texttt{system}, \texttt{spawn},
-\texttt{kill}, \texttt{random}, \texttt{time}, the sound and the network. Of the twenty programs
-of v2.9.59, Calc and ASMONCRAFT use only what is known and go through the new py2asm; the other
-eighteen wait for the rest. Nothing compiled by the new py2asm has run inside NinuxOS yet.
+\noindent Not connected yet: \texttt{load\_image} and \texttt{save\_image} (Paint, Nest),
+\texttt{sound\_play} (PyNamp), \texttt{net\_ask}, \texttt{net\_answer}, \texttt{net\_state} (Ask),
+\texttt{time}. Sixteen of the twenty programs of v2.9.59 go through the new py2asm and assemble;
+these four wait. Nothing compiled by the new py2asm has run inside NinuxOS yet, and the old
+programs were written for the old PyTon: where the two differ will show only on the screen.
 
 % ------------------------------------------------------------------------------------------
 \section{The shell}\label{sec:shell}
