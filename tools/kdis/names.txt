@@ -185,7 +185,7 @@
 95AC L_095ac
 95C4 L_095c4
 95DE L_095de
-95E9 fn_095e9
+95E9 api_clip
 9642 fn_09642
 9675 fn_09675
 96A9 L_096a9
@@ -500,14 +500,14 @@ B85B cmd_desktop
 B86E L_0b86e
 B888 cmd_reboot
 B89B cmd_shutdown
-B89F L_0b89f
+B89F api_power
 B93F L_0b93f
 B950 L_0b950
 B951 L_0b951
 B954 L_0b954
 B9A2 fn_0b9a2
 B9A7 L_0b9a7
-B9AE p_0b9ae
+B9AE api_cabinet_changes
 B9B6 fn_0b9b6
 B9C7 L_0b9c7
 BA06 L_0ba06
@@ -806,7 +806,7 @@ DAA1 L_0daa1
 DAAB L_0daab
 DAB9 L_0dab9
 DABB L_0dabb
-DABC fn_0dabc
+DABC api_rect_save
 DADD L_0dadd
 DAE7 L_0dae7
 DAFE L_0dafe
@@ -815,7 +815,7 @@ DB5D L_0db5d
 DB84 L_0db84
 DB91 L_0db91
 DB9A L_0db9a
-DB9D fn_0db9d
+DB9D api_rect_restore
 DBB6 L_0dbb6
 DBE4 L_0dbe4
 DBED L_0dbed

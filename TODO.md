@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.25 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.26 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -68,7 +68,7 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 
 | # | what | size |
 |---|---|---|
-| 22 | Desktop rewritten as source meant to be read (PyTon + pages) | L |
+| 22 | **[begun, v3.0.26: the object read through and named - docs/DESKTOP.md has its parts and the five steps of the rewriting; no line of the new one is written yet]** Desktop rewritten as source meant to be read (PyTon + pages) | L |
 | 23 | More desktops: slide for a new one as on a phone; or one endless desktop that scrolls like a film strip, a column a frame, more added when needed | M after 22 |
 | 24 | The desktop split in 4 or 9 instances at once (multiboxing) | L |
 

@@ -1,0 +1,41 @@
+﻿# renames_desktop.txt - names for the functions of the object Desktop (objects/Desktop.asmo.kasm),
+# from tools/kdis/outline.py and the texts each one uses (v3.0.26). Applied by:
+#   python tools/kdis/rename.py objects/Desktop.asmo.kasm tools/kdis/renames_desktop.txt
+# Not named yet (not understood): fn_12c668, fn_12c72c, fn_12c781, fn_12d428, fn_12e3d0, fn_12e508, fn_12e5c2
+# OLD NEW ; what it does
+sock_run     desk_run           ; the socket "run": the desktop itself - checks for a graphics mode, draws the desk, then takes keys and the mouse until ESC or the shell button
+fn_12c810    desk_draw          ; draw the desk: every object of the cabinet that is not hidden gets a place and its icon (the picture named by "icon", or its socket "draw"), by its type: icon, script, cabinet (a drawer), page
+fn_12cdbb    places_object      ; -> the object desk_places (where the user put each icon), 0 if there is none
+fn_12cdfb    places_find        ; the place kept for an object, by its name
+fn_12ce92    places_set         ; keep the place of an object, by its name
+fn_12cf33    places_save        ; save the places as the object desk_places (type:data)
+fn_12d006    icon_drag          ; an icon is moved with the mouse: draw, keep the new place, save
+fn_12d0f8    taskbar_is_page    ; is there a page "taskbar" to draw the taskbar with
+fn_12d116    taskbar_plain      ; the taskbar drawn by the desktop itself, when there is no page for it
+fn_12d266    tasks_count        ; how many programs run (asked of the multiplexer)
+fn_12d309    tasks_buttons      ; a button on the taskbar for every program that runs
+fn_12d3d9    tasks_at           ; which program's button is under the mouse
+fn_12d47b    taskbar_clock      ; the clock and the message on the taskbar, once a second
+fn_12d5f2    taskbar_top        ; the dot line where the taskbar starts
+fn_12d60d    taskbar_click      ; a click on the taskbar
+fn_12d76c    object_open        ; open an object: a program is started, a drawer opened, a page or text shown; "Locked" if it is locked
+fn_12d9cb    icon_at            ; which icon is under the mouse (-1: none)
+fn_12da16    icon_hover         ; the mouse is over an icon: its card comes up
+fn_12da74    card_off           ; take the card of an object off the screen
+fn_12dac6    card_draw          ; the card of an object: label, name, kind, a picture or text of its DATA, its identity
+fn_12df37    desk_redraw        ; draw everything again
+fn_12df69    icon_label         ; the name under an icon
+fn_12e08b    studio_with        ; start Studio with an object (edit, view)
+fn_12e101    context_menu       ; the right button on an icon: the page "context" and what was chosen there
+fn_12e31d    first_start        ; no settings yet: show the page "setup"
+fn_12e370    inject_cancel      ; "Inject cancelled"
+fn_12e3aa    message_time       ; when the message on the taskbar goes away
+fn_12e3bf    message_set        ; put a message on the taskbar
+fn_12e548    start_menu         ; the start button: the page "start" as a popup
+fn_12e5fa    taskbar_object     ; -> the object "taskbar"
+fn_12e68c    taskbar_page       ; draw the taskbar with its page (the kernel's page drawing), the values filled in
+fn_12e794    taskbar_page_hit   ; what the page says was clicked
+fn_12e7d1    taskbar_page_click ; a click on the taskbar page
+fn_12e83a    action_do          ; do what a clicked part of a page names: start, system.shell, system.shutdown, system.restart, system.stone, or the name of an object on the desk
+fn_12e9b9    taskbar_values     ; the values the taskbar page shows: tasks=, title=, msg=, hint=, clock
+fn_12eb60    procket_message    ; the message of the desktop's procket ("lucky start")

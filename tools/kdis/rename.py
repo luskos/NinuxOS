@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # rename.py - give functions and data of the kernel the names they deserve.
 #
-#   python tools/kdis/rename.py            applies tools/kdis/renames.txt
+#   python tools/kdis/rename.py            applies tools/kdis/renames.txt to the kernel and the suits
+#   python tools/kdis/rename.py objects/Desktop.asmo.kasm tools/kdis/renames_desktop.txt
+#                                          the same for one object written as source, with its own list
 #
 # renames.txt:  OLD NEW   ; what it does       (a line a name; # starts a comment line)
 # The recovered kernel has addresses for names (fn_53fdf). When it is understood what a function
@@ -30,9 +32,13 @@ FILES = [KERNEL, os.path.join(ROOT, 'kernel', 'Kernel.sym.inc'), os.path.join(HE
     + sorted(glob.glob(os.path.join(ROOT, 'kernel', 'suits', '*.kasm')))
 
 
+SOURCES = [KERNEL] + sorted(glob.glob(os.path.join(ROOT, 'kernel', 'suits', '*.kasm')))
+LIST = os.path.join(HERE, 'renames.txt')
+
+
 def assemble_all():
     out = []
-    for src in [KERNEL] + sorted(glob.glob(os.path.join(ROOT, 'kernel', 'suits', '*.kasm'))):
+    for src in SOURCES:
         o = os.path.join(WORK, 'rename.bin')
         r = subprocess.run([build_disk.find_nasm(), '-f', 'bin', '-w-all', '-I', os.path.dirname(src) + os.sep, '-o', o, src],
                            capture_output=True, text=True)
@@ -43,8 +49,13 @@ def assemble_all():
 
 
 def main():
+    global KERNEL, FILES, SOURCES, LIST
+    if len(sys.argv) == 3:                      # one object and its own list
+        KERNEL = os.path.abspath(sys.argv[1])
+        FILES = SOURCES = [KERNEL]
+        LIST = sys.argv[2]
     pairs = []
-    for line in open(os.path.join(HERE, 'renames.txt'), encoding='utf-8'):
+    for line in open(LIST, encoding='utf-8'):
         if line.strip() and not line.startswith('#'):
             names, _, what = line.partition(';')
             f = names.split()
@@ -78,7 +89,7 @@ def main():
         os.remove(p + '.keep')
     if not same:
         sys.exit('rename: the bytes did not stay the same - everything was put back\n' + err)
-    print('rename: %d names given; the kernel and the %d suits are the same bytes' % (len(todo), len(before) - 1))
+    print('rename: %d names given; %d file(s) assembled to the same bytes' % (len(todo), len(before)))
     return 0
 
 

@@ -1863,7 +1863,8 @@ L_095de:
         pop rbx
         retq
 
-fn_095e9:
+; rdi, rsi, rdx, rcx = x, y, width, height: draw only inside this rectangle (kept within the screen)
+api_clip:
         test rdx,rdx
         jz short fn_09642
         lea rax,[rdi+rdx]
@@ -4550,7 +4551,7 @@ L_0b417:
         xor esi,esi
         mov rdx,[rel d_11818]
         mov rcx,[rel d_11820]
-        call fn_0dabc
+        call api_rect_save
         mov [rel d_11db9],rax
 
 L_0b45e:
@@ -4589,7 +4590,7 @@ L_0b494:
         xor esi,esi
         mov rdx,[rel d_11818]
         mov rcx,[rel d_11820]
-        call fn_0dabc
+        call api_rect_save
         mov [rel d_11db9],rax
 
 L_0b4fe:
@@ -4606,7 +4607,7 @@ L_0b4fe:
         test rdi,rdi
         jz near L_0b620
         mov qword [rel d_11db9],0x0
-        call fn_0db9d
+        call api_rect_restore
         jmp near L_0b620
 
 L_0b550:
@@ -4653,7 +4654,7 @@ L_0b5b1:
         test rdi,rdi
         jz short L_0b5f7
         mov qword [rel d_11db9],0x0
-        call fn_0db9d
+        call api_rect_restore
         jmp short L_0b620
 
 L_0b5f7:
@@ -4867,16 +4868,17 @@ cmd_reboot:
         lea rdi,[rel d_14bda]
         call api_print
         mov edi,0x1
-        jmp short L_0b89f
+        jmp short api_power
 
 ; says: '[ninux] power off'
 ; says: 'NinuxOS has stopped. It is now safe to turn off the computer.'
 ; says: '[ninux] restart'
 cmd_shutdown:
         xor edi,edi
-        jmp short L_0b89f
+        jmp short api_power
 
-L_0b89f:
+; rdi = 0: power off; else: restart
+api_power:
         test rdi,rdi
         jnz near L_0b954
         lea rdi,[rel d_11e28]
@@ -4969,7 +4971,8 @@ L_0b9a7:
         jnz short L_0b9a7
         retq
 
-p_0b9ae:
+; -> rax = a number that grows with every change of the cabinet
+api_cabinet_changes:
         mov rax,[rel d_11de1]
         retq
 
@@ -8037,7 +8040,8 @@ L_0dab9:
 L_0dabb:
         retq
 
-fn_0dabc:
+; rdi, rsi, rdx, rcx = x, y, width, height: keep what the screen shows there -> rax = the kept picture
+api_rect_save:
         cmp qword [rel d_117cb],0x0
         jz near L_0db9a
         push rbx
@@ -8127,7 +8131,8 @@ L_0db9a:
         retq
 
 ; says: '[store] restore_rect: a bad buffer was refused'
-fn_0db9d:
+; rdi = a kept picture (api_rect_save): put it back on the screen
+api_rect_restore:
         test rdi,rdi
         jz short L_0dbed
         push rbx
@@ -12741,13 +12746,13 @@ api_table:
         dq mem_free
         dq api_log
         dq p_0da95
-        dq fn_0dabc
-        dq fn_0db9d
+        dq api_rect_save
+        dq api_rect_restore
         dq api_ob_save
-        dq L_0b89f
-        dq p_0b9ae
+        dq api_power
+        dq api_cabinet_changes
         dq fn_09675
-        dq fn_095e9
+        dq api_clip
         dq p_107fd
         dq fn_0fe64
         dq api_programs
@@ -16969,7 +16974,7 @@ fn_51773:
         mov rsi,[rel d_52190]
         mov edx,0x210
         mov ecx,0xc6
-        call fn_0dabc
+        call api_rect_save
         mov [rel d_52198],rax
         mov rdi,[rel d_52188]
         add rdi,0x7
@@ -17173,7 +17178,7 @@ L_51ba5:
 L_51ba7:
         call api_cursor_hide
         mov rdi,[rel d_52198]
-        call fn_0db9d
+        call api_rect_restore
         cmp byte [rel d_52125],0x0
         jz short L_51bcc
         mov rdi,r12
@@ -17379,7 +17384,7 @@ L_51e31:
         xor esi,esi
         mov rdx,[rel d_11818]
         mov rcx,[rel d_11820]
-        call fn_0dabc
+        call api_rect_save
         mov rbx,rax
         xor edi,edi
         xor esi,esi
@@ -17405,7 +17410,7 @@ L_51ebb:
         test rbx,rbx
         jz short L_51edf
         mov rdi,rbx
-        call fn_0db9d
+        call api_rect_restore
         jmp short L_51f06
 
 L_51edf:
@@ -20035,7 +20040,7 @@ L_54cef:
 L_54d2e:
         mov rdx,[rbx+0x20]
         mov rcx,[rbx+0x28]
-        call fn_095e9
+        call api_clip
         mov rax,[rel d_11dc1]
         mov [r12+0xc8],rax
         mov rax,[rel d_11dc9]
@@ -20401,7 +20406,7 @@ p_5510f:
         call mux_this_task
         pop rdi
         test rax,rax
-        jz near fn_095e9
+        jz near api_clip
         call fn_54f16
         push rdi
         push rsi
@@ -20608,7 +20613,7 @@ p_553ae:
         call mux_this_task
         pop rdi
         test rax,rax
-        jz near fn_0dabc
+        jz near api_rect_save
         push rbx
         mov rbx,rax
         call fn_54f16
@@ -20624,7 +20629,7 @@ p_553ae:
         pop rdi
         sub rdi,[rbx+0x90]
         sub rsi,[rbx+0x98]
-        call fn_0dabc
+        call api_rect_save
         push rax
         call fn_54dbd
         pop rax
@@ -20635,7 +20640,7 @@ p_553f5:
         call mux_this_task
         pop rdi
         test rax,rax
-        jz near fn_0db9d
+        jz near api_rect_restore
         test rdi,rdi
         jz near L_55495
         push rbx
@@ -20653,7 +20658,7 @@ p_553f5:
         mov rax,[r12+0x18]
         mov [rel d_565d0],rax
         mov rdi,r12
-        call fn_0db9d
+        call api_rect_restore
         call fn_54dbd
         mov rdi,[rel d_565b8]
         add rdi,[rbx+0x80]
@@ -31987,7 +31992,7 @@ L_61fe8:
         xor esi,esi
         mov rdx,[rel d_11818]
         mov rcx,[rel d_11820]
-        call fn_0dabc
+        call api_rect_save
         mov rbx,rax
         mov qword [rel d_62c80],0x1
         call fn_6227b
@@ -31996,7 +32001,7 @@ L_61fe8:
         call fn_6227b
         mov r13,rax
         mov rdi,rbx
-        call fn_0db9d
+        call api_rect_restore
         mov edi,0x80
         call fn_0b693
         or al,[rel d_62ee8]

@@ -49,7 +49,7 @@ p_12c12b:
         retq
 
 obj_named:
-        dq sock_run
+        dq desk_run
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 obj_prockets:
@@ -57,7 +57,8 @@ obj_prockets:
         db 0x1E, 0x00, 0x00, 0x00, 0x01
         times 19 db 0x00
 
-sock_run:
+; the socket "run": the desktop itself - checks for a graphics mode, draws the desk, then takes keys and the mouse until ESC or the shell button
+desk_run:
         push rbx
         push rbp
         push r12
@@ -97,7 +98,7 @@ L_12c188:
         mov rdi,[rel d_12f6a8]
         call qword near [r15+0xd8]
         mov byte [rel d_12f339],0x1
-        call fn_12c810
+        call desk_draw
         mov byte [rel d_12f339],0x0
         mov qword [rel d_1300ab],0xffffffffffffffff
         lea rdi,[rel d_130291]
@@ -107,8 +108,8 @@ L_12c265:
         mov rdi,[rel d_12f6a8]
         call qword near [r15+0xb8]
 L_12c273:
-        call fn_12c810
-        call fn_12e31d
+        call desk_draw
+        call first_start
 L_12c27d:
         mov rdi,[rel d_12ebed]
         mov esi,0x1
@@ -131,7 +132,7 @@ L_12c2d2:
         cmp rax,0x2
         jz short L_12c2f2
         call fn_12d428
-        call fn_12d47b
+        call taskbar_clock
         jmp short L_12c2d2
 L_12c2f2:
         mov [rel d_12ec05],rdx
@@ -150,7 +151,7 @@ L_12c2f2:
         jnz short L_12c35c
         mov rdi,[rel d_12ec05]
         mov rsi,[rel d_12ec0d]
-        call fn_12d9cb
+        call icon_at
         mov [rel d_12f868],rax
         jmp short L_12c35c
 L_12c347:
@@ -158,22 +159,22 @@ L_12c347:
         jz short L_12c35c
         cmp qword [rel d_12f868],0xffffffffffffffff
         jz short L_12c35c
-        call fn_12d006
+        call icon_drag
 L_12c35c:
         mov r14,rbx
         jmp near L_12c2d2
 L_12c364:
         mov rdi,[rel d_12ec05]
         mov rsi,[rel d_12ec0d]
-        call fn_12da16
-        call fn_12e7d1
+        call icon_hover
+        call taskbar_page_click
         test bl,0x2
         jz short L_12c39a
         test r14b,0x2
         jnz short L_12c39a
         mov rdi,[rel d_12ec05]
         mov rsi,[rel d_12ec0d]
-        call fn_12e101
+        call context_menu
 L_12c39a:
         test bl,0x1
         jz short L_12c3cf
@@ -181,7 +182,7 @@ L_12c39a:
         jnz short L_12c3cf
         mov rdi,[rel d_12ec05]
         mov rsi,[rel d_12ec0d]
-        call fn_12d60d
+        call taskbar_click
 L_12c3b8:
         mov edi,0x2
         call qword near [r15+0x148]
@@ -229,7 +230,7 @@ L_12c451:
         jz near L_12c2d2
         mov rdi,[rel d_12ec05]
         mov rsi,[rel d_12ec0d]
-        call fn_12e101
+        call context_menu
         jmp near L_12c2d2
 L_12c476:
         call fn_12c72c
@@ -241,12 +242,12 @@ L_12c476:
         mov rbx,r14
         mov rdi,[rel d_12ec05]
         mov rsi,[rel d_12ec0d]
-        call fn_12d60d
+        call taskbar_click
         jmp near L_12c3b8
 L_12c4b0:
-        call fn_12da74
+        call card_off
         call qword near [r15+0x50]
-        call fn_12c810
+        call desk_draw
         cmp byte [rel d_12f7d1],0x0
         jz short L_12c4d5
         call fn_12c72c
@@ -270,9 +271,9 @@ L_12c4ec:
 L_12c4fe:
         xor byte [rel d_12f7d0],0x1
         mov qword [rel d_12f868],0xffffffffffffffff
-        call fn_12da74
+        call card_off
         call qword near [r15+0x50]
-        call fn_12c810
+        call desk_draw
         mov rdi,[rel d_12ec05]
         mov rsi,[rel d_12ec0d]
         call qword near [r15+0x48]
@@ -291,9 +292,9 @@ L_12c535:
 L_12c54c:
         mov edi,0xc
         call qword near [r15+0x118]
-        call fn_12da74
+        call card_off
         call qword near [r15+0x50]
-        call fn_12c810
+        call desk_draw
         mov rdi,[rel d_12ec05]
         mov rsi,[rel d_12ec0d]
         call qword near [r15+0x48]
@@ -308,9 +309,9 @@ L_12c57d:
 L_12c595:
         cmp byte [rel d_12f21d],0x0
         jz short L_12c5a3
-        call fn_12df37
+        call desk_redraw
 L_12c5a3:
-        call fn_12e548
+        call start_menu
         test eax,eax
         jnz near L_12c2d2
         call fn_12e3d0
@@ -320,7 +321,7 @@ L_12c5ba:
         jnz near L_12c2d2
         cmp byte [rel d_12f21f],0x0
         jz short L_12c5d6
-        call fn_12e370
+        call inject_cancel
         jmp near L_12c2d2
 L_12c5d6:
         cmp byte [rel d_12f21e],0x0
@@ -334,10 +335,10 @@ L_12c5e9:
         jz short L_12c611
         mov qword [rel d_12f580],0xffffffffffffffff
 L_12c607:
-        call fn_12df37
+        call desk_redraw
         jmp near L_12c2d2
 L_12c611:
-        call fn_12da74
+        call card_off
         call fn_12e508
         call qword near [r15+0x50]
         xor edi,edi
@@ -483,7 +484,8 @@ fn_12c781:
         pop rbx
         retq
 
-fn_12c810:
+; draw the desk: every object of the cabinet that is not hidden gets a place and its icon (the picture named by "icon", or its socket "draw"), by its type: icon, script, cabinet (a drawer), page
+desk_draw:
         push rbx
         push r12
         push r13
@@ -512,7 +514,7 @@ L_12c865:
         lea r8,[rel obj_data]
         call qword near [r15+0x28]
 L_12c882:
-        call fn_12d0f8
+        call taskbar_is_page
 L_12c887:
         mov qword [rel d_12ec15],0x0
         mov rax,[rel d_12ebfd]
@@ -682,7 +684,7 @@ L_12cb11:
         add rdx,0x10
         cmp qword [rel d_12f580],0xffffffffffffffff
         jnz short L_12cb65
-        call fn_12cdfb
+        call places_find
 L_12cb65:
         lea r8,[rel d_12f380]
         mov [r8+rcx*8],rbx
@@ -729,7 +731,7 @@ L_12cc2f:
         mov [rel d_12f690],r8
         mov rdi,r13
         mov rsi,rax
-        call fn_12df69
+        call icon_label
         jmp short L_12cc88
 L_12cc43:
         push rax
@@ -828,7 +830,8 @@ L_12cdac:
         pop rbx
         retq
 
-fn_12cdbb:
+; -> the object desk_places (where the user put each icon), 0 if there is none
+places_object:
         mov byte [rel d_12f7d4],0x1
         lea rdi,[rel d_12f7d5]
         call qword near [r15+0x68]
@@ -847,7 +850,8 @@ fn_12cdbb:
 L_12cdfa:
         retq
 
-fn_12cdfb:
+; the place kept for an object, by its name
+places_find:
         push rbx
         push r12
         push rax
@@ -855,7 +859,7 @@ fn_12cdfb:
         push rcx
         cmp byte [rel d_12f7d4],0x0
         jnz short L_12ce0f
-        call fn_12cdbb
+        call places_object
 L_12ce0f:
         cmp qword [rel d_12f878],0x0
         jz short L_12ce8b
@@ -903,7 +907,8 @@ L_12ce8b:
         pop rbx
         retq
 
-fn_12ce92:
+; keep the place of an object, by its name
+places_set:
         push rbx
         push r12
         push r13
@@ -964,7 +969,8 @@ L_12cf2b:
         pop rbx
         retq
 
-fn_12cf33:
+; save the places as the object desk_places (type:data)
+places_save:
         push rbx
         mov rbx,[rel d_12f880]
         test rbx,rbx
@@ -1008,7 +1014,8 @@ L_12d004:
         pop rbx
         retq
 
-fn_12d006:
+; an icon is moved with the mouse: draw, keep the new place, save
+icon_drag:
         push rbx
         push r12
         push r13
@@ -1046,7 +1053,7 @@ L_12d06e:
         mov r13,rax
         mov rdi,r12
         mov rsi,r13
-        call fn_12d9cb
+        call icon_at
         cmp rax,0xffffffffffffffff
         jz short L_12d0c4
         cmp rax,rbx
@@ -1056,15 +1063,15 @@ L_12d06e:
         mov rsi,[rcx+rbx*8]
         lea rcx,[rel d_12f01d]
         mov rdx,[rcx+rbx*8]
-        call fn_12ce92
+        call places_set
 L_12d0c4:
         mov rdi,rbx
         mov rsi,r12
         mov rdx,r13
-        call fn_12ce92
-        call fn_12cf33
+        call places_set
+        call places_save
         call qword near [r15+0x50]
-        call fn_12c810
+        call desk_draw
         mov rdi,[rel d_12ec05]
         mov rsi,[rel d_12ec0d]
         call qword near [r15+0x48]
@@ -1074,14 +1081,16 @@ L_12d0f2:
         pop rbx
         retq
 
-fn_12d0f8:
-        call fn_12e5fa
+; is there a page "taskbar" to draw the taskbar with
+taskbar_is_page:
+        call taskbar_object
         cmp byte [rel d_130438],0x0
-        jz short fn_12d116
+        jz short taskbar_plain
         mov qword [rel d_1300ab],0xffffffffffffffff
-        jmp near fn_12d47b
+        jmp near taskbar_clock
 
-fn_12d116:
+; the taskbar drawn by the desktop itself, when there is no page for it
+taskbar_plain:
         push rbx
         mov rbx,[rel d_12ebfd]
         sub rbx,0x22
@@ -1119,12 +1128,12 @@ fn_12d116:
         lea rdx,[rel d_1311e1]
         xor ecx,ecx
         call qword near [r15+0x20]
-        call fn_12d266
+        call tasks_count
         cmp qword [rel d_12f230],0x0
         jnz short L_12d1de
         cmp qword [rel d_12f588],0x0
         jz short L_12d1de
-        call fn_12d309
+        call tasks_buttons
         jmp short L_12d214
 L_12d1de:
         mov edi,0x58
@@ -1152,11 +1161,12 @@ L_12d214:
         call qword near [r15+0x30]
 L_12d254:
         mov qword [rel d_1300ab],0xffffffffffffffff
-        call fn_12d47b
+        call taskbar_clock
         pop rbx
         retq
 
-fn_12d266:
+; how many programs run (asked of the multiplexer)
+tasks_count:
         push rbx
         push r12
         mov qword [rel d_12f588],0x0
@@ -1203,7 +1213,8 @@ L_12d2f2:
         pop rbx
         retq
 
-fn_12d309:
+; a button on the taskbar for every program that runs
+tasks_buttons:
         push r12
         push r13
         mov edi,0x5
@@ -1255,7 +1266,8 @@ L_12d3d4:
         pop r12
         retq
 
-fn_12d3d9:
+; which program's button is under the mouse
+tasks_at:
         cmp qword [rel d_12f230],0x0
         jnz short L_12d425
         sub rdi,0x50
@@ -1287,7 +1299,7 @@ fn_12d428:
         cmp byte [rel d_12f21d],0x0
         jnz short L_12d460
         mov [rel d_1300b3],rax
-        call fn_12df37
+        call desk_redraw
         jmp short L_12d460
 L_12d459:
         mov [rel d_1300b3],rax
@@ -1296,11 +1308,12 @@ L_12d460:
         call qword near [r15+0x118]
         cmp rax,[rel d_12f590]
         jz short L_12d47a
-        call fn_12d0f8
+        call taskbar_is_page
 L_12d47a:
         retq
 
-fn_12d47b:
+; the clock and the message on the taskbar, once a second
+taskbar_clock:
         push rbx
         cmp qword [rel d_12f230],0x0
         jz short L_12d4bc
@@ -1309,7 +1322,7 @@ fn_12d47b:
         jc short L_12d4bc
         mov qword [rel d_12f230],0x0
         call qword near [r15+0x50]
-        call fn_12d0f8
+        call taskbar_is_page
         mov rdi,[rel d_12ec05]
         mov rsi,[rel d_12ec0d]
         call qword near [r15+0x48]
@@ -1328,15 +1341,15 @@ L_12d4bc:
         xor edx,edx
         div rcx
         lea rdi,[rel d_1300bb]
-        call fn_12d5f2
+        call taskbar_top
         mov byte [rdi],0x3a
         inc rdi
         mov rax,rdx
-        call fn_12d5f2
+        call taskbar_top
         mov byte [rdi],0x3a
         inc rdi
         mov rax,rbx
-        call fn_12d5f2
+        call taskbar_top
         mov byte [rdi],0x20
         inc rdi
         push rdi
@@ -1357,7 +1370,7 @@ L_12d550:
         mov byte [rdi],0x0
         cmp byte [rel d_130438],0x0
         jz short L_12d566
-        call fn_12e68c
+        call taskbar_page
         jmp near L_12d5f0
 L_12d566:
         call qword near [r15+0x50]
@@ -1391,7 +1404,8 @@ L_12d5f0:
         pop rbx
         retq
 
-fn_12d5f2:
+; the dot line where the taskbar starts
+taskbar_top:
         push rdx
         xor edx,edx
         mov ecx,0xa
@@ -1404,7 +1418,8 @@ fn_12d5f2:
         pop rdx
         retq
 
-fn_12d60d:
+; a click on the taskbar
+taskbar_click:
         push rbx
         push r12
         push r13
@@ -1412,13 +1427,13 @@ fn_12d60d:
         mov r13,rsi
         cmp byte [rel d_12f21f],0x0
         jz short L_12d682
-        call fn_12d9cb
+        call icon_at
         cmp rax,0xffffffffffffffff
         jz near L_12d766
         lea rcx,[rel d_12ec1d]
         mov rbx,[rcx+rax*8]
         mov byte [rel d_12f21f],0x0
-        call fn_12da74
+        call card_off
         mov qword [rel d_12f6d0],0xffffffffffffffff
         call qword near [r15+0x50]
         mov rdx,rbx
@@ -1426,8 +1441,8 @@ fn_12d60d:
         mov esi,0xa
         lea rcx,[rel d_12f240]
         call qword near [r15+0x108]
-        call fn_12e3aa
-        call fn_12df37
+        call message_time
+        call desk_redraw
         jmp near L_12d766
 L_12d682:
         cmp byte [rel d_12f21e],0x0
@@ -1454,7 +1469,7 @@ L_12d6c6:
         jl short L_12d73d
         cmp byte [rel d_130438],0x0
         jz short L_12d6eb
-        call fn_12e83a
+        call action_do
         cmp eax,0x1
         jz short L_12d71f
         jmp short L_12d766
@@ -1471,17 +1486,17 @@ L_12d6eb:
         jmp short L_12d766
 L_12d70c:
         mov rdi,r12
-        call fn_12d3d9
+        call tasks_at
         test eax,eax
         jz short L_12d766
-        call fn_12d0f8
+        call taskbar_is_page
         jmp short L_12d766
 L_12d71f:
         cmp byte [rel d_12f21d],0x0
         jz short L_12d72d
-        call fn_12df37
+        call desk_redraw
 L_12d72d:
-        call fn_12e548
+        call start_menu
         test eax,eax
         jnz short L_12d766
         call fn_12e3d0
@@ -1489,38 +1504,39 @@ L_12d72d:
 L_12d73d:
         cmp byte [rel d_12f21d],0x0
         jz short L_12d74d
-        call fn_12df37
+        call desk_redraw
         jmp short L_12d766
 L_12d74d:
         mov rdi,r12
         mov rsi,r13
-        call fn_12d9cb
+        call icon_at
         cmp rax,0xffffffffffffffff
         jz short L_12d766
         mov rbx,rax
-        call fn_12d76c
+        call object_open
 L_12d766:
         pop r13
         pop r12
         pop rbx
         retq
 
-fn_12d76c:
+; open an object: a program is started, a drawer opened, a page or text shown; "Locked" if it is locked
+object_open:
         lea rax,[rel d_12ec1d]
         mov rax,[rax+rbx*8]
         cmp qword [rax+0x38],0x3
         jnz short L_12d7a9
         lea rdi,[rel d_12f240]
         lea rsi,[rel d_1301c0]
-        call fn_12e3bf
-        call fn_12e3aa
+        call message_set
+        call message_time
         call qword near [r15+0x50]
-        call fn_12d0f8
+        call taskbar_is_page
         mov rdi,r12
         mov rsi,r13
         jmp qword near [r15+0x48]
 L_12d7a9:
-        call fn_12da74
+        call card_off
         mov qword [rel d_12f6d0],0xffffffffffffffff
         call qword near [r15+0x50]
         lea rax,[rel d_12f33b]
@@ -1531,7 +1547,7 @@ L_12d7a9:
         mov rdi,[rax+rbx*8]
         lea rsi,[rel d_130a5a]
         lea rdx,[rel d_13018f]
-        call fn_12e08b
+        call studio_with
         jmp near L_12d99f
 L_12d7f0:
         cmp ecx,0x3
@@ -1545,7 +1561,7 @@ L_12d7f0:
         lea rdi,[rel d_130145]
         call qword near [r15+0xc0]
 L_12d825:
-        jmp near fn_12df37
+        jmp near desk_redraw
 L_12d82a:
         test ecx,ecx
         jz near L_12d8e7
@@ -1591,7 +1607,7 @@ L_12d8a6:
         lea rsi,[rel d_130264]
         lea rdx,[rel d_13018f]
 L_12d8dd:
-        call fn_12e08b
+        call studio_with
         jmp near L_12d99f
 L_12d8e7:
         lea rax,[rel d_12ec1d]
@@ -1642,14 +1658,15 @@ L_12d99f:
 L_12d9af:
         cmp rax,0x1
         jnz short L_12d9ba
-        jmp near fn_12df37
+        jmp near desk_redraw
 L_12d9ba:
         mov byte [rel d_12f21d],0x1
         mov rdi,r12
         mov rsi,r13
         jmp qword near [r15+0x48]
 
-fn_12d9cb:
+; which icon is under the mouse (-1: none)
+icon_at:
         xor eax,eax
 L_12d9cd:
         cmp rax,[rel d_12ec15]
@@ -1676,7 +1693,8 @@ L_12da0e:
         mov rax,0xffffffffffffffff
         retq
 
-fn_12da16:
+; the mouse is over an icon: its card comes up
+icon_hover:
         cmp byte [rel d_12f21d],0x0
         jnz short L_12da73
         cmp byte [rel d_12f21e],0x0
@@ -1686,18 +1704,18 @@ fn_12da16:
         push r13
         mov r12,rdi
         mov r13,rsi
-        call fn_12d9cb
+        call icon_at
         cmp rax,[rel d_12f6d0]
         jz short L_12da6e
         mov rbx,rax
-        call fn_12da74
+        call card_off
         mov [rel d_12f6d0],rbx
         cmp rbx,0xffffffffffffffff
         jz short L_12da64
         mov rdi,r12
         mov rsi,r13
         mov rdx,rbx
-        call fn_12dac6
+        call card_draw
 L_12da64:
         mov rdi,r12
         mov rsi,r13
@@ -1709,7 +1727,8 @@ L_12da6e:
 L_12da73:
         retq
 
-fn_12da74:
+; take the card of an object off the screen
+card_off:
         cmp qword [rel d_12f6d8],0x0
         jz short L_12da9b
         call qword near [r15+0x50]
@@ -1744,7 +1763,8 @@ L_12dab0:
 L_12dac5:
         retq
 
-fn_12dac6:
+; the card of an object: label, name, kind, a picture or text of its DATA, its identity
+card_draw:
         push rbx
         push rbp
         push r12
@@ -2005,17 +2025,19 @@ L_12df2e:
         pop rbx
         retq
 
-fn_12df37:
-        call fn_12da74
+; draw everything again
+desk_redraw:
+        call card_off
         mov qword [rel d_12f6d0],0xffffffffffffffff
         call qword near [r15+0x50]
-        call fn_12c810
+        call desk_draw
         mov byte [rel d_12f21d],0x0
         mov rdi,[rel d_12ec05]
         mov rsi,[rel d_12ec0d]
         jmp qword near [r15+0x48]
 
-fn_12df69:
+; the name under an icon
+icon_label:
         push rbx
         push r12
         push r13
@@ -2102,7 +2124,8 @@ L_12e038:
         pop rbx
         retq
 
-fn_12e08b:
+; start Studio with an object (edit, view)
+studio_with:
         push rbx
         push r12
         mov rbx,rdi
@@ -2143,7 +2166,8 @@ L_12e0fd:
         pop rbx
         retq
 
-fn_12e101:
+; the right button on an icon: the page "context" and what was chosen there
+context_menu:
         push rbx
         push r12
         push r13
@@ -2156,7 +2180,7 @@ fn_12e101:
         jnz near L_12e315
         cmp byte [rel d_12f21f],0x0
         jz short L_12e13b
-        call fn_12e370
+        call inject_cancel
         jmp near L_12e315
 L_12e13b:
         mov rax,[rel d_12ebfd]
@@ -2165,7 +2189,7 @@ L_12e13b:
         jnl near L_12e315
         mov rdi,r12
         mov rsi,r13
-        call fn_12d9cb
+        call icon_at
         mov rbx,rax
         xor r14d,r14d
         cmp rbx,0xffffffffffffffff
@@ -2177,7 +2201,7 @@ L_12e13b:
         jnz short L_12e181
         xor r14d,r14d
 L_12e181:
-        call fn_12da74
+        call card_off
         mov qword [rel d_12f6d0],0xffffffffffffffff
         call qword near [r15+0x50]
         lea rdi,[rel d_13018f]
@@ -2218,7 +2242,7 @@ L_12e20b:
 L_12e220:
         cmp byte [rel d_12f240],0x0
         jz short L_12e22e
-        call fn_12e3aa
+        call message_time
 L_12e22e:
         pop rax
         cmp rax,0x2
@@ -2232,7 +2256,7 @@ L_12e241:
         mov byte [rel d_12f21f],0x1
         lea rdi,[rel d_12f240]
         lea rsi,[rel d_1301ec]
-        call fn_12e3bf
+        call message_set
         mov qword [rel d_12f230],0xffffffffffffffff
         jmp short L_12e2cc
 L_12e275:
@@ -2245,8 +2269,8 @@ L_12e284:
         jnz short L_12e29c
         cmp rbx,0xffffffffffffffff
         jz short L_12e2cc
-        call fn_12df37
-        call fn_12d76c
+        call desk_redraw
+        call object_open
         jmp short L_12e315
 L_12e29c:
         cmp rax,0x6
@@ -2256,14 +2280,14 @@ L_12e29c:
         mov rdi,r14
         lea rsi,[rel d_130274]
         lea rdx,[rel d_130269]
-        call fn_12e08b
+        call studio_with
         jmp short L_12e2cc
 L_12e2bf:
         cmp rax,0x7
         jnz short L_12e2cc
         mov byte [rel d_12f220],0x0
 L_12e2cc:
-        call fn_12df37
+        call desk_redraw
         jmp short L_12e315
 L_12e2d3:
         mov rdi,r12
@@ -2280,8 +2304,8 @@ L_12e2df:
         mov rdi,[rax+rbx*8]
         lea rsi,[rel d_130274]
         lea rdx,[rel d_130269]
-        call fn_12e08b
-        call fn_12df37
+        call studio_with
+        call desk_redraw
 L_12e315:
         pop r14
         pop r13
@@ -2289,7 +2313,8 @@ L_12e315:
         pop rbx
         retq
 
-fn_12e31d:
+; no settings yet: show the page "setup"
+first_start:
         cmp byte [rel d_12f223],0x0
         jnz short L_12e36f
         mov byte [rel d_12f223],0x1
@@ -2305,37 +2330,40 @@ fn_12e31d:
         lea rsi,[rel d_130264]
         lea rdx,[rel d_13018f]
         mov byte [rel d_12f658],0x1
-        call fn_12e08b
-        call fn_12c810
+        call studio_with
+        call desk_draw
 L_12e36f:
         retq
 
-fn_12e370:
+; "Inject cancelled"
+inject_cancel:
         mov byte [rel d_12f21f],0x0
         lea rdi,[rel d_12f240]
         lea rsi,[rel d_130238]
-        call fn_12e3bf
-        call fn_12e3aa
+        call message_set
+        call message_time
         call qword near [r15+0x50]
-        call fn_12d0f8
+        call taskbar_is_page
         mov rdi,[rel d_12ec05]
         mov rsi,[rel d_12ec0d]
         jmp qword near [r15+0x48]
 
-fn_12e3aa:
+; when the message on the taskbar goes away
+message_time:
         call qword near [r15+0xa0]
         add rax,0x258
         mov [rel d_12f230],rax
         retq
 
-fn_12e3bf:
+; put a message on the taskbar
+message_set:
         mov al,[rsi]
         mov [rdi],al
         test al,al
         jz short L_12e3cf
         inc rsi
         inc rdi
-        jmp short fn_12e3bf
+        jmp short message_set
 L_12e3cf:
         retq
 
@@ -2343,7 +2371,7 @@ fn_12e3d0:
         push rbx
         cmp byte [rel d_12f21e],0x0
         jnz near L_12e506
-        call fn_12da74
+        call card_off
         mov qword [rel d_12f6d0],0xffffffffffffffff
         call qword near [r15+0x50]
         mov rbx,[rel d_12ebfd]
@@ -2427,7 +2455,8 @@ fn_12e508:
 L_12e547:
         retq
 
-fn_12e548:
+; the start button: the page "start" as a popup
+start_menu:
         push rbx
         lea rdi,[rel d_130249]
         call qword near [r15+0x68]
@@ -2456,7 +2485,7 @@ L_12e591:
         jmp short L_12e5b7
 L_12e5ab:
         mov byte [rel d_12f21d],0x1
-        call fn_12df37
+        call desk_redraw
 L_12e5b7:
         mov eax,0x1
         pop rbx
@@ -2485,7 +2514,8 @@ L_12e5f2:
         mov rax,0xffffffffffffffff
         retq
 
-fn_12e5fa:
+; -> the object "taskbar"
+taskbar_object:
         mov byte [rel d_130438],0x0
         cmp byte [rel d_130439],0x0
         jnz short L_12e638
@@ -2516,10 +2546,11 @@ fn_12e639:
         mov qword [rel d_1303c8],0x22
         retq
 
-fn_12e68c:
+; draw the taskbar with its page (the kernel's page drawing), the values filled in
+taskbar_page:
         push rbx
-        call fn_12d266
-        call fn_12e9b9
+        call tasks_count
+        call taskbar_values
         call fn_12e639
         mov qword [rel d_1303d0],0xffffffffffffffff
         mov qword [rel d_1303d8],0xffffffffffffffff
@@ -2559,7 +2590,7 @@ L_12e6d8:
         mov byte [rel d_130438],0x0
         lea rdi,[rel d_130b16]
         call qword near [r15+0xc0]
-        call fn_12d116
+        call taskbar_plain
         jmp short L_12e792
 L_12e76f:
         cmp byte [rel d_12f222],0x0
@@ -2574,10 +2605,11 @@ L_12e792:
         pop rbx
         retq
 
-fn_12e794:
+; what the page says was clicked
+taskbar_page_hit:
         push rdi
         push rsi
-        call fn_12e9b9
+        call taskbar_values
         call fn_12e639
         pop rsi
         pop rdi
@@ -2589,7 +2621,8 @@ fn_12e794:
         mov ecx,0x1
         jmp qword near [r15+0x80]
 
-fn_12e7d1:
+; a click on the taskbar page
+taskbar_page_click:
         cmp byte [rel d_130438],0x0
         jz short L_12e839
         cmp byte [rel d_12f21e],0x0
@@ -2600,24 +2633,25 @@ fn_12e7d1:
         jl short L_12e81f
         mov rdi,[rel d_12ec05]
         mov rsi,[rel d_12ec0d]
-        call fn_12e794
+        call taskbar_page_hit
         cmp rax,[rel d_130428]
         jz short L_12e839
         mov [rel d_130428],rax
-        jmp near fn_12e68c
+        jmp near taskbar_page
 L_12e81f:
         cmp qword [rel d_130428],0xffffffffffffffff
         jz short L_12e839
         mov qword [rel d_130428],0xffffffffffffffff
-        jmp near fn_12e68c
+        jmp near taskbar_page
 L_12e839:
         retq
 
-fn_12e83a:
+; do what a clicked part of a page names: start, system.shell, system.shutdown, system.restart, system.stone, or the name of an object on the desk
+action_do:
         push rbx
         mov rdi,r12
         mov rsi,r13
-        call fn_12e794
+        call taskbar_page_hit
         cmp rax,0xffffffffffffffff
         jz near L_12e9ae
         lea rbx,[rel d_1303e0]
@@ -2659,7 +2693,7 @@ L_12e8da:
         jz short L_12e905
         mov edi,0x9
         call qword near [r15+0x118]
-        call fn_12d0f8
+        call taskbar_is_page
         jmp near L_12e9ae
 L_12e905:
         cmp dword [rbx],0x6b736174
@@ -2680,7 +2714,7 @@ L_12e919:
 L_12e930:
         mov edi,0x3
         call qword near [r15+0x118]
-        call fn_12d0f8
+        call taskbar_is_page
         jmp short L_12e9ae
 L_12e943:
         mov rdi,rbx
@@ -2699,19 +2733,19 @@ L_12e95d:
         cmp byte [rel d_12f21d],0x0
         jz short L_12e97e
         push rbx
-        call fn_12df37
+        call desk_redraw
         pop rbx
 L_12e97e:
-        call fn_12d76c
+        call object_open
         jmp short L_12e9ae
 L_12e985:
         lea rdi,[rel d_12f240]
         lea rsi,[rel d_130b04]
-        call fn_12e3bf
+        call message_set
         lea rsi,[rel d_1303e0]
-        call fn_12e3bf
-        call fn_12e3aa
-        call fn_12d0f8
+        call message_set
+        call message_time
+        call taskbar_is_page
 L_12e9ae:
         xor eax,eax
         pop rbx
@@ -2721,7 +2755,8 @@ L_12e9b2:
         pop rbx
         retq
 
-fn_12e9b9:
+; the values the taskbar page shows: tasks=, title=, msg=, hint=, clock
+taskbar_values:
         push rbx
         push r12
         push r13
@@ -2749,7 +2784,7 @@ L_12ea26:
         lea rsi,[rel d_130b7d]
         call fn_12eb43
         mov rax,rbx
-        call fn_12eb60
+        call procket_message
         lea rsi,[rel d_130b8e]
         call fn_12eb43
         mov rsi,r12
@@ -2838,7 +2873,8 @@ L_12eb4a:
 L_12eb5f:
         retq
 
-fn_12eb60:
+; the message of the desktop's procket ("lucky start")
+procket_message:
         push rbx
         lea rbx,[rel d_130451]
         mov byte [rbx],0x0
@@ -2863,9 +2899,9 @@ procket_0:
         jz short L_12ebba
         lea rdi,[rel d_12f240]
         lea rsi,[rel d_130315]
-        call fn_12e3bf
-        call fn_12e3aa
-        call fn_12d0f8
+        call message_set
+        call message_time
+        call taskbar_is_page
         pop r15
         retq
 L_12ebba:

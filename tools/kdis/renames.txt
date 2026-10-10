@@ -46,3 +46,9 @@ fn_0c11e   key_next           ; the next scan code from the keyboards (the built
 d_1188a    key_shift          ; 1 while Shift is held
 d_118d9    key_ctrl           ; 1 while Ctrl is held
 d_118da    key_alt            ; 1 while Alt is held
+# ---- functions of the table a program is handed, named from how the desktop uses them (v3.0.26)
+fn_0dabc   api_rect_save      ; rdi, rsi, rdx, rcx = x, y, width, height: keep what the screen shows there -> rax = the kept picture
+fn_0db9d   api_rect_restore   ; rdi = a kept picture (api_rect_save): put it back on the screen
+fn_095e9   api_clip           ; rdi, rsi, rdx, rcx = x, y, width, height: draw only inside this rectangle (kept within the screen)
+p_0b9ae    api_cabinet_changes ; -> rax = a number that grows with every change of the cabinet
+L_0b89f    api_power          ; rdi = 0: power off; else: restart

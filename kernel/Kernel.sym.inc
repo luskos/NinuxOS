@@ -185,7 +185,7 @@ api_text equ 0x9590
 L_095ac equ 0x95AC
 L_095c4 equ 0x95C4
 L_095de equ 0x95DE
-fn_095e9 equ 0x95E9
+api_clip equ 0x95E9
 fn_09642 equ 0x9642
 fn_09675 equ 0x9675
 L_096a9 equ 0x96A9
@@ -507,14 +507,14 @@ cmd_desktop equ 0xB85B
 L_0b86e equ 0xB86E
 cmd_reboot equ 0xB888
 cmd_shutdown equ 0xB89B
-L_0b89f equ 0xB89F
+api_power equ 0xB89F
 L_0b93f equ 0xB93F
 L_0b950 equ 0xB950
 L_0b951 equ 0xB951
 L_0b954 equ 0xB954
 fn_0b9a2 equ 0xB9A2
 L_0b9a7 equ 0xB9A7
-p_0b9ae equ 0xB9AE
+api_cabinet_changes equ 0xB9AE
 fn_0b9b6 equ 0xB9B6
 L_0b9c7 equ 0xB9C7
 L_0ba06 equ 0xBA06
@@ -813,7 +813,7 @@ L_0daa1 equ 0xDAA1
 L_0daab equ 0xDAAB
 L_0dab9 equ 0xDAB9
 L_0dabb equ 0xDABB
-fn_0dabc equ 0xDABC
+api_rect_save equ 0xDABC
 L_0dadd equ 0xDADD
 L_0dae7 equ 0xDAE7
 L_0dafe equ 0xDAFE
@@ -822,7 +822,7 @@ L_0db5d equ 0xDB5D
 L_0db84 equ 0xDB84
 L_0db91 equ 0xDB91
 L_0db9a equ 0xDB9A
-fn_0db9d equ 0xDB9D
+api_rect_restore equ 0xDB9D
 L_0dbb6 equ 0xDBB6
 L_0dbe4 equ 0xDBE4
 L_0dbed equ 0xDBED

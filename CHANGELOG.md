@@ -3,6 +3,14 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.26** (11 October 2026) - the image is the same but for the version
+  - **The desktop read through** (the first step of writing it anew): it is 47 functions, 2510
+    instructions - the 1.3 MB are the wallpaper. 36 of its functions have names now
+    (`desk_run`, `desk_draw`, `object_open`, `card_draw`, `context_menu`, `taskbar_page`,
+    `action_do` ...). `docs/DESKTOP.md`: its parts, the system functions it stands on, and the
+    order in which it is to be written in PyTon.
+  - `tools/kdis/outline.py`: a line a function for any recovered source. `rename.py` now also
+    works on one object with its own list. Five more functions of the kernel named.
 - **v3.0.25** (11 October 2026) - seen in QEMU
   - **The silent backup.** Every object a program saves is at once written a second time into
     a backup pool of 32 MB outside the cabinet - nothing asked, nothing said, no maintenance

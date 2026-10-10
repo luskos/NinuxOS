@@ -851,7 +851,7 @@ L_30de4:
         jmp short L_30de4
 L_30e03:
         mov edi,0x1
-        call L_0b89f
+        call api_power
         jmp short L_30e45
 L_30e0f:
         mov rdi,rbx
@@ -3087,7 +3087,7 @@ entry_06:
         xor esi,esi
         mov rdx,[rel suit_start + (d_11818 - 0x30000)]
         mov rcx,[rel suit_start + (d_11820 - 0x30000)]
-        call fn_0dabc
+        call api_rect_save
         mov r15,rax
 L_3408c:
         mov edi,0x800000
@@ -3223,7 +3223,7 @@ L_3429e:
         call mem_free
 L_342ab:
         mov rdi,r15
-        call fn_0db9d
+        call api_rect_restore
         lea rdi,[rel d_3454e]
         call fn_34337
         xor ebx,ebx
@@ -5633,7 +5633,7 @@ L_387b8:
         mov edi,0xbb8
         call fn_0bc03
         mov edi,0x1
-        call L_0b89f
+        call api_power
 L_3880e:
         pop rbx
         retq
@@ -5737,7 +5737,7 @@ L_38925:
         mov edi,0xbb8
         call fn_0bc03
         mov edi,0x1
-        call L_0b89f
+        call api_power
 L_38974:
         pop r13
         pop r12
