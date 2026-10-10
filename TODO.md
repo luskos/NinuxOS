@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.35 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.36 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -87,11 +87,11 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 
 | # | what | size |
 |---|---|---|
-| 31 | **[first writing: docs/PROTOCOLS.md; no code]** The protocols: messages, pictures, video, files between two programs that only share a handle | L |
+| 31 | **[v3.0.36: the parcel is in code - `save_object` writes an object with the envelope as its META; Socials makes and lists them; carried by the system's own `share` / `send`; signatures, closing to others, sending from the program are not there]** The protocols: messages, pictures, video, files between two programs that only share a handle | L |
 | 32 | The chain of machines: each registers when installed, cloned, copied; where the data of NET and META lie | XL |
 | 33 | An instance of the system on every disk; the governor (`swap`, `sync`) | L |
 | 34 | The vDNA constructor: a universal one from the demo in the repository vDNA; closed programs as chains it builds into an ASMO object; an AI checks them | XL |
-| 35 | **[the empty program is there, v3.0.11]** Socials | L |
+| 35 | **[v3.0.36: Socials is a program - your handle, writing a message as a parcel, the list of parcels from you and for you; seen in QEMU]** Socials | L |
 | 36 | **[written, v3.0.33: c2asm, c++2asm, c#2asm, java2asm, js2asm - tried on Windows: one program in the five dialects prints what the Python one prints]** The other dialects over the one back end: c2asm, c++2asm, c#2asm, java2asm, js2asm - plain code only, no OOP (part 2a) | XL |
 
 ### Seen in QEMU on 11 October 2026 (v3.0.15; the owner allowed one quick test)
@@ -765,6 +765,29 @@ DIRECTIVE.md. Three rows of the table in 4c were written against these and are w
       host-only ports whatever the protocol. The half-duplex turn-taking itself - who sends
       now - is ours to design freely once a link exists; it fits docs/PROTOCOLS.md part 4
       as a fourth way for a parcel to travel.
+- [ ] **Zipper** (the owner, 11 October 2026): everything of the system kept packed and
+      ready; what is asked for is unpacked at that moment and started. If unpacking is nearly
+      instant, everything that is not in use waits packed - and the whole becomes very small.
+      "Dynamic zipper". Perhaps a function of the shell in the kernel.
+      **Can it be done? Yes** (Claude), and the system is already half built for it:
+      - Objects are not read at the start but "on first use" (the log says
+        `[room] loaded on first use: NAME`). That one place - where an object is read from the
+        disk when first asked for - is where it would be unpacked. Nothing else has to know.
+      - Measured on the PC (v3.0.36): the 122 objects of the cabinet are 4.35 MB; packed they
+        are 1.34 MB - **31%** (the wallpaper 1325 KB -> 524 KB, a picture 317 -> 39, a program
+        of 128 KB -> 41). That is with zlib; the kind of packing that unpacks fastest (LZ4:
+        about fifty lines of assembly, hundreds of MB a second) packs a little less, perhaps
+        40%.
+      - The steps: (1) the build packs each object and marks it packed in the table; (2) the
+        kernel unpacks in the "first use" place - the Sentinel checks the object *after*
+        unpacking, so the signed list stays as it is; (3) what the system itself saves is
+        written unpacked at first, packed later; (4) "dynamic": an object not used for a
+        while is dropped from memory and read again packed when asked for - this needs to
+        know when an object is no longer in use, which the multiplexer knows for programs.
+      - What has to be looked at: everything that reads an object's bytes straight from the
+        disk without the "first use" place (`scan`, `recover`, `update`, the loader, which
+        reads every object named in the table at the start - so the loader must unpack too,
+        or the packed ones must be left for the kernel).
 - [ ] **NET Express** - a program for making content for NET. With ready templates that do what
       the big ready systems do - a blog, a vlog, a shop - so that someone drops a whole site
       in at once. Not to be thought through yet.
@@ -832,6 +855,20 @@ DIRECTIVE.md. Three rows of the table in 4c were written against these and are w
 
 v3.0.11: the empty program is in the cabinet (`apps/Socials.asmo`), and the protocols it is to
 speak have a first writing: `docs/PROTOCOLS.md`.
+
+v3.0.36: **Socials is a program** (190 lines of PyTon, seen in QEMU). Your handle is
+NAME@MACHINE (the name from Settings; eight letters made from the object `machine`). A message
+is written as a parcel - the object `p_ID`, its DATA the text, its META the envelope of
+PROTOCOLS.md (type:parcel, proto:nx.msg/1, kind:text, from, to, time, id, charset). It lists
+every parcel in the cabinet that is from you or for you; Enter on one from someone else puts
+its sender into "to". A parcel is carried to another machine by what the system already has
+for objects (`share p_ID`, `send`, a stick) - that journey has not been tried.
+- [ ] Not there: sending from the program itself (the network functions of py2asm are
+      connected but not tried); `sig` (the kernel keeps Ed25519 to itself - a place in the
+      table programs are handed is needed); parcels closed to others; pictures, files, video;
+      groups; the list of known handles; more than the first six parcels on the screen.
+- [ ] In QEMU the machine gets a new identity at every start (nothing is written to the
+      image), so the handle changes there; on a real machine it stays.
 
 The social network that comes with the system - a program of the desktop, written in PyTon.
 Nothing is decided yet beyond that it must be made.

@@ -78,6 +78,7 @@ SYSTEM = {
     'power': ('i', 'n'), 'ob_call': ('ssii', 'i'),
     'cabinet_top': ('', 'i'), 'drawer_first': ('i', 'i'), 'drawer_count': ('i', 'i'),
     'ob_flags': ('i', 'i'), 'ob_state': ('i', 'i'), 'open_with': ('sss', 'i'),
+    'save_object': ('sss', 'i'), 'data_len': ('s', 'i'), 'data_code': ('si', 'i'),
     'text_big': ('iisii', 'n'), 'split': ('i', 'i'), 'ob_call_on': ('sssi', 'i'), 'ob_text': ('ss', 's'),
     'task_name': ('i', 's'), 'task_focus': ('i', 'n'), 'tasks_changes': ('', 'i'), 'task_focused': ('', 'i'),
 }

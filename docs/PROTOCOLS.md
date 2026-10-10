@@ -4,8 +4,8 @@ What two programs must agree on to pass messages, pictures, video and files to e
 all they share is a handle. Programs are different (my messenger, your "lessenger"); the protocol
 is one. No platform, no server that owns the talk, no browser.
 
-This is a first writing by Claude from the owner's words (TODO.md, part 4d). Nothing of it is
-in code yet. Every "open" below is a question for the owner; the rest is a proposal to be
+This is a first writing by Claude from the owner's words (TODO.md, part 4d). The first of it is in code since v3.0.36 (the parcel as an object; Socials makes
+and lists parcels) - part 6 says what. Every "open" below is a question for the owner; the rest is a proposal to be
 corrected. It is built only from what the system already has: ASMO objects, Ed25519 signatures
 and SHA-256 (the kernel has both), the identity of a machine (`whoami`), Meta Net of the suit
 k_net, and the call of a named socket of another object (the system's table, +0x80).
@@ -99,7 +99,14 @@ ChaCha20 for the DATA - both are small enough to write in PyTon or in a suit. A 
 - have a socket `take(parcel)`: check `sig`, then act on `proto` and `kind`, or keep the object;
 - send by calling the relay's `take`.
 
-Socials (apps/Socials.asmo, empty today) is to be the first such program; any other is as good.
+Socials (apps/Socials.asmo) is the first such program; any other is as good.
+
+**In code since v3.0.36:** `save_object(name, data, meta)` in PyTon writes an object whose META
+is given line by line - so a program can make a parcel: `type:parcel`, `proto:nx.msg/1`,
+`kind:text`, `from`, `to`, `time`, `id`, `charset`. Socials writes messages that way (the object
+`p_ID`) and lists the parcels of the cabinet that are from or for its user's handle. The `id`
+is eight hex letters of a simple sum for now, not of SHA-256; there is no `sig` and nothing is
+closed to others; a parcel travels by the system's own carrying of objects.
 
 ## 7. What has to exist first
 

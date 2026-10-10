@@ -603,6 +603,66 @@ sys_ob_text:                            ; (a program, one of its sockets) -> the
         xor eax, eax
 ninux_text_ok:
         ret
+sys_save_object:                        ; (name, a text that is its DATA, its META: "key:value" a line): keep it as an
+        push rbx                        ; object of the cabinet with that META (a parcel of docs/PROTOCOLS.md, say)
+        push r12
+        push r13
+        push r14
+        mov r12, rdi
+        mov r13, rsi
+        mov r14, rdx
+        xor ebx, ebx
+ninux_object_length:
+        cmp byte [r14 + rbx], 0
+        je ninux_object_meta
+        inc rbx
+        jmp ninux_object_length
+ninux_object_meta:
+        lea rdi, [rbx + 2]              ; the META of an object: its lines, each ended by a zero, and one zero more
+        call rt_alloc
+        xor ecx, ecx
+ninux_object_line:
+        cmp rcx, rbx
+        jae ninux_object_save
+        mov dl, [r14 + rcx]
+        cmp dl, 10
+        jne ninux_object_put
+        xor edx, edx
+ninux_object_put:
+        mov [rax + rcx], dl
+        inc rcx
+        jmp ninux_object_line
+ninux_object_save:
+        mov r10, rax
+        lea r11, [rbx + 2]
+        mov rdi, r12
+        mov rsi, r13
+        mov rcx, -1
+        call ninux_save_sized
+        pop r14
+        pop r13
+        pop r12
+        pop rbx
+        ret
+sys_data_len:                           ; (name of an object) -> the length of its DATA; 0: none
+        mov rax, [rel ninux_api]
+        call [rax + 0x68]
+        test rax, rax
+        jz ninux_nothing
+        mov rax, [rax + 0x58]
+        ret
+sys_data_code:                          ; (name of an object, i) -> byte i of its DATA; 0: beyond it
+        push rsi
+        mov rax, [rel ninux_api]
+        call [rax + 0x68]
+        pop rsi
+        test rax, rax
+        jz ninux_nothing
+        cmp rsi, [rax + 0x58]
+        jae ninux_own_beyond
+        add rax, [rax + 0x10]
+        movzx eax, byte [rax + rsi]
+        ret
 sys_text_big:                           ; (x, y, text, colour, times): letters 1, 2, 3 ... times as big as the
         push rbx                        ; system's own (8 x 16 dots). They are drawn from the object `font`,
         push rbp                        ; a square of dots for every dot of a letter.

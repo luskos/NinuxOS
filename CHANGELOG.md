@@ -3,6 +3,13 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.36** (11 October 2026) - seen in QEMU
+  - **Socials is a program**: it knows your handle (NAME@MACHINE), writes a message as a
+    **parcel** - an object whose META is the envelope of docs/PROTOCOLS.md - and lists the
+    parcels from you and for you. The first code of the protocols.
+  - py2asm: `save_object(name, data, meta)`, `data_len`, `data_code`.
+  - TODO.md: Zipper (everything kept packed, unpacked when asked for) - it can be done, the
+    objects of the cabinet pack to 31%; the plan is there.
 - **v3.0.35** (11 October 2026) - seen in QEMU
   - **A damaged table of the cabinet no longer stops the system**: the loader reads the copy.
     An image with the table's sector wiped starts with all its objects (it started with none).

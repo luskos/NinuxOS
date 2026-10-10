@@ -1,16 +1,34 @@
-# socials.py - Socials (NinuxOS v3.0.11): the empty program, put here so that it is not forgotten.
+# socials.py - Socials (NinuxOS v3.0.36): messages between people who know each other's handle.
 #
-# What it is to become (TODO.md, part 5a): the place for people one knows by their handle -
-# messages, pictures, video, files - over the protocols of docs/PROTOCOLS.md, between NinuxOS
-# machines of NET. Not a platform and not a web page: any other program that speaks the same
-# protocols is as good as this one.
-#
-# Today it opens a window that says so, and waits for ESC.
+# The first program that speaks the protocols of docs/PROTOCOLS.md. What it does today:
+#   - it knows who you are: your handle is NAME@MACHINE (the name from Settings, eight letters
+#     made from this machine's identity)
+#   - a message is written as a **parcel**: an ordinary object of the cabinet, its DATA the
+#     text, its META the envelope (type:parcel, proto:nx.msg/1, kind:text, from, to, time, id)
+#   - it lists every parcel in the cabinet that is from you or for you
+#   Tab          from the list to "to" to "message" and back
+#   Up / Down    another parcel (in the list)
+#   Enter        in "message": make the parcel
+#   ESC          close
+# How a parcel gets to the other machine: by what the system already has for carrying objects
+# (`share NAME`, `send`, `get` in the shell, a stick) - the parcel is the object p_ID. There it
+# shows in the other person's Socials, because its `to` is their handle.
+# Not there yet: sending from here, signatures (the kernel keeps Ed25519 to itself), parcels
+# closed to others, pictures and files, a relay for two programs on one machine.
 
 META = {"type": "icon", "label": "Socials", "kind": "app"}
 
-WW = 420
-WH = 200
+WW = 720
+WH = 440
+WX = 0
+WY = 0
+IDX = []        # the object numbers of the parcels shown
+me = ""
+field = 0       # 0 the list, 1 "to", 2 "message"
+to = ""
+msg = ""
+sel = 0
+status = "Tab: write. Enter in the message: make the parcel. ESC: close."
 
 
 def draw(x, y):
@@ -24,19 +42,176 @@ def draw(x, y):
     text_meta(x + 48, y + 58, "label", 0xFFFFFF)
 
 
-def open(sw, sh):
-    x = (sw - WW) // 2
-    y = (sh - WH) // 2
+def _hash(s, h):
+    i = 0
+    while i < len(s):
+        h = (h * 33 + code(s, i)) % 4294967296
+        i = i + 1
+    return h
+
+
+def _handle():
+    # NAME@MACHINE: the name from the object settings ("user=NAME"), the machine from its identity
+    name = "someone"
+    d = load_text("settings")
+    for line in d.split("\n"):
+        if line[:5] == "user=" and len(line) > 5:
+            name = line[5:]
+    h = 5381
+    n = data_len("machine")
+    if n > 64:
+        n = 64
+    i = 0
+    while i < n:
+        h = (h * 33 + data_code("machine", i)) % 4294967296
+        i = i + 1
+    return name + "@" + f"{h:08x}"
+
+
+def _collect():
+    while len(IDX) > 0:
+        IDX.pop()
+    n = ob_count()
+    i = 0
+    while i < n:
+        if ob_meta(i, "type") == "parcel":
+            if ob_meta(i, "to") == me or ob_meta(i, "from") == me:
+                IDX.append(i)
+        i = i + 1
+
+
+def _status(s):
+    global status
+    status = s
+    fill(WX + 12, WY + WH - 26, WW - 24, 18, 0x1C1C2A)
+    text(WX + 14, WY + WH - 25, status, 0xC9CEDE)
+
+
+def _fields():
+    fill(WX + 12, WY + 330, WW - 24, 74, 0x1C1C2A)
+    c1 = 0x2A2840
+    c2 = 0x2A2840
+    if field == 1:
+        c1 = 0x443F7A
+    if field == 2:
+        c2 = 0x443F7A
+    text(WX + 20, WY + 338, "to", 0x9AA0B6)
+    fill_round(WX + 100, WY + 334, WW - 124, 24, c1, 6)
+    text(WX + 108, WY + 338, to, 0xFFFFFF)
+    text(WX + 20, WY + 372, "message", 0x9AA0B6)
+    fill_round(WX + 100, WY + 368, WW - 124, 24, c2, 6)
+    m = msg
+    if len(m) > 72:
+        m = m[len(m) - 72:]
+    text(WX + 108, WY + 372, m, 0xFFFFFF)
+
+
+def _list():
+    fill(WX + 12, WY + 62, WW - 24, 262, 0x16161F)
+    if len(IDX) == 0:
+        text(WX + 24, WY + 76, "No parcels from you or for you in the cabinet yet.", 0x9AA0B6)
+        return 0
+    r = 0
+    while r < 6 and r < len(IDX):
+        i = IDX[r]
+        y = WY + 66 + r * 43
+        bg = 0x1E1C30
+        if r == sel and field == 0:
+            bg = 0x33305A
+        fill_round(WX + 16, y, WW - 32, 39, bg, 8)
+        frm = ob_meta(i, "from")
+        who = "from " + frm
+        col = 0x00D6B4
+        if frm == me:
+            who = "to " + ob_meta(i, "to")
+            col = 0xFFB020
+        text(WX + 24, y + 3, who, col)
+        text(WX + WW - 190, y + 3, ob_meta(i, "time"), 0x6E6A88)
+        t = load_text(ob_meta(i, "name"))
+        if len(t) > 82:
+            t = t[:82]
+        text(WX + 24, y + 21, t, 0xECECF5)
+        r = r + 1
+    return 1
+
+
+def _frame():
     cursor_hide()
-    window(x, y, WW, WH, "Socials")
-    text_big(x + 24, y + 40, "Socials", 0xFFB020, 2)
-    text(x + 150, y + 56, "is not written yet.", 0xECECF5)
-    text(x + 24, y + 84, "It will speak the protocols of NinuxOS:", 0xC9CEDE)
-    text(x + 24, y + 104, "messages, pictures, video and files between", 0xC9CEDE)
-    text(x + 24, y + 124, "people who know each other's handle.", 0xC9CEDE)
-    text(x + 24, y + 160, "ESC closes.", 0x9AA0B6)
+    window(WX, WY, WW, WH, "Socials")
+    text_big(WX + 20, WY + 28, "Socials", 0xFFB020, 2)
+    text(WX + 150, WY + 44, "you are  " + me, 0xC9CEDE)
+    _list()
+    _fields()
+    _status(status)
+
+
+def _send():
+    global msg
+    if len(to) < 3 or "@" not in to:
+        _status("'to' wants a handle: name@machine.")
+        return 0
+    if len(msg) == 0:
+        _status("Nothing to send.")
+        return 0
+    now = system("time")
+    pid = f"{_hash(msg + now + me, 5381):08x}"
+    env = "type:parcel\nname:p_" + pid + "\nproto:nx.msg/1\nkind:text\nfrom:" + me + "\nto:" + to + "\ntime:" + now
+    env = env + "\nid:" + pid + "\ncharset:windows-1251\nlabel:parcel\ndata:a message (docs/PROTOCOLS.md)"
+    save_object("p_" + pid, msg, env)
+    msg = ""
+    _collect()
+    _frame()
+    _status("Made: the object p_" + pid + ". In the shell: share p_" + pid + " (or send) carries it.")
+    return 1
+
+
+def open(sw, sh):
+    global WX, WY, me, field, to, msg, sel
+    WX = (sw - WW) // 2
+    WY = (sh - WH) // 2
+    me = _handle()
+    _collect()
+    _frame()
     while True:
-        if poll() == 1:
-            if key() == 27:
-                break
+        if poll() != 1:
+            continue
+        k = key()
+        if k == 27:
+            break
+        if k == 9:
+            field = (field + 1) % 3
+            _list()
+            _fields()
+        elif field == 0:
+            if k == 0x81 and sel + 1 < len(IDX) and sel < 5:
+                sel = sel + 1
+                _list()
+            elif k == 0x80 and sel > 0:
+                sel = sel - 1
+                _list()
+            elif (k == 10 or k == 13) and sel < len(IDX):
+                frm = ob_meta(IDX[sel], "from")         # answer: its sender goes into "to"
+                if frm != me:
+                    to = frm
+                    field = 2
+                    _list()
+                    _fields()
+        elif k == 8:
+            if field == 1 and len(to) > 0:
+                to = to[:len(to) - 1]
+            elif field == 2 and len(msg) > 0:
+                msg = msg[:len(msg) - 1]
+            _fields()
+        elif k == 10 or k == 13:
+            if field == 1:
+                field = 2
+                _fields()
+            else:
+                _send()
+        elif k >= 32 and k != 127 and k < 256:
+            if field == 1 and len(to) < 40:
+                to = to + char(k)
+            elif field == 2 and len(msg) < 400:
+                msg = msg + char(k)
+            _fields()
     return 1

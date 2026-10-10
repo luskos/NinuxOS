@@ -1,0 +1,27 @@
+# q_v3_socials.txt - v3.0.36: Socials makes a parcel and lists it
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type desk desk2
+wait 8
+moveto 447 420
+click
+wait 5
+snap so01_open
+tab
+text mira@0b55e410
+tab
+text Hello from NinuxOS, this is a parcel.
+enter
+wait 3
+snap so02_sent
+esc
+wait 2
+esc
+wait 3
+type ls
+wait 1
+esc
+type cls
+type meta p_
+snap so03_shell
