@@ -54,7 +54,7 @@ def _arith(a, b, op):
         if op == 5:
             return a % b
         if b == 0:
-            _error("division by zero")
+            _raise("ZeroDivisionError", "division by zero")
         return _fdiv(_i2f(a), _i2f(b))
     if (ta == 0 or ta == 4) and (tb == 0 or tb == 4):
         if ta == 0:
@@ -68,7 +68,7 @@ def _arith(a, b, op):
         if op == 2:
             return _fmul(a, b)
         if _feq(b, 0.0):
-            _error("division by zero")
+            _raise("ZeroDivisionError", "division by zero")
         q = _fdiv(a, b)
         if op == 3:
             return q
@@ -78,7 +78,7 @@ def _arith(a, b, op):
         if op == 4:
             return f
         return _fsub(a, _fmul(f, b))
-    _error("these two values cannot be combined with + - * / // %")
+    _raise("TypeError", "these two values cannot be combined with + - * / // %")
 
 
 def _repeat(seq, n):
@@ -130,11 +130,13 @@ def _add(a, b):
             _settype(r, 5)
         return r
     if ta == 1 or tb == 1:
-        _error("a text can only be added to a text - use str()")
+        _raise("TypeError", "a text can only be added to a text - use str()")
     return _arith(a, b, 0)
 
 
 def _sub(a, b):
+    if _type(a) == 9 and _type(b) == 9:
+        return _m_difference(a, b)
     return _arith(a, b, 1)
 
 
@@ -247,6 +249,16 @@ def _eq(a, b):
                 return False
             i = i + 1
         return True
+    if ta == 9:
+        n = len(a)
+        if n != len(b):
+            return False
+        i = 0
+        while i < n:
+            if not _contains(b, _lget(a, i)):
+                return False
+            i = i + 1
+        return True
     if ta == 3:
         ka = _dkeys(a)
         n = len(ka)
@@ -317,7 +329,7 @@ def _order(a, b):
         if la > lb:
             return 1
         return 0
-    _error("these two values cannot be compared with < >")
+    _raise("TypeError", "these two values cannot be compared with < >")
 
 
 def _lt(a, b):
@@ -348,7 +360,7 @@ def _contains(c, x):
         if _type(x) != 1:
             _error("'in' a text needs a text on the left")
         return _find_text(c, x, 0) >= 0
-    if t == 2 or t == 5:
+    if t == 2 or t == 5 or t == 9:
         n = len(c)
         i = 0
         while i < n:
@@ -377,7 +389,7 @@ def _dict_find(d, k):
 def _dict_get(d, k):
     i = _dict_find(d, k)
     if i < 0:
-        _error("the dict has no such key: " + _repr(k))
+        _raise("KeyError", _repr(k))
     return _lget(_dvals(d), i)
 
 
@@ -405,7 +417,7 @@ def _delitem(o, k):
     if t == 3:
         i = _dict_find(o, k)
         if i < 0:
-            _error("the dict has no such key: " + _repr(k))
+            _raise("KeyError", _repr(k))
         _remove_at(_dkeys(o), i)
         _remove_at(_dvals(o), i)
         return None
@@ -414,7 +426,7 @@ def _delitem(o, k):
         if k < 0:
             k = k + n
         if k < 0 or k >= n:
-            _error("del: the index is outside the list")
+            _raise("IndexError", "del: the index is outside the list")
         _remove_at(o, k)
         return None
     _error("del works on a list or a dict")
@@ -570,6 +582,20 @@ def _repr(x):
                 s = _concat(s, ",")
             return _concat(s, ")")
         return _concat(s, "]")
+    if t == 9:
+        n = len(x)
+        if n == 0:
+            return "set()"
+        s = "{"
+        i = 0
+        while i < n:
+            if i > 0:
+                s = _concat(s, ", ")
+            s = _concat(s, _repr(_lget(x, i)))
+            i = i + 1
+        return _concat(s, "}")
+    if t == 8:
+        return "<function>"
     if t == 3:
         keys = _dkeys(x)
         vals = _dvals(x)
@@ -629,7 +655,7 @@ def _int(x, base=10):
     while i < n and _is_space(_sget(x, i)):
         i = i + 1
     if seen == 0 or i < n:
-        _error("int(): this text is not a whole number: " + _repr(x))
+        _raise("ValueError", "invalid literal for int() with base " + _int_str(base) + ": " + _repr(x))
     if neg == 1:
         v = 0 - v
     return v
@@ -671,7 +697,7 @@ def _float(x):
     while i < n and _is_space(_sget(x, i)):
         i = i + 1
     if seen == 0 or i < n:
-        _error("float(): this text is not a number: " + _repr(x))
+        _raise("ValueError", "could not convert string to float: " + _repr(x))
     if neg == 1:
         v = _fsub(0.0, v)
     return v
@@ -828,10 +854,52 @@ def _iter(x):
     # what a for loop walks over
     t = _type(x)
     if t == 3:
-        return _m_copy(_dkeys(x))
+        return _copy_items(_dkeys(x))
+    if t == 9:
+        return _copy_items(x)
     if t == 1 or t == 2 or t == 5:
         return x
-    _error("for ... in needs a text, a list, a tuple, a dict or range()")
+    _raise("TypeError", "for ... in needs a text, a list, a tuple, a set, a dict or range()")
+
+
+def _copy_items(x):
+    n = len(x)
+    r = _list_new(n)
+    i = 0
+    while i < n:
+        _push(r, _lget(x, i))
+        i = i + 1
+    return r
+
+
+def _len(x):
+    return len(x)
+
+
+def _map(f, seq):
+    s = _iter(seq)
+    n = len(s)
+    r = _list_new(n)
+    i = 0
+    while i < n:
+        _push(r, f(s[i]))
+        i = i + 1
+    return r
+
+
+def _filter(f, seq):
+    s = _iter(seq)
+    n = len(s)
+    r = _list_new(n)
+    i = 0
+    while i < n:
+        if f is None:
+            if s[i]:
+                _push(r, s[i])
+        elif f(s[i]):
+            _push(r, s[i])
+        i = i + 1
+    return r
 
 
 def _range_list(start, stop, step):
@@ -889,32 +957,33 @@ def _abs(x):
     return x
 
 
-def _min(seq):
+def _best(seq, key, biggest):
     s = _iter(seq)
     n = len(s)
     if n == 0:
-        _error("min() of nothing")
+        _raise("ValueError", "min() or max() of nothing")
     m = s[0]
+    km = m
+    if key is not None:
+        km = key(m)
     i = 1
     while i < n:
-        if s[i] < m:
+        k = s[i]
+        if key is not None:
+            k = key(k)
+        if (biggest and k > km) or (not biggest and k < km):
             m = s[i]
+            km = k
         i = i + 1
     return m
 
 
-def _max(seq):
-    s = _iter(seq)
-    n = len(s)
-    if n == 0:
-        _error("max() of nothing")
-    m = s[0]
-    i = 1
-    while i < n:
-        if s[i] > m:
-            m = s[i]
-        i = i + 1
-    return m
+def _min(seq, key=None):
+    return _best(seq, key, False)
+
+
+def _max(seq, key=None):
+    return _best(seq, key, True)
 
 
 def _sum(seq, start=0):
@@ -949,9 +1018,9 @@ def _all(seq):
     return True
 
 
-def _sorted(seq, reverse=False):
+def _sorted(seq, key=None, reverse=False):
     r = _list(seq)
-    _m_sort(r, reverse)
+    _m_sort(r, key, reverse)
     return r
 
 
@@ -1052,28 +1121,30 @@ def _m_pop(o, i=None):
     if t == 3:
         k = _dict_find(o, i)
         if k < 0:
-            _error("the dict has no such key: " + _repr(i))
+            _raise("KeyError", _repr(i))
         v = _lget(_dvals(o), k)
         _remove_at(_dkeys(o), k)
         _remove_at(_dvals(o), k)
         return v
-    _need(o, 2, ".pop() is for a list or a dict")
+    if t != 9:
+        _need(o, 2, ".pop() is for a list, a set or a dict")
     n = len(o)
     if n == 0:
-        _error(".pop() from an empty list")
+        _raise("IndexError", ".pop() from an empty list")
     if i is None:
         i = n - 1
     if i < 0:
         i = i + n
     if i < 0 or i >= n:
-        _error(".pop(): the index is outside the list")
+        _raise("IndexError", ".pop(): the index is outside the list")
     v = _lget(o, i)
     _remove_at(o, i)
     return v
 
 
 def _m_remove(l, v):
-    _need(l, 2, ".remove() is for a list")
+    if _type(l) != 9:
+        _need(l, 2, ".remove() is for a list or a set")
     n = len(l)
     i = 0
     while i < n:
@@ -1081,7 +1152,7 @@ def _m_remove(l, v):
             _remove_at(l, i)
             return None
         i = i + 1
-    _error(".remove(): the value is not in the list")
+    _raise("ValueError", ".remove(): the value is not there")
 
 
 def _m_index(o, v):
@@ -1089,7 +1160,7 @@ def _m_index(o, v):
     if t == 1:
         i = _find_text(o, v, 0)
         if i < 0:
-            _error(".index(): the text is not there")
+            _raise("ValueError", ".index(): the text is not there")
         return i
     n = len(o)
     i = 0
@@ -1097,7 +1168,7 @@ def _m_index(o, v):
         if _lget(o, i) == v:
             return i
         i = i + 1
-    _error(".index(): the value is not in the list")
+    _raise("ValueError", ".index(): the value is not in the list")
 
 
 def _m_count(o, v):
@@ -1134,21 +1205,31 @@ def _m_reverse(l):
     return None
 
 
-def _m_sort(l, reverse=False):
+def _m_sort(l, key=None, reverse=False):
     # a merge of sorted halves would be faster; this keeps equal values in their order
     _need(l, 2, ".sort() is for a list")
     n = len(l)
+    keys = l
+    if key is not None:
+        keys = _list_new(n)
+        i = 0
+        while i < n:
+            _push(keys, key(_lget(l, i)))
+            i = i + 1
     i = 1
     while i < n:
         v = _lget(l, i)
+        kv = _lget(keys, i)
         j = i - 1
-        while j >= 0 and _lget(l, j) > v:
+        while j >= 0 and ((not reverse and _lget(keys, j) > kv) or (reverse and _lget(keys, j) < kv)):
             _lset(l, j + 1, _lget(l, j))
+            if key is not None:
+                _lset(keys, j + 1, _lget(keys, j))
             j = j - 1
         _lset(l, j + 1, v)
+        if key is not None:
+            _lset(keys, j + 1, kv)
         i = i + 1
-    if reverse:
-        _m_reverse(l)
     return None
 
 
@@ -1158,7 +1239,8 @@ def _m_clear(o):
         _lsetlen(_dkeys(o), 0)
         _lsetlen(_dvals(o), 0)
         return None
-    _need(o, 2, ".clear() is for a list or a dict")
+    if t != 9:
+        _need(o, 2, ".clear() is for a list, a set or a dict")
     _lsetlen(o, 0)
     return None
 
@@ -1169,6 +1251,8 @@ def _m_copy(o):
         d = {}
         _m_update(d, o)
         return d
+    if t == 9:
+        return _settype(_copy_items(o), 9)
     return _slice(o, None, None, None)
 
 
@@ -1356,6 +1440,14 @@ def _m_items(d):
 
 
 def _m_update(d, other):
+    if _type(d) == 9:
+        s = _iter(other)
+        n = len(s)
+        i = 0
+        while i < n:
+            _m_add(d, s[i])
+            i = i + 1
+        return None
     keys = _dkeys(other)
     vals = _dvals(other)
     n = len(keys)
@@ -1372,3 +1464,98 @@ def _m_setdefault(d, k, v=None):
         _dict_set(d, k, v)
         return v
     return _lget(_dvals(d), i)
+
+
+# ---------------------------------------------------------------- sets: a list where every value is once
+
+def _set(x=None):
+    r = _settype(_list_new(8), 9)
+    if x is not None:
+        _m_update(r, x)
+    return r
+
+
+def _m_add(s, v):
+    _need(s, 9, ".add() is for a set")
+    if not _contains(s, v):
+        _push(s, v)
+    return None
+
+
+def _m_discard(s, v):
+    _need(s, 9, ".discard() is for a set")
+    n = len(s)
+    i = 0
+    while i < n:
+        if _lget(s, i) == v:
+            _remove_at(s, i)
+            return None
+        i = i + 1
+    return None
+
+
+def _m_union(a, b):
+    r = _set(a)
+    _m_update(r, b)
+    return r
+
+
+def _m_intersection(a, b):
+    r = _set()
+    s = _iter(a)
+    n = len(s)
+    i = 0
+    while i < n:
+        if _contains(b, s[i]):
+            _push(r, s[i])
+        i = i + 1
+    return r
+
+
+def _m_difference(a, b):
+    r = _set()
+    s = _iter(a)
+    n = len(s)
+    i = 0
+    while i < n:
+        if not _contains(b, s[i]):
+            _push(r, s[i])
+        i = i + 1
+    return r
+
+
+def _m_issubset(a, b):
+    return len(_m_difference(a, b)) == 0
+
+
+def _m_issuperset(a, b):
+    return len(_m_difference(b, a)) == 0
+
+
+def _bitop(a, b, op):
+    # & | ^ on what is not two whole numbers.  op: 0 &   1 |   2 ^
+    ta = _type(a)
+    tb = _type(b)
+    if ta == 9 and tb == 9:
+        if op == 0:
+            return _m_intersection(a, b)
+        if op == 1:
+            return _m_union(a, b)
+        return _m_union(_m_difference(a, b), _m_difference(b, a))
+    if (ta == 7 or ta == 0) and (tb == 7 or tb == 0):
+        x = a
+        y = b
+        if ta == 7:
+            x = _bval(a)
+        if tb == 7:
+            y = _bval(b)
+        if op == 0:
+            r = x & y
+        elif op == 1:
+            r = x | y
+        else:
+            r = x ^ y
+        if ta == 7 and tb == 7:
+            return r == 1
+        return r
+    _raise("TypeError", "& | ^ need whole numbers or sets")

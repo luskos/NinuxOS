@@ -1,8 +1,23 @@
 # NinuxOS - what each version brought
 
-Newest first. v2.9.60 is written by hand; everything from v2.9.50 down is the text the v2.9.59
+Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.0** (10 October 2026) - versions are v3.x.xx from here. The system on the disk is still the
+  v2.9.59 kernel (TODO.md, part 1).
+  - PyTon: `pyton/py2asm.py` written anew. The program is read with Python's own parser and compiled
+    to assembly: for, break, continue, +=, dicts, tuples, sets, fractions, slices, f-strings,
+    comprehensions, default values, *args, def inside def, lambda, functions as values,
+    try / except / finally / raise, the methods of texts, lists, dicts and sets. No class, on purpose.
+    Most of the language is written in PyTon itself (`pyton/prelude.py`) on a small assembly core
+    (`pyton/runtime.inc`). `python pyton/test.py` runs the examples under real Python and compiled
+    (a Windows .exe made by nasm alone) and compares: the same output.
+  - For NinuxOS py2asm writes an ASMO v4 object, but only print and input reach the system yet:
+    13 of the system's functions are not found (`pyton/platform_ninux.inc`).
+  - The source container: `tools/source_container.py` packs every file of the project;
+    the build makes it, Puffus writes it onto the stick 1 GiB from its start.
+  - TODO.md: where everything is if the disk is lost again; winlolz / linlolz (the disks of
+    Windows and Linux); file names with Greek letters (.Ω for the system).
 - **v2.9.60** (10 October 2026) - the project is back after the disk was lost. The system itself is
   still the v2.9.59 that came off the stick (its kernel says v2.9.59: other bytes in the kernel would
   fail its SHA-256 check, and nothing signs a new one yet - TODO.md). New in the project:
@@ -16,10 +31,6 @@ kernel carries in itself.
   - `tools/qemu/qrun.py` and `test/qemu/q_v2959_*.txt`: the system in QEMU, driven by scripts
   - `docs/NinuxOS_Architecture.tex`: the system and the files of the project, described anew
   - `TODO.md`, and `docs/chat`: the conversation in which all this was done
-  - `pyton/py2asm.py`, written anew: PyTon is read with Python's own parser and compiled to assembly.
-    for, break, continue, +=, dicts, tuples, fractions, slices, f-strings, default values, the methods
-    of texts, lists and dicts. Most of it is written in PyTon itself (`pyton/prelude.py`) on a small
-    assembly core (`pyton/runtime.inc`). Not tried yet; see TODO.md
 - **v2.9.51 - v2.9.59** - the kernel carries no line about these. What is known: Keys is
   "NinuxOS v2.9.59", Ask is "v2.9.56" (the dates in their sources).
 

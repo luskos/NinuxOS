@@ -1,4 +1,4 @@
-; platform_ninux.inc - a PyTon program as an ASMO v4 object of NinuxOS (v2.9.60).
+﻿; platform_ninux.inc - a PyTon program as an ASMO v4 object of NinuxOS (v2.9.60).
 ; NOT COMPLETE: read "what is known" below before relying on it.
 ;
 ; How the system calls a socket (read from the objects of v2.9.59, e.g. greet, keys, puffer):
@@ -36,6 +36,7 @@
         mov [rel ninux_object], rdi
         mov [rel ninux_api], rsi
         mov [rel ninux_rsp], rsp
+        mov qword [rel rt_handler], 0
         cmp byte [rel ninux_started], 0
         jne %%ready
         mov byte [rel ninux_started], 1

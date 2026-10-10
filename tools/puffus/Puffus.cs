@@ -1,4 +1,4 @@
-// Puffus.cs - Puffus for Windows (NinuxOS v2.9.60): build disk.img and write it onto a USB stick,
+﻿// Puffus.cs - Puffus for Windows (NinuxOS v3.0.0): build disk.img and write it onto a USB stick,
 // sector for sector from the first one - the stick then starts NinuxOS on a PC.
 //
 //   tools\puffus\make_puffus.cmd      compiles it into Puffus.exe in the project folder
@@ -76,6 +76,7 @@ class PuffusForm : Form
 {
     const int SECTOR = 512;
     const int CHUNK = 1 << 20;
+    const long SOURCE_AT = 1L << 30;            // the source container: 1 GiB from the start of the stick
 
     readonly string root = Application.StartupPath;
     readonly ComboBox disks = new ComboBox();
@@ -302,6 +303,40 @@ class PuffusForm : Form
                         if (back[i] != data[o + i])
                             throw new Exception(string.Format("the stick does not hold what was written (sector {0}) - try another stick.", (o + i) / SECTOR));
                     worker.ReportProgress(50 + (int)(o * 50L / data.Length));
+                }
+
+                // the whole source of the project goes on the stick too, far behind the system
+                string source = Path.Combine(Path.Combine(root, "build"), Path.Combine("source", "NinuxOS_source.nxc"));
+                if (File.Exists(source))
+                {
+                    byte[] box = File.ReadAllBytes(source);
+                    if (box.Length % SECTOR != 0 || SOURCE_AT + box.Length > u.Size)
+                        worker.ReportProgress(100, "The source container does not fit on this stick - left out.");
+                    else
+                    {
+                        worker.ReportProgress(100, string.Format("Writing the source container ({0:0.0} MB) ...", box.Length / 1048576.0));
+                        f.Seek(SOURCE_AT, SeekOrigin.Begin);
+                        for (int o = 0; o < box.Length; o += CHUNK)
+                            f.Write(box, o, Math.Min(CHUNK, box.Length - o));
+                        f.Flush();
+                        Native.FlushFileBuffers(h);
+                        f.Seek(SOURCE_AT, SeekOrigin.Begin);
+                        for (int o = 0; o < box.Length; o += CHUNK)
+                        {
+                            int want = Math.Min(CHUNK, box.Length - o);
+                            int got = 0;
+                            while (got < want)
+                            {
+                                int n = f.Read(back, got, want - got);
+                                if (n <= 0) throw new Exception("the stick stopped answering while the source was read back.");
+                                got += n;
+                            }
+                            for (int i = 0; i < want; i++)
+                                if (back[i] != box[o + i])
+                                    throw new Exception("the source container on the stick is not what was written.");
+                        }
+                        worker.ReportProgress(100, "The source of the project is on the stick too (tools\\source_container.py takes it out).");
+                    }
                 }
 
                 bool ejected = Native.Control(volumes.Count > 0 ? volumes[0] : h, Native.IOCTL_STORAGE_EJECT_MEDIA);

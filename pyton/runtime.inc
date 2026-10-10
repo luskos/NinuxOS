@@ -11,6 +11,8 @@
 ;       4 float   [4][the 8 bytes of a double]
 ;       5 tuple   like a list
 ;       6 None    rt_none          7 bool   rt_true / rt_false   [7][0 or 1]
+;       8 function [8][code][values it takes][values it keeps][values it needs][kept values, default values]
+;       9 set     like a list, every value once
 ;
 ; Calling:  the functions here take their values in rdi, rsi, rdx, rcx and give the result in rax;
 ;           they keep rbx, rbp, r12-r15.  A compiled PyTon function (f_NAME) takes its values on the
@@ -27,6 +29,8 @@ T_FLOAT equ 4
 T_TUPLE equ 5
 T_NONE  equ 6
 T_BOOL  equ 7
+T_FUNC  equ 8
+T_SET   equ 9
 
 RT_CHUNK equ 0x100000                   ; memory is asked from the system 1 MB at a time
 
@@ -118,17 +122,106 @@ rt_fail:                                ; rdi = a zero-ended text: say it and st
         jmp plat_abort
 
 rt_err_type:
-        lea rdi, [rel rt_msg_type]
-        jmp rt_fail
+        lea rdi, [rel rt_k_type]
+        lea rsi, [rel rt_m_type]
+        jmp rt_raise
 rt_err_index:
-        lea rdi, [rel rt_msg_index]
-        jmp rt_fail
+        lea rdi, [rel rt_k_index]
+        lea rsi, [rel rt_m_index]
+        jmp rt_raise
 rt_err_index_type:
-        lea rdi, [rel rt_msg_index_type]
-        jmp rt_fail
+        lea rdi, [rel rt_k_type]
+        lea rsi, [rel rt_m_index_type]
+        jmp rt_raise
 rt_err_zero:
-        lea rdi, [rel rt_msg_zero]
-        jmp rt_fail
+        lea rdi, [rel rt_k_zero]
+        lea rsi, [rel rt_m_zero]
+        jmp rt_raise
+rt_err_call:
+        lea rdi, [rel rt_k_type]
+        lea rsi, [rel rt_m_call]
+        jmp rt_raise
+rt_err_count:
+        lea rdi, [rel rt_k_type]
+        lea rsi, [rel rt_m_count]
+        jmp rt_raise
+
+; ---------------------------------------------------------------- try / except
+; A try keeps four values in its function's frame: [0] rsp, [8] rbp, [16] where its except
+; starts, [24] the try around it. rt_handler points at the innermost one.
+
+rt_raise:                               ; rdi = the kind (a text: 'ValueError'), rsi = the message (a text)
+        mov [rel rt_exc_kind], rdi
+        mov [rel rt_exc_msg], rsi
+rt_reraise:
+        mov rax, [rel rt_handler]
+        test rax, rax
+        jz .nobody
+        mov rcx, [rax + 24]
+        mov [rel rt_handler], rcx
+        mov rsp, [rax]
+        mov rbp, [rax + 8]
+        jmp [rax + 16]
+.nobody:                                ; no try around it: say it and stop the program
+        lea rdi, [rel rt_msg_error]
+        mov esi, rt_msg_error_len
+        call plat_write
+        mov rax, [rel rt_exc_kind]
+        lea rdi, [rax + 16]
+        mov rsi, [rax + 8]
+        call plat_write
+        lea rdi, [rel rt_msg_colon]
+        mov esi, 2
+        call plat_write
+        mov rax, [rel rt_exc_msg]
+        lea rdi, [rax + 16]
+        mov rsi, [rax + 8]
+        call plat_write
+        lea rdi, [rel rt_msg_nl]
+        mov esi, 1
+        call plat_write
+        jmp plat_abort
+
+; ---------------------------------------------------------------- functions as values
+
+rt_func_new:                            ; rdi = code, rsi = values it takes, rdx = kept, rcx = defaults
+        push rdi
+        push rsi
+        push rdx
+        push rcx
+        lea rdi, [rdx + rcx]
+        shl rdi, 3
+        add rdi, 40
+        call rt_alloc
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        mov qword [rax], T_FUNC
+        mov [rax + 8], rdi
+        mov [rax + 16], rsi
+        mov [rax + 24], rdx
+        sub rsi, rcx
+        mov [rax + 32], rsi
+        ret
+
+rt_call_check:                          ; r10 = the function, rdi = how many values were pushed
+        test r10b, 1                    ; -> rax = how many default values to push, rdx = the first of them
+        jnz rt_err_call
+        cmp qword [r10], T_FUNC
+        jne rt_err_call
+        mov rcx, [r10 + 16]
+        cmp rdi, rcx
+        ja rt_err_count
+        mov rax, rcx
+        sub rax, rdi
+        sub rcx, [r10 + 32]
+        cmp rax, rcx
+        ja rt_err_count
+        sub rcx, rax
+        add rcx, [r10 + 24]
+        lea rdx, [r10 + 40 + rcx*8]
+        ret
 
 ; ---------------------------------------------------------------- true or not
 
@@ -272,23 +365,36 @@ rt_invert:
         ret
 
 rt_and:
-        RT_BOTH_INT rt_err_type
+        RT_BOTH_INT rt_bits_and
         mov rax, rdi
         and rax, rsi
         ret
 
 rt_or:
-        RT_BOTH_INT rt_err_type
+        RT_BOTH_INT rt_bits_or
         mov rax, rdi
         or rax, rsi
         ret
 
 rt_xor:
-        RT_BOTH_INT rt_err_type
+        RT_BOTH_INT rt_bits_xor
         mov rax, rdi
         xor rax, rsi
         or rax, 1
         ret
+
+%macro RT_BITS 2                        ; sets and True / False: prelude.py does it
+rt_bits_%1:
+        push rdi
+        push rsi
+        push %2
+        call f__bitop
+        add rsp, 24
+        ret
+%endmacro
+        RT_BITS and, 1
+        RT_BITS or, 3
+        RT_BITS xor, 5
 
 rt_shl:
         RT_BOTH_INT rt_err_type
@@ -385,8 +491,11 @@ rt_len:                                 ; -> a whole number (as a value)
 .check:
         cmp rax, T_FLOAT
         je rt_err_type
+        cmp rax, T_SET
+        je .ok
         cmp rax, T_NONE
         jae rt_err_type
+.ok:
         mov rax, [rdi + 8]
         lea rax, [rax*2 + 1]
         ret
@@ -697,9 +806,10 @@ i_exit:
         sar rdi, 1
         jmp plat_exit
 
-i_error:                                ; (text): say it and stop the program
-        lea rdi, [rdi + 16]
-        jmp rt_fail
+i_error:                                ; (text): raise Exception(text)
+        mov rsi, rdi
+        lea rdi, [rel rt_k_exception]
+        jmp rt_raise
 
 ; ---------------------------------------------------------------- the fixed values and the texts
 
@@ -713,9 +823,26 @@ rt_heap_end:    dq 0
 rt_msg_error:   db 'PyTon: '
 rt_msg_error_len equ $ - rt_msg_error
 rt_msg_nl:      db 10
+rt_msg_colon:   db ': '
 rt_msg_memory:  db 'no memory left', 0
-rt_msg_type:    db 'this cannot be done with a value of this kind', 0
-rt_msg_index:   db 'the index is outside the list or the text', 0
-rt_msg_index_type: db 'an index must be a whole number', 0
-rt_msg_zero:    db 'division by zero', 0
+rt_handler:     dq 0
+rt_exc_kind:    dq 0
+rt_exc_msg:     dq 0
+%macro RT_TEXT_OBJ 2                    ; a text value that is always there
+        align 8
+%1:     dq T_STR, %%end - %%start
+%%start: db %2
+%%end:  db 0
+%endmacro
+        RT_TEXT_OBJ rt_k_exception, 'Exception'
+        RT_TEXT_OBJ rt_k_type, 'TypeError'
+        RT_TEXT_OBJ rt_k_index, 'IndexError'
+        RT_TEXT_OBJ rt_k_zero, 'ZeroDivisionError'
+        RT_TEXT_OBJ rt_m_type, 'this cannot be done with a value of this kind'
+        RT_TEXT_OBJ rt_m_index, 'the index is outside the list or the text'
+        RT_TEXT_OBJ rt_m_index_type, 'an index must be a whole number'
+        RT_TEXT_OBJ rt_m_zero, 'division by zero'
+        RT_TEXT_OBJ rt_m_call, 'this is not a function'
+        RT_TEXT_OBJ rt_m_count, 'the function is called with the wrong number of values'
+        align 8
 RT_TEXT

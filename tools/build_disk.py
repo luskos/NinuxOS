@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-# build_disk.py - make disk.img from the project (NinuxOS v2.9.60).
+﻿#!/usr/bin/env python3
+# build_disk.py - make disk.img from the project (NinuxOS v3.0.0).
 #
 #   python tools/build_disk.py [--out disk.img] [--base build/base/disk_v2.9.59.img]
 #
@@ -106,6 +106,11 @@ def main():
 
     with open(a.out, 'wb') as f:
         f.write(img)
+    try:                                    # the whole source goes with every build
+        import source_container
+        source_container.pack()
+    except Exception as e:
+        print('build: the source container was not made (%s)' % e)
     print('build: boot sector %d bytes, kernel %d bytes, %d objects' % (len(boot), len(kernel), count))
     print('build: %s  %d bytes  SHA-256 %s' % (a.out, len(img), hashlib.sha256(img).hexdigest()))
     if not changed:

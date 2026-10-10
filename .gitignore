@@ -8,3 +8,5 @@ build/work/
 *.exe
 !Puffus.exe
 pyton/examples/*.asm
+build/source/
+pyton/examples/out/
