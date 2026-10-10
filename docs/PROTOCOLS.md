@@ -75,6 +75,11 @@ Three ways, the same parcel in each:
    left with a machine of NET that both reach, which keeps it until asked. Such a machine keeps
    parcels it cannot read: the DATA are encrypted for the receiver (part 5).
 
+4. **Over a cable between two machines** (the owner, 11 October 2026: USB-C, "check-mate"):
+   the two take turns - one sends while the other takes, then they change places - and a
+   relay keeps count of whose turn it is. Needs a port on each machine that can be either
+   end of a USB link, or Thunderbolt / USB4 (TODO.md, part 4f).
+
 - Open: how a handle is turned into "where that machine is now" - this is the chain of machines
   (TODO.md, the order of work, 32). Until then: the address is typed, or found on the local net.
 

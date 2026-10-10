@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.33 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.34 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -78,7 +78,7 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 |---|---|---|
 | 25 | Touchpads and touch screens (I2C HID) | L |
 | 26 | The battery meter (needs the machine's ACPI tables read and run) | L |
-| 27 | Unicode; languages; letters of any size | L |
+| 27 | **[letters 2, 3, 4 ... times as big: `text_big`, v3.0.34; Unicode, other languages and letters drawn from a .ttf at any size are not begun]** Unicode; languages; letters of any size | L |
 | 28 | Wi-Fi; Bluetooth; tether from another device | XL |
 | 29 | winlolz / linlolz: read NTFS, ext4 | L each |
 | 30 | **[only Alt + * (the display off and on) is written, v3.0.11]** Sleep, the lid, brightness | L |
@@ -458,6 +458,21 @@ What that means for the work (Claude):
 - [ ] A program of NinuxOS written in one of them (a window, keys) has not been tried: the
       system's functions are called by the same names, so it should compile as it is.
 
+### 27, letters and languages: what is there and what is not (v3.0.34)
+
+- [x] `text_big(x, y, text, colour, times)` in PyTon: the system's letters (8 x 16 dots, the
+      object `font`) drawn 2, 3, 4 ... times as big - a square of dots for every dot. Used for
+      the clock of Desk2's curtain and the title of Socials. Seen in QEMU. No kernel change.
+- [ ] They are the same letters made of bigger dots: at 3 times and more they look blocky.
+      Smooth letters of any size need them drawn from the .ttf itself (a rasteriser in the
+      system), or tools/make_font.py making a second, bigger font object (16 x 32) on the PC.
+- [ ] Unicode: a letter is one byte everywhere (Windows-1251: Latin and Cyrillic). Greek,
+      which the names of files want (part 6), and every other script need either more code
+      pages (a font object each, a line of META saying which) or texts of two bytes a letter
+      through the whole system - the second is the real answer and touches everything.
+- [ ] The system's own texts are English, written into the kernel and the programs. Other
+      languages need them out of the code: a text object a language, looked up by a key.
+
 ## 3. Testing
 
 - [ ] One command that runs everything: `pyton/test.py`, the build, the QEMU scripts of
@@ -692,6 +707,29 @@ DIRECTIVE.md. Three rows of the table in 4c were written against these and are w
   person or an AI can read - the same work as the source of the compiled objects (part 4).
 - The chain of machines starts from what exists: `whoami` already keeps an ID, a generation, a
   parent and how many clones were made; the chained log is there.
+
+## 4f. More from the owner, 11 October 2026
+
+- [ ] **Two laptops joined by a USB-C cable** - a protocol of our own. The owner's design: the
+      two do not play ping-pong (as `ping` does) but **check-mate**: a relay keeps count of
+      which way the data go, and step by step the two change places - one sends while the
+      other takes, then the other sends while the first takes (+/-, then -/+).
+      What it stands on (Claude): on a plain USB cable one end must be the *host* and the other
+      the *device* - that is why two ordinary laptops do nothing over it, and why Thunderbolt /
+      USB4 can (there both ends are equals). USB-C itself has the swap the owner describes:
+      the two ends can change who is host and who is device over the cable's own wire
+      ("data role swap"). But the end that becomes the device needs a controller that *can*
+      be a device, and most laptop ports are host only. So: possible where both machines have
+      a port that can be either (to be read from each machine: `pci`, `usb`); not possible on
+      host-only ports whatever the protocol. The half-duplex turn-taking itself - who sends
+      now - is ours to design freely once a link exists; it fits docs/PROTOCOLS.md part 4
+      as a fourth way for a parcel to travel.
+- [ ] **NET Express** - a program for making content for NET. With ready templates that do what
+      the big ready systems do - a blog, a vlog, a shop - so that someone drops a whole site
+      in at once. Not to be thought through yet.
+- [ ] **Fast Reels** (the name is a first try) - a social network / widget of the kind of
+      TikTok, in its dimensions and with its functions: everyone puts up what they want. And
+      something like Instagram. Not a priority now. (With Socials and the protocols, part 5a.)
 
 ## 4e. More from the owner, 10 October 2026 (third)
 

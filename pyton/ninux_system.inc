@@ -603,6 +603,93 @@ sys_ob_text:                            ; (a program, one of its sockets) -> the
         xor eax, eax
 ninux_text_ok:
         ret
+sys_text_big:                           ; (x, y, text, colour, times): letters 1, 2, 3 ... times as big as the
+        push rbx                        ; system's own (8 x 16 dots). They are drawn from the object `font`,
+        push rbp                        ; a square of dots for every dot of a letter.
+        push r12
+        push r13
+        push r14
+        push r15
+        sub rsp, 0x28
+        mov [rsp], rdi
+        mov [rsp + 8], rsi
+        mov r12, rdx
+        mov r13, rcx
+        mov r14, r8
+        test r14, r14
+        jle ninux_big_out
+        lea rdi, [rel ninux_font_name]
+        mov rax, [rel ninux_api]
+        call [rax + 0x68]
+        test rax, rax
+        jz ninux_big_out
+        mov r15, rax
+        add r15, [rax + 0x10]           ; 256 letters, 16 rows each, a byte a row
+ninux_big_letter:
+        movzx eax, byte [r12]
+        test eax, eax
+        jz ninux_big_out
+        inc r12
+        shl eax, 4
+        lea rbx, [r15 + rax]
+        xor ebp, ebp                    ; the row
+ninux_big_row:
+        movzx eax, byte [rbx + rbp]
+        mov [rsp + 16], rax
+        mov qword [rsp + 24], 0         ; the column
+ninux_big_dot:
+        mov rcx, [rsp + 24]
+        mov edx, 0x80
+        shr edx, cl
+        test [rsp + 16], edx
+        jz ninux_big_next
+        mov qword [rsp + 32], 1         ; how many dots in a row stand side by side: one square for them all
+ninux_big_run:
+        mov rcx, [rsp + 24]
+        add rcx, [rsp + 32]
+        cmp rcx, 8
+        jae ninux_big_fill
+        mov edx, 0x80
+        shr edx, cl
+        test [rsp + 16], edx
+        jz ninux_big_fill
+        inc qword [rsp + 32]
+        jmp ninux_big_run
+ninux_big_fill:
+        mov rdi, [rsp + 24]
+        imul rdi, r14
+        add rdi, [rsp]
+        mov rsi, rbp
+        imul rsi, r14
+        add rsi, [rsp + 8]
+        mov rdx, [rsp + 32]
+        imul rdx, r14
+        mov rcx, r14
+        mov r8, r13
+        mov rax, [rel ninux_api]
+        call [rax + 0x18]
+        mov rax, [rsp + 32]
+        dec rax
+        add [rsp + 24], rax
+ninux_big_next:
+        inc qword [rsp + 24]
+        cmp qword [rsp + 24], 8
+        jb ninux_big_dot
+        inc rbp
+        cmp rbp, 16
+        jb ninux_big_row
+        lea rax, [r14*8]
+        add [rsp], rax
+        jmp ninux_big_letter
+ninux_big_out:
+        add rsp, 0x28
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbp
+        pop rbx
+        ret
 sys_split:                              ; (0, 4 or 9): the screen whole, or split so that everything that runs is seen at once
         mov rsi, rdi
         mov edi, 0x0F
@@ -812,6 +899,7 @@ ninux_meta_image:
         db 'type:image', 0, 'kind:image', 0, 'data:a picture saved by a PyTon program', 0, 0
 ninux_meta_image_end:
 ninux_key_name: db 'name', 0
+ninux_font_name: db 'font', 0
 ninux_own_name: times 16 db 0
 ninux_open:     db 'open', 0
 ninux_system_names:                     ; system(name): the number of the name is what the system is asked

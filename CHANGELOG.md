@@ -3,6 +3,13 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.34** (11 October 2026) - seen in QEMU
+  - **Letters of other sizes**: `text_big(x, y, text, colour, times)` draws the system's letters
+    2, 3, 4 ... times as big (py2asm; no kernel change). The clock of Desk2's curtain and the
+    title of Socials use it.
+  - TODO.md, part 4f, from the owner: two laptops joined by a USB-C cable with a protocol that
+    takes turns ("check-mate") and what the hardware allows; NET Express (making content for
+    NET from templates: blog, vlog, shop); Fast Reels.
 - **v3.0.33** (11 October 2026) - tried on Windows
   - **The other dialects: c2asm, c++2asm, c#2asm, java2asm, js2asm.** One reader for the five
     (`pyton/clike.py`) turns the text into PyTon and py2asm compiles it - one back end, the

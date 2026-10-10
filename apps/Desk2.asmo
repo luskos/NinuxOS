@@ -443,6 +443,9 @@ def _curtain():
     text(over_x + 16, over_y + 88, "memory " + system("memory") + "    screen " + system("screen"), 0xC9CEDE)
     text(over_x + 16, over_y + 108, system("version"), 0x9AA0B6)
     text(over_x + 16, over_y + 130, "Alt + * : the display off and on", 0x9AA0B6)
+    t = system("time")
+    if len(t) >= 16:
+        text_big(over_x + 448, over_y + 72, t[11:16], 0xFFFFFF, 3)     # the clock, three times as big
     fill_round(over_x + 260, over_y + 148, 80, 4, 0x55526E, 2)
 
 

@@ -29,7 +29,8 @@ def open(sw, sh):
     y = (sh - WH) // 2
     cursor_hide()
     window(x, y, WW, WH, "Socials")
-    text(x + 24, y + 56, "Socials is not written yet.", 0xECECF5)
+    text_big(x + 24, y + 40, "Socials", 0xFFB020, 2)
+    text(x + 150, y + 56, "is not written yet.", 0xECECF5)
     text(x + 24, y + 84, "It will speak the protocols of NinuxOS:", 0xC9CEDE)
     text(x + 24, y + 104, "messages, pictures, video and files between", 0xC9CEDE)
     text(x + 24, y + 124, "people who know each other's handle.", 0xC9CEDE)
