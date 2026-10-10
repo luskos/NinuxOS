@@ -1,0 +1,49 @@
+﻿qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type cls
+type sentinel
+key pgup
+wait 1
+snap c1_sentinel_pgup
+key shift-pgup
+wait 1
+snap c2_sentinel_shift_pgup
+type cls
+type maint
+wait 2
+text ninux1
+enter
+wait 2
+snap c3_maint_after_first
+text ninux1
+enter
+wait 2
+type copy hello hello2
+type run hello2
+type rename hello2 hello3
+type build
+wait 8
+type delete hello3
+type view donate
+wait 1
+snap c4_maint_work
+esc
+type maint
+type desktop
+waitlog [browser] page shown 60
+wait 2
+esc
+wait 2
+moveto 352 506
+click
+wait 5
+esc
+wait 3
+snap c5_after_bags_esc
+moveto 352 506
+click
+wait 5
+snap c6_bags_again
+esc
+wait 3

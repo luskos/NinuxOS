@@ -1,0 +1,14 @@
+﻿qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type desktop
+waitlog [browser] page shown 60
+wait 2
+esc
+wait 2
+moveto 256 46
+click
+wait 10
+snap f_photon_1
+wait 6
+snap f_photon_2

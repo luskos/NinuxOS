@@ -1,0 +1,128 @@
+﻿# q_v2959_apps.txt - the programs of the desktop, one after another
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type desktop
+waitlog [browser] page shown 60
+wait 2
+esc
+wait 2
+moveto 352 138
+click
+wait 5
+snap e01_pynamp
+esc
+wait 2
+moveto 64 230
+click
+wait 5
+snap e02_net
+esc
+wait 2
+moveto 64 322
+click
+wait 5
+snap e03_studio
+esc
+wait 2
+moveto 352 322
+click
+wait 5
+snap e04_search
+esc
+wait 2
+moveto 160 414
+click
+wait 5
+snap e05_paint
+esc
+wait 2
+moveto 256 414
+click
+wait 5
+snap e06_interfacer
+esc
+wait 2
+moveto 352 414
+click
+wait 5
+snap e07_projector
+esc
+wait 2
+moveto 64 506
+click
+wait 5
+snap e08_chronos
+esc
+wait 2
+moveto 256 506
+click
+wait 5
+snap e09_device
+esc
+wait 2
+moveto 352 506
+click
+wait 5
+snap e10_bags
+esc
+wait 2
+moveto 64 598
+click
+wait 5
+snap e11_support
+esc
+wait 2
+moveto 160 598
+click
+wait 5
+snap e12_console
+esc
+wait 2
+moveto 256 598
+click
+wait 5
+snap e13_nest
+esc
+wait 2
+moveto 352 598
+click
+wait 5
+snap e14_widgets
+esc
+wait 2
+moveto 160 46
+click
+wait 3
+moveto 256 322
+click
+wait 5
+snap e15_phone
+esc
+wait 2
+moveto 256 506
+click
+wait 5
+snap e16_ask
+esc
+wait 2
+moveto 256 598
+click
+wait 5
+snap e17_keys
+esc
+wait 2
+esc
+wait 2
+moveto 160 230
+click
+wait 8
+snap e18_tasktest
+esc
+wait 2
+moveto 160 322
+click
+wait 8
+snap e19_coretest
+esc
+wait 2

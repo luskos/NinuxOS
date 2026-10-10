@@ -1,0 +1,86 @@
+﻿# q_v2959_shell.txt - the start and the shell commands, one picture a group
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 2
+snap shell_00_start
+type cls
+type version
+type whoami
+type uptime
+type machine
+type cores
+snap shell_01_machine
+type cls
+type mem
+type memtest
+type pci
+type usb
+snap shell_02_mem_pci
+type cls
+type disk
+type room
+type sentinel
+type id calc
+type meta calc
+snap shell_03_disk_sentinel
+type cls
+type ls
+snap shell_04_ls
+esc
+type cls
+type sources
+snap shell_05_sources
+esc
+type cls
+type view about
+snap shell_06_view
+esc
+type cls
+type run hello
+type run hello shout
+type echo typed in the shell
+type log a line for the serial log
+type sound
+type net
+type spaces
+type gpu probe
+snap shell_07_run_net
+type cls
+type shield test
+type colors amber
+type files
+type mnt
+type level
+snap shell_08_shield_colors
+type colors classic
+type cls
+type cores test
+wait 8
+snap shell_09_cores_test
+esc
+type cls
+type bench
+wait 14
+snap shell_10_bench
+esc
+type cls
+type sgpu test
+wait 12
+snap shell_11_sgpu
+esc
+type cls
+type maint
+wait 1
+type copy hello hello2
+type rename hello2 hello3
+type ls demo
+type delete hello3
+type build
+wait 6
+type maint
+snap shell_12_maint
+esc
+type cls
+type info
+snap shell_13_info
+esc

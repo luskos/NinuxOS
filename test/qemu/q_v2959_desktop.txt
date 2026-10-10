@@ -1,0 +1,191 @@
+﻿# q_v2959_desktop.txt - every icon of the desktop: open it, take a picture, close it
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type desktop
+waitlog [browser] page shown 60
+wait 2
+esc
+wait 2
+snap d00_desktop
+moveto 64 46
+click
+wait 5
+snap d01_readme
+esc
+wait 2
+moveto 160 46
+click
+wait 5
+snap d02_archive
+esc
+wait 2
+moveto 352 46
+click
+wait 5
+snap d03_mail
+esc
+wait 2
+moveto 448 46
+click
+wait 5
+snap d04_copycat
+esc
+wait 2
+moveto 64 138
+click
+wait 5
+snap d05_sunset
+esc
+wait 2
+moveto 160 138
+click
+wait 5
+snap d06_samples
+esc
+wait 2
+moveto 256 138
+click
+wait 5
+snap d07_puffer
+esc
+wait 2
+moveto 352 138
+click
+wait 5
+snap d08_pynamp
+esc
+wait 2
+moveto 64 230
+click
+wait 5
+snap d09_net
+esc
+wait 2
+moveto 160 230
+click
+wait 5
+snap d10_tasktest
+esc
+wait 2
+moveto 64 322
+click
+wait 5
+snap d11_studio
+esc
+wait 2
+moveto 160 322
+click
+wait 5
+snap d12_coretest
+esc
+wait 2
+moveto 256 322
+click
+wait 5
+snap d13_tuner
+esc
+wait 2
+moveto 352 322
+click
+wait 5
+snap d14_search
+esc
+wait 2
+moveto 64 414
+click
+wait 5
+snap d15_calc
+esc
+wait 2
+moveto 160 414
+click
+wait 5
+snap d16_paint
+esc
+wait 2
+moveto 256 414
+click
+wait 5
+snap d17_interfacer
+esc
+wait 2
+moveto 352 414
+click
+wait 5
+snap d18_projector
+esc
+wait 2
+moveto 64 506
+click
+wait 5
+snap d19_chronos
+esc
+wait 2
+moveto 160 506
+click
+wait 5
+snap d20_notepad
+esc
+wait 2
+moveto 256 506
+click
+wait 5
+snap d21_device
+esc
+wait 2
+moveto 352 506
+click
+wait 5
+snap d22_bags
+esc
+wait 2
+moveto 64 598
+click
+wait 5
+snap d23_support
+esc
+wait 2
+moveto 160 598
+click
+wait 5
+snap d24_console
+esc
+wait 2
+moveto 256 598
+click
+wait 5
+snap d25_nest
+esc
+wait 2
+moveto 352 598
+click
+wait 5
+snap d26_widgets
+esc
+wait 2
+moveto 256 230
+click
+wait 9
+snap d27_meta
+esc
+wait 3
+esc
+wait 2
+moveto 352 230
+click
+wait 9
+snap d28_asmoncraft
+esc
+wait 3
+esc
+wait 2
+moveto 256 46
+click
+wait 9
+snap d29_photon
+esc
+wait 3
+esc
+wait 2
+snap d30_after_all

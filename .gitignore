@@ -2,3 +2,4 @@
 tools/kdis/work/
 __pycache__/
 *.pyc
+test/qemu/out/
