@@ -3,6 +3,13 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.22** (11 October 2026) - the image is the same but for the version
+  - **The first real names in the kernel**: 41 functions and variables of the multiplexer
+    (`mux_run`, `mux_task`, `mux_turn`, `mux_free_task`, `mux_focus` ...), the shell
+    (`shell_command`, `shell_commands`), objects and memory (`ob_find`, `ob_call`, `mem_free`,
+    `cabinet_save`, `maint_check`), the keys (`key_next`, `key_alt` ...), each with a line
+    that says what it does. `tools/kdis/rename.py` applies `tools/kdis/renames.txt` to the
+    kernel, its symbols and the suits and checks that no byte changed.
 - **v3.0.21** (11 October 2026) - seen in QEMU (4 cores)
   - **`cores solo`, `cores one`, `cores all` work outside maintenance mode**, for the session;
     only keeping the setting on the disk needs `maint`. They used to be refused, so `bench`

@@ -1,0 +1,48 @@
+# renames.txt - names for what is understood in the kernel (tools/kdis/rename.py applies them).
+# OLD NEW ; what it does
+#
+# ---- the multiplexer: the desktop and the programs side by side (read in v3.0.14 - v3.0.19)
+L_53d40    mux_run            ; the multiplexer: runs the desktop (task 0) and up to seven programs, a turn each, until the desktop ends. rdi = the desktop object
+fn_53f25   mux_init           ; wipe the table of tasks, take the memory of the multiplexer; eax = 1 if there was memory
+fn_53fdf   mux_task           ; rdi = the number of a task (0 .. 7) -> rax = its record (0x200 bytes at 0x43F60; +0 state: 0 free, 1 runs, 2 closing; +0x120 its name)
+fn_53fee   mux_task_stacks    ; rdi = a task record: take its stacks; eax = 1 if there was memory
+fn_540cc   mux_switch         ; change stacks: keep the registers, [rdi] = this stack, go on with the stack rsi
+fn_540e7   mux_turn           ; rdi = the number of a task: give it one turn (its stack, its page tables), until it waits again
+fn_54369   mux_reap           ; free every task that is closing and has no turn running
+fn_5439c   mux_free_all       ; free every task that is not free
+fn_543c2   mux_free_task      ; rdi = the number of a task: its memory, its window, its place in the order of the windows
+fn_5448b   mux_order_out      ; rdi = the number of a task: out of the order of the windows
+fn_544cb   mux_order_top      ; -> rax = the task whose window is on top
+fn_544e6   mux_order_front    ; rdi = the number of a task: its window to the top of the order (the desktop, 0, stays below)
+fn_5450c   mux_focus          ; rdi = the number of a task: the keys go to it, its window comes to the top
+fn_54539   mux_task_surface   ; rdi = a task record, rsi, rdx = width, height: the picture its window is drawn into
+fn_54acc   mux_compose        ; draw what the tasks asked to be drawn into their windows, and the windows to the screen
+fn_54eab   mux_hooks_on       ; put the multiplexer's own functions into the table programs call (d_565d8 lists them); the old ones are kept
+fn_54edb   mux_hooks_off      ; put the kept functions back into the table programs call
+fn_54f01   mux_this_task      ; -> rax = the record of the task that has the turn now, 0 if none
+d_56478    mux_on             ; 1 while the multiplexer runs
+d_56480    mux_focused        ; the number of the task the keys go to
+d_56530    mux_order_count    ; how many windows are in the order
+d_56538    mux_order_list     ; the order of the windows from the bottom: the numbers of their tasks, 8 bytes each
+d_564b8    mux_draw_list      ; the memory of the multiplexer: what was asked to be drawn since the last composing
+d_16770    mux_turn_of        ; the number of the task that has the turn now, -1 if none
+# ---- the shell
+fn_0afa4   shell_command      ; do the line that was typed (d_11a20): the word is looked up in the table of commands, then among the objects
+fn_0af65   shell_same_word    ; rdi, rsi = two words: eax = 1 if they are the same
+fn_0af96   shell_skip_spaces  ; rdi = a text -> rax = where its first letter that is no space is
+d_1124b    shell_commands     ; the table of the shell's commands: the address of a word, the address of its function; 0 ends it
+fn_5612f   same_word_any_case ; rdi, rsi = two words: eax = 1 if they are the same, capitals or not
+# ---- objects, memory, the cabinet
+fn_0ad17   ob_find            ; rdi = a name -> rax = the object of the cabinet with that name, 0 if none
+fn_0adb6   ob_call            ; rdi = an object, rsi = the name of a socket (0: its first), rdx, rcx = two values: call the socket
+fn_0b356   ob_run_as_command  ; rdi = the name of an object typed as a command: start it
+fn_0ca3c   mem_free           ; rdi = a block got from api_memory (0: nothing happens): give it back
+fn_0d104   cabinet_save       ; write the table of the cabinet to the disk
+fn_0d535   maint_check        ; is maintenance mode on? eax = 1 and not zero if so; if not it says "enter maintenance mode first"
+d_155df    maint_on           ; 1 in maintenance mode
+d_110c0    cabinet_table      ; the address of the table of the cabinet in memory ('CABN', version, count, sectors, flags at +0x0A)
+# ---- keys
+fn_0c11e   key_next           ; the next scan code from the keyboards (the built-in one and USB): al, ah = flags; carry if none
+d_1188a    key_shift          ; 1 while Shift is held
+d_118d9    key_ctrl           ; 1 while Ctrl is held
+d_118da    key_alt            ; 1 while Alt is held

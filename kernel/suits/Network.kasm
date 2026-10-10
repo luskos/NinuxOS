@@ -2070,7 +2070,7 @@ fn_87cdb:
         jz short L_87d16
         mov rdi,rax
         lea rsi,[rel d_89506]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_87d57
 L_87d16:
@@ -2087,7 +2087,7 @@ L_87d34:
         jz short L_87d57
         push rcx
         mov rdi,rbx
-        call fn_0af65
+        call shell_same_word
         pop rcx
         test eax,eax
         jnz short L_87d50
@@ -2334,7 +2334,7 @@ fn_88102:
         test eax,eax
         jz short L_88165
         mov rdi,r13
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_8814c
         mov rdi,rax
@@ -2658,7 +2658,7 @@ fn_8859d:
         mov r15d,edi
         mov r13,rsi
         mov rdi,rsi
-        call fn_0ad17
+        call ob_find
         test rax,rax
         lea rcx,[rel d_897c3]
         jz near L_886fc
@@ -2804,7 +2804,7 @@ L_8874e:
 fn_88756:
         mov qword [rel d_8bfcc],0x0
         lea rdi,[rel d_89510]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_8879b
         mov rcx,[rax+0x58]
@@ -2868,7 +2868,7 @@ entry_13:
         cmp rax,0xffffffffffffffff
         jnz near L_888ea
         mov rdi,rbx
-        call fn_0ad17
+        call ob_find
         test rax,rax
         lea rcx,[rel d_897c3]
         jz near L_888ee
@@ -3043,7 +3043,7 @@ L_88a2b:
 fn_88a64:
         push rbx
         lea rdi,[rel d_89509]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_88a8d
         mov rsi,rax
@@ -3184,12 +3184,12 @@ entry_01:
         mov r12,rax
         mov rdi,rbx
         lea rsi,[rel suit_start + (d_162c7 - 0x86000)]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_88c28
         mov rdi,rbx
         lea rsi,[rel d_8989c]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_88c5f
         lea rdi,[rel d_898fd]
@@ -3663,12 +3663,12 @@ entry_03:
         push rax
         mov rdi,rbx
         lea rsi,[rel d_89517]
-        call fn_0af65
+        call shell_same_word
         pop rdi
         test eax,eax
         jz short L_8925f
         lea rsi,[rel suit_start + (d_162c7 - 0x86000)]
-        call fn_0af65
+        call shell_same_word
         mov [rel d_8bfdd],al
         lea rdi,[rel d_896ff]
         test eax,eax
@@ -3680,7 +3680,7 @@ L_89258:
 L_8925f:
         mov rdi,rbx
         lea rsi,[rel suit_start + (d_162ca - 0x86000)]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_89287
         mov byte [rel d_8948d],0x0

@@ -174,7 +174,7 @@ L_30241:
 L_30248:
         cmp [rel suit_start + (d_14eea - 0x30000)],r12
         jnc near L_3031f
-        call fn_0c11e
+        call key_next
         jc near L_301c8
         test ah,0x20
         jnz near L_301c8
@@ -294,17 +294,17 @@ entry_00:
 L_305c3:
         mov rdi,rbx
         lea rsi,[rel d_3161c]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_305eb
-        call fn_0d535
+        call maint_check
         jz near L_3099b
         call fn_30cbb
         jmp near L_3099b
 L_305eb:
         mov rdi,rbx
         lea rsi,[rel d_31616]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_30607
         mov byte [rel d_31612],0x1
@@ -312,11 +312,11 @@ L_305eb:
 L_30607:
         mov rdi,rbx
         lea rsi,[rel d_31613]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_30638
 L_3061a:
-        call fn_0d535
+        call maint_check
         jz near L_3099b
         mov byte [rel d_31610],0x1
         lea rdi,[rel d_38df3]
@@ -337,7 +337,7 @@ L_30638:
         test eax,eax
         jz near L_30996
         lea rdi,[rel suit_start + (d_5f2c8 - 0x30000)]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_306b5
         mov rcx,[rax+0x10]
@@ -529,17 +529,17 @@ L_3099b:
         mov rdi,[rel d_31550]
         test rdi,rdi
         jz short L_309ac
-        call fn_0ca3c
+        call mem_free
 L_309ac:
         mov rdi,[rel d_31570]
         test rdi,rdi
         jz short L_309bd
-        call fn_0ca3c
+        call mem_free
 L_309bd:
         mov rdi,[rel d_31580]
         test rdi,rdi
         jz short L_309ce
-        call fn_0ca3c
+        call mem_free
 L_309ce:
         pop r15
         pop r14
@@ -748,14 +748,14 @@ L_30c47:
         test eax,eax
         jz short L_30c9f
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         lea rdi,[rel d_3173e]
         call api_print
         xor eax,eax
         jmp short L_30cb3
 L_30c9f:
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         lea rdi,[rel d_31807]
 L_30cae:
         mov eax,0x1
@@ -855,17 +855,17 @@ L_30e03:
         jmp short L_30e45
 L_30e0f:
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         lea rdi,[rel d_31924]
         jmp short L_30e40
 L_30e20:
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         lea rdi,[rel d_3187a]
         jmp short L_30e40
 L_30e31:
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         lea rdi,[rel d_31807]
 L_30e40:
         call api_print
@@ -989,14 +989,14 @@ fn_30ecb:
         test eax,eax
         jz short L_3100e
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         mov eax,0x1
         pop r12
         pop rbx
         retq
 L_3100e:
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
 L_31016:
         mov rdx,r12
         xor eax,eax
@@ -1285,12 +1285,12 @@ L_31388:
         mov qword [rel suit_start + (d_15540 - 0x30000)],0x0
         mov ebx,eax
         mov rdi,r13
-        call fn_0ca3c
+        call mem_free
         mov eax,ebx
         jmp short L_313d0
 L_313b7:
         mov rdi,r13
-        call fn_0ca3c
+        call mem_free
         jmp near L_312d0
 L_313c4:
         mov eax,0xffffffff
@@ -1395,14 +1395,14 @@ L_314e0:
 L_314ea:
         mov r12d,eax
         mov rdi,r15
-        call fn_0ca3c
+        call mem_free
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         mov eax,r12d
         jmp short L_3150f
 L_31502:
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
 L_3150a:
         mov eax,0x5
 L_3150f:
@@ -1601,12 +1601,12 @@ entry_01:
         xor r14d,r14d
         mov rdi,rbx
         lea rsi,[rel d_32738]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_321d4
         mov rdi,rbx
         lea rsi,[rel d_32741]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_321dc
 L_321d4:
@@ -1615,12 +1615,12 @@ L_321d4:
 L_321dc:
         mov rdi,rbx
         lea rsi,[rel d_3273b]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_32202
         mov rdi,rbx
         lea rsi,[rel d_32744]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_32208
 L_32202:
@@ -1782,14 +1782,14 @@ L_32444:
         repe cmpsb
         jnz short L_32485
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         mov byte [rel d_38bd0],0x1
         call fn_5ff3f
         lea rdi,[rel d_32a86]
         jmp short L_3249b
 L_32485:
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         jmp short L_32494
 L_3248f:
         call fn_600ad
@@ -1801,7 +1801,7 @@ L_3249b:
         mov qword [rel suit_start + (d_66a18 - 0x30000)],0x0
         test rdi,rdi
         jz short L_324bc
-        call fn_0ca3c
+        call mem_free
 L_324bc:
         pop r15
         pop r14
@@ -2075,12 +2075,12 @@ L_32c06:
         mov r12,rax
         mov rdi,rbx
         lea rsi,[rel d_3379f]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_32c57
         mov rdi,rbx
         lea rsi,[rel d_337a2]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_32cae
 L_32c3c:
@@ -2229,7 +2229,7 @@ L_32da4:
         call fn_0d173
         mov ebx,eax
         mov rdi,r15
-        call fn_0ca3c
+        call mem_free
         test ebx,ebx
         jnz short L_32f18
         lea rdi,[rel d_33c25]
@@ -2252,7 +2252,7 @@ L_32f18:
         jmp short L_32f5c
 L_32f32:
         mov rdi,r15
-        call fn_0ca3c
+        call mem_free
         lea rdi,[rel d_338fc]
         jmp short L_32f5c
 L_32f43:
@@ -3008,7 +3008,7 @@ L_33de9:
         lea rcx,[rel d_33ee0]
         mov rdi,[rcx+rax*8]
         lea rsi,[rel d_33f40]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_33e5b
         lea rdi,[rel d_33f47]
@@ -3220,7 +3220,7 @@ L_3429e:
         test r14,r14
         jz short L_342ab
         mov rdi,r14
-        call fn_0ca3c
+        call mem_free
 L_342ab:
         mov rdi,r15
         call fn_0db9d
@@ -3409,7 +3409,7 @@ L_34724:
         stosb
         mov byte [rdi],0x0
         lea rdi,[rel d_34818]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_34750
         inc r12d
@@ -3427,7 +3427,7 @@ L_34750:
         test eax,eax
         jnz short L_347d0
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         lea rdi,[rel d_34868]
         call api_log
         lea rdi,[rel d_34818]
@@ -3445,7 +3445,7 @@ L_34750:
         jmp short L_34804
 L_347d0:
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         jmp short L_347ea
 L_347da:
         lea r12,[rel d_3492c]
@@ -4001,17 +4001,17 @@ L_35139:
         mov r12,rax
         lea rsi,[rel d_36479]
         mov rdi,rbx
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz near L_35290
         lea rsi,[rel d_3647e]
         mov rdi,rbx
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_351c5
         lea rsi,[rel d_36048]
         mov rdi,rbx
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_351e9
         mov rdi,rbx
@@ -4041,17 +4041,17 @@ L_351e9:
         jz near L_3527f
         mov rdi,r12
         lea rsi,[rel d_360b0]
-        call fn_0af65
+        call shell_same_word
         mov ebx,eax
         test eax,eax
         jnz short L_3522e
         mov rdi,r12
         lea rsi,[rel d_360b7]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz near L_352f5
 L_3522e:
-        call fn_0d535
+        call maint_check
         jz near L_353c2
         mov ecx,0x1fc
         rdmsr
@@ -4091,10 +4091,10 @@ L_35290:
         jnz short L_352f5
 L_352ab:
         push rax
-        call fn_0d535
+        call maint_check
         pop rax
         jz near L_353c2
-        mov rcx,[rel suit_start + (d_110c0 - 0x30000)]
+        mov rcx,[rel suit_start + (cabinet_table - 0x30000)]
         and word [rcx+0xa],0xfcff
         xor edx,edx
         cmp eax,0x2
@@ -4106,7 +4106,7 @@ L_352d1:
         mov edx,0x200
 L_352db:
         or [rcx+0xa],dx
-        call fn_0d104
+        call cabinet_save
         lea rdi,[rel d_3689f]
         call api_print
         jmp near L_353c2
@@ -4163,7 +4163,7 @@ L_353ce:
         lea rcx,[rel d_35f40]
         mov rsi,[rcx+rbx*8]
         mov rdi,r12
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_353f1
         inc ebx
@@ -5194,7 +5194,7 @@ fn_38138:
         mov qword [rdx+0x30f8],0x3108
         mov dword [rdx+0x3100],0x4f4d5341
         lea rdi,[rel d_38bd1]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_3821c
         cmp qword [rax+0x58],0x3030
@@ -5508,7 +5508,7 @@ L_38618:
 fn_3861e:
         push rbx
         lea rdi,[rel suit_start + (d_60519 - 0x30000)]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_38688
         mov rbx,rax
@@ -5535,7 +5535,7 @@ fn_3861e:
         call fn_0d173
 L_38688:
         lea rdi,[rel suit_start + (d_60689 - 0x30000)]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_386c7
         mov rbx,rax
@@ -5554,7 +5554,7 @@ L_386c7:
         retq
 L_386c9:
         push rbx
-        call fn_0d535
+        call maint_check
         jz near L_3880e
         call fn_38138
         test eax,eax
@@ -5597,7 +5597,7 @@ L_38720:
         call fn_0fcd8
         jmp short L_38720
 L_38769:
-        call fn_0d104
+        call cabinet_save
         call fn_309d8
         mov rdi,rax
         mov rsi,[rel d_38e68]
@@ -5627,7 +5627,7 @@ L_387b8:
         mov dword [rax+0x74],0x0
         lea rdi,[rel d_38e28]
         call entry_12
-        call fn_0d104
+        call cabinet_save
         lea rdi,[rel d_3903d]
         call api_print
         mov edi,0xbb8
@@ -5656,20 +5656,20 @@ L_38822:
         mov r12d,0x1
         mov rdi,rbx
         lea rsi,[rel d_38c50]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_38862
         xor r12d,r12d
         mov rdi,rbx
         lea rsi,[rel d_38c5b]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_38862
         lea rdi,[rel d_38cb2]
         call api_print
         jmp near L_38974
 L_38862:
-        call fn_0d535
+        call maint_check
         jz near L_38974
         lea rdi,[rel d_38d71]
         call api_print
@@ -5699,22 +5699,22 @@ L_38881:
         mov r13,rax
         lea rsi,[rel d_38c6e]
         mov rdi,r13
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_38881
         lea rsi,[rel d_38c74]
         mov rdi,r13
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_38881
         lea rsi,[rel d_38c7a]
         mov rdi,r13
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_38881
         lea rsi,[rel d_38c7f]
         mov rdi,r13
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz near L_38881
 L_38918:
@@ -5727,9 +5727,9 @@ L_38925:
         xor eax,eax
         mov ecx,0x4
         rep stosq
-        mov rax,[rel suit_start + (d_110c0 - 0x30000)]
+        mov rax,[rel suit_start + (cabinet_table - 0x30000)]
         and word [rax+0xa],0x1
-        call fn_0d104
+        call cabinet_save
         lea rdi,[rel d_38c84]
         call entry_12
         lea rdi,[rel d_38da6]
@@ -5752,7 +5752,7 @@ entry_14:
         push rbx
         mov rbx,rdi
         lea rsi,[rel d_38c4b]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_38994
         pop rbx
@@ -5760,14 +5760,14 @@ entry_14:
 L_38994:
         mov rdi,rbx
         lea rsi,[rel d_38c43]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_389b8
         lea rdi,[rel d_392fe]
         call api_print
         jmp near L_38a63
 L_389b8:
-        call fn_0d535
+        call maint_check
         jz near L_38a63
         cmp byte [rel suit_start + (d_154a9 - 0x30000)],0x0
         jz short L_389dd
@@ -5813,10 +5813,10 @@ entry_15:
         push rbx
         mov rbx,rdi
         lea rsi,[rel d_38c46]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_38ac0
-        call fn_0d535
+        call maint_check
         jz near L_38b20
         call fn_38138
         test eax,eax
@@ -6011,7 +6011,7 @@ fn_3982a:
         mov qword [rdx+0x240],0x250
         mov dword [rdx+0x248],0x4f4d5341
         lea rdi,[rel d_39e70]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_39905
         cmp qword [rax+0x58],0x188
@@ -6056,7 +6056,7 @@ L_3994d:
         jz short L_39968
         mov rdi,rbx
         mov rsi,r12
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_39968
         pop rcx
@@ -6117,12 +6117,12 @@ entry_17:
         jz near L_39cba
         mov rdi,r12
         lea rsi,[rel d_39ecd]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz near L_39be2
         mov rdi,r12
         lea rsi,[rel d_39ec9]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz near L_39cba
         mov rdi,r13
@@ -6144,7 +6144,7 @@ L_39a3c:
         jc short L_39a3c
         jmp near L_39cba
 L_39a5a:
-        call fn_0d535
+        call maint_check
         jz near L_39cc6
         xor ecx,ecx
 L_39a67:
@@ -6244,7 +6244,7 @@ L_39b7e:
         call api_print
         jmp near L_39cc6
 L_39be2:
-        call fn_0d535
+        call maint_check
         jz near L_39cc6
         mov rdi,r13
         call fn_39937

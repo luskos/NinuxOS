@@ -945,7 +945,7 @@ L_088df:
 L_088e9:
         mov dword [rel d_11850],0x6fc3ff
         lea rdi,[rel d_1206e]
-        cmp byte [rel d_155df],0x0
+        cmp byte [rel maint_on],0x0
         jz short L_08914
         mov dword [rel d_11850],0xffb45a
         lea rdi,[rel d_12076]
@@ -956,7 +956,7 @@ L_08914:
         lea rdi,[rel d_11a20]
         mov esi,0x4c
         call fn_08ee6
-        call fn_0afa4
+        call shell_command
         jmp short L_088e9
 
 fn_0893b:
@@ -1040,7 +1040,7 @@ L_08a6a:
         retq
 
 fn_08a6b:
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         cmp dword [rax],0x4e424143
         jnz short L_08abc
         movzx eax,word [rax+0xa]
@@ -1075,7 +1075,7 @@ L_08aca:
         test rsi,rsi
         jz short L_08b49
         mov rdi,r12
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_08ae4
         add rbx,0x18
@@ -1097,13 +1097,13 @@ L_08ae4:
         xor edx,edx
         mov ecx,0x18
         div ecx
-        mov rcx,[rel d_110c0]
+        mov rcx,[rel cabinet_table]
         and word [rcx+0xa],0x9fff
         shl eax,byte 0xd
         or [rcx+0xa],ax
         cmp byte [rel d_1553d],0x0
         jz short L_08b42
-        call fn_0d104
+        call cabinet_save
 
 L_08b42:
         call fn_08c44
@@ -2866,7 +2866,7 @@ d_0a0ba:
 fn_0a116:
         cmp byte [rel d_119d5],0x0
         jnz short L_0a142
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         cmp dword [rax],0x4e424143
         jnz short L_0a136
         test word [rax+0xa],0x1
@@ -2888,7 +2888,7 @@ api_poll:
         popfq
         call fn_10bcf
         call fn_10bdd
-        call fn_0c11e
+        call key_next
         jc near L_0a4cd
         mov bl,ah
         test bl,0x20
@@ -2924,7 +2924,7 @@ api_poll:
 %endif
         jnc near L_0a261
         lea rdx,[rel d_11b66]
-        cmp byte [rel d_1188a],0x0
+        cmp byte [rel key_shift],0x0
         jz short L_0a1f1
         lea rdx,[rel d_11ba0]
 
@@ -2932,7 +2932,7 @@ L_0a1f1:
         movzx edx,byte [rdx+rcx]
         test edx,edx
         jz near L_0a4cd
-        cmp byte [rel d_118d9],0x0
+        cmp byte [rel key_ctrl],0x0
         jz short L_0a233
         mov eax,edx
         or eax,0x20
@@ -2940,7 +2940,7 @@ L_0a1f1:
         jc short L_0a233
         cmp eax,0x7a
         ja short L_0a233
-        cmp byte [rel d_118da],0x0
+        cmp byte [rel key_alt],0x0
         jz short L_0a22d
         cmp eax,0x6c
         jnz short L_0a22d
@@ -3036,7 +3036,7 @@ L_0a33d:
         movzx edx,byte [rdx+0x1]
         cmp edx,0x9d
         jnz short L_0a357
-        cmp byte [rel d_118da],0x0
+        cmp byte [rel key_alt],0x0
         jz short L_0a357
         mov edx,0x9f
 
@@ -3081,41 +3081,41 @@ L_0a3bf:
         jmp near L_0a4cd
 
 L_0a3cb:
-        cmp byte [rel d_1188a],0x0
+        cmp byte [rel key_shift],0x0
         jnz near L_0a4cd
-        mov byte [rel d_1188a],0x1
-        cmp byte [rel d_118da],0x0
+        mov byte [rel key_shift],0x1
+        cmp byte [rel key_alt],0x0
         jz near L_0a4cd
         call fn_0a563
         jmp near L_0a4cd
 
 L_0a3f6:
-        mov byte [rel d_1188a],0x0
+        mov byte [rel key_shift],0x0
         jmp near L_0a4cd
 
 L_0a402:
         mov byte [rel d_119d3],0x0
-        cmp byte [rel d_118da],0x0
+        cmp byte [rel key_alt],0x0
         jnz near L_0a4cd
-        mov byte [rel d_118da],0x1
-        cmp byte [rel d_1188a],0x0
+        mov byte [rel key_alt],0x1
+        cmp byte [rel key_shift],0x0
         jz near L_0a4cd
         call fn_0a563
         jmp near L_0a4cd
 
 L_0a434:
         mov byte [rel d_119d3],0x0
-        mov byte [rel d_118da],0x0
+        mov byte [rel key_alt],0x0
         jmp near L_0a4cd
 
 L_0a447:
         mov byte [rel d_119d3],0x0
-        mov byte [rel d_118d9],0x1
+        mov byte [rel key_ctrl],0x1
         jmp short L_0a4cd
 
 L_0a457:
         mov byte [rel d_119d3],0x0
-        mov byte [rel d_118d9],0x0
+        mov byte [rel key_ctrl],0x0
         jmp short L_0a4cd
 
 L_0a467:
@@ -3200,10 +3200,10 @@ d_0a543:
         db 0x00
 
 fn_0a544:
-        movzx r8d,byte [rel d_1188a]
-        movzx eax,byte [rel d_118d9]
+        movzx r8d,byte [rel key_shift]
+        movzx eax,byte [rel key_ctrl]
         lea r8d,[r8+rax*2]
-        movzx eax,byte [rel d_118da]
+        movzx eax,byte [rel key_alt]
         lea r8d,[r8+rax*4]
         retq
 
@@ -3244,7 +3244,7 @@ fn_0a5c8:
         cmp byte [rel d_118dc],0x0
         jnz short L_0a62e
         lea rdi,[rel d_118dd]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_0a62e
         cmp qword [rax+0x58],0x1000
@@ -3526,7 +3526,7 @@ L_0a8b1:
         retq
 
 api_ob_by_name:
-        call fn_0ad17
+        call ob_find
         jmp short L_0a8c5
 
 api_ob_by_number:
@@ -3551,7 +3551,7 @@ L_0a8ec:
 fn_0a8ed:
         test rax,rax
         jz short L_0a958
-        mov rcx,[rel d_110c0]
+        mov rcx,[rel cabinet_table]
         movzx ecx,word [rcx+0xa]
         shr ecx,byte 0xa
         and ecx,0x7
@@ -3573,7 +3573,7 @@ L_0a913:
         pop rax
         cmp edx,ecx
         ja short L_0a956
-        mov rcx,[rel d_110c0]
+        mov rcx,[rel cabinet_table]
         test word [rcx+0xa],0x8000
         jz short L_0a958
         test edx,edx
@@ -3628,7 +3628,7 @@ cmd_rate:
         push rbx
         push r12
         mov rbx,rdi
-        call fn_0d535
+        call maint_check
         jz near L_0aa44
         mov rdi,rbx
         call fn_0d4cd
@@ -3642,7 +3642,7 @@ cmd_rate:
         ja short L_0aa38
         mov r12,rax
         mov rdi,rbx
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_0aa38
         mov rbx,rax
@@ -3711,13 +3711,13 @@ cmd_level:
         cmp byte [rbx],0x0
         jz near L_0aba3
         lea rsi,[rel d_0abf9]
-        call fn_0af65
+        call shell_same_word
         mov ecx,0x8000
         test eax,eax
         jnz short L_0ab31
         mov rdi,rbx
         lea rsi,[rel d_0ac00]
-        call fn_0af65
+        call shell_same_word
         xor ecx,ecx
         test eax,eax
         jz short L_0ab58
@@ -3728,10 +3728,10 @@ L_0ab31:
         pop rcx
         test eax,eax
         jnz near L_0abf7
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         and word [rax+0xa],0x7fff
         or [rax+0xa],cx
-        call fn_0d104
+        call cabinet_save
         jmp short L_0aba3
 
 L_0ab58:
@@ -3757,16 +3757,16 @@ L_0ab7f:
         pop rcx
         test eax,eax
         jnz short L_0abf7
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         and word [rax+0xa],0xe3ff
         shl ecx,byte 0xa
         or [rax+0xa],cx
-        call fn_0d104
+        call cabinet_save
 
 L_0aba3:
         lea rdi,[rel d_0ac6e]
         call api_print
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         movzx eax,word [rax+0xa]
         shr eax,byte 0xa
         and eax,0x7
@@ -3775,7 +3775,7 @@ L_0aba3:
         call fn_08e3b
         lea rdi,[rel d_0ac96]
         call api_print
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         test word [rax+0xa],0x8000
         jz short L_0abf7
         lea rdi,[rel d_0ac05]
@@ -3804,7 +3804,8 @@ d_0ac96:
         db '. (level 18 | 16 | 12 | 7 | 0 changes it - with the administrator password;', 10
         db 'an object says its rating in its META:  rating:16 )', 10, 0
 
-fn_0ad17:
+; rdi = a name -> rax = the object of the cabinet with that name, 0 if none
+ob_find:
         call fn_0a805
         cmp rax,0xffffffffffffffff
         jz short L_0ad2a
@@ -3890,7 +3891,8 @@ L_0adb4:
 
 ; says: '[sentinel] refused to run a CHANGED system object'
 ; says: '[gate] refused: code the Sentinel has not verified does not run on the kernel'
-fn_0adb6:
+; rdi = an object, rsi = the name of a socket (0: its first), rdx, rcx = two values: call the socket
+ob_call:
         test dword [rdi+0x50],0x8
         jz short L_0add5
         push rdi
@@ -4039,7 +4041,7 @@ fn_0aec6:
         mov rsi,rax
         mov rdx,r12
         mov rcx,r13
-        call fn_0adb6
+        call ob_call
 
 L_0aef0:
         pop r13
@@ -4093,7 +4095,8 @@ L_0af5d:
         pop rbx
         retq
 
-fn_0af65:
+; rdi, rsi = two words: eax = 1 if they are the same
+shell_same_word:
         mov al,[rdi]
         cmp al,[rsi]
         jnz short L_0af7d
@@ -4101,7 +4104,7 @@ fn_0af65:
         jz short L_0af77
         inc rdi
         inc rsi
-        jmp short fn_0af65
+        jmp short shell_same_word
 
 L_0af77:
         mov eax,0x1
@@ -4117,7 +4120,8 @@ api_screen_size:
         mov rcx,[rel d_117cb]
         retq
 
-fn_0af96:
+; rdi = a text -> rax = where its first letter that is no space is
+shell_skip_spaces:
         mov rax,rdi
 
 L_0af99:
@@ -4131,12 +4135,13 @@ L_0afa3:
 
 ; says: 'the shell (since the last command)'
 ; says: 'Unknown command. Type '
-fn_0afa4:
+; do the line that was typed (d_11a20): the word is looked up in the table of commands, then among the objects
+shell_command:
         push rbx
         push r12
         push r13
         lea rdi,[rel d_11a20]
-        call fn_0af96
+        call shell_skip_spaces
         mov rbx,rax
         cmp byte [rbx],0x0
         jz near L_0b044
@@ -4155,7 +4160,7 @@ L_0afd5:
         mov byte [r12],0x0
         inc r12
         mov rdi,r12
-        call fn_0af96
+        call shell_skip_spaces
         mov r12,rax
 
 L_0afe8:
@@ -4163,14 +4168,14 @@ L_0afe8:
         lea rdi,[rel d_11f93]
         call fn_08682
         pop rdi
-        lea r13,[rel d_1124b]
+        lea r13,[rel shell_commands]
 
 L_0affd:
         mov rsi,[r13+0x0]
         test rsi,rsi
         jz short L_0b021
         mov rdi,rbx
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_0b018
         add r13,0x10
@@ -4184,7 +4189,7 @@ L_0b018:
 L_0b021:
 %ifdef PLAIN_KERNEL
         mov rdi,rbx
-        call fn_0ad17
+        call ob_find
 %else
         call near shell_more            ; v3.0.19: commands written after the recovery (the same 8 bytes)
         times 3 nop
@@ -4192,7 +4197,7 @@ L_0b021:
         test rax,rax
         jz short L_0b038
         mov rdi,rbx
-        call fn_0b356
+        call ob_run_as_command
         jmp short L_0b044
 
 L_0b038:
@@ -4291,7 +4296,7 @@ p_0b117:
         jz short L_0b19d
         mov rdi,r14
         lea rsi,[rel d_14ab3]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_0b14e
         call api_ob_count
@@ -4430,7 +4435,7 @@ cmd_meta:
         mov rbx,rdi
         cmp byte [rbx],0x0
         jz short L_0b33f
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_0b34d
         push rax
@@ -4460,7 +4465,8 @@ L_0b34d:
 ; says: 'That object is raw data (STATE 0): it has nothing to run. Try '
 ; says: 'The Sentinel refuses: this system object was CHANGED since the build (see '
 ; says: ... and 9 more texts
-fn_0b356:
+; rdi = the name of an object typed as a command: start it
+ob_run_as_command:
         push rbx
         push r12
         push r13
@@ -4482,7 +4488,7 @@ L_0b37b:
         mov byte [r12],0x0
         inc r12
         mov rdi,r12
-        call fn_0af96
+        call shell_skip_spaces
         mov r12,rax
         jmp short L_0b393
 
@@ -4497,7 +4503,7 @@ L_0b393:
         lea rdi,[rel d_153bf]
         call api_log
         mov rdi,rbx
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz near L_0b618
         mov r13,rax
@@ -4565,7 +4571,7 @@ L_0b494:
         jz near L_0b550
         mov rdi,rax
         lea rsi,[rel d_1245d]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz near L_0b550
         cmp qword [rel d_11db9],0x0
@@ -4598,7 +4604,7 @@ L_0b4fe:
 L_0b550:
         mov rdi,rbx
         lea rsi,[rel d_11c1e]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_0b5a3
         mov eax,0x6
@@ -4623,7 +4629,7 @@ L_0b5a3:
         xor esi,esi
         xor edx,edx
         xor ecx,ecx
-        call fn_0adb6
+        call ob_call
 
 L_0b5b1:
         call fn_09642
@@ -4662,7 +4668,7 @@ L_0b620:
         test rdi,rdi
         jz short L_0b63c
         mov qword [rel d_11db9],0x0
-        call fn_0ca3c
+        call mem_free
 
 L_0b63c:
         pop r13
@@ -4683,7 +4689,7 @@ fn_0b642:
 fn_0b661:
         cmp byte [rel d_1553d],0x0
         jz short L_0b692
-        mov rcx,[rel d_110c0]
+        mov rcx,[rel cabinet_table]
         cmp dword [rcx],0x4e424143
         jnz short L_0b692
         movzx edx,word [rcx+0xa]
@@ -4692,14 +4698,14 @@ fn_0b661:
         jz short L_0b692
         and word [rcx+0xa],0xfffffffffffffff9
         or [rcx+0xa],ax
-        call fn_0d104
+        call cabinet_save
 
 L_0b692:
         retq
 
 fn_0b693:
         xor eax,eax
-        mov rcx,[rel d_110c0]
+        mov rcx,[rel cabinet_table]
         test rcx,rcx
         jz short L_0b6af
         cmp dword [rcx],0x4e424143
@@ -4725,7 +4731,7 @@ fn_0b6b0:
         mov byte [rel d_1243a],0x0
         cmp byte [rel d_1553d],0x0
         jz short L_0b734
-        mov rsi,[rel d_110c0]
+        mov rsi,[rel cabinet_table]
         cmp dword [rsi],0x4e424143
         jnz short L_0b734
         test word [rsi+0xa],0x4
@@ -4744,7 +4750,7 @@ L_0b734:
 fn_0b735:
         cmp qword [rel d_117cb],0x0
         jz short L_0b7b4
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         test rax,rax
         jz short L_0b7b4
         cmp dword [rax],0x4e424143
@@ -4789,7 +4795,7 @@ fn_0b7b5:
 ; says: 'Staying in the shell.'
 ; says: 'The desktop did not get through its first 10 seconds last time - staying in the shell.'
 fn_0b7ce:
-        mov rcx,[rel d_110c0]
+        mov rcx,[rel cabinet_table]
         cmp dword [rcx],0x4e424143
         jnz short L_0b833
         test word [rcx+0xa],0x4
@@ -4846,7 +4852,7 @@ L_0b86e:
         dec ecx
         jnz short L_0b86e
         lea rdi,[rel d_11a70]
-        jmp near fn_0b356
+        jmp near ob_run_as_command
 
 ; says: 'Rebooting...'
 cmd_reboot:
@@ -5071,7 +5077,7 @@ L_0baab:
         jz near L_0bbc9
         mov rdi,rax
         lea rsi,[rel d_11e71]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz near L_0bbc9
         test r14,r14
@@ -5106,7 +5112,7 @@ L_0bb08:
         lea rsi,[rel d_11e59]
         call api_ob_meta
         mov rdi,rax
-        call fn_0ad17
+        call ob_find
         pop rdx
         test rax,rax
         jz short L_0bbbd
@@ -5118,7 +5124,7 @@ L_0bb08:
         test rax,rax
         jz short L_0bbb4
         mov rdi,rax
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_0bbb4
         lea rdi,[rel d_14cf9]
@@ -5665,7 +5671,8 @@ d_0c10c:
 d_0c114:
         db 0x50, 0xB0, 0x20, 0xE6, 0xA0, 0xE6, 0x20, 0x58, 0x48, 0xCF
 
-fn_0c11e:
+; the next scan code from the keyboards (the built-in one and USB): al, ah = flags; carry if none
+key_next:
         cmp byte [rel d_14ef2],0x0
         jz short L_0c156
         cli
@@ -6417,7 +6424,8 @@ L_0ca2d:
         retq
 
 ; says: 'mem: free() of an invalid address '
-fn_0ca3c:
+; rdi = a block got from api_memory (0: nothing happens): give it back
+mem_free:
         test rdi,rdi
         jz near L_0cac9
         lea rax,[rdi-0x10]
@@ -6568,7 +6576,7 @@ L_0cc12:
 L_0cc3f:
         lea rdx,[rel core_start + (v_42590 - 0x7E00)]
         mov rdi,[rdx+rbx*8]
-        call fn_0ca3c
+        call mem_free
         inc rbx
         cmp rbx,0x40
         jc short L_0cc3f
@@ -7002,7 +7010,7 @@ fn_0cfda:
         test eax,eax
         jz short L_0d069
         lea rsi,[rel core_start + (v_42990 - 0x7E00)]
-        mov rdi,[rel d_110c0]
+        mov rdi,[rel cabinet_table]
         mov ecx,0x2c
         repe cmpsb
         jnz short L_0d069
@@ -7031,13 +7039,13 @@ L_0d08f:
 fn_0d098:
         mov rdi,[rel d_155e0]
         add rdi,[rel d_15499]
-        mov rsi,[rel d_110c0]
+        mov rsi,[rel cabinet_table]
         call fn_1105d
         test eax,eax
         jnz short L_0d0d2
         mov rdi,[rel d_155e0]
         add rdi,[rel d_15499]
-        mov rsi,[rel d_110c0]
+        mov rsi,[rel cabinet_table]
         call fn_1103d
         test eax,eax
 
@@ -7055,7 +7063,7 @@ L_0d0e8:
         retq
 
 fn_0d0e9:
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         movzx eax,word [rax+0x8]
         shl rax,byte 0x9
         sub rax,0x10
@@ -7063,13 +7071,14 @@ fn_0d0e9:
         dec rax
         retq
 
-fn_0d104:
+; write the table of the cabinet to the disk
+cabinet_save:
         inc qword [rel d_11de1]
         call fn_0fc7e
         test eax,eax
         jz short L_0d12f
         mov rdi,[rel d_155e0]
-        mov rsi,[rel d_110c0]
+        mov rsi,[rel cabinet_table]
         movzx edx,word [rsi+0x8]
         xor ecx,ecx
         inc ecx
@@ -7124,7 +7133,7 @@ fn_0d173:
         mov r13,rsi
         mov r14,rdx
         mov eax,0x1
-        mov dl,[rel d_155df]
+        mov dl,[rel maint_on]
         or dl,[rel d_1553e]
         mov byte [rel d_1553e],0x0
         test dl,dl
@@ -7255,7 +7264,7 @@ L_0d306:
         mov eax,[r13+0x4c]
         mov [rdi+0x18],eax
         mov [rdi+0x1c],r13d
-        call fn_0d104
+        call cabinet_save
         test eax,eax
         jz short L_0d338
         mov rdi,r13
@@ -7351,7 +7360,7 @@ L_0d41a:
         shl ecx,byte 0x8
         or [r12+0x50],ecx
         mov rdi,rbx
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_0d45c
         push rax
@@ -7479,13 +7488,14 @@ L_0d51b:
 
 ; says: 'Maintenance mode ended by itself (10 minutes). Type maint again for more.'
 ; says: 'This changes the cabinet: enter maintenance mode first ('
-fn_0d535:
-        cmp byte [rel d_155df],0x0
+; is maintenance mode on? eax = 1 and not zero if so; if not it says "enter maintenance mode first"
+maint_check:
+        cmp byte [rel maint_on],0x0
         jz short L_0d564
         mov rax,[rel d_14eea]
         cmp rax,[rel d_15548]
         jc short L_0d573
-        mov byte [rel d_155df],0x0
+        mov byte [rel maint_on],0x0
         lea rdi,[rel d_15550]
         call api_print
         xor eax,eax
@@ -7506,7 +7516,7 @@ L_0d573:
 ; says: 'maintenance mode switched on (the password was right)'
 ; says: ... and 4 more texts
 cmd_maint:
-        cmp byte [rel d_155df],0x0
+        cmp byte [rel maint_on],0x0
         jnz short L_0d5b2
         call fn_108a1
         test eax,eax
@@ -7518,14 +7528,14 @@ L_0d595:
         mov rax,[rel d_14eea]
         add rax,0xea60
         mov [rel d_15548],rax
-        mov byte [rel d_155df],0x1
+        mov byte [rel maint_on],0x1
         jmp short L_0d5b9
 
 L_0d5b2:
-        mov byte [rel d_155df],0x0
+        mov byte [rel maint_on],0x0
 
 L_0d5b9:
-        cmp byte [rel d_155df],0x0
+        cmp byte [rel maint_on],0x0
         jz short L_0d5fb
         lea rdi,[rel d_15b37]
         call api_log
@@ -7554,7 +7564,7 @@ cmd_copy:
         push r13
         push r14
         mov rbx,rdi
-        call fn_0d535
+        call maint_check
         jz near L_0d6d9
         mov rdi,rbx
         call fn_0d4cd
@@ -7590,14 +7600,14 @@ cmd_copy:
         call fn_0d173
         pop rdi
         push rax
-        call fn_0ca3c
+        call mem_free
         pop rax
         call fn_0d4f9
         jmp short L_0d6d9
 
 L_0d6a5:
         pop rdi
-        call fn_0ca3c
+        call mem_free
         mov eax,0x6
         call fn_0d4f9
         jmp short L_0d6d9
@@ -7628,7 +7638,7 @@ cmd_rename:
         push rbx
         push r12
         mov rbx,rdi
-        call fn_0d535
+        call maint_check
         jz near L_0d7ab
         cmp byte [rel d_1553d],0x0
         jz near L_0d789
@@ -7675,7 +7685,7 @@ L_0d758:
         jc short L_0d758
 
 L_0d763:
-        call fn_0d104
+        call cabinet_save
         test eax,eax
         mov eax,0x0
         jnz short L_0d776
@@ -7717,7 +7727,7 @@ cmd_delete:
         push r12
         push r13
         mov rbx,rdi
-        call fn_0d535
+        call maint_check
         jz near L_0d84e
         cmp byte [rel d_1553d],0x0
         jz short L_0d82c
@@ -7725,7 +7735,7 @@ cmd_delete:
         jz short L_0d838
         mov rdi,rbx
         lea rsi,[rel d_11c1e]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_0d81e
         mov rdi,rbx
@@ -7776,7 +7786,7 @@ L_0d84e:
 
 fn_0d854:
         call fn_0fcd8
-        call fn_0d104
+        call cabinet_save
         test eax,eax
         mov eax,0x0
         jnz short L_0d86c
@@ -7797,7 +7807,7 @@ cmd_view:
         mov rbx,rdi
         cmp byte [rbx],0x0
         jz near L_0da29
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz near L_0da37
         mov r12,rax
@@ -8127,7 +8137,7 @@ L_0dbb6:
 
 L_0dbe4:
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         pop rbx
 
 L_0dbed:
@@ -8189,7 +8199,7 @@ L_0dc89:
 
 fn_0dc8a:
         mov rax,[rel d_155e0]
-        mov rdx,[rel d_110c0]
+        mov rdx,[rel cabinet_table]
         movzx ecx,word [rdx+0x8]
         add rax,rcx
         retq
@@ -8404,7 +8414,7 @@ L_0de87:
         retq
 
 fn_0dea6:
-        call fn_0d535
+        call maint_check
         jz short L_0dec2
         cmp byte [rel d_1553d],0x0
         jnz short L_0dec2
@@ -8566,7 +8576,7 @@ cmd_scan:
         cmp byte [rdi],0x0
         jz short L_0e0ee
         lea rsi,[rel d_15b90]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz near L_0e221
         lea rdi,[rel d_15b94]
@@ -8629,13 +8639,13 @@ L_0e14d:
         inc r15
         call fn_0e51f
         mov rdi,r14
-        call fn_0ca3c
+        call mem_free
         add rbx,r13
         jmp near L_0e14d
 
 L_0e1d1:
         mov rdi,r14
-        call fn_0ca3c
+        call mem_free
 
 L_0e1d9:
         inc rbx
@@ -8647,7 +8657,7 @@ L_0e1e1:
 
 L_0e1eb:
         mov rdi,[rel d_15b78]
-        call fn_0ca3c
+        call mem_free
         mov rdi,r15
         call fn_08e3b
         lea rdi,[rel d_15ec9]
@@ -8735,7 +8745,7 @@ L_0e287:
 
 L_0e321:
         mov rdi,r14
-        call fn_0ca3c
+        call mem_free
 
 L_0e329:
         add rbx,r13
@@ -8743,7 +8753,7 @@ L_0e329:
 
 L_0e331:
         mov rdi,r14
-        call fn_0ca3c
+        call mem_free
 
 L_0e339:
         inc rbx
@@ -8755,13 +8765,13 @@ L_0e341:
         jc near L_0e274
         cmp qword [rel d_15b80],0x0
         jz short L_0e35f
-        call fn_0d104
+        call cabinet_save
         test eax,eax
         jz short L_0e3a9
 
 L_0e35f:
         mov rdi,[rel d_15b78]
-        call fn_0ca3c
+        call mem_free
         lea rdi,[rel d_15c2d]
         call api_print
         mov rdi,[rel d_15b80]
@@ -8776,7 +8786,7 @@ L_0e35f:
 
 L_0e3a9:
         mov rdi,[rel d_15b78]
-        call fn_0ca3c
+        call mem_free
         mov eax,0x6
         call fn_0d4f9
         jmp short L_0e3cb
@@ -9109,14 +9119,14 @@ cmd_recover:
         call fn_0d173
         push rax
         mov rdi,r14
-        call fn_0ca3c
+        call mem_free
         pop rax
         call fn_0d4f9
         jmp short L_0e7cf
 
 L_0e77f:
         mov rdi,r14
-        call fn_0ca3c
+        call mem_free
 
 L_0e787:
         lea rdi,[rel d_15fa6]
@@ -9125,7 +9135,7 @@ L_0e787:
 
 L_0e795:
         mov rdi,r14
-        call fn_0ca3c
+        call mem_free
 
 L_0e79d:
         mov eax,0x6
@@ -9291,7 +9301,7 @@ L_0e905:
         jz short L_0e980
         mov r14d,[rbx+0x10]
         mov [rbx+0x10],r12d
-        call fn_0d104
+        call cabinet_save
         test eax,eax
         jz short L_0e980
         lea rax,[r12+r13]
@@ -9304,13 +9314,13 @@ L_0e905:
 
 L_0e973:
         pop rdi
-        call fn_0ca3c
+        call mem_free
         mov eax,0x1
         jmp short L_0e98c
 
 L_0e980:
         pop rdi
-        call fn_0ca3c
+        call mem_free
         xor eax,eax
         jmp short L_0e98c
 
@@ -10244,7 +10254,7 @@ fn_0f483:
         mov rdx,[rcx+0x28]
         mov [rel d_16798],rdx
         mov rdx,[rcx+0x30]
-        mov [rel d_16770],rdx
+        mov [rel mux_turn_of],rdx
         mov rdx,[rcx+0x38]
         mov [rel d_16778],rdx
         mov rdx,[rcx+0x40]
@@ -10278,7 +10288,7 @@ fn_0f50e:
         mov [rcx+0x20],rdx
         mov rdx,[rel d_16798]
         mov [rcx+0x28],rdx
-        mov rdx,[rel d_16770]
+        mov rdx,[rel mux_turn_of]
         mov [rcx+0x30],rdx
         mov rdx,[rel d_16778]
         mov [rcx+0x38],rdx
@@ -10320,17 +10330,17 @@ cmd_shield:
         push rbx
         mov rbx,rdi
         lea rsi,[rel d_162c7]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_0f686
         mov rdi,rbx
         lea rsi,[rel d_162ca]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_0f665
         mov rdi,rbx
         lea rsi,[rel d_162ce]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_0f6ab
         lea rdi,[rel d_163f4]
@@ -10591,7 +10601,7 @@ L_0f901:
         retq
 
 fn_0f919:
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         cmp dword [rax],0x4e424143
         jnz short L_0f92d
         movzx eax,word [rax+0x6]
@@ -10605,7 +10615,7 @@ fn_0f930:
         mov rax,rdi
         shl rax,byte 0x5
         add rax,0x10
-        add rax,[rel d_110c0]
+        add rax,[rel cabinet_table]
         mov eax,[rax+0x1c]
         test eax,eax
         jz short L_0f972
@@ -10671,7 +10681,7 @@ fn_0f9b0:
         mov rax,r13
         shl rax,byte 0x5
         add rax,0x10
-        add rax,[rel d_110c0]
+        add rax,[rel cabinet_table]
         xor edx,edx
         mov rcx,0xffffffffffffffff
         jmp short L_0fa28
@@ -10837,7 +10847,7 @@ L_0fb32:
         pop rdi
 
 L_0fb48:
-        call fn_0ca3c
+        call mem_free
 
 L_0fb4d:
         xor eax,eax
@@ -10945,7 +10955,7 @@ fn_0fc16:
         call fn_0d0e9
         cmp r12,rax
         jnc short L_0fc3d
-        mov rdx,[rel d_110c0]
+        mov rdx,[rel cabinet_table]
         inc word [rdx+0x6]
         mov rax,r12
         jmp short L_0fc78
@@ -10999,7 +11009,7 @@ L_0fc8b:
         mov rax,rbx
         shl rax,byte 0x5
         add rax,0x10
-        add rax,[rel d_110c0]
+        add rax,[rel cabinet_table]
         mov edi,[rax+0x10]
         mov edx,[rax+0x14]
         mov esi,[rax+0x1c]
@@ -11038,7 +11048,7 @@ fn_0fcd8:
         jmp short L_0fd15
 
 L_0fcfd:
-        mov rdx,[rel d_110c0]
+        mov rdx,[rel cabinet_table]
         movzx ecx,word [rdx+0x6]
         shl rcx,byte 0x5
         lea rcx,[rdx+rcx+0x10]
@@ -11371,7 +11381,7 @@ L_0ffdb:
 L_0ffec:
         mov dword [rdi+rcx],0x7070612f
         mov byte [rdi+rcx+0x4],0x0
-        call fn_0ad17
+        call ob_find
         test rax,rax
 
 p_10000:
@@ -11463,7 +11473,7 @@ L_100ac:
         cmp [rcx+0x8],rdx
         jnz short L_100ac
         mov dword [rax+0x1c],0x0
-        call fn_0ca3c
+        call mem_free
         inc r14
         jmp short L_100ac
 
@@ -11485,7 +11495,7 @@ cmd_room:
         cmp byte [rdi],0x0
         jz short L_10154
         lea rsi,[rel d_16aa8]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_10143
         call fn_1008f
@@ -11533,7 +11543,7 @@ L_1019c:
         mov rdi,rbx
         shl rdi,byte 0x5
         add rdi,0x10
-        add rdi,[rel d_110c0]
+        add rdi,[rel cabinet_table]
         mov esi,0x10
         call fn_08eb1
         pop rax
@@ -11615,7 +11625,7 @@ cmd_drawer:
         push rbx
         push r12
         mov rbx,rdi
-        call fn_0d535
+        call maint_check
         jz near L_103cf
         cmp byte [rbx],0x0
         jz near L_103c3
@@ -11651,7 +11661,7 @@ cmd_drawer:
         call fn_0d173
         push rax
         mov rdi,r12
-        call fn_0ca3c
+        call mem_free
         pop rax
         call fn_0d4f9
         jmp short L_103cf
@@ -11685,7 +11695,7 @@ cmd_stow:
         push r13
         push r14
         mov rbx,rdi
-        call fn_0d535
+        call maint_check
         jz near L_10510
         mov rdi,rbx
         call fn_0d4cd
@@ -11764,7 +11774,7 @@ L_104ea:
         jmp short L_10510
 
 L_104f8:
-        call fn_0d104
+        call cabinet_save
         test eax,eax
         mov eax,0x0
         jnz short L_1050b
@@ -11786,7 +11796,7 @@ cmd_unstow:
         push rbx
         push r13
         mov rbx,rdi
-        call fn_0d535
+        call maint_check
         jz near L_10601
         cmp byte [rbx],0x0
         jz near L_105d1
@@ -11798,7 +11808,7 @@ cmd_unstow:
         call fn_0f919
         cmp r13,rax
         jc near L_105e9
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         movzx eax,word [rax+0x6]
         push rax
         call fn_0d0e9
@@ -11813,7 +11823,7 @@ cmd_unstow:
         rep movsb
         mov rdi,r13
         call fn_0fcd8
-        mov rdx,[rel d_110c0]
+        mov rdx,[rel cabinet_table]
         movzx eax,word [rdx+0x6]
         shl rax,byte 0x5
         lea rdi,[rdx+rax+0x10]
@@ -11821,7 +11831,7 @@ cmd_unstow:
         mov ecx,0x20
         rep movsb
         inc word [rdx+0x6]
-        call fn_0d104
+        call cabinet_save
         test eax,eax
         mov eax,0x0
         jnz short L_105ca
@@ -12044,11 +12054,11 @@ api_programs:
 
 fn_10840:
         cmp byte [rel d_16e45],0x0
-        jnz near L_53d40
+        jnz near mux_run
         xor esi,esi
         xor edx,edx
         xor ecx,ecx
-        jmp near fn_0adb6
+        jmp near ob_call
 
 fn_10858:
         cmp byte [rel d_10c5e],0x0
@@ -12315,7 +12325,7 @@ fn_10bdd:
         jnz near L_6ddc7
         mov byte [rel d_10c5d],0x1
         call fn_08a6b
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         cmp dword [rax],0x4e424143
         jnz short L_10c24
         test word [rax+0xa],0x40
@@ -12327,7 +12337,7 @@ fn_10bdd:
 
 L_10c24:
         call fn_6dea2
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         cmp dword [rax],0x4e424143
         jnz short L_10c5c
         movzx eax,word [rax+0xa]
@@ -12683,7 +12693,8 @@ d_110b0:
 d_110b8:
         db 0x00, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_110c0:
+; the address of the table of the cabinet in memory ('CABN', version, count, sectors, flags at +0x0A)
+cabinet_table:
         db 0x00, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 api_table:
@@ -12702,15 +12713,15 @@ api_table:
         dq api_ob_by_number
         dq api_ob_by_name
         dq api_ob_meta
-        dq fn_0adb6
+        dq ob_call
         dq fn_0aec6
         dq p_0aef6
         dq api_random
-        dq fn_0af65
+        dq shell_same_word
         dq api_ticks
         dq fn_0bc03
         dq api_memory
-        dq fn_0ca3c
+        dq mem_free
         dq api_log
         dq p_0da95
         dq fn_0dabc
@@ -12736,7 +12747,8 @@ d_11220:
         db 0x03, 0x01, 0x00, 0x03, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x00, 0x01, 0x03, 0x00, 0x00, 0x04
         db 0x00, 0x09, 0x00, 0x00, 0x00, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00
 
-d_1124b:
+; the table of the shell's commands: the address of a word, the address of its function; 0 ends it
+shell_commands:
         dq p_11c26
         dq cmd_help
         dq p_11c2b
@@ -12752,7 +12764,7 @@ d_1124b:
         dq p_11cdc
         dq cmd_meta
         dq p_11ce1
-        dq fn_0b356
+        dq ob_run_as_command
         dq p_11ce5
         dq cmd_desktop
         dq p_11ced
@@ -12997,7 +13009,8 @@ d_11888:
 d_11889:
         db 0x00
 
-d_1188a:
+; 1 while Shift is held
+key_shift:
         db 0x00
 
 d_1188b:
@@ -13019,10 +13032,12 @@ d_118bf:
         db 0xFF, 0xFF, 0x00, 0xFF, 0x01, 0xFF, 0x00, 0x00, 0xFF, 0x00, 0x7F, 0x01, 0x01, 0x00, 0x00, 0x00
         db 0xFF, 0x01, 0x00, 0x01, 0x01, 0x01, 0x7F, 0x02, 0x00, 0x00
 
-d_118d9:
+; 1 while Ctrl is held
+key_ctrl:
         db 0x00
 
-d_118da:
+; 1 while Alt is held
+key_alt:
         db 0x00
 
 d_118db:
@@ -14215,7 +14230,8 @@ d_15550:
 d_1559b:
         db 'Maintenance mode stays off (the administrator password is needed).', 10, 0
 
-d_155df:
+; 1 in maintenance mode
+maint_on:
         db 0x00
 
 d_155e0:
@@ -14652,7 +14668,8 @@ d_16760:
 d_16768:
         db 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_16770:
+; the number of the task that has the turn now, -1 if none
+mux_turn_of:
         db 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
 
 d_16778:
@@ -15212,16 +15229,16 @@ L_502fb:
         jz near L_503b1
         mov rax,[rel d_52140]
         mov dword [rax+0x48],0x2
-        mov al,[rel d_155df]
+        mov al,[rel maint_on]
         mov [rel d_52122],al
-        mov byte [rel d_155df],0x1
+        mov byte [rel maint_on],0x1
         lea rdi,[rel d_521d0]
         mov rsi,[rel d_52140]
         mov rdx,[rel d_52138]
         shl rdx,byte 0x9
         call fn_0d173
         mov dl,[rel d_52122]
-        mov [rel d_155df],dl
+        mov [rel maint_on],dl
         push rax
         call fn_50c3a
         pop rax
@@ -15356,7 +15373,7 @@ L_504c6:
         jmp short L_504c6
 
 L_504d3:
-        call fn_0d104
+        call cabinet_save
         test eax,eax
         jz short L_50508
         lea rdi,[rel d_526f1]
@@ -15541,13 +15558,13 @@ L_5070d:
 
 L_5072b:
         mov rdi,r13
-        call fn_0ca3c
+        call mem_free
         mov eax,0x1
         jmp short L_50744
 
 L_5073a:
         mov rdi,r13
-        call fn_0ca3c
+        call mem_free
 
 L_50742:
         xor eax,eax
@@ -15616,7 +15633,7 @@ p_507f2:
         cmp byte [rel d_16e44],0x0
         jz short L_5080d
         mov rdi,r14
-        call fn_0ad17
+        call ob_find
         jmp near L_508ac
 
 L_5080d:
@@ -15669,7 +15686,7 @@ L_50869:
 
 L_508a0:
         lea rdi,[rel d_521d0]
-        call fn_0ad17
+        call ob_find
 
 L_508ac:
         test rax,rax
@@ -15984,7 +16001,7 @@ fn_50c3a:
         mov qword [rel d_52140],0x0
         test rdi,rdi
         jz short L_50c56
-        jmp near fn_0ca3c
+        jmp near mem_free
 
 L_50c56:
         retq
@@ -16112,7 +16129,7 @@ fn_50d2a:
         call fn_50f32
         cmp byte [rel d_1553d],0x0
         jz short L_50df3
-        call fn_0d104
+        call cabinet_save
 
 L_50df3:
         call fn_510b0
@@ -16177,7 +16194,7 @@ fn_50e46:
         call fn_5025c
         cmp byte [rel d_1553d],0x0
         jz short L_50efa
-        call fn_0d104
+        call cabinet_save
         test eax,eax
         jnz short L_50f06
 
@@ -16236,7 +16253,7 @@ fn_50f79:
         jmp short L_50fa1
 
 L_50f97:
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         mov eax,[rax+0xc]
 
 L_50fa1:
@@ -16329,11 +16346,11 @@ fn_510b0:
         retq
 
 fn_510c6:
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         movzx eax,word [rax+0x8]
         shl rax,byte 0x9
         sub rax,0x20
-        add rax,[rel d_110c0]
+        add rax,[rel cabinet_table]
         retq
 
 d_510e1:
@@ -16542,7 +16559,7 @@ L_51358:
 
 L_51360:
         mov rdi,[rel d_15b78]
-        call fn_0ca3c
+        call mem_free
         mov rax,r13
         shl rax,byte 0x5
         cmp r13,0x20
@@ -16609,16 +16626,16 @@ L_5142e:
         jmp short L_513f1
 
 L_51444:
-        mov al,[rel d_155df]
+        mov al,[rel maint_on]
         mov [rel d_52122],al
-        mov byte [rel d_155df],0x1
+        mov byte [rel maint_on],0x1
         lea rdi,[rel d_521d0]
         mov rsi,[rel d_52140]
         mov rdx,[rel d_52138]
         shl rdx,byte 0x9
         call fn_0d173
         mov dl,[rel d_52122]
-        mov [rel d_155df],dl
+        mov [rel maint_on],dl
         push rax
         call fn_50c3a
         pop rax
@@ -17176,7 +17193,7 @@ L_51bd9:
         call fn_08ee6
         lea rdi,[rel d_521f8]
         lea rsi,[rel d_52460]
-        call fn_0af65
+        call shell_same_word
         jmp short L_51bce
 
 L_51c42:
@@ -17281,7 +17298,7 @@ L_51d8f:
         push rbx
         mov rbx,rdi
         lea rsi,[rel d_5255d]
-        call fn_0af65
+        call shell_same_word
         mov ebx,0x40
         test eax,eax
         jnz short L_51daa
@@ -17299,10 +17316,10 @@ L_51dc3:
         call fn_50d2a
         test eax,eax
         jnz short L_51df8
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         and word [rax+0xa],0xffffffffffffffbf
         or [rax+0xa],bx
-        call fn_0d104
+        call cabinet_save
         lea rdi,[rel d_525b7]
         test ebx,ebx
         jz short L_51df3
@@ -17400,7 +17417,7 @@ L_51f13:
         push r13
         mov rbx,rdi
         mov r12d,esi
-        call fn_0d535
+        call maint_check
         jz short L_51f76
         cmp byte [rbx],0x0
         jz short L_51f60
@@ -18155,7 +18172,7 @@ fn_53188:
         lea rdx,[rel d_53a88]
         call fn_0f6ff
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         mov eax,0x1
         jmp short L_5321e
 
@@ -18362,7 +18379,7 @@ L_53546:
 L_53547:
         push rax
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         pop rax
         cmp eax,0x0
         jnz short L_53577
@@ -18483,7 +18500,7 @@ p_535ea:
         call fn_53783
         push rax
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         pop rax
         cmp eax,0x0
         jnz short L_53715
@@ -18596,18 +18613,18 @@ fn_53783:
         mov [rbx+rdi],rax
         mov dword [rbx+rdi+0x8],0x4f4d5341
         mov dword [rbx+rdi+0xc],0x0
-        mov al,[rel d_155df]
+        mov al,[rel maint_on]
         mov [rel d_52122],al
-        mov byte [rel d_155df],0x1
+        mov byte [rel maint_on],0x1
         lea rdi,[rel d_521a0]
         mov rsi,rbx
         mov rdx,[rel d_539c8]
         call fn_0d173
         mov dl,[rel d_52122]
-        mov [rel d_155df],dl
+        mov [rel maint_on],dl
         push rax
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         pop rax
         jmp short L_538c9
 
@@ -18790,7 +18807,8 @@ d_53cea:
         db 'It is locked - unlock it first', 0
         db 'a system object - the administrator password is needed', 0
 
-L_53d40:
+; the multiplexer: runs the desktop (task 0) and up to seven programs, a turn each, until the desktop ends. rdi = the desktop object
+mux_run:
         push rbx
         push rbp
         push r12
@@ -18801,7 +18819,7 @@ L_53d40:
         cmp qword [rel d_117cb],0x0
         jz near L_53f0c
 %ifdef PLAIN_KERNEL
-        call fn_53f25
+        call mux_init
 %else
         call near mux_begin             ; v3.0.16: programs kept from the last time are taken up again
 %endif
@@ -18811,7 +18829,7 @@ L_53d40:
         call api_log
         xor ebx,ebx
         mov rdi,rbx
-        call fn_53fdf
+        call mux_task
         mov r13,rax
         mov [r13+0x48],r12
         mov qword [r13+0x50],0x0
@@ -18821,27 +18839,27 @@ L_53d40:
         lea rsi,[rel d_56790]
         call fn_55391
         mov rdi,r13
-        call fn_53fee
+        call mux_task_stacks
         test eax,eax
         jz near L_53ed8
         mov rdi,r13
         mov rsi,[rel d_564d8]
         mov rdx,[rel d_564e0]
-        call fn_54539
+        call mux_task_surface
         test eax,eax
         jz near L_53ed8
         mov qword [r13+0xa0],0x3
         mov qword [r13+0x0],0x1
 %ifdef PLAIN_KERNEL
-        mov qword [rel d_56530],0x1
-        mov qword [rel d_56538],0x0
-        mov qword [rel d_56480],0x0
+        mov qword [rel mux_order_count],0x1
+        mov qword [rel mux_order_list],0x0
+        mov qword [rel mux_focused],0x0
 %else
         call near mux_order             ; v3.0.16 (the same 33 bytes as the three lines it stands for)
         times 28 nop
 %endif
-        call fn_54eab
-        mov byte [rel d_56478],0x1
+        call mux_hooks_on
+        mov byte [rel mux_on],0x1
         call fn_56e7f
 
 L_53e23:
@@ -18853,13 +18871,13 @@ L_53e2f:
         cmp rbx,0x8
         jnc short L_53e5a
         mov rdi,rbx
-        call fn_53fdf
+        call mux_task
         cmp qword [rax],0x1
         jnz short L_53e55
         cmp qword [rax+0x1a8],0x0
         jnz short L_53e55
         mov rdi,rbx
-        call fn_540e7
+        call mux_turn
 
 L_53e55:
         inc rbx
@@ -18867,10 +18885,10 @@ L_53e55:
 
 L_53e5a:
         mov edi,0x0
-        call fn_53fdf
+        call mux_task
         cmp qword [rax],0x1
         jnz short L_53e76
-        call fn_54369
+        call mux_reap
         call fn_55604
         jmp short L_53e23
 
@@ -18885,7 +18903,7 @@ L_53e7b:
         cmp rbx,0x8
         jnc short L_53e9b
         mov rdi,rbx
-        call fn_53fdf
+        call mux_task
         cmp qword [rax],0x0
         jz short L_53e96
         mov qword [rax],0x2
@@ -18896,12 +18914,12 @@ L_53e96:
 
 L_53e9b:
         call fn_56edf
-        mov byte [rel d_56478],0x0
-        call fn_54edb
-        call fn_5439c
-        mov rdi,[rel d_564b8]
-        call fn_0ca3c
-        mov qword [rel d_564b8],0x0
+        mov byte [rel mux_on],0x0
+        call mux_hooks_off
+        call mux_free_all
+        mov rdi,[rel mux_draw_list]
+        call mem_free
+        mov qword [rel mux_draw_list],0x0
         lea rdi,[rel d_56896]
         call api_log
         xor eax,eax
@@ -18909,11 +18927,11 @@ L_53e9b:
 
 L_53ed8:
         call fn_56edf
-        mov byte [rel d_56478],0x0
-        call fn_5439c
-        mov rdi,[rel d_564b8]
-        call fn_0ca3c
-        mov qword [rel d_564b8],0x0
+        mov byte [rel mux_on],0x0
+        call mux_free_all
+        mov rdi,[rel mux_draw_list]
+        call mem_free
+        mov qword [rel mux_draw_list],0x0
         lea rdi,[rel d_568ad]
         call api_log
 
@@ -18922,7 +18940,7 @@ L_53f0c:
         xor esi,esi
         xor edx,edx
         xor ecx,ecx
-        call fn_0adb6
+        call ob_call
 
 L_53f1a:
         pop r15
@@ -18933,14 +18951,15 @@ L_53f1a:
         pop rbx
         retq
 
-fn_53f25:
+; wipe the table of tasks, take the memory of the multiplexer; eax = 1 if there was memory
+mux_init:
         lea rdi,[rel core_start + (v_43f60 - 0x7E00)]
         xor eax,eax
         mov ecx,0x1000
         rep stosb
         mov edi,0x20000
         call api_memory
-        mov [rel d_564b8],rax
+        mov [rel mux_draw_list],rax
         test rax,rax
         jz near L_53fdc
 mux_begin_rest:                         ; (v3.0.16: mux_begin comes in here when the tasks are kept)
@@ -18959,7 +18978,7 @@ mux_begin_rest:                         ; (v3.0.16: mux_begin comes in here when
         mov [rel d_564f0],rax
         mov qword [rel d_564f8],0x0
         mov qword [rel d_56500],0xffffffffffffffff
-        mov qword [rel d_16770],0xffffffffffffffff
+        mov qword [rel mux_turn_of],0xffffffffffffffff
         inc qword [rel d_56488]
         mov eax,0x1
         retq
@@ -18968,13 +18987,15 @@ L_53fdc:
         xor eax,eax
         retq
 
-fn_53fdf:
+; rdi = the number of a task (0 .. 7) -> rax = its record (0x200 bytes at 0x43F60; +0 state: 0 free, 1 runs, 2 closing; +0x120 its name)
+mux_task:
         mov rax,rdi
         shl rax,byte 0x9
         lea rax,[rax+0x43f60]
         retq
 
-fn_53fee:
+; rdi = a task record: take its stacks; eax = 1 if there was memory
+mux_task_stacks:
         push rbx
         mov rbx,rdi
         mov edi,0x40000
@@ -19035,7 +19056,8 @@ L_540c8:
         pop rbx
         retq
 
-fn_540cc:
+; change stacks: keep the registers, [rdi] = this stack, go on with the stack rsi
+mux_switch:
         push rbx
         push rbp
         push r12
@@ -19052,16 +19074,17 @@ fn_540cc:
         pop rbx
         retq
 
-fn_540e7:
+; rdi = the number of a task: give it one turn (its stack, its page tables), until it waits again
+mux_turn:
         push rbx
         push r12
         mov r12,rdi
-        call fn_53fdf
+        call mux_task
         mov rbx,rax
         call fn_0f370
         inc rax
         mov [rbx+0x1a8],rax
-        mov [rel d_16770],r12
+        mov [rel mux_turn_of],r12
         push qword [rel d_16218]
         push qword [rel d_161b4]
         push qword [rel d_16220]
@@ -19094,7 +19117,7 @@ L_54196:
         pushfq
         lea rdi,[rel d_16778]
         mov rsi,[rbx+0x8]
-        call fn_540cc
+        call mux_switch
         popfq
         cmp qword [rbx+0x170],0x0
         jz short L_541ba
@@ -19118,13 +19141,13 @@ L_541ba:
         pop qword [rel d_16220]
         pop qword [rel d_161b4]
         pop qword [rel d_16218]
-        mov qword [rel d_16770],0xffffffffffffffff
+        mov qword [rel mux_turn_of],0xffffffffffffffff
         mov qword [rbx+0x1a8],0x0
         cmp byte [rel d_16789],0x0
         jz short L_5424d
         mov byte [rel d_16789],0x0
         inc qword [rbx+0x180]
-        call fn_54acc
+        call mux_compose
 
 L_5424d:
         pop r12
@@ -19141,7 +19164,7 @@ fn_54251:
         xor r13d,r13d
         cmp byte [rel d_564a8],0x0
         jz short L_542db
-        cmp byte [rel d_56478],0x0
+        cmp byte [rel mux_on],0x0
         jz short L_542db
         cmp byte [rel d_16250],0x0
         jz short L_542db
@@ -19157,14 +19180,14 @@ L_54289:
         div rcx
         lea rbx,[rdx+0x1]
         mov rdi,rbx
-        call fn_53fdf
+        call mux_task
         cmp qword [rax],0x1
         jnz short L_542d6
         cmp qword [rax+0x1a8],0x0
         jnz short L_542d6
         mov [rel d_564b0],rbx
         mov rdi,rbx
-        call fn_540e7
+        call mux_turn
         mov r13d,0x1
         jmp short L_542db
 
@@ -19186,18 +19209,18 @@ L_542e9:
 
 fn_542ec:
         push rbx
-        mov rdi,[rel d_16770]
-        call fn_53fdf
+        mov rdi,[rel mux_turn_of]
+        call mux_task
         mov rbx,rax
         lea rdi,[rbx+0x8]
         mov rsi,[rel d_16778]
-        call fn_540cc
+        call mux_switch
         pop rbx
         retq
 
 d_5430e:
-        mov rdi,[rel d_16770]
-        call fn_53fdf
+        mov rdi,[rel mux_turn_of]
+        call mux_task
         mov rbx,rax
         mov rdi,[rbx+0x48]
         mov rdx,[rbx+0x58]
@@ -19209,18 +19232,19 @@ d_5430e:
         jmp short L_5433e
 
 L_54339:
-        call fn_0adb6
+        call ob_call
 
 L_5433e:
-        call fn_54acc
-        mov rdi,[rel d_16770]
-        call fn_53fdf
+        call mux_compose
+        mov rdi,[rel mux_turn_of]
+        call mux_task
         mov qword [rax],0x2
         lea rdi,[rel d_56498]
         mov rsi,[rel d_16778]
-        call fn_540cc
+        call mux_switch
 
-fn_54369:
+; free every task that is closing and has no turn running
+mux_reap:
         push rbx
         mov ebx,0x1
 
@@ -19228,13 +19252,13 @@ L_5436f:
         cmp rbx,0x8
         jnc short L_5439a
         mov rdi,rbx
-        call fn_53fdf
+        call mux_task
         cmp qword [rax],0x2
         jnz short L_54395
         cmp qword [rax+0x1a8],0x0
         jnz short L_54395
         mov rdi,rbx
-        call fn_543c2
+        call mux_free_task
 
 L_54395:
         inc rbx
@@ -19244,7 +19268,8 @@ L_5439a:
         pop rbx
         retq
 
-fn_5439c:
+; free every task that is not free
+mux_free_all:
         push rbx
         xor ebx,ebx
 
@@ -19252,11 +19277,11 @@ L_5439f:
         cmp rbx,0x8
         jnc short L_543c0
         mov rdi,rbx
-        call fn_53fdf
+        call mux_task
         cmp qword [rax],0x0
         jz short L_543bb
         mov rdi,rbx
-        call fn_543c2
+        call mux_free_task
 
 L_543bb:
         inc rbx
@@ -19266,28 +19291,29 @@ L_543c0:
         pop rbx
         retq
 
-fn_543c2:
+; rdi = the number of a task: its memory, its window, its place in the order of the windows
+mux_free_task:
         push rbx
         push r12
         mov r12,rdi
-        call fn_53fdf
+        call mux_task
         mov rbx,rax
         push qword [rbx+0x80]
         push qword [rbx+0x88]
         push qword [rbx+0x70]
         push qword [rbx+0x78]
         mov rdi,[rbx+0x68]
-        call fn_0ca3c
+        call mem_free
         mov rdi,[rbx+0x10]
-        call fn_0ca3c
+        call mem_free
         mov rdi,[rbx+0xb0]
-        call fn_0ca3c
+        call mem_free
         cmp qword [rbx+0x160],0x0
         jnz short L_5441e
         mov rdi,[rbx+0x18]
-        call fn_0ca3c
+        call mem_free
         mov rdi,[rbx+0x40]
-        call fn_0ca3c
+        call mem_free
         jmp short L_54426
 
 L_5441e:
@@ -19300,11 +19326,11 @@ L_54426:
         mov ecx,0x200
         rep stosb
         mov rdi,r12
-        call fn_5448b
-        cmp [rel d_56480],r12
+        call mux_order_out
+        cmp [rel mux_focused],r12
         jnz short L_5444f
-        call fn_544cb
-        mov [rel d_56480],rax
+        call mux_order_top
+        mov [rel mux_focused],rax
 
 L_5444f:
         cmp [rel d_56500],r12
@@ -19317,7 +19343,7 @@ L_54463:
         pop rdx
         pop rsi
         pop rdi
-        cmp byte [rel d_56478],0x0
+        cmp byte [rel mux_on],0x0
         jz short L_54487
         test rdx,rdx
         jz short L_54487
@@ -19330,13 +19356,14 @@ L_54487:
         pop rbx
         retq
 
-fn_5448b:
+; rdi = the number of a task: out of the order of the windows
+mux_order_out:
         xor ecx,ecx
 
 L_5448d:
-        cmp rcx,[rel d_56530]
+        cmp rcx,[rel mux_order_count]
         jnc short L_544ca
-        lea rax,[rel d_56538]
+        lea rax,[rel mux_order_list]
         cmp [rax+rcx*8],rdi
         jz short L_544a8
         inc rcx
@@ -19346,7 +19373,7 @@ L_544a8:
         lea rdx,[rcx+0x1]
 
 L_544ac:
-        cmp rdx,[rel d_56530]
+        cmp rdx,[rel mux_order_count]
         jnc short L_544c3
         mov r8,[rax+rdx*8]
         mov [rax+rdx*8-0x8],r8
@@ -19354,45 +19381,48 @@ L_544ac:
         jmp short L_544ac
 
 L_544c3:
-        dec qword [rel d_56530]
+        dec qword [rel mux_order_count]
 
 L_544ca:
         retq
 
-fn_544cb:
-        mov rcx,[rel d_56530]
+; -> rax = the task whose window is on top
+mux_order_top:
+        mov rcx,[rel mux_order_count]
         xor eax,eax
         test rcx,rcx
         jz short L_544e5
-        lea rax,[rel d_56538]
+        lea rax,[rel mux_order_list]
         mov rax,[rax+rcx*8-0x8]
 
 L_544e5:
         retq
 
-fn_544e6:
+; rdi = the number of a task: its window to the top of the order (the desktop, 0, stays below)
+mux_order_front:
         test rdi,rdi
         jz short L_5450b
         push rdi
-        call fn_5448b
+        call mux_order_out
         pop rdi
-        mov rcx,[rel d_56530]
-        lea rax,[rel d_56538]
+        mov rcx,[rel mux_order_count]
+        lea rax,[rel mux_order_list]
         mov [rax+rcx*8],rdi
-        inc qword [rel d_56530]
+        inc qword [rel mux_order_count]
 
 L_5450b:
         retq
 
-fn_5450c:
+; rdi = the number of a task: the keys go to it, its window comes to the top
+mux_focus:
         push rbx
         mov rbx,rdi
-        cmp [rel d_56480],rbx
+        cmp [rel mux_focused],rbx
         jz short L_54537
-        mov [rel d_56480],rbx
+        mov [rel mux_focused],rbx
         inc qword [rel d_56488]
         mov rdi,rbx
-        call fn_544e6
+        call mux_order_front
         mov rdi,rbx
         call fn_545bc
 
@@ -19400,7 +19430,8 @@ L_54537:
         pop rbx
         retq
 
-fn_54539:
+; rdi = a task record, rsi, rdx = width, height: the picture its window is drawn into
+mux_task_surface:
         push rbx
         push r12
         push r13
@@ -19408,7 +19439,7 @@ fn_54539:
         mov r12,rsi
         mov r13,rdx
         mov rdi,[rbx+0x68]
-        call fn_0ca3c
+        call mem_free
         mov qword [rbx+0x68],0x0
         mov rdi,r12
         imul rdi,r13
@@ -19438,7 +19469,7 @@ L_545b6:
         retq
 
 fn_545bc:
-        call fn_53fdf
+        call mux_task
         mov rdi,[rax+0x80]
         mov rsi,[rax+0x88]
         mov rdx,[rax+0x70]
@@ -19583,7 +19614,7 @@ fn_547a0:
         mov rdi,[rel d_54798]
         cmp rdi,0xffffffffffffffff
         jz short L_547f4
-        call fn_53fdf
+        call mux_task
         mov rbx,rax
         cmp qword [rbx],0x1
         jnz short L_547e9
@@ -19601,11 +19632,11 @@ L_547f4:
         xor ebp,ebp
 
 L_547f6:
-        cmp rbp,[rel d_56530]
+        cmp rbp,[rel mux_order_count]
         jnc near L_5496e
-        lea rax,[rel d_56538]
+        lea rax,[rel mux_order_list]
         mov rdi,[rax+rbp*8]
-        call fn_53fdf
+        call mux_task
         mov rbx,rax
         cmp qword [rbx+0x68],0x0
         jz near L_54966
@@ -19711,7 +19742,7 @@ L_5496e:
         cmp byte [rel d_57068],0x0
         jz near L_54a30
         xor edi,edi
-        call fn_53fdf
+        call mux_task
         mov rbx,rax
         cmp qword [rbx+0x68],0x0
         jz near L_54a30
@@ -19776,18 +19807,18 @@ fn_54a3f:
         cmp rdx,0x20000
         jna short L_54a77
         push rax
-        call fn_54acc
+        call mux_compose
         pop rax
         cmp rax,0x20000
         ja short L_54ab0
 
 L_54a77:
-        mov rdx,[rel d_564b8]
+        mov rdx,[rel mux_draw_list]
         add rdx,[rel d_564c0]
         add [rel d_564c0],rax
         mov [rdx],eax
         mov [rdx+0x4],r12d
-        mov rax,[rel d_16770]
+        mov rax,[rel mux_turn_of]
         mov [rdx+0x8],eax
         lea rdi,[rdx+0x40]
         mov rsi,r13
@@ -19819,7 +19850,8 @@ L_54aba:
 L_54acb:
         retq
 
-fn_54acc:
+; draw what the tasks asked to be drawn into their windows, and the windows to the screen
+mux_compose:
         push rbx
         push rbp
         push r12
@@ -19832,7 +19864,7 @@ fn_54acc:
         mov qword [rel d_565a0],0x7fffffff
         mov qword [rel d_565a8],0xffffffff80000001
         mov qword [rel d_565b0],0xffffffff80000001
-        mov rbx,[rel d_564b8]
+        mov rbx,[rel mux_draw_list]
         mov rbp,rbx
         add rbp,[rel d_564c0]
 
@@ -19840,7 +19872,7 @@ L_54b21:
         cmp rbx,rbp
         jnc near L_54d81
         mov edi,[rbx+0x8]
-        call fn_53fdf
+        call mux_task
         mov r12,rax
         cmp qword [r12+0x68],0x0
         jz near L_54d77
@@ -20101,7 +20133,8 @@ L_54e8c:
         pop rbx
         jmp near fn_54dfa
 
-fn_54eab:
+; put the multiplexer's own functions into the table programs call (d_565d8 lists them); the old ones are kept
+mux_hooks_on:
         push rbx
         lea rbx,[rel d_565d8]
 
@@ -20121,7 +20154,8 @@ L_54ed9:
         pop rbx
         retq
 
-fn_54edb:
+; put the kept functions back into the table programs call
+mux_hooks_off:
         lea rcx,[rel d_565d8]
 
 L_54ee2:
@@ -20137,11 +20171,12 @@ L_54ee2:
 L_54f00:
         retq
 
-fn_54f01:
-        mov rdi,[rel d_16770]
+; -> rax = the record of the task that has the turn now, 0 if none
+mux_this_task:
+        mov rdi,[rel mux_turn_of]
         cmp rdi,0xffffffffffffffff
         jz short L_54f13
-        jmp near fn_53fdf
+        jmp near mux_task
 
 L_54f13:
         xor eax,eax
@@ -20159,7 +20194,7 @@ fn_54f16:
         mov rdi,rax
         mov rsi,[rel d_564d8]
         mov rdx,[rel d_564e0]
-        call fn_54539
+        call mux_task_surface
         mov rax,[rsp+0x28]
         mov qword [rax+0xa0],0x1
         mov qword [rax+0x80],0x0
@@ -20177,7 +20212,7 @@ L_54f80:
         retq
 p_54f81:
         push rdi
-        call fn_54f01
+        call mux_this_task
         pop rdi
         test rax,rax
         jz near api_fill
@@ -20208,7 +20243,7 @@ L_54fc7:
 p_54fc8:
         push r9
         push rdi
-        call fn_54f01
+        call mux_this_task
         pop rdi
         test rax,rax
         jnz short L_54fdd
@@ -20246,7 +20281,7 @@ L_5501d:
         retq
 p_5501e:
         push rdi
-        call fn_54f01
+        call mux_this_task
         pop rdi
         test rax,rax
         jz near fn_09a0b
@@ -20273,7 +20308,7 @@ L_5505c:
         retq
 p_5505d:
         push rdi
-        call fn_54f01
+        call mux_this_task
         pop rdi
         test rax,rax
         jz near fn_09ac5
@@ -20303,7 +20338,7 @@ L_550a3:
         retq
 p_550a4:
         push rdi
-        call fn_54f01
+        call mux_this_task
         pop rdi
         test rax,rax
         jz near api_text
@@ -20337,7 +20372,7 @@ L_550f2:
         retq
 p_550f3:
         push rdi
-        call fn_54f01
+        call mux_this_task
         pop rdi
         test rax,rax
         jz near fn_09675
@@ -20346,7 +20381,7 @@ p_550f3:
         jmp short L_550be
 p_5510f:
         push rdi
-        call fn_54f01
+        call mux_this_task
         pop rdi
         test rax,rax
         jz near fn_095e9
@@ -20373,7 +20408,7 @@ L_5514d:
         retq
 p_5514e:
         push rdi
-        call fn_54f01
+        call mux_this_task
         pop rdi
         test rax,rax
         jz near api_window
@@ -20391,7 +20426,7 @@ p_5514e:
         mov rdi,rbx
         mov rsi,[rsp+0x10]
         mov rdx,[rsp+0x8]
-        call fn_54539
+        call mux_task_surface
         mov rax,[rsp+0x20]
         mov [rbx+0x90],rax
         mov rax,[rsp+0x18]
@@ -20480,7 +20515,7 @@ L_552c7:
         jnc short L_55328
         mov rdi,rcx
         push rcx
-        call fn_53fdf
+        call mux_task
         pop rcx
         inc rcx
         cmp rax,rbx
@@ -20553,7 +20588,7 @@ L_553a9:
         retq
 p_553ae:
         push rdi
-        call fn_54f01
+        call mux_this_task
         pop rdi
         test rax,rax
         jz near fn_0dabc
@@ -20564,7 +20599,7 @@ p_553ae:
         push rsi
         push rdx
         push rcx
-        call fn_54acc
+        call mux_compose
         call fn_55496
         pop rcx
         pop rdx
@@ -20580,7 +20615,7 @@ p_553ae:
         retq
 p_553f5:
         push rdi
-        call fn_54f01
+        call mux_this_task
         pop rdi
         test rax,rax
         jz near fn_0db9d
@@ -20590,7 +20625,7 @@ p_553f5:
         push r12
         mov rbx,rax
         mov r12,rdi
-        call fn_54acc
+        call mux_compose
         call fn_55496
         mov rax,[r12]
         mov [rel d_565b8],rax
@@ -20634,18 +20669,18 @@ p_554c8:
 p_554cd:
         jmp near fn_0bdea
 p_554d2:
-        call fn_54f01
+        call mux_this_task
         test rax,rax
         jz near api_poll
         push rbx
         mov rbx,rax
-        call fn_54acc
+        call mux_compose
         call fn_5550d
         test eax,eax
         jnz short L_5550b
         call fn_542ec
-        mov rdi,[rel d_16770]
-        call fn_53fdf
+        mov rdi,[rel mux_turn_of]
+        call mux_task
         mov rbx,rax
         call fn_5550d
 
@@ -20679,7 +20714,7 @@ fn_5554c:
         push rdx
         push rcx
         push r8
-        call fn_53fdf
+        call mux_task
         mov rbx,rax
         pop r8
         pop rcx
@@ -20709,13 +20744,13 @@ L_555b2:
         retq
 p_555b4:
         push rdi
-        call fn_54f01
+        call mux_this_task
         pop rdi
         test rax,rax
         jz near fn_0bc03
         push rbx
         push rdi
-        call fn_54acc
+        call mux_compose
         pop rdi
         cmp byte [rel d_14ef2],0x0
         jz short L_555fd
@@ -20769,7 +20804,7 @@ L_5564e:
 L_55658:
         cmp edx,0x9c
         jnz short L_5568c
-        cmp qword [rel d_56480],0x0
+        cmp qword [rel mux_focused],0x0
         jz short L_5566f
         call fn_55e87
 
@@ -20783,7 +20818,7 @@ L_5566f:
         jmp near L_559a3
 
 L_5568c:
-        mov rdi,[rel d_56480]
+        mov rdi,[rel mux_focused]
         cmp edx,0x9d
         jnz short L_5569d
         xor edi,edi
@@ -20829,17 +20864,17 @@ L_55714:
         mov rdi,r12
         mov rsi,r13
         call fn_559ab
-        cmp rax,[rel d_56480]
+        cmp rax,[rel mux_focused]
         jz short L_557ac
         push rax
-        mov rdi,[rel d_56480]
+        mov rdi,[rel mux_focused]
         mov esi,0x2
         mov rdx,0xfffffffffffffc18
         mov rcx,0xfffffffffffffc18
         xor r8d,r8d
         call fn_5554c
         mov rdi,[rsp]
-        call fn_53fdf
+        call mux_task
         mov rdx,r12
         sub rdx,[rax+0x80]
         add rdx,[rax+0x90]
@@ -20851,7 +20886,7 @@ L_55714:
         xor r8d,r8d
         call fn_5554c
         mov rdi,[rsp]
-        call fn_5450c
+        call mux_focus
         pop rax
 
 L_557ac:
@@ -20861,7 +20896,7 @@ L_557ac:
         jz near L_558e4
         mov rdi,rax
         push rax
-        call fn_53fdf
+        call mux_task
         mov rbx,rax
         pop rax
         cmp qword [rbx+0xa0],0x2
@@ -20928,18 +20963,18 @@ L_558b6:
         jmp near L_559a3
 
 L_558e4:
-        mov rdi,[rel d_56480]
+        mov rdi,[rel mux_focused]
         test qword [rel d_56510],0x3
         jz short L_55914
         cmp qword [rel d_56508],0xffffffffffffffff
         jz short L_55914
         mov rdi,[rel d_56508]
-        call fn_53fdf
+        call mux_task
         cmp qword [rax],0x1
         jz short L_5591b
 
 L_55914:
-        mov rdi,[rel d_56480]
+        mov rdi,[rel mux_focused]
 
 L_5591b:
         mov [rel d_56518],rdi
@@ -20953,7 +20988,7 @@ L_55932:
         mov qword [rel d_56508],0xffffffffffffffff
 
 L_5593d:
-        call fn_53fdf
+        call mux_task
         mov rdx,r12
         sub rdx,[rax+0x80]
         add rdx,[rax+0x90]
@@ -20965,7 +21000,7 @@ L_5593d:
         mov esi,0x2
         call fn_5554c
         mov rdi,[rel d_56518]
-        cmp rdi,[rel d_56480]
+        cmp rdi,[rel mux_focused]
         jz short L_559a3
         mov esi,0x2
         mov rdx,0xfffffffffffffc18
@@ -20987,7 +21022,7 @@ fn_559ab:
         retq
 
 L_559b7:
-        mov rcx,[rel d_56530]
+        mov rcx,[rel mux_order_count]
 
 L_559be:
         test rcx,rcx
@@ -20996,10 +21031,10 @@ L_559be:
         push rcx
         push rdi
         push rsi
-        lea rax,[rel d_56538]
+        lea rax,[rel mux_order_list]
         mov rdi,[rax+rcx*8]
         push rdi
-        call fn_53fdf
+        call mux_task
         pop rdx
         pop rsi
         pop rdi
@@ -21030,7 +21065,7 @@ L_55a1d:
 fn_55a20:
         push rbx
         mov rdi,[rel d_56500]
-        call fn_53fdf
+        call mux_task
         mov rbx,rax
         mov rdi,rbx
         call fn_55235
@@ -21052,7 +21087,7 @@ fn_55a20:
         retq
 
 L_55a96:
-        cmp byte [rel d_56478],0x0
+        cmp byte [rel mux_on],0x0
         jz near L_55b31
         cmp rdi,0x0
         jz near L_561a4
@@ -21095,17 +21130,17 @@ L_55b39:
         push r13
         mov r12,rsi
         mov r13,rdx
-        mov rbx,[rel d_56530]
+        mov rbx,[rel mux_order_count]
 
 L_55b4b:
         test rbx,rbx
         jz short L_55b78
         dec rbx
-        lea rax,[rel d_56538]
+        lea rax,[rel mux_order_list]
         mov rdi,[rax+rbx*8]
-        cmp rdi,[rel d_16770]
+        cmp rdi,[rel mux_turn_of]
         jz short L_55b4b
-        call fn_53fdf
+        call mux_task
         cmp qword [rax+0x188],0x0
         jnz short L_55b4b
         jmp short L_55b7a
@@ -21134,7 +21169,7 @@ L_55b94:
         cmp rdi,0x8
         jnc short L_55b31
         push rdi
-        call fn_53fdf
+        call mux_task
         pop rdx
         cmp qword [rax],0x1
         jnz near L_55b31
@@ -21155,7 +21190,7 @@ L_55be7:
         retq
 
 L_55bf5:
-        cmp qword [rel d_16770],0x0
+        cmp qword [rel mux_turn_of],0x0
         jnz near L_55b31
         test rcx,rcx
         jz short L_55c58
@@ -21167,9 +21202,9 @@ L_55bf5:
         mov [rel d_57058],rax
         cmp byte [rel d_57068],0x0
         jnz short L_55c55
-        mov rax,[rel d_56480]
+        mov rax,[rel mux_focused]
         mov [rel d_57060],rax
-        mov qword [rel d_56480],0x0
+        mov qword [rel mux_focused],0x0
         mov byte [rel d_57068],0x1
 
 L_55c55:
@@ -21183,11 +21218,11 @@ L_55c58:
         mov rdi,[rel d_57060]
         cmp rdi,0x8
         jnc short L_55c8e
-        call fn_53fdf
+        call mux_task
         cmp qword [rax],0x1
         jnz short L_55c8e
         mov rax,[rel d_57060]
-        mov [rel d_56480],rax
+        mov [rel mux_focused],rax
 
 L_55c8e:
         mov rdi,[rel d_57040]
@@ -21216,7 +21251,7 @@ L_55cd2:
         cmp rsi,0x8
         jnc near L_55b31
         mov rdi,rsi
-        call fn_53fdf
+        call mux_task
         mov rdx,[rax+0x180]
         mov rax,[rax+0x160]
         retq
@@ -21230,18 +21265,18 @@ L_55cf9:
         retq
 
 L_55d01:
-        mov rax,[rel d_56480]
+        mov rax,[rel mux_focused]
         retq
 
 L_55d09:
-        mov rax,[rel d_16770]
+        mov rax,[rel mux_turn_of]
         retq
 
 L_55d11:
         cmp rsi,0x8
         jnc near L_55b31
         mov rdi,rsi
-        call fn_53fdf
+        call mux_task
         cmp qword [rax],0x1
         jnz near L_55b31
         cmp qword [rax+0x188],0x0
@@ -21249,14 +21284,14 @@ L_55d11:
         mov qword [rax+0x188],0x0
         push rsi
         mov rdi,rsi
-        call fn_544e6
+        call mux_order_front
         mov rdi,[rsp]
         call fn_545bc
         pop rsi
 
 L_55d55:
         mov rdi,rsi
-        call fn_5450c
+        call mux_focus
         xor eax,eax
         retq
 
@@ -21277,7 +21312,7 @@ L_55d7c:
         jz short L_55dbb
         push rdx
         mov rdi,rsi
-        call fn_53fdf
+        call mux_task
         pop rdi
         cmp qword [rax],0x1
         jnz short L_55dbb
@@ -21365,11 +21400,11 @@ L_55e4b:
 fn_55e4e:
         push rbx
         mov rbx,rdi
-        call fn_53fdf
+        call mux_task
         mov qword [rax+0x188],0x1
-        cmp [rel d_56480],rbx
+        cmp [rel mux_focused],rbx
         jnz short L_55e76
-        mov qword [rel d_56480],0x0
+        mov qword [rel mux_focused],0x0
 
 L_55e76:
         inc qword [rel d_56488]
@@ -21380,7 +21415,7 @@ L_55e76:
 
 fn_55e87:
         push rbx
-        mov rbx,[rel d_56480]
+        mov rbx,[rel mux_focused]
         test rbx,rbx
         jz short L_55ea5
         mov [rel d_55f18],rbx
@@ -21395,7 +21430,7 @@ L_55ea5:
         cmp rbx,0x8
         jnc short L_55f08
         mov rdi,rbx
-        call fn_53fdf
+        call mux_task
         cmp qword [rax],0x1
         jnz short L_55f08
         cmp [rel d_54798],rbx
@@ -21407,13 +21442,13 @@ L_55ed9:
         jz short L_55efe
         mov qword [rax+0x188],0x0
         mov rdi,rbx
-        call fn_544e6
+        call mux_order_front
         mov rdi,rbx
         call fn_545bc
 
 L_55efe:
         mov rdi,rbx
-        call fn_5450c
+        call mux_focus
         jmp short L_55f13
 
 L_55f08:
@@ -21431,7 +21466,7 @@ fn_55f20:
         push rbx
         push r12
         mov r12,rdi
-        call fn_53fdf
+        call mux_task
         mov rbx,rax
         mov rdi,rbx
         call fn_55235
@@ -21482,7 +21517,7 @@ L_55ff0:
         cmp rbx,0x8
         jnc short L_56023
         mov rdi,rbx
-        call fn_53fdf
+        call mux_task
         inc rbx
         cmp qword [rax],0x1
         jnz short L_55ff0
@@ -21500,7 +21535,7 @@ L_56028:
         cmp rbx,0x8
         jnc short L_56052
         mov rdi,rbx
-        call fn_53fdf
+        call mux_task
         inc rbx
         cmp qword [rax],0x1
         jnz short L_56028
@@ -21512,7 +21547,7 @@ L_56028:
 L_56052:
         test r12,r12
         jz short L_56062
-        mov qword [rel d_56480],0x0
+        mov qword [rel mux_focused],0x0
 
 L_56062:
         inc qword [rel d_56488]
@@ -21540,14 +21575,14 @@ L_56097:
         cmp rbx,0x8
         jnc short L_56103
         mov rdi,rbx
-        call fn_53fdf
+        call mux_task
         inc rbx
         cmp qword [rax],0x1
         jnz short L_56097
         push rax
         lea rdi,[rax+0x120]
         mov rsi,r12
-        call fn_5612f
+        call same_word_any_case
         pop rdx
         test eax,eax
         jnz short L_560eb
@@ -21561,7 +21596,7 @@ L_56097:
         push rdx
         mov rdi,rax
         mov rsi,r12
-        call fn_5612f
+        call same_word_any_case
         pop rdx
         test eax,eax
         jz short L_56097
@@ -21594,7 +21629,8 @@ L_56126:
 ; says: 'No running program has that name (programs run inside the desktop).'
 ; says: 'Usage: kill NAME   closes a program in a window by its name'
 ; says: ... and 4 more texts
-fn_5612f:
+; rdi, rsi = two words: eax = 1 if they are the same, capitals or not
+same_word_any_case:
         xor ecx,ecx
 
 L_56131:
@@ -21633,7 +21669,7 @@ L_56165:
 L_56168:
         cmp byte [rdi],0x0
         jz short L_56198
-        cmp byte [rel d_56478],0x0
+        cmp byte [rel mux_on],0x0
         jz short L_5618c
         call fn_56087
         test rax,rax
@@ -21676,7 +21712,7 @@ L_561e9:
         cmp rbx,0x8
         jnc near L_56362
         mov rdi,rbx
-        call fn_53fdf
+        call mux_task
         cmp qword [rax],0x0
         jz short L_56206
         inc rbx
@@ -21740,16 +21776,16 @@ L_5629f:
         mov [rdx+0x190],rax
         mov qword [rdx+0x198],0xffffffffffffffff
         mov rdi,[rel d_56490]
-        call fn_53fee
+        call mux_task_stacks
         test eax,eax
         jz short L_5635a
         mov rax,[rel d_56490]
         mov qword [rax],0x1
-        mov rcx,[rel d_56530]
-        lea rdx,[rel d_56538]
+        mov rcx,[rel mux_order_count]
+        lea rdx,[rel mux_order_list]
         mov [rdx+rcx*8],rbx
-        inc qword [rel d_56530]
-        mov [rel d_56480],rbx
+        inc qword [rel mux_order_count]
+        mov [rel mux_focused],rbx
         inc qword [rel d_56488]
         lea rdi,[rel d_568df]
         call api_log
@@ -21763,7 +21799,7 @@ L_5629f:
 
 L_5635a:
         mov rdi,rbx
-        call fn_543c2
+        call mux_free_task
 
 L_56362:
         mov rax,0xffffffffffffffff
@@ -21878,10 +21914,12 @@ L_56470:
         retq
         db 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
 
-d_56478:
+; 1 while the multiplexer runs
+mux_on:
         db 0x00, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
 
-d_56480:
+; the number of the task the keys go to
+mux_focused:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 d_56488:
@@ -21902,7 +21940,8 @@ d_564a8:
 d_564b0:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_564b8:
+; the memory of the multiplexer: what was asked to be drawn since the last composing
+mux_draw_list:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 d_564c0:
@@ -21947,10 +21986,12 @@ d_56520:
 d_56528:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_56530:
+; how many windows are in the order
+mux_order_count:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_56538:
+; the order of the windows from the bottom: the numbers of their tasks, 8 bytes each
+mux_order_list:
         times 64 db 0x00
 
 d_56578:
@@ -22122,7 +22163,7 @@ L_569a1:
         cmp rbx,0x8
         jnc short L_569db
         mov rdi,rbx
-        call fn_53fdf
+        call mux_task
         mov rdi,[rax+0x170]
         test rdi,rdi
         jz short L_569d6
@@ -22231,9 +22272,9 @@ fn_56b1a:
 
 L_56b34:
         mov rdi,[rbx+0x168]
-        call fn_0ca3c
+        call mem_free
         mov rdi,[rbx+0x158]
-        call fn_0ca3c
+        call mem_free
         xor eax,eax
         mov [rbx+0x160],rax
         mov [rbx+0x158],rax
@@ -22341,7 +22382,7 @@ L_56c4f:
         jmp near api_log
 p_56c67:
         push rdi
-        call fn_54f01
+        call mux_this_task
         pop rdi
         test rax,rax
         jz near api_memory
@@ -22369,7 +22410,7 @@ L_56cbf:
         cmp rbx,0x8
         jnc short L_56d16
         mov rdi,rbx
-        call fn_53fdf
+        call mux_task
         mov rcx,[rax+0x160]
         test rcx,rcx
         jz short L_56d01
@@ -22378,7 +22419,7 @@ L_56cbf:
         lea rdx,[rcx+0x800000]
         cmp r12,rdx
         jnc short L_56d01
-        cmp rbx,[rel d_16770]
+        cmp rbx,[rel mux_turn_of]
         jnz short L_56d06
         mov rdi,rcx
         mov rsi,r12
@@ -22403,11 +22444,11 @@ L_56d16:
         mov rdi,r12
         pop r12
         pop rbx
-        jmp near fn_0ca3c
+        jmp near mem_free
 
 L_56d21:
         mov rax,rdi
-        cmp byte [rel d_56478],0x0
+        cmp byte [rel mux_on],0x0
         jz near L_56e7e
         cmp byte [rel d_564a8],0x0
         jz near L_56e7e
@@ -22415,12 +22456,12 @@ L_56d21:
         push r12
         push r13
         mov r12,rdi
-        mov rdi,[rel d_16770]
+        mov rdi,[rel mux_turn_of]
         cmp rdi,0x1
         jl near L_56e76
         cmp rdi,0x8
         jnc near L_56e76
-        call fn_53fdf
+        call mux_task
         mov rbx,rax
         cmp qword [rbx],0x1
         jnz near L_56e76
@@ -22549,7 +22590,7 @@ L_56ef2:
         cmp rbx,0x8
         jnc short L_56f20
         mov rdi,rbx
-        call fn_53fdf
+        call mux_task
         cmp qword [rax+0x1a8],0x0
         jnz short L_56f0f
         inc rbx
@@ -22580,18 +22621,18 @@ L_56f3a:
         retq
 
 L_56f3b:
-        cmp byte [rel d_56478],0x0
+        cmp byte [rel mux_on],0x0
         jz short L_56f99
         test edi,0x3
         jz short L_56f99
-        cmp qword [rel d_16770],0xffffffffffffffff
+        cmp qword [rel mux_turn_of],0xffffffffffffffff
         jz short L_56f99
         inc qword [rel d_16780]
         cmp qword [rel d_16780],0x3
         jc short L_56f99
         mov byte [rel d_16789],0x1
         inc qword [rel d_564a0]
-        mov rax,[rel d_16770]
+        mov rax,[rel mux_turn_of]
         shl rax,byte 0x9
         lea rdx,[rel core_start + (v_44f60 - 0x7E00)]
         add rax,rdx
@@ -26474,7 +26515,7 @@ L_59969:
         push r13
         push r14
         mov rbx,rdi
-        call fn_0d535
+        call maint_check
         jz near L_59adb
         cmp byte [rel d_1553d],0x0
         jz near L_59ad1
@@ -26504,7 +26545,7 @@ L_599cc:
         jz short L_599cc
         mov rdi,rax
         lea rsi,[rel d_5a95e]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_599cc
         mov rax,[rel d_5a168]
@@ -26598,7 +26639,7 @@ L_59b01:
         lea rsi,[rel d_5a96a]
         call fn_59dc2
         lea rdi,[rel d_5a140]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_59b43
         mov rsi,rax
@@ -26680,7 +26721,7 @@ L_59bbc:
         lea rsi,[rel d_5a965]
         call fn_59dc2
         lea rdi,[rel d_5a140]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_59c58
         mov rdi,rax
@@ -26690,7 +26731,7 @@ L_59bbc:
         jz short L_59c58
         mov rdi,rax
         lea rsi,[rel d_5a170]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_59c58
         inc qword [rel d_5a098]
@@ -26719,7 +26760,7 @@ L_59c58:
         mov qword [rel d_15540],0x0
         push rax
         mov rdi,r13
-        call fn_0ca3c
+        call mem_free
         pop rax
         test rax,rax
         jnz short L_59d1e
@@ -27744,7 +27785,7 @@ L_5b41e:
         push r13
         push r14
         lea rdi,[rel d_5b8d2]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz near L_5b517
         mov rbx,rax
@@ -28152,7 +28193,7 @@ L_5da50:
         jz near L_5db18
         mov rdi,rbx
         lea rsi,[rel d_5dc13]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_5dad8
         mov rdi,rbx
@@ -28170,22 +28211,22 @@ L_5da50:
         test edx,edx
         jz short L_5db07
         mov r12,rax
-        call fn_0d535
+        call maint_check
         jz near L_5dc0d
-        mov rcx,[rel d_110c0]
+        mov rcx,[rel cabinet_table]
         mov [rcx+0xc],r13w
         mov [rcx+0xe],r12w
-        call fn_0d104
+        call cabinet_save
         lea rdi,[rel d_5dc57]
         call api_print
         jmp near L_5dc0d
 
 L_5dad8:
-        call fn_0d535
+        call maint_check
         jz near L_5dc0d
-        mov rcx,[rel d_110c0]
+        mov rcx,[rel cabinet_table]
         mov dword [rcx+0xc],0x0
-        call fn_0d104
+        call cabinet_save
         lea rdi,[rel d_5dc57]
         call api_print
         jmp near L_5dc0d
@@ -28206,7 +28247,7 @@ L_5db18:
         call fn_08e3b
         lea rdi,[rel d_5dc2a]
         call api_print
-        mov rcx,[rel d_110c0]
+        mov rcx,[rel cabinet_table]
         movzx edi,word [rcx+0xc]
         test edi,edi
         jnz short L_5db71
@@ -28218,7 +28259,7 @@ L_5db71:
         call fn_08e3b
         lea rdi,[rel d_5da19]
         call api_print
-        mov rcx,[rel d_110c0]
+        mov rcx,[rel cabinet_table]
         movzx edi,word [rcx+0xe]
         call fn_08e3b
 
@@ -28304,7 +28345,7 @@ fn_5dce7:
         mov [rel d_5ee88],rax
         call fn_5e054
         lea rdi,[rel d_5f2c8]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz near L_5df74
         mov r12,[rax+0x10]
@@ -28391,7 +28432,7 @@ L_5ddf3:
         repe cmpsb
         jnz short L_5decb
         mov rdi,[rel d_5e668]
-        call fn_0ca3c
+        call mem_free
         call fn_5e145
         lea rdi,[rel d_5f2d1]
         jmp short L_5df2a
@@ -28402,14 +28443,14 @@ L_5decb:
         test eax,eax
         jz short L_5def1
         mov rdi,[rel d_5e668]
-        call fn_0ca3c
+        call mem_free
         call fn_5e145
         lea rdi,[rel d_5f4ac]
         jmp short L_5df2a
 
 L_5def1:
         mov rdi,[rel d_5e668]
-        call fn_0ca3c
+        call mem_free
         inc qword [rel d_5e650]
         mov rdi,rbx
         mov rsi,[rel d_5e670]
@@ -28464,7 +28505,7 @@ fn_5df85:
         movzx edx,word [rbx+0x1b4]
         push rdx
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         pop rdx
         test eax,eax
         jz near L_5e050
@@ -28497,14 +28538,14 @@ fn_5df85:
         repe cmpsb
         jnz short L_5e048
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         mov eax,0x1
         pop rbx
         retq
 
 L_5e048:
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
 
 L_5e050:
         xor eax,eax
@@ -28515,7 +28556,7 @@ L_5e050:
 fn_5e054:
         mov qword [rel d_5f574],0x0
         lea rdi,[rel d_5f565]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_5e0bc
         mov rsi,[rax+0x10]
@@ -28549,7 +28590,7 @@ L_5e0bc:
 ; says: 'netkey'
 fn_5e0bd:
         lea rdi,[rel d_60689]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_5e0ee
         mov rsi,[rax+0x10]
@@ -28731,7 +28772,7 @@ fn_5e23b:
         lea rdx,[rel d_5f290]
         call fn_0f6ff
         mov rdi,[rel d_5e668]
-        call fn_0ca3c
+        call mem_free
         call fn_5e0bd
         test eax,eax
         jz near L_5e41d
@@ -28831,7 +28872,7 @@ L_5e402:
 
 L_5e411:
         mov rdi,[rel d_5e668]
-        call fn_0ca3c
+        call mem_free
 
 L_5e41d:
         xor eax,eax
@@ -28992,12 +29033,12 @@ L_5e597:
         push rax
         mov rdi,rbx
         lea rsi,[rel d_5f4b8]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_5e61b
         mov rdi,rbx
         lea rsi,[rel d_5f401]
-        call fn_0af65
+        call shell_same_word
         pop rbx
         test eax,eax
         jz short L_5e60b
@@ -29005,7 +29046,7 @@ L_5e597:
         test eax,eax
         jnz short L_5e5fd
         mov rdi,rbx
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_5e5fd
         and dword [rax+0x50],0xfffffffffffffff7
@@ -29211,7 +29252,7 @@ L_5fd0b:
 ; says: ... and 1 more texts
 fn_5fd0c:
         lea rdi,[rel d_60519]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_5fd4c
         mov rsi,[rax+0x10]
@@ -29276,7 +29317,7 @@ L_5fe01:
 L_5fe02:
         push rbx
         lea rdi,[rel d_60689]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_5fe30
         mov rsi,[rax+0x10]
@@ -29331,7 +29372,7 @@ fn_5fecb:
         push rbx
         push r12
         lea rdi,[rel d_60689]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_5ff3b
         mov rsi,[rax+0x10]
@@ -29372,7 +29413,7 @@ fn_5ff3f:
 L_5ff49:
         push rbx
         lea rdi,[rel d_60519]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_5ff8a
         mov rbx,rax
@@ -29498,7 +29539,7 @@ fn_60109:
         push rbx
         push r12
         lea rdi,[rel d_60519]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz short L_6018d
         mov rbx,[rax+0x10]
@@ -29557,7 +29598,7 @@ L_6018d:
 L_60191:
         push rbx
         lea rdi,[rel d_60519]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz near L_60277
         mov rbx,[rax+0x10]
@@ -31609,9 +31650,9 @@ d_61bfa:
 L_61bfc:
         cmp qword [rel d_62c78],0x0
         jz short L_61c5e
-        cmp byte [rel d_56478],0x0
+        cmp byte [rel mux_on],0x0
         jz short L_61c5e
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         cmp dword [rax],0x4e424143
         jnz short L_61c5e
         test word [rax+0xa],0x20
@@ -31681,7 +31722,7 @@ fn_61cb7:
         mov r12,rdi
         mov r13,rsi
         mov r14,rdx
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         cmp dword [rax],0x4e424143
         jnz short L_61ceb
         test word [rax+0xa],0x80
@@ -31920,7 +31961,7 @@ L_61fe8:
         jz near L_62124
         lea rsi,[rel d_62cb0]
         mov rdi,rbx
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz near L_62124
         cmp qword [rel d_117cb],0x0
@@ -32000,39 +32041,39 @@ L_62124:
 fn_6212a:
         push r12
         push r13
-        mov rcx,[rel d_110c0]
+        mov rcx,[rel cabinet_table]
         cmp dword [rcx],0x4e424143
         jnz near L_62274
         mov r12d,0x20
         xor r13d,r13d
         mov rdi,rbx
         lea rsi,[rel d_62cb5]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_621b2
         mov r13d,0x1
         mov rdi,rbx
         lea rsi,[rel d_62cb9]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_621b2
         mov r12d,0x10
         mov r13d,0x2
         mov rdi,rbx
         lea rsi,[rel d_62cbd]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_621b2
         mov r12d,0x80
         mov rdi,rbx
         lea rsi,[rel d_62cc2]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz near L_62274
 
 L_621b2:
 %ifdef PLAIN_KERNEL
-        call fn_0d535
+        call maint_check
 %else
         call near cores_maint           ; v3.0.21: outside maintenance mode the setting holds for this session
 %endif
@@ -32043,7 +32084,7 @@ L_621b2:
         retq
 
 L_621c3:
-        mov rcx,[rel d_110c0]
+        mov rcx,[rel cabinet_table]
         movzx eax,word [rcx+0xa]
         cmp r13d,0x2
         jz short L_621e5
@@ -32063,7 +32104,7 @@ L_621e8:
         cmp byte [rel d_1553d],0x0
         jz short L_621fa
 %ifdef PLAIN_KERNEL
-        call fn_0d104
+        call cabinet_save
 %else
         call near cores_save            ; v3.0.21: ... and is then not written to the disk
 %endif
@@ -32077,7 +32118,7 @@ L_621fa:
         mov byte [rel d_62ee8],0x0
         mov byte [rel d_62fea],0x0
         lea rdi,[rel d_6339d]
-        mov rcx,[rel d_110c0]
+        mov rcx,[rel cabinet_table]
         test word [rcx+0xa],0x80
         jnz short L_62250
         lea rdi,[rel d_6343c]
@@ -33220,7 +33261,7 @@ L_64579:
 L_6457e:
         push rax
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         pop rax
         jmp short L_6458c
 
@@ -33479,13 +33520,13 @@ L_6483c:
         lea rdi,[rel d_64baf]
         call api_log
         mov rdi,r14
-        call fn_0ca3c
+        call mem_free
         mov eax,0x1
         jmp short L_6489d
 
 L_64893:
         mov rdi,r14
-        call fn_0ca3c
+        call mem_free
 
 L_6489b:
         xor eax,eax
@@ -34253,7 +34294,7 @@ L_657d3:
 L_65855:
         mov rdi,[rel d_66a18]
         mov qword [rel d_66a18],0x0
-        call fn_0ca3c
+        call mem_free
 
 L_6586c:
         lea rdi,[rel d_669ed]
@@ -34285,14 +34326,14 @@ fn_6587b:
         cmp rax,rcx
         jnz short L_658c8
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         mov eax,0x1
         pop rbx
         retq
 
 L_658c8:
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
 
 L_658d0:
         xor eax,eax
@@ -34321,7 +34362,7 @@ L_658d5:
         jz near L_65c14
         mov rdi,rbx
         lea rsi,[rel d_664ef]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_6592c
         call fn_66338
@@ -34343,12 +34384,12 @@ L_6592c:
         mov qword [rel d_664a8],0x0
         lea rdi,[rbx+0x2]
         lea rsi,[rel d_66843]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_6599f
         lea rdi,[rbx+0x2]
         lea rsi,[rel d_664e8]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz near L_65c14
         mov byte [rel d_664c0],0x1
@@ -34518,7 +34559,7 @@ L_65bb6:
         repe cmpsb
         jnz near L_65d0a
         mov rdi,rbx
-        call fn_0ca3c
+        call mem_free
         call fn_5ff3f
         lea rdi,[rel d_66a20]
         cmp byte [rel d_664c0],0x0
@@ -34616,7 +34657,7 @@ L_65d1b:
         mov qword [rel d_66a18],0x0
         test rdi,rdi
         jz short L_65d37
-        call fn_0ca3c
+        call mem_free
 
 L_65d37:
         pop r15
@@ -36428,7 +36469,7 @@ fn_67874:
         mov eax,[rel d_14ef4]
         mov [rel d_14ef8],eax
         popfq
-        mov byte [rel d_1188a],0x0
+        mov byte [rel key_shift],0x0
         mov byte [rel d_119d3],0x0
 
 L_678b7:
@@ -37977,7 +38018,7 @@ L_68d0c:
         call fn_6af0a
         pop rdi
         push rax
-        call fn_0ca3c
+        call mem_free
         pop rax
         test eax,eax
         jnz near L_68e74
@@ -38520,7 +38561,7 @@ L_69320:
         mov rax,[rel d_110b0]
         cmp byte [rax+0x48],0x1
         jz near fn_66bb7
-        mov rax,[rel d_110c0]
+        mov rax,[rel cabinet_table]
         cmp dword [rax],0x4e424143
         jnz short L_6934d
         test word [rax+0xa],0x1
@@ -38537,7 +38578,7 @@ L_6934e:
         jz near L_693ef
         mov rdi,rbx
         lea rsi,[rel d_6a2dc]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_69378
         call fn_66bb7
@@ -38551,23 +38592,23 @@ L_69378:
         push rax
         mov rdi,rbx
         lea rsi,[rel d_6a3b3]
-        call fn_0af65
+        call shell_same_word
         pop rdx
         test eax,eax
         jz short L_693ef
         push rdx
-        call fn_0d535
+        call maint_check
         pop rdx
         jz near L_69462
         mov rdi,rdx
         lea rsi,[rel d_6a2dc]
-        call fn_0af65
-        mov rcx,[rel d_110c0]
+        call shell_same_word
+        mov rcx,[rel cabinet_table]
         and word [rcx+0xa],0xfffffffffffffffe
         or [rcx+0xa],ax
-        call fn_0d104
+        call cabinet_save
         lea rdi,[rel d_6a3b8]
-        mov rcx,[rel d_110c0]
+        mov rcx,[rel cabinet_table]
         test word [rcx+0xa],0x1
         jnz short L_693e8
         lea rdi,[rel d_6a3f0]
@@ -39535,7 +39576,7 @@ L_6b07b:
         test eax,eax
         jz short L_6b127
         push rsi
-        mov rdi,[rel d_110c0]
+        mov rdi,[rel cabinet_table]
         mov ecx,0x2c
         repe cmpsb
         pop rsi
@@ -39559,7 +39600,7 @@ L_6b07b:
 
 L_6b127:
         mov rdi,rsi
-        call fn_0ca3c
+        call mem_free
 
 L_6b12f:
         retq
@@ -41375,7 +41416,7 @@ fn_6d795:
         jnz near L_6d85e
         lea rax,[rel d_6dff8]
         mov rdi,[rax+r12*8]
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz near L_6d865
         mov rbx,rax
@@ -43295,7 +43336,7 @@ L_6ec49:
         jz near L_6ed60
         mov rdi,rbx
         lea rsi,[rel d_6f9a5]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_6ec73
         call fn_6e555
@@ -43304,7 +43345,7 @@ L_6ec49:
 L_6ec73:
         mov rdi,rbx
         lea rsi,[rel d_6f9a8]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_6ec90
         call fn_6ea40
@@ -43313,7 +43354,7 @@ L_6ec73:
 L_6ec90:
         mov rdi,rbx
         lea rsi,[rel d_6f654]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jz short L_6ecad
         call fn_6edc4
@@ -43327,18 +43368,18 @@ L_6ecad:
         push rax
         mov rdi,rbx
         lea rsi,[rel d_6f9af]
-        call fn_0af65
+        call shell_same_word
         pop rbx
         test eax,eax
         jz near L_6ed60
         mov rdi,rbx
         lea rsi,[rel d_6f9a5]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_6ed15
         mov rdi,rbx
         lea rsi,[rel d_6f9b5]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_6ed59
         mov byte [rel d_6f652],0x0
@@ -43579,7 +43620,7 @@ fn_6f02a:
         push rbx
         push r12
         push r13
-        call fn_0d535
+        call maint_check
         jz near L_6f1a6
         mov rax,[rel d_6f648]
         imul rax,rax,0x30
@@ -43686,7 +43727,7 @@ L_6f0fc:
         call fn_0d173
         push rax
         mov rdi,r12
-        call fn_0ca3c
+        call mem_free
         pop rax
         call fn_0d4f9
 
@@ -45005,37 +45046,37 @@ L_70a71:
         jz near L_70b6d
         mov rdi,rbx
         lea rsi,[rel d_715a8]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz near L_70c18
         mov rdi,rbx
         lea rsi,[rel d_715ad]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz near L_70d76
         mov rdi,rbx
         lea rsi,[rel d_715b3]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz near L_70f3e
         mov rdi,rbx
         lea rsi,[rel d_715b8]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_70b35
         mov rdi,rbx
         lea rsi,[rel d_715bf]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_70b3f
         mov rdi,rbx
         lea rsi,[rel d_715c5]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_70b5a
         mov rdi,rbx
         lea rsi,[rel d_715cb]
-        call fn_0af65
+        call shell_same_word
         test eax,eax
         jnz short L_70b66
         lea rdi,[rel d_71619]
@@ -45955,7 +45996,7 @@ L_71927:
         sub rax,r12
         mov [rel d_742b0],rax
         mov rdi,[rel d_74280]
-        call fn_0ca3c
+        call mem_free
         mov qword [rel d_74280],0x0
         mov dword [rel d_742cc],0x1f
         call fn_724c1
@@ -47224,7 +47265,7 @@ L_730d3:
         jna short L_7313b
         mov rbx,r8
         mov rdi,[rel d_74238]
-        call fn_0ca3c
+        call mem_free
         mov qword [rel d_74238],0x0
         mov qword [rel d_74240],0x0
         mov r12,rbx
@@ -50144,10 +50185,10 @@ display_key:                            ; al = the key that went down (its scan 
         jz short display_key_alt
         cmp al,0x09                     ; the 8 of the top row: a star with Shift
         jnz short display_key_no
-        cmp byte [rel d_1188a],0x0      ; Shift is held
+        cmp byte [rel key_shift],0x0      ; Shift is held
         jz short display_key_no
 display_key_alt:
-        cmp byte [rel d_118da],0x0      ; Alt is held
+        cmp byte [rel key_alt],0x0      ; Alt is held
         jz short display_key_no
         call display_toggle
         add rsp,0x8                     ; the key is used up: api_poll says "nothing came"
@@ -50188,7 +50229,7 @@ display_dark:
         db 0x00
 
 ; ---- v3.0.16: programs live on when the desktop is left ------------------------------------
-; The multiplexer (L_53d40) runs the desktop as task 0 and up to seven programs. Until now the
+; The multiplexer (mux_run) runs the desktop as task 0 and up to seven programs. Until now the
 ; end of the desktop closed them all. Now: if programs still run when the desktop ends, they
 ; are kept as they are - their records, memory and windows - and get no turns while the shell
 ; has the screen. The next `desktop` takes them up again where they were.
@@ -50198,7 +50239,7 @@ mux_leave:                              ; the desktop has ended. Stands for: mov
         mov ebx,0x1
 mux_leave_count:
         mov rdi,rbx
-        call fn_53fdf                   ; the record of task rbx
+        call mux_task                   ; the record of task rbx
         cmp qword [rax],0x1             ; running
         jnz short mux_leave_next
         inc ecx
@@ -50213,21 +50254,21 @@ mux_leave_next:
 mux_keep:
         add rsp,0x8                     ; not back to the old ending
         call fn_56edf
-        mov byte [rel d_56478],0x0
-        call fn_54edb
-        call fn_54369                   ; what was closing is closed
+        mov byte [rel mux_on],0x0
+        call mux_hooks_off
+        call mux_reap                   ; what was closing is closed
         xor edi,edi
-        call fn_543c2                   ; the desktop's own task is given back
+        call mux_free_task                   ; the desktop's own task is given back
         mov byte [rel mux_kept],0x1
         lea rdi,[rel mux_says_kept]
         call api_log
         xor eax,eax
         jmp near L_53f1a
 
-mux_begin:                              ; the desktop starts. Stands for: call fn_53f25
+mux_begin:                              ; the desktop starts. Stands for: call mux_init
         mov byte [rel mux_again],0x0
         cmp byte [rel mux_kept],0x0
-        jz near fn_53f25                ; nothing kept: a clean table, as before
+        jz near mux_init                ; nothing kept: a clean table, as before
         mov byte [rel mux_kept],0x0
         mov byte [rel mux_again],0x1
         lea rdi,[rel mux_says_again]
@@ -50237,14 +50278,14 @@ mux_begin:                              ; the desktop starts. Stands for: call f
 mux_order:                              ; the order of the windows, from the bottom. Stands for:
         cmp byte [rel mux_again],0x0    ;   one window, the desktop's
         jnz short mux_order_under
-        mov qword [rel d_56530],0x1
-        mov qword [rel d_56538],0x0
-        mov qword [rel d_56480],0x0     ; the keys go to the desktop
+        mov qword [rel mux_order_count],0x1
+        mov qword [rel mux_order_list],0x0
+        mov qword [rel mux_focused],0x0     ; the keys go to the desktop
         retq
 mux_order_under:                        ; the kept windows stay in their order; the desktop goes under them
         mov byte [rel mux_again],0x0
-        mov rcx,[rel d_56530]
-        lea rax,[rel d_56538]
+        mov rcx,[rel mux_order_count]
+        lea rax,[rel mux_order_list]
 mux_order_up:
         test rcx,rcx
         jz short mux_order_put
@@ -50254,10 +50295,10 @@ mux_order_up:
         jmp short mux_order_up
 mux_order_put:
         mov qword [rax],0x0
-        inc qword [rel d_56530]
-        mov rcx,[rel d_56530]           ; the keys go to the window on top, as when the desktop was left
+        inc qword [rel mux_order_count]
+        mov rcx,[rel mux_order_count]           ; the keys go to the window on top, as when the desktop was left
         mov rdx,[rax+rcx*8-0x8]
-        mov [rel d_56480],rdx
+        mov [rel mux_focused],rdx
         retq
 ; ---- v3.0.19: `tasks` - the programs that are kept while the shell has the screen -----------
 ;       tasks             a line a kept program: its number and its name
@@ -50265,13 +50306,13 @@ mux_order_put:
 ; The table of the shell's commands is in the core, which cannot grow. So the shell comes here
 ; when a word is not in that table, before it looks for an object of that name.
 shell_more:                             ; rbx = the word, r12 = what follows it
-        lea rsi,[rel tasks_word]        ; stands for: mov rdi,rbx / call fn_0ad17
+        lea rsi,[rel tasks_word]        ; stands for: mov rdi,rbx / call ob_find
         mov rdi,rbx
-        call fn_5612f                   ; the same word?
+        call same_word_any_case                   ; the same word?
         test eax,eax
         jnz near tasks_command
         mov rdi,rbx                     ; not ours: on with what the shell did here
-        jmp near fn_0ad17
+        jmp near ob_find
 tasks_command:
         add rsp,0x8                     ; the command is done here: back to the end of the shell's function
         cmp byte [rel mux_kept],0x0
@@ -50281,7 +50322,7 @@ tasks_command:
         mov ebx,0x1
 tasks_line:
         mov rdi,rbx
-        call fn_53fdf                   ; the record of task rbx
+        call mux_task                   ; the record of task rbx
         mov r13,rax
         cmp qword [r13],0x1
         jnz near tasks_next
@@ -50314,23 +50355,23 @@ tasks_close:                            ; the first of the digits 1 .. 7 in what
         movzx ebx,al
         sub ebx,0x30
         mov rdi,rbx
-        call fn_53fdf
+        call mux_task
         cmp qword [rax],0x1
         jnz near tasks_no_such
         mov rdi,rbx
-        call fn_543c2                   ; its memory, its window, its place
+        call mux_free_task                   ; its memory, its window, its place
         mov ebx,0x1                     ; was it the last one?
 tasks_left:
         mov rdi,rbx
-        call fn_53fdf
+        call mux_task
         cmp qword [rax],0x1
         jz near tasks_closed
         inc rbx
         cmp rbx,0x8
         jc near tasks_left
-        mov rdi,[rel d_564b8]           ; nothing is kept any more: the multiplexer's own memory goes too
-        call fn_0ca3c
-        mov qword [rel d_564b8],0x0
+        mov rdi,[rel mux_draw_list]           ; nothing is kept any more: the multiplexer's own memory goes too
+        call mem_free
+        mov qword [rel mux_draw_list],0x0
         mov byte [rel mux_kept],0x0
 tasks_closed:
         lea rdi,[rel tasks_says_closed]
@@ -50352,18 +50393,18 @@ tasks_nothing:
 ; They were refused ("enter maintenance mode first") because the setting is kept in the table
 ; of the cabinet - so `bench` gave the same numbers whatever was typed. Now the setting is made
 ; for this session; only the writing to the disk still needs maintenance mode.
-cores_maint:                            ; stands for: call fn_0d535 (is maintenance mode on? says so if not)
+cores_maint:                            ; stands for: call maint_check (is maintenance mode on? says so if not)
         mov byte [rel cores_session],0x0
-        cmp byte [rel d_155df],0x0
-        jnz near fn_0d535               ; on: as before (it may have run out)
+        cmp byte [rel maint_on],0x0
+        jnz near maint_check               ; on: as before (it may have run out)
         mov byte [rel cores_session],0x1
         lea rdi,[rel cores_says_session]
         call api_print
         or eax,0x1                      ; go on
         retq
-cores_save:                             ; stands for: call fn_0d104 (write the table of the cabinet)
+cores_save:                             ; stands for: call cabinet_save (write the table of the cabinet)
         cmp byte [rel cores_session],0x0
-        jz near fn_0d104
+        jz near cabinet_save
         retq
 cores_session:
         db 0x00

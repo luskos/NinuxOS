@@ -764,7 +764,7 @@ L_809ea:
         jmp near L_80ae3
 L_809f7:
         mov rdi,rbx
-        call fn_0ad17
+        call ob_find
         test rax,rax
         jz near L_80af1
         mov r12,rax

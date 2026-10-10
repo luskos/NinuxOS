@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.21 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.22 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -62,7 +62,7 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 | 18 | **[`cores solo` / `bench` explained and changed, v3.0.21; "all cores for programs" is `cores all`, to be tried on the real machine]** `cores solo`, `bench`, all cores for programs | M |
 | 19 | **[done, v3.0.20: tried on Windows and once in QEMU]** Memory given back by PyTon programs | M |
 | 20 | Photon, Puffer, Tuner, META out of the kernel: programs of their own | L each |
-| 21 | Names for the kernel's 655 functions; the kernel cut into its parts | L |
+| 21 | **[begun, v3.0.22: 41 names (the multiplexer, the shell, objects, keys) - `tools/kdis/renames.txt`; about 900 functions still have addresses for names]** Names for the kernel's 655 functions; the kernel cut into its parts | L |
 
 **Step 4 - the desktop itself** (Desktop has only a machine-read source: to be rewritten first)
 
@@ -708,6 +708,13 @@ to be touched. A proposal for the rest, to decide:
       PC with one `nop` under `cmd_version`: 1419 names moved, the four suits assembled against
       them. Whether such a kernel also *runs* is still test I of docs/TESTS.md - data of the
       kernel may hold addresses that are still numbers.
+- [x] `tools/kdis/rename.py` + `tools/kdis/renames.txt` (v3.0.22): a line "OLD NEW ; what it
+      does" and the name is changed everywhere - the kernel, Kernel.sym.inc, the suits,
+      names.txt - with the comment above the function; the kernel and the suits must stay the
+      same bytes or everything is put back. This is how item 21 goes on: every time a function
+      is understood, one line.
+- [ ] says.py takes only fn_, cmd_, api_, entry_ for the start of a function: one that got a
+      real name is no longer a start for it. To change before says.py is run again.
 - [x] `tools/kdis/says.py` (v3.0.14): above every function of the kernel and the suits, the
       texts it points at (299 of 940 functions have some) - a first step to names (21).
 

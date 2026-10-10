@@ -1,9 +1,9 @@
 # The conversation
 
-`2026-10-11_recovery_to_v3.0.21.zip` is the export of the Claude Code session in which NinuxOS
+`2026-10-11_recovery_to_v3.0.22.zip` is the export of the Claude Code session in which NinuxOS
 v2.9.59 was brought back and v3 was started: the whole transcript with every command that was
 run and its output. It is the record of how each file of this project was made. It ends shortly
-before v3.0.21 was committed. One file holds the whole conversation; a later export replaces it
+before v3.0.22 was committed. One file holds the whole conversation; a later export replaces it
 (the older ones stay in the history of git).
 
 In short, in the order it happened:
@@ -53,6 +53,7 @@ In short, in the order it happened:
 26. v3.0.19: the command tasks.
 27. v3.0.20: PyTon programs give memory back.
 28. v3.0.21: cores solo and bench; the room for kernel code.
+29. v3.0.22: the first real names in the kernel.
 
 The transcript holds what was on the screen of this PC during the work (paths, the account name,
 the identity of the test machine). Keep the repository private.

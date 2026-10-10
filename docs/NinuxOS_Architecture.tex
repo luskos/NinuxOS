@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.21.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.22.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.21 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.22 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -769,6 +769,17 @@ the first kernel suit at \texttt{0x80000}; the boot sector reads 480 sectors of 
 and is reached by calls exactly as long as the instructions they stand for; that is no longer
 the only way, but what moves code must be tried on what it moves. \file{tools/kdis/numbers.py} and
 \file{tools/kdis/pointers.py} find and name addresses that are still numbers.
+
+\subsection{Names in the kernel}
+
+The recovered source has addresses for names (\texttt{fn\_53fdf}). What is understood gets a real
+name through \file{tools/kdis/renames.txt} (\emph{old new ; what it does}) and
+\file{tools/kdis/rename.py}, which changes it in the kernel, in \file{Kernel.sym.inc}, in the
+suits and in \file{names.txt}, and checks that the bytes stay the same. From v3.0.22 the
+multiplexer reads as \texttt{mux\_run}, \texttt{mux\_task}, \texttt{mux\_turn},
+\texttt{mux\_free\_task}, \texttt{mux\_compose}; the shell as \texttt{shell\_command} and its
+table \texttt{shell\_commands}; further \texttt{ob\_find}, \texttt{ob\_call},
+\texttt{mem\_free}, \texttt{cabinet\_save}, \texttt{maint\_check}, \texttt{key\_next}.
 
 \subsection{Versions}
 
