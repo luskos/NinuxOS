@@ -98,3 +98,7 @@ d_56488    mux_changes        ; grows whenever a program starts, ends or comes t
 fn_080ac   load_table         ; the loader (16 bits): read the table of the cabinet, then every object it names, to 1 MB and up
 fn_07f3b   load_sectors       ; the loader: eax = sector, cx = how many, es = where to: read them through the BIOS
 d_085be    load_table_sector  ; the loader: the sector of the table (the kernel's sectors + 1; + 4 more if the copy is read)
+# ---- kernel suits and what the desktop may ask for (v3.0.37)
+fn_6d795   suit_load          ; rdi = the number of a kernel suit (0 k_sound, 1 k_usb12, 2 k_net, 3 k_tools): if it is not on yet, find its object, check its signature, copy its code to its place; eax = 1 when it is on
+fn_73d22   photon_run         ; Photon, the game, on the whole screen - asked for by the desktop (it draws through the SUB-GPU: fn_7189b)
+d_7477e    desk_asks          ; what the desktop asked the kernel to run when it has left the screen: 1 Photon, 2 Puffer, 3 META, 4 Tuner

@@ -3014,7 +3014,7 @@ L_33de9:
         lea rdi,[rel d_33f47]
         call api_log
         call api_cursor_hide
-        call fn_73d22
+        call photon_run
         jmp near L_33ce8
 L_33e5b:
         lea rdi,[rel d_33f61]

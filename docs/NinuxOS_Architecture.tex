@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.36.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.37.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.36 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.37 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -340,6 +340,16 @@ suit & slot & bytes & what \\ \midrule
 \texttt{k\_net} & \texttt{0x86000} & 24544 & the network \\
 \bottomrule
 \end{longtable}
+
+\subsection{Photon, Puffer, Tuner, META (read in v3.0.37)}
+
+Their objects on the desk only ask: place \texttt{+0x148} of the system's table with a number,
+which the kernel notes (\texttt{desk\_asks}) and the shell's loop runs when the desktop has
+left the screen. Puffer, Tuner and META are entries of the suit \texttt{k\_tools} (21 entries:
+update, Puffer, files, META, bench, shot, tune, the chain, uproot, root, users, login, build
+refresh, the keyboard test), put on by \texttt{suit\_load}; Photon (\texttt{photon\_run} and the
+engine in the SUB-GPU) is in the extension. \file{tools/kdis/own.py} measures what belongs to
+one entry alone.
 
 \subsection{The source of the kernel}
 

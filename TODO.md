@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.36 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.37 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -61,7 +61,7 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 | 17 | **[v3.0.35: a program the Sentinel does not know is refused power, the extension's services, closing and typing into other programs; the keyboard on the screen, v3.0.23; a relay object between two programs is not written]** A desktop program is handed only what it needs; relays for the rest (the keyboard on the screen for the shell is one) | L |
 | 18 | **[`cores solo` / `bench` explained and changed, v3.0.21; "all cores for programs" is `cores all`, to be tried on the real machine]** `cores solo`, `bench`, all cores for programs | M |
 | 19 | **[done, v3.0.20: tried on Windows and once in QEMU]** Memory given back by PyTon programs | M |
-| 20 | Photon, Puffer, Tuner, META out of the kernel: programs of their own | L each |
+| 20 | **[read and measured, v3.0.37 - three of the four are already outside the kernel, in the suit k_tools; nothing was cut yet: see "20, read in the kernel"]** Photon, Puffer, Tuner, META out of the kernel: programs of their own | L each |
 | 21 | **[v3.0.35: 91 names, and what was written after the recovery lies in kernel/New.kasm; begun, v3.0.22: 41 names (the multiplexer, the shell, objects, keys) - `tools/kdis/renames.txt`; about 900 functions still have addresses for names]** Names for the kernel's 655 functions; the kernel cut into its parts | L |
 
 **Step 4 - the desktop itself** (Desktop has only a machine-read source: to be rewritten first)
@@ -326,6 +326,47 @@ Not written blind: it changes what happens at every start and end of the desktop
       the multiplexer, the drivers) is the next cut, when more of it has names.
 - [ ] tools/kdis/handwork.py has not been tried since New.kasm was cut out and the loader's
       texts were changed; it must be before the kernel is read again by kdis.py.
+
+### 20, read in the kernel (v3.0.37): where Photon, Puffer, Tuner and META really are
+
+What was said before - "they are functions inside the kernel" - was wrong for three of the four.
+Read now, from the objects on the desk down to the code:
+
+- The four objects on the desk (`photon`, `puffer`, `tuner`, `metaspace`, 1024 bytes each) only
+  *ask*: they call the place +0x148 of the system's table with a number. The kernel notes it
+  (`desk_asks`), the desktop leaves the screen, and the shell's loop runs what was asked.
+- **Puffer, Tuner and META are not in the kernel.** They are in the kernel suit `k_tools` - an
+  object of the cabinet, signed, 41 KB, put on at 0x30000 when first needed (`suit_load`).
+  `k_tools` has 21 entries: update, Puffer (2), files, META (2), bench, shot, tune (4: the
+  command and the TUNER screen), the chain (3), uproot and root, users, login, build refresh,
+  the keyboard test. So they are in an object already - but one object for 21 things, built
+  for one fixed address, calling the kernel by its addresses (Kernel.sym.inc).
+- **Photon is in the kernel**: its starter `photon_run` (601 bytes of its own) and the engine
+  it draws with, in the SUB-GPU part of the extension (about 3.2 KB of code and 4.6 KB of data
+  that nothing else uses).
+- Measured with the new `tools/kdis/own.py` (what belongs to one entry only):
+  Puffer 1.3 KB of code + 1.1 KB of data; the TUNER screen 2.8 KB + 1.3 KB (and it shares
+  functions with the `tune` command); META 0.4 KB + 0.5 KB - it is only the starter of
+  "full-screen programs", Photon among them.
+
+What "each a program of its own, independent of everything" then asks for, in order:
+
+- [ ] A fifth, sixth ... kernel suit: `suit_load` knows four by number, from tables in the
+      extension (names, places, greatest sizes). More suits need those tables longer and
+      free places in memory for them (what lies free between 0x3B000 and 0x41000, and above
+      0x8C000, is to be read).
+- [ ] Tuner first (it is the cleanest): its entries of k_tools cut out into `k_tuner`, built
+      for its own place; the four small functions of the kernel that jump into k_tools for
+      it turned to the new suit. The source of a suit has never been tried at another
+      address than its own (as the kernel's had not, before v3.0.18) - that is the test.
+- [ ] Then Puffer, then META; then Photon out of the extension (the engine with it).
+- [ ] The further step - not a suit but an ordinary program, as Bags and Files are - is
+      possible only for what needs nothing but the table programs are handed. Tuner sets the
+      processor's clock, Puffer writes sticks sector by sector: they need the kernel's own
+      functions, so they stay suits (kernel parts as objects, KASM) unless those functions
+      are opened to programs - which the owner's rule "nothing on the desktop reaches the
+      kernel" speaks against. META and Photon draw and take keys: they could be programs.
+- Not done in v3.0.37: none of the cutting. It was measured, not moved.
 
 ## If the disk is lost again - where everything is
 
@@ -765,6 +806,16 @@ DIRECTIVE.md. Three rows of the table in 4c were written against these and are w
       host-only ports whatever the protocol. The half-duplex turn-taking itself - who sends
       now - is ours to design freely once a link exists; it fits docs/PROTOCOLS.md part 4
       as a fourth way for a parcel to travel.
+- [ ] **A screen saver as in the film The Matrix** (the owner, 11 October 2026): the threads that
+      fall from the top of the screen are the *real* processes of the kernel as they run -
+      what the system is doing, written as the falling code.
+      What it can be made of (Claude): the multiplexer knows which task has the turn and how
+      many turns each has had (`mux_turn`, the record of a task); the log is a stream of real
+      lines; the functions a program calls pass one gate (`api_guard` stands in it). A column a
+      task, a letter for every call it makes, its speed the task's turns - nothing invented.
+      It needs a place in the kernel that counts what passes the gate, and a program that
+      draws; it comes on when no key and no mouse came for a while (Alt + * is the screen
+      going dark; this would be the other choice).
 - [ ] **Zipper** (the owner, 11 October 2026): everything of the system kept packed and
       ready; what is asked for is unpacked at that moment and started. If unpacking is nearly
       instant, everything that is not in use waits packed - and the whole becomes very small.

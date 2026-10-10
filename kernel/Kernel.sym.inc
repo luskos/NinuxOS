@@ -5073,7 +5073,7 @@ d_6d6b0 equ 0x6D6B0
 d_6d6b8 equ 0x6D6B8
 fn_6d788 equ 0x6D788
 L_6d78e equ 0x6D78E
-fn_6d795 equ 0x6D795
+suit_load equ 0x6D795
 L_6d85e equ 0x6D85E
 L_6d865 equ 0x6D865
 L_6d86e equ 0x6D86E
@@ -5779,7 +5779,7 @@ L_73c74 equ 0x73C74
 L_73ce5 equ 0x73CE5
 L_73cfd equ 0x73CFD
 fn_73d07 equ 0x73D07
-fn_73d22 equ 0x73D22
+photon_run equ 0x73D22
 L_73d7b equ 0x73D7B
 L_73db5 equ 0x73DB5
 L_73dba equ 0x73DBA
@@ -5975,7 +5975,7 @@ d_7471a equ 0x7471A
 d_7473b equ 0x7473B
 d_74751 equ 0x74751
 d_7475b equ 0x7475B
-d_7477e equ 0x7477E
+desk_asks equ 0x7477E
 d_7477f equ 0x7477F
 d_747a0 equ 0x747A0
 d_757a0 equ 0x757A0

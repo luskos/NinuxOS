@@ -3,6 +3,14 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.37** (11 October 2026) - the image is the same but for the version
+  - **Where Photon, Puffer, Tuner and META really are** - read from the desk down to the code:
+    Puffer, Tuner and META are not in the kernel but in the kernel suit `k_tools` (an object of
+    the cabinet with 21 entries); Photon is in the kernel's extension. `tools/kdis/own.py`
+    measures what belongs to one entry only. TODO.md has the account and the order in which
+    they can become objects of their own. Nothing was cut yet.
+  - TODO.md: a screen saver as in The Matrix, the falling threads being the real processes.
+  - Three more names in the kernel: `suit_load`, `photon_run`, `desk_asks`.
 - **v3.0.36** (11 October 2026) - seen in QEMU
   - **Socials is a program**: it knows your handle (NAME@MACHINE), writes a message as a
     **parcel** - an object whose META is the envelope of docs/PROTOCOLS.md - and lists the

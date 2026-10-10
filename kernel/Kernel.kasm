@@ -41525,7 +41525,8 @@ L_6d78e:
 ; says: '[kasm] on: '
 ; says: 'Kernel suit missing from the cabinet: '
 ; says: 'Kernel suit refused (bad signature or built for another kernel): '
-fn_6d795:
+; rdi = the number of a kernel suit (0 k_sound, 1 k_usb12, 2 k_net, 3 k_tools): if it is not on yet, find its object, check its signature, copy its code to its place; eax = 1 when it is on
+suit_load:
         push rbx
         push r12
         push r13
@@ -41618,7 +41619,7 @@ L_6d8b8:
         push r8
         push r9
         mov edi,0x0
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -41641,7 +41642,7 @@ L_6d8e0:
         push r8
         push r9
         mov edi,0x0
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -41664,7 +41665,7 @@ fn_6d908:
         push r8
         push r9
         mov edi,0x0
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -41687,7 +41688,7 @@ fn_6d930:
         push r8
         push r9
         mov edi,0x1
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -41710,7 +41711,7 @@ fn_6d958:
         push r8
         push r9
         mov edi,0x1
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -41778,7 +41779,7 @@ L_6d9df:
         push r8
         push r9
         mov edi,0x2
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -41801,7 +41802,7 @@ L_6da07:
         push r8
         push r9
         mov edi,0x2
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -41824,7 +41825,7 @@ L_6da2f:
         push r8
         push r9
         mov edi,0x2
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -41847,7 +41848,7 @@ L_6da57:
         push r8
         push r9
         mov edi,0x2
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -41870,7 +41871,7 @@ L_6da7f:
         push r8
         push r9
         mov edi,0x2
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -41893,7 +41894,7 @@ L_6daa7:
         push r8
         push r9
         mov edi,0x2
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -41916,7 +41917,7 @@ L_6dacf:
         push r8
         push r9
         mov edi,0x2
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -41939,7 +41940,7 @@ L_6daf7:
         push r8
         push r9
         mov edi,0x2
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -41962,7 +41963,7 @@ L_6db1f:
         push r8
         push r9
         mov edi,0x2
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -41985,7 +41986,7 @@ L_6db47:
         push r8
         push r9
         mov edi,0x2
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42008,7 +42009,7 @@ L_6db6f:
         push r8
         push r9
         mov edi,0x2
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42031,7 +42032,7 @@ fn_6db97:
         push r8
         push r9
         mov edi,0x2
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42054,7 +42055,7 @@ fn_6dbbf:
         push r8
         push r9
         mov edi,0x2
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42077,7 +42078,7 @@ fn_6dbe7:
         push r8
         push r9
         mov edi,0x2
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42100,7 +42101,7 @@ L_6dc0f:
         push r8
         push r9
         mov edi,0x2
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42123,7 +42124,7 @@ L_6dc37:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42146,7 +42147,7 @@ L_6dc5f:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42169,7 +42170,7 @@ fn_6dc87:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42192,7 +42193,7 @@ L_6dcaf:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42215,7 +42216,7 @@ L_6dcd7:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42238,7 +42239,7 @@ fn_6dcff:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42261,7 +42262,7 @@ L_6dd27:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42284,7 +42285,7 @@ fn_6dd4f:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42307,7 +42308,7 @@ L_6dd77:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42330,7 +42331,7 @@ fn_6dd9f:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42362,7 +42363,7 @@ L_6ddda:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42385,7 +42386,7 @@ fn_6de02:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42408,7 +42409,7 @@ L_6de2a:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42431,7 +42432,7 @@ L_6de52:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42454,7 +42455,7 @@ L_6de7a:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42477,7 +42478,7 @@ fn_6dea2:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42500,7 +42501,7 @@ L_6deca:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42523,7 +42524,7 @@ L_6def2:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42549,7 +42550,7 @@ fn_6df1a:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -42572,7 +42573,7 @@ L_6df42:
         push r8
         push r9
         mov edi,0x3
-        call fn_6d795
+        call suit_load
         pop r9
         pop r8
         pop rcx
@@ -45203,7 +45204,7 @@ L_70a71:
         jmp near L_71129
 
 L_70b35:
-        call fn_73d22
+        call photon_run
         jmp near L_71129
 
 L_70b3f:
@@ -47943,7 +47944,7 @@ L_73812:
         xor eax,eax
         cmp qword [rel screen_on],0x0
         jz short L_73869
-        mov byte [rel d_7477e],0x4
+        mov byte [rel desk_asks],0x4
         mov eax,0x1
         retq
 
@@ -47951,12 +47952,12 @@ L_7382b:
         xor eax,eax
         cmp qword [rel screen_on],0x0
         jz short L_73869
-        mov byte [rel d_7477e],0x3
+        mov byte [rel desk_asks],0x3
         mov eax,0x1
         retq
 
 L_73844:
-        mov byte [rel d_7477e],0x2
+        mov byte [rel desk_asks],0x2
         mov eax,0x1
         retq
 
@@ -47964,48 +47965,48 @@ L_73851:
         xor eax,eax
         cmp qword [rel screen_on],0x0
         jz short L_73869
-        mov byte [rel d_7477e],0x1
+        mov byte [rel desk_asks],0x1
         mov eax,0x1
 
 L_73869:
         retq
 
 L_7386a:
-        movzx eax,byte [rel d_7477e]
+        movzx eax,byte [rel desk_asks]
         retq
 
 L_73872:
-        cmp byte [rel d_7477e],0x0
+        cmp byte [rel desk_asks],0x0
         jz short L_738ef
-        cmp byte [rel d_7477e],0x3
+        cmp byte [rel desk_asks],0x3
         jnz short L_73896
-        mov byte [rel d_7477e],0x0
+        mov byte [rel desk_asks],0x0
         call fn_6dcff
         mov eax,0x1
         retq
 
 L_73896:
-        cmp byte [rel d_7477e],0x4
+        cmp byte [rel desk_asks],0x4
         jnz short L_738b1
-        mov byte [rel d_7477e],0x0
+        mov byte [rel desk_asks],0x0
         call fn_6dd9f
         mov eax,0x1
         retq
 
 L_738b1:
-        cmp byte [rel d_7477e],0x2
+        cmp byte [rel desk_asks],0x2
         jnz short L_738cc
-        mov byte [rel d_7477e],0x0
+        mov byte [rel desk_asks],0x0
         call fn_6dc87
         mov eax,0x1
         retq
 
 L_738cc:
-        mov byte [rel d_7477e],0x0
+        mov byte [rel desk_asks],0x0
         lea rdi,[rel d_7475b]
         call api_log
         call api_cursor_hide
-        call fn_73d22
+        call photon_run
         mov eax,0x1
         retq
 
@@ -48325,7 +48326,8 @@ fn_73d07:
 ; says: 'Photon demo ended (last second: '
 ; says: ' frames per second).'
 ; says: 'Photon: not enough memory (it needs about 40 MB).'
-fn_73d22:
+; Photon, the game, on the whole screen - asked for by the desktop (it draws through the SUB-GPU: fn_7189b)
+photon_run:
         push rbx
         push r12
         push r13
@@ -49035,7 +49037,8 @@ d_74751:
 d_7475b:
         db '[photon] started from the desktop', 10, 0
 
-d_7477e:
+; what the desktop asked the kernel to run when it has left the screen: 1 Photon, 2 Puffer, 3 META, 4 Tuner
+desk_asks:
         db 0x00
 
 d_7477f:
