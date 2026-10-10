@@ -3,6 +3,13 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.07** (10 October 2026)
+  - `assets/fonts`: the three font families v2.9.59 was made with (Exo for the shell, JetBrains
+    Mono, Russo One), from the owner.
+  - TODO.md, part 4a: what an operating system needs and NinuxOS does not have yet - twelve
+    points, the worst first. Part 4b: the owner's notes of today - kill and the desktop that
+    closes everything, cores solo and bench, at most 5 users, an instance of the system on every
+    disk with a governor, the wall between the desktop and the shell.
 - **v3.0.06** (10 October 2026)
   - `docs/TESTS.md`: the full list of system tests for the owner, in the order they depend on each
     other, with what must be seen and what it means if it is not: the build, Puffus and the stick,

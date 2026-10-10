@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.06 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.07 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -173,6 +173,64 @@ a suit that reads, a command and a program that show).
       dates and size), or straight to another stick.
 - [ ] This is also the tool that would have saved the old project: a lost NTFS partition read
       from NinuxOS.
+
+## 4a. What an operating system needs and NinuxOS does not have yet
+
+Looked at on 10 October 2026, against v2.9.59. Order = how much it hurts.
+
+- [ ] **One copy of everything that matters on the disk.** The table of the cabinet is one
+      sector run at 481; the kernel is one copy; nothing is written in two steps. One bad sector
+      or a power cut in the middle of a write and the system is gone (this project was lost that
+      way once). Needed: a second copy of the table and of the kernel, writes that are either
+      whole or not at all, a check at every start. The owner's idea of an instance on every disk
+      (below) is the big form of this.
+- [ ] **The boot sector looks like a FAT12 diskette**, so Windows writes over the kernel when the
+      stick is plugged in. Every user will do this once.
+- [ ] **Programs do not live on.** Leaving the desktop for the shell closes every program
+      ("[desktop] closed", "[mux] multiplexer off") and the desktop starts anew on the way back.
+      So nothing runs in the background, and `kill NAME` has nothing to kill. Needed: programs
+      that keep running whatever is on the screen, and a list of them (`tasks`).
+- [ ] **Memory is never given back** by a PyTon program (old runtime and new). A program that
+      runs long fills its memory and stops.
+- [ ] **All cores.** By default every program takes turns on the first core ("cores all" crashed
+      a real machine in v2.9.10). `bench` and `cores solo` show the same numbers on one core and
+      on many (the owner, 10 Oct) - find out what `cores solo` switches and what `bench` measures.
+- [ ] **A wall between programs and the system.** A program gets the whole table of the system's
+      functions: it can save over any object, start and close other programs, send keys to
+      another window, read every object. The shield stops it writing into the kernel, not using
+      the kernel. Needed: what a program may do written in its META and checked on every call.
+- [ ] **The outside world.** Read only: FAT32 sticks. No writing to a stick, no NTFS / ext4
+      (winlolz / linlolz below). The network has two wired cards; no Wi-Fi. Whether there is TCP,
+      DNS, TLS - a way to the internet at all - has not been read from the kernel yet.
+- [ ] **Text is one byte a letter** (Latin and Cyrillic). No Unicode: no Greek (the file endings
+      planned below), no other scripts, no emoji; a text from outside in UTF-8 shows wrong.
+- [ ] **Laptops.** No sleep, no battery, no lid, no touchpad that is not PS/2 or USB, no screen
+      brightness. ACPI is used for power-off only.
+- [ ] **Programs are made outside the system.** `build` inside compiles numbers only; py2asm is a
+      Python program on a PC. A system that cannot build its own programs depends on another one.
+- [ ] **When something goes wrong.** A fault in a program is caught and logged; there is no way
+      to look inside a running program, no saved picture of a crash, no automatic tests.
+- [ ] Smaller: no clock from the network; sound out only; no printing; no Bluetooth.
+
+## 4b. From the owner, 10 October 2026
+
+- [ ] **The fonts.** `assets/fonts`: Exo (the shell), JetBrains Mono, Russo One - the originals
+      of v2.9.59. Write `tools/make_font.py` again (a .ttf -> the object `font`); find out where
+      the other two were used.
+- [ ] `kill NAME` is useless as long as leaving the desktop closes everything (4a, "programs do
+      not live on"). Decide: programs stay open across shell / desktop.
+- [ ] `cores solo` and `bench`: the same results whatever is set - not as it should be (4a).
+- [ ] **At most 5 users.**
+- [ ] **An instance of the system on every physical disk.** If one dies another starts. One is
+      the *governor*: it leads and starts first. `governor swap` makes another one the governor;
+      `governor sync` brings every instance to the governor's settings and updates. To think
+      through before building: who decides when two instances both claim to lead; what is synced
+      (the system only, or the users' objects too); what happens to changes made on an instance
+      that was not the governor.
+- [ ] **Nothing on the desktop may reach the kernel or the shell.** Today `NAME` in the shell
+      starts a program of the desktop (calc ...) and a program can send keys (Keys does). The one
+      exception wanted: a keyboard on the screen that can type into the shell - decide how far
+      that is safe (it is a program that types commands).
 
 ## 5a. New: Socials
 
