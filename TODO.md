@@ -1,9 +1,88 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.37 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.38 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
+
+## THE FULL TEST of 11 October 2026 (v3.0.37 -> v3.0.38): what works, what does not, how to mend it
+
+All 30 test scripts were run in QEMU against the image, one after another:
+`python test/qemu/run_all.py` (results: `test/qemu/RESULTS.md`; pictures: `test/qemu/out_all/`,
+`python tools/qemu/sheet.py` puts many on one sheet). The eight scripts of v2.9.59 (shell,
+checks, desktop, the programs, META, Photon, Tuner, ASMONCRAFT) and the 22 written since.
+
+**No script ended in a fault, a stop of the system, a refusal or a wrong seal.** The one
+"object fault" in the log is `shield test` doing its work; the `[ata] read error` lines are the
+backup pool being looked for on a disk too small for it (see 3 below).
+
+### Seen working (in QEMU; nothing here was seen on a real machine)
+
+- The start with the new boot sector, the kernel with everything written since, our key; the
+  Sentinel; the four suits.
+- The shell's commands of v2.9.59 (the whole script), maintenance mode, copy / rename / delete.
+- The old desktop with all its programs: PyNamp, NET, Studio, Search, Paint, Interfacer,
+  Projector, Chronos, Device, Console, Nest, Widgets, Phone, Ask, Keys, Task test, Core test;
+  Photon, Tuner, ASMONCRAFT on the whole screen.
+- **All 19 programs of v2.9.59 compiled by the new py2asm** (`--compare`): each starts and draws
+  its window - Ask, ASMONCRAFT (the whole 3D world), Calc, Chronos, Console, Copycat, Device,
+  Greet, Interfacer, Keys, Mail, Nest, Notepad, Paint, Phone, Projector, PyNamp, Search,
+  Widgets. Seen small, side by side: none is blank or broken at a glance. **Not compared key by
+  key with the old ones** - that is still the owner's (docs/TESTS.md, part M).
+- Written since the recovery: Alt + *, programs kept across leaving the desktop, `tasks`,
+  `keyboard` and the click in the corner, `cores solo` / `bench`, `backup`, the table of the
+  cabinet twice and the loader taking the copy, `desk NAME`; Bags, Files, Settings, Socials;
+  Desk2 with its card, menus, bag panel, curtain, desktops, the system's menu, the screen
+  split in 4; memory given back; the five dialects (on Windows).
+
+### What does not work, or was found wrong - and how to mend it
+
+1. **[mended, v3.0.38] Support showed one line of Puffer's text.** Not a fault of the program:
+   the page itself (`pages/Donate.asmo`) held that line - it was lost before the disk was.
+   Written anew, with the picture `qr_donate`. Seen.
+2. **[mended, v3.0.38] The Sentinel always said "1 CHANGED"** (that same page). The build now
+   makes every line of the list true by the object's name when the old sum is not found.
+   The build says "0 left as they were"; to be looked at on the screen: `sentinel` should end
+   with nothing CHANGED.
+3. **`[ata] read error` in the log** once a session, when a program saves on a disk under
+   64 MB: the backup pool is looked for by reading where it would be. Harmless. To mend: ask
+   the disk for its size first (the size is known per kind of disk - to be read), or keep
+   quiet about a failed read in that one place.
+4. **Five people at most: not tried.** The test typed `user add ana 1`; the level must be 18,
+   16, 12, 7 or 0, so nobody was added. To do: the test with a right level
+   (`test/qemu/q_v3_misc.txt`), then look for "Five people are known by now".
+5. **The screen split in 9: not seen.** In the test the right button on the desk did nothing,
+   because a program's window had the keys: **the first click on the desk after working in a
+   window only brings the desk to the front** (the multiplexer takes it; the old desktop
+   behaves the same). The second click works. To mend, if the owner wants it mended: let the
+   multiplexer hand that click on to the desktop as well (`mux_input`).
+6. **META from the old test**: the script's two pictures show the shell with two lines, not a
+   screen of META. The log says `[meta] asked for by the desktop app` and nothing after. Either
+   META needs something QEMU does not have here, or it is broken since v2.9.59 (it was not
+   looked at then). To do: `meta` in the shell by hand, read what it says; compare with the
+   stick of v2.9.59.
+7. **In a split screen nobody can work**, only look and pick (written so; TODO "24").
+8. **`sources`** was not looked at after Bags was written anew (it may say OUT OF DATE: how
+   the sum of a source is made is not known).
+9. **The right button of the mouse arrives as 4 in QEMU**, not 2. Desk2 takes both; the old
+   desktop and the programs of v2.9.59 test for 2. To see on a real mouse.
+10. **Bags in the old desktop** opens on a black screen (a program without `window()` gets the
+    whole screen); over the desk only in Desk2.
+11. **`view`** shows only the first lines of a long text: the papers in the drawer `project`
+    cannot be read whole in the shell.
+12. Not tried at all, because there was nothing to try them with: a program outside the
+    Sentinel's list asking for power (`api_guard` refusing); a parcel carried to a second
+    machine; a USB mouse or a touch screen on the keyboard of the shell; the stick in Windows
+    with the new boot sector; `--source-inside`; the vault of Bags; `update`, `uproot`, the
+    network, sound; anything on a real machine.
+13. Tools: `tools/kdis/handwork.py` has not been run since `kernel/New.kasm` was cut out;
+    `Puffus.exe` in the project folder is still the one of v2.9.60 (close it, run
+    `tools\puffus\make_puffus.cmd`).
+
+### What to do first, when there is time again
+
+In this order: 4 and 5 (two small tests), 6 (META), 3 (the read error), then the owner's own
+round on a real machine (docs/TESTS.md, parts C, K - T).
 
 ## To try now (the owner)
 
@@ -999,8 +1078,8 @@ to be touched. A proposal for the rest, to decide:
 
 - [x] Bags: a page fault when it is closed with Esc. v3.0.11: Bags is written anew (a folder, as
       on a phone) and compiled by the new py2asm; whether the fault is gone is to be seen.
-- [ ] Support (the page `donate`) shows Puffer's text instead of the page with the QR code;
-      probably the one object the Sentinel calls CHANGED.
+- [x] Support (the page `donate`) showed Puffer's text: the page itself was lost. Written anew
+      in v3.0.38; the Sentinel's line for it is made true by the build.
 
 ## 9. Lost, not on the stick
 

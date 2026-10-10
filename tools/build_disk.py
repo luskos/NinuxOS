@@ -614,8 +614,19 @@ def seal(img, base, tables, seed, old_public, added):
             lba = struct.unpack_from('<I', img, by_hash[old] + 16)[0]
             h = object_hash(img, lba * SECTOR)
         else:
-            h = old                             # the list did not match this object before either
-            kept += 1
+            # the list did not match this object before either (the page `donate` of v2.9.59):
+            # the line is made true by the object's name
+            want = name.decode('latin-1')
+            source = '/' in want
+            h = None
+            for t in tables:
+                for e, n, lba, sectors, ident in t.entries(img):
+                    if (n + '/source')[:15] == want if source else n == want:
+                        if (type_at(img, lba) == 'source') == source:
+                            h = object_hash(img, lba * SECTOR)
+            if h is None:
+                h = old
+                kept += 1
         if h != old:
             fresh += 1
         new[at + 16:at + 48] = h

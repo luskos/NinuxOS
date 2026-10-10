@@ -1,0 +1,111 @@
+# q_v3_compare.txt - the programs of v2.9.59 compiled by the new py2asm (an image built with --compare):
+# each is started from the shell by its name and closed with ESC
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type desk desk2
+wait 8
+moveto 800 300
+rclick
+wait 2
+esc
+wait 1
+esc
+wait 3
+type pycalc
+wait 4
+snap cmp_calc
+esc
+wait 2
+type pychronos
+wait 4
+snap cmp_chronos
+esc
+wait 2
+type pynotepad
+wait 4
+text hello
+wait 1
+snap cmp_notepad
+esc
+wait 2
+esc
+wait 2
+type pypaint
+wait 4
+snap cmp_paint
+esc
+wait 2
+type pysearch
+wait 4
+snap cmp_search
+esc
+wait 2
+type pymail
+wait 4
+snap cmp_mail
+esc
+wait 2
+type pywidgets
+wait 4
+snap cmp_widgets
+esc
+wait 2
+type pyconsole
+wait 4
+snap cmp_console
+esc
+wait 2
+type pydevice
+wait 4
+snap cmp_device
+esc
+wait 2
+type pynest
+wait 4
+snap cmp_nest
+esc
+wait 2
+type pypynamp
+wait 4
+snap cmp_pynamp
+esc
+wait 2
+type pyprojector
+wait 4
+snap cmp_projector
+esc
+wait 2
+type pycopycat
+wait 4
+snap cmp_copycat
+esc
+wait 2
+type pyinterfacer
+wait 4
+snap cmp_interfacer
+esc
+wait 2
+type pykeys
+wait 4
+snap cmp_keys
+esc
+wait 2
+type pyphone
+wait 4
+snap cmp_phone
+esc
+wait 2
+type pyask
+wait 4
+snap cmp_ask
+esc
+wait 2
+type pyasmoncraft
+wait 5
+snap cmp_asmoncraft
+esc
+wait 2
+type run pygreet
+wait 2
+snap cmp_end

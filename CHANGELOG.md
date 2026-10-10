@@ -3,6 +3,16 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.38** (11 October 2026) - the full test
+  - **Everything was run**: `python test/qemu/run_all.py` drives all 30 test scripts through
+    QEMU and writes `test/qemu/RESULTS.md`; `tools/qemu/sheet.py` puts many pictures of the
+    screen on one sheet. No script ended in a fault or a stop. All 19 programs of v2.9.59
+    compiled by the new py2asm start and draw. TODO.md begins with the account: what works,
+    the 13 things that do not or were not tried, and how to mend each.
+  - **Support works again**: the page was lost before the disk was (it held a line of Puffer's
+    text); written anew with the QR picture.
+  - **The Sentinel no longer says "1 CHANGED"**: the build makes every line true by name.
+  - New test scripts: `q_v3_compare`, `q_v3_misc`, `q_v3_support`.
 - **v3.0.37** (11 October 2026) - the image is the same but for the version
   - **Where Photon, Puffer, Tuner and META really are** - read from the desk down to the code:
     Puffer, Tuner and META are not in the kernel but in the kernel suit `k_tools` (an object of

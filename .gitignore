@@ -16,3 +16,4 @@ build/font/
 test/qemu/out_v3/
 pyton/examples/dialects/out/
 *.pyton.py
+test/qemu/out_all/

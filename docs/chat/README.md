@@ -1,9 +1,9 @@
 # The conversation
 
-`2026-10-11_recovery_to_v3.0.37.zip` is the export of the Claude Code session in which NinuxOS
+`2026-10-11_recovery_to_v3.0.38.zip` is the export of the Claude Code session in which NinuxOS
 v2.9.59 was brought back and v3 was started: the whole transcript with every command that was
 run and its output. It is the record of how each file of this project was made. It ends shortly
-before v3.0.37 was committed. One file holds the whole conversation; a later export replaces it
+before v3.0.38 was committed. One file holds the whole conversation; a later export replaces it
 (the older ones stay in the history of git).
 
 In short, in the order it happened:
@@ -69,6 +69,7 @@ In short, in the order it happened:
 42. v3.0.35: the loader reads the copy of the table; what a program is handed; 91 names, New.kasm.
 43. v3.0.36: Socials and the parcel in code; Zipper into TODO.
 44. v3.0.37: where Photon, Puffer, Tuner and META really are; the Matrix screen saver into TODO.
+45. v3.0.38: the full test in QEMU - what works, what does not; Support and the Sentinel mended.
 
 The transcript holds what was on the screen of this PC during the work (paths, the account name,
 the identity of the test machine). Keep the repository private.

@@ -1,0 +1,21 @@
+# q_v3_support.txt - v3.0.38: the Support page, and the Sentinel with nothing CHANGED
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type sentinel
+wait 3
+snap su01_sentinel
+type cls
+type desktop
+waitlog [browser] page shown 60
+wait 2
+esc
+wait 2
+moveto 64 595
+click
+wait 5
+snap su02_support
+esc
+wait 2
+esc
+wait 2

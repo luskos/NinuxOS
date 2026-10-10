@@ -1,0 +1,95 @@
+# q_v3_misc.txt - what no other script tries: five people, a vault, the split in 9, programs kept + shutdown
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type maint
+wait 2
+text ninux1
+enter
+wait 2
+text ninux1
+enter
+wait 2
+type user add ana 1
+wait 2
+text pw1
+enter
+wait 1
+text pw1
+enter
+wait 2
+type user add bob 1
+wait 2
+text pw1
+enter
+wait 1
+text pw1
+enter
+wait 2
+type user add cid 1
+wait 2
+text pw1
+enter
+wait 1
+text pw1
+enter
+wait 2
+type user add dan 1
+wait 2
+text pw1
+enter
+wait 1
+text pw1
+enter
+wait 2
+type user add eve 1
+wait 2
+text pw1
+enter
+wait 1
+text pw1
+enter
+wait 2
+type user add fay 1
+wait 2
+snap mi01_users
+type cls
+type user
+wait 1
+type sources
+wait 1
+snap mi02_sources
+esc
+type cls
+type help
+wait 1
+snap mi03_help
+esc
+type cls
+type desk desk2
+wait 8
+moveto 64 500
+click
+wait 4
+moveto 900 60
+click
+wait 1
+moveto 64 410
+click
+wait 4
+moveto 900 100
+rclick
+wait 2
+moveto 940 184
+click
+wait 4
+snap mi04_split9
+esc
+wait 2
+moveto 60 749
+click
+wait 4
+type tasks
+type shutdown
+wait 6
+snap mi05_shutdown
