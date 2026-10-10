@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.04.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.05.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.04 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.05 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -214,7 +214,11 @@ whole objects --- the other 58 are older copies the build left between the live 
       public half in that place and signs with it.
 \end{itemize}
 
-\noindent \file{tools/build\_disk.py} does all three after every change; the order matters: the
+\begin{itemize}
+\item \textbf{The kernel suits} are signed too, with the same key (below).
+\end{itemize}
+
+\noindent \file{tools/build\_disk.py} does all of it after every change; the order matters: the
 key goes into the extension, then the SHA-256 of the extension into the core, then the kernel is
 hashed for the list, then the list is signed.
 
@@ -265,6 +269,72 @@ directly, and the core calls the extension. The names of the old source files (C
 Shield, Cart, ATA; ACPI, AHCI, Bench, Chain, Crypto, Files, Lock, NVMe, PCI, PhotonTables,
 PyTonCompiler, Shot, SuitLoader, SysInfo, Tuner, USBStick, VirtioGPU, XHCI; the suits EHCI, OHCI,
 UHCI, Sound) are known; which bytes belonged to which file is not.
+
+\subsection{A kernel suit}
+
+A suit is kernel code that is not in the kernel's 480 sectors: an object of type \texttt{kernel}
+in the cabinet, put on when a command first needs it (\texttt{[kasm] on: k\_tools}). Its DATA is:
+
+\begin{longtable}{@{}l p{12cm}@{}}
+\toprule
+offset & what \\ \midrule
+0 & 64 bytes: an Ed25519 signature over everything that follows \\
+64 & 8 bytes: the \emph{slot}, the fixed address the code runs at \\
+72 & 8 bytes: the size of the code \\
+80 & 16 zero bytes \\
+96 & the code \\
+\bottomrule
+\end{longtable}
+
+\noindent The code is linked for its slot and calls the kernel directly, by address; it is not
+position-independent, and it is built for one kernel (``refused: bad signature or built for
+another kernel''). It begins with a mark, its size and its name, and from byte \texttt{0x20} a
+table of addresses: the places the kernel enters it by.
+
+\begin{longtable}{@{}l l r l@{}}
+\toprule
+suit & slot & bytes & what \\ \midrule
+\texttt{k\_tools} & \texttt{0x30000} & 41232 & the tools of the shell \\
+\texttt{k\_sound} & \texttt{0x80000} & 3840 & HD Audio, AC97 \\
+\texttt{k\_usb12} & \texttt{0x82000} & 8624 & UHCI and OHCI \\
+\texttt{k\_net} & \texttt{0x86000} & 24544 & the network \\
+\bottomrule
+\end{longtable}
+
+\subsection{The source of the kernel}
+
+\file{kernel/Kernel.kasm} is made from the compiled kernel by \file{tools/kdis/kdis.py} and
+assembles to the same 220000 bytes. What it is made of:
+
+\begin{longtable}{@{}l r p{9.5cm}@{}}
+\toprule
+part & bytes & \\ \midrule
+code & 122410 & 30952 instructions in 655 functions, every one written as an instruction \\
+texts & 42277 & the messages, the help of the shell \\
+runs of one byte & 35925 & zeros and filling \\
+tables of addresses & 2952 & 369 addresses, written as names \\
+other data & 16436 & tables of numbers (the crypto, Photon, the keyboard \ldots); may still hide
+                     code that nothing found so far leads to \\
+\bottomrule
+\end{longtable}
+
+\noindent Names: \texttt{fn\_ADDR} a function, \texttt{L\_ADDR} a place jumped to, \texttt{d\_ADDR}
+data, \texttt{p\_ADDR} what a table points at, \texttt{v\_ADDR} a variable in the memory after the
+kernel (it is not in the file). Two tables gave real names: the functions the system gives a
+program (\texttt{api\_fill}, \texttt{api\_text}, \texttt{api\_poll} \ldots, 43 places, the table
+\texttt{api\_table}) and the commands of the shell (\texttt{cmd\_help}, \texttt{cmd\_puffer},
+\texttt{cmd\_sentinel} \ldots, found from the table that pairs each word with its function).
+\texttt{ext\_sha256} and \texttt{build\_public\_key} are the two places the build fills in.
+
+The 64-bit code points at everything relative to itself, the tables of addresses are names, the
+loader's addresses are names, and the size of the extension is written as
+\texttt{ext\_end - ext\_start}. So the source no longer depends on where things lie: a line can be
+added. What is \emph{not} proven is that nothing was missed --- an address kept as a plain number
+in a place the tool does not look. The proof is a kernel with one line added that still starts;
+that has not been done.
+
+\file{kernel/suits/*.kasm} are the four suits, made the same way by \file{tools/kdis/odis.py};
+they take the kernel's names from \file{kernel/Kernel.sym.inc}.
 
 \subsection{Protection}
 
@@ -621,10 +691,10 @@ new number.
       build (0 is accepted), but \cmd{id} shows it.
 \item Whether a system built and signed this way starts and passes \cmd{sentinel}: written from
       what was read, not tried yet.
-\item The kernel suits (\texttt{k\_tools}, \texttt{k\_net}, \texttt{k\_usb12}, \texttt{k\_sound}): their
-      code lies in their DATA in a form of its own; not turned into source yet.
+\item Whether a kernel with a line added still runs (the source is written so that it should).
+\item What the 16 KB of ``other data'' in the kernel are, table by table.
 \item Photon, Puffer, Tuner and META are 560-byte launchers; their code is in the extension of
-      the kernel.
+      the kernel, among its functions, not yet told apart by name.
 \item The nine system sockets and the third number of a procket; the fields \texttt{0x48} and
       \texttt{0x50} of the header.
 \item The rest of the table of the system's functions (section~6 lists what is known).

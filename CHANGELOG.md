@@ -3,6 +3,19 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.05** (10 October 2026) - a source for everything that is compiled
+  - The kernel: the tables of addresses in its data found and followed (the shell's commands, the
+    functions for programs, 369 addresses in all) - 55.6% of the kernel is code, the rest is
+    texts, zeros and tables; no instruction is left as bytes; the variables in memory, the
+    loader's addresses and the size of the extension are names. `cmd_*` and `api_*` are real
+    names. Written so that lines can be added; not proven by running a changed kernel.
+  - The four kernel suits as source (`kernel/suits/*.kasm`); the build assembles them and signs
+    them. Their format: 64 bytes of signature, the slot, the size, the code.
+  - Corrected: v3.0.04 changed the key but left the suits signed with the old one - the system
+    would have refused k_tools. The build signs the suits now.
+  - The build finds the places it fills in (the key, the hash) by what the source holds there,
+    not by a fixed address.
+  - Still the same bytes as v2.9.59 everywhere except the version, the key and the signatures.
 - **v3.0.04** (10 October 2026) - the build can change the system
   - Read from the image and written into `tools/build_disk.py`: the SHA-256 the core keeps of the
     extension; the Sentinel's list (98 lines of name + SHA-256, signed with Ed25519) and the place

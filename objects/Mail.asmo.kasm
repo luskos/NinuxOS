@@ -8103,10 +8103,12 @@ L_0932c:
         jnc short L_0933a
         mov al,0x20
 L_0933a:
+r_0933c equ L_0933a + 2
         mov [rcx+0xb746],al
         inc rcx
         jmp short L_0932c
 L_09345:
+r_09347 equ L_09345 + 2
         mov byte [rcx+0xb746],0x0
         mov rcx,r9
         lea rdx,[rel d_0b746]

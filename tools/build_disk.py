@@ -15,6 +15,7 @@
 #        the Sentinel's list: the SHA-256 of every system object and of the kernel, signed with
 #        this project's own key (build/key/build.key - made at the first build, never in git);
 #        the public half of the key goes into the kernel
+#        every kernel suit (kernel/suits/*.kasm is its code): signed with the same key
 #   5. packs the whole source next to it (tools/source_container.py)
 #
 # The disk, as read from v2.9.59 (docs/NinuxOS_Architecture.tex has it in full):
@@ -44,10 +45,11 @@ KEY = os.path.join(ROOT, 'build', 'key', 'build.key')
 SECTOR = 512
 KERNEL_SECTORS = 480                    # boot/Boot.kasm: kernel_sectors
 KERNEL_ROOM = KERNEL_SECTORS * SECTOR
+BASE_KERNEL = 220000                    # v2.9.59: the kernel, of which
 CORE_SIZE = 61968                       # the core; the extension follows it
 KERNEL_SAYS = b'v2.9.59'                # the version written in the kernel's texts
-EXT_HASH_AT = 0xF058                    # in the kernel: the SHA-256 the extension must have (32 bytes)
-PUBLIC_KEY_AT = 0x2D280                 # in the kernel: the key the Sentinel's list is checked with
+EXT_HASH_AT = 0xF058                    # in the v2.9.59 kernel: the SHA-256 the extension must have (ext_sha256)
+PUBLIC_KEY_AT = 0x2D280                 # in the v2.9.59 kernel: the key the lists are checked with (build_public_key)
 TABLE_AT = 481 * SECTOR                 # the table of the cabinet
 TABLE_PLACES = 63
 
@@ -66,7 +68,8 @@ def find_nasm():
 
 def assemble(nasm, src, name):
     out = os.path.join(WORK, name)
-    r = subprocess.run([nasm, '-f', 'bin', '-w-all', '-o', out, os.path.join(ROOT, src)],
+    path = os.path.join(ROOT, src)
+    r = subprocess.run([nasm, '-f', 'bin', '-w-all', '-I', os.path.dirname(path) + os.sep, '-o', out, path],
                        capture_output=True, text=True)
     if r.returncode != 0:
         sys.exit('build: nasm stopped on %s\n%s' % (src, r.stderr[:4000]))
@@ -268,6 +271,46 @@ def add_object(img, tables, path):
     return '%s (%s, %d bytes, sector %d)' % (name, what, len(data), used)
 
 
+SUITS = {'k_tools': 'Tools', 'k_usb12': 'USB12', 'k_net': 'Network', 'k_sound': 'Sound'}
+
+
+def suits(img, tables):
+    """the kernel suits of the cabinet: (name, where the DATA starts, its length)"""
+    for t in tables:
+        for e, name, lba, sectors, ident in t.entries(img):
+            off = lba * SECTOR
+            if object_size(img, off) and meta(img[off:off + object_size(img, off)], 'type') == 'kernel':
+                yield name, off + struct.unpack_from('<Q', img, off + 0x10)[0], struct.unpack_from('<Q', img, off + 0x58)[0]
+
+
+def suit_sources(nasm, img, tables, changed):
+    """kernel/suits/NAME.kasm is the code of a suit: assembled and put into its object"""
+    for name, data, length in list(suits(img, tables)):
+        src = os.path.join('kernel', 'suits', SUITS.get(name, name) + '.kasm')
+        if not os.path.exists(os.path.join(ROOT, src)):
+            continue
+        code = assemble(nasm, src, name + '.bin')
+        size = struct.unpack_from('<Q', img, data + 72)[0]
+        if len(code) != size:
+            sys.exit('build: the suit %s is %d bytes now, its object holds %d - a suit of another size '
+                     'cannot be put in yet (TODO.md)' % (name, len(code), size))
+        if code != img[data + 96:data + 96 + size]:
+            img[data + 96:data + 96 + size] = code
+            changed.append('the suit %s (%s)' % (name, src.replace(os.sep, '/')))
+
+
+def sign_suits(img, base, tables, seed, old_public):
+    """a suit carries a signature over its slot, its size and its code: ours, since the key is ours"""
+    done = 0
+    for name, data, length in suits(img, tables):
+        if not verify(old_public, bytes(base[data + 64:data + length]), bytes(base[data:data + 64])):
+            print('build: the suit %s was not signed as expected in the base image - left as it is' % name)
+            continue
+        img[data:data + 64] = sign(seed, bytes(img[data + 64:data + length]))
+        done += 1
+    return done
+
+
 def seal(img, base, tables, seed, old_public):
     """the Sentinel's list for this image, signed with our key; returns what it did"""
     sentinel = None
@@ -372,21 +415,32 @@ def main():
         count += 1
 
     tables = all_tables(img)
+    suit_sources(nasm, img, tables, changed)
     for path in sorted(glob.glob(os.path.join(ROOT, 'build', 'add', '*.asmo'))):
         changed.append('added: ' + add_object(img, tables, path))
 
-    old_public = base_kernel[PUBLIC_KEY_AT:PUBLIC_KEY_AT + 32]
+    # the two places the build fills in are found by what the source still holds there - the key
+    # and the hash of v2.9.59 - so they are found wherever a changed kernel has them
+    base_k = base[SECTOR:SECTOR + BASE_KERNEL]
+    old_public = base_k[PUBLIC_KEY_AT:PUBLIC_KEY_AT + 32]
+    old_hash = hashlib.sha256(base_k[CORE_SIZE:]).digest()
+    if base_k[EXT_HASH_AT:EXT_HASH_AT + 32] != old_hash:
+        sys.exit('build: the base image is not v2.9.59 as it came off the stick - not built')
+    key_at, hash_at, ext_at = kernel.find(old_public), kernel.find(old_hash), kernel.find(b'NXEXT1\0\0')
+    if min(key_at, hash_at, ext_at) < 0:
+        sys.exit('build: kernel/Kernel.kasm no longer has build_public_key, ext_sha256 or the extension as they were')
     sealed = None
     if changed and not a.no_seal:
         seed = build_key()
-        kernel = kernel[:PUBLIC_KEY_AT] + public_key(seed) + kernel[PUBLIC_KEY_AT + 32:]
-    if kernel[CORE_SIZE:] != base_kernel[CORE_SIZE:]:
-        if base_kernel[EXT_HASH_AT:EXT_HASH_AT + 32] != hashlib.sha256(base_kernel[CORE_SIZE:]).digest():
-            sys.exit('build: the hash of the extension is not where it was in v2.9.59 - not built')
-        kernel = kernel[:EXT_HASH_AT] + hashlib.sha256(kernel[CORE_SIZE:]).digest() + kernel[EXT_HASH_AT + 32:]
+        kernel = kernel[:key_at] + public_key(seed) + kernel[key_at + 32:]
+    ext_size = struct.unpack_from('<Q', kernel, ext_at + 8)[0]
+    new_hash = hashlib.sha256(kernel[ext_at:ext_at + ext_size]).digest()
+    if new_hash != old_hash:
+        kernel = kernel[:hash_at] + new_hash + kernel[hash_at + 32:]
     img[SECTOR:SECTOR + len(kernel)] = kernel
     if changed and not a.no_seal:
-        sealed = seal(img, base, tables, seed, old_public)
+        signed = sign_suits(img, base, tables, seed, old_public)
+        sealed = '%d kernel suits signed; ' % signed + seal(img, base, tables, seed, old_public)
 
     with open(a.out, 'wb') as f:
         f.write(img)

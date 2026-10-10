@@ -5410,10 +5410,12 @@ L_06b2b:
         jnc short L_06b39
         mov al,0x20
 L_06b39:
+r_06b3b equ L_06b39 + 2
         mov [rcx+0x8aef],al
         inc rcx
         jmp short L_06b2b
 L_06b44:
+r_06b46 equ L_06b44 + 2
         mov byte [rcx+0x8aef],0x0
         mov rcx,r9
         lea rdx,[rel d_08aef]

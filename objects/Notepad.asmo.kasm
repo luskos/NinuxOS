@@ -7760,10 +7760,12 @@ L_0968c:
         jnc short L_0969a
         mov al,0x20
 L_0969a:
+r_0969c equ L_0969a + 2
         mov [rcx+0xbb38],al
         inc rcx
         jmp short L_0968c
 L_096a5:
+r_096a7 equ L_096a5 + 2
         mov byte [rcx+0xbb38],0x0
         mov rcx,r9
         lea rdx,[rel d_0bb38]

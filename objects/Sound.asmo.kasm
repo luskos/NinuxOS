@@ -1,0 +1,984 @@
+; Sound.asmo.kasm - the kernel suit k_sound of NinuxOS v2.9.59 as NASM source: 3840 bytes of kernel code that
+; run at 0x80000. Made by tools/kdis/odis.py; it assembles to the same bytes:
+;   nasm -f bin -I kernel/suits/ Sound.asmo.kasm -o k_sound.bin
+; The build puts the code into the object k_sound (64 bytes of signature, the slot, the size, the
+; code) and signs it. The names fn_0xxxx, L_0xxxx, d_0xxxx are the kernel's (Kernel.sym.inc).
+
+%include "../Kernel.sym.inc"
+
+
+org 0x80000
+
+suit_start:
+        db 'KASM', 0
+        db 0x0F, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00
+        db 'k_sound', 0
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        dq entry_00
+        dq entry_01
+        dq entry_02
+        dq entry_03
+[bits 64]
+
+suit_table_end:
+        cmp byte [rel d_80c15],0x0
+        jnz near L_800e7
+        mov byte [rel d_80c15],0x1
+        push rbx
+        push r12
+        mov edi,0x102000
+        call fn_0c95e
+        test rax,rax
+        jz short L_800e4
+        add rax,0xfff
+        and rax,0xfffffffffffff000
+        mov [rel d_80bb8],rax
+        add rax,0x1000
+        mov [rel d_80bc0],rax
+        mov edi,0x403ff
+        xor esi,esi
+        call fn_63921
+        test rax,rax
+        jz short L_800a3
+        mov rdi,rax
+        call fn_800f4
+        test eax,eax
+        jnz short L_800c0
+L_800a3:
+        mov edi,0x401ff
+        xor esi,esi
+        call fn_63921
+        test rax,rax
+        jz short L_800e4
+        mov rdi,rax
+        call fn_805d3
+        test eax,eax
+        jz short L_800e4
+L_800c0:
+        lea rdi,[rel d_80e47]
+        call fn_0be2c
+        mov rdi,[rel d_80bc8]
+        call fn_0be2c
+        lea rdi,[rel d_153bf]
+        call fn_0be2c
+L_800e4:
+        pop r12
+        pop rbx
+L_800e7:
+        xor eax,eax
+        cmp byte [rel d_80c14],0x0
+        setnz al
+        retq
+
+fn_800f4:
+        push rbx
+        push r12
+        push r13
+        push r14
+        push r15
+        mov r12,rdi
+        call fn_639cc
+        mov rdi,r12
+        xor esi,esi
+        call fn_6396b
+        test rax,rax
+        jz near L_80334
+        mov rbx,rax
+        mov [rel d_80bd8],rax
+        and dword [rbx+0x8],0xfffffffffffffffe
+        mov ecx,0x64
+L_8012b:
+        test dword [rbx+0x8],0x1
+        jz short L_80142
+        push rcx
+        mov edi,0x1
+        call fn_6d788
+        pop rcx
+        loop L_8012b
+L_80142:
+        mov edi,0x1
+        call fn_6d788
+        or dword [rbx+0x8],0x1
+        mov ecx,0x64
+L_80155:
+        test dword [rbx+0x8],0x1
+        jnz short L_80171
+        push rcx
+        mov edi,0x1
+        call fn_6d788
+        pop rcx
+        loop L_80155
+        jmp near L_80334
+L_80171:
+        mov edi,0xa
+        call fn_6d788
+        movzx eax,word [rbx+0xe]
+        test eax,eax
+        jz near L_80334
+        bsf eax,eax
+        mov [rel d_80c08],eax
+        mov byte [rbx+0x4c],0x0
+        mov byte [rbx+0x5c],0x0
+        mov edi,0x14
+        call fn_6d788
+        mov rax,[rel d_80bb8]
+        lea rcx,[rax+0x400]
+        mov [rbx+0x40],ecx
+        mov dword [rbx+0x44],0x0
+        lea rcx,[rax+0x800]
+        mov [rbx+0x50],ecx
+        mov dword [rbx+0x54],0x0
+        mov byte [rbx+0x4e],0x2
+        mov byte [rbx+0x5e],0x2
+        mov word [rbx+0x4a],0x8000
+        mov ecx,0x32
+L_801de:
+        test word [rbx+0x4a],0x8000
+        jnz short L_801f4
+        push rcx
+        mov edi,0x1
+        call fn_6d788
+        pop rcx
+        loop L_801de
+L_801f4:
+        mov word [rbx+0x4a],0x0
+        mov ecx,0x32
+L_801ff:
+        test word [rbx+0x4a],0x8000
+        jz short L_80215
+        push rcx
+        mov edi,0x1
+        call fn_6d788
+        pop rcx
+        loop L_801ff
+L_80215:
+        mov word [rbx+0x48],0x0
+        mov word [rbx+0x58],0x8000
+        mov word [rbx+0x5a],0xff
+        mov qword [rel d_80be8],0x0
+        mov qword [rel d_80bf0],0x0
+        mov byte [rbx+0x5c],0x2
+        mov byte [rbx+0x4c],0x2
+        mov edi,0x5
+        call fn_6d788
+        xor edi,edi
+        mov esi,0xf0004
+        call fn_80340
+        cmp eax,0xffffffffffffffff
+        jz near L_80334
+        mov r13d,eax
+        shr r13d,byte 0x10
+        and r13d,0xff
+        and eax,0xff
+        lea r14d,[r13d+eax+0x0]
+L_8027d:
+        cmp r13d,r14d
+        jnc near L_80334
+        mov edi,r13d
+        mov esi,0xf0005
+        call fn_80340
+        and eax,0xff
+        cmp eax,0x1
+        jz short L_802a2
+        inc r13d
+        jmp short L_8027d
+L_802a2:
+        mov [rel d_80c0c],r13d
+        mov edi,r13d
+        mov esi,0x70500
+        call fn_80340
+        mov edi,r13d
+        mov esi,0xf0004
+        call fn_80340
+        mov r14d,eax
+        shr r14d,byte 0x10
+        and r14d,0xff
+        and eax,0xff
+        lea r15d,[r14d+eax]
+        mov dword [rel d_80c10],0x0
+L_802e5:
+        cmp r14d,r15d
+        jnc short L_802f7
+        mov edi,r14d
+        call fn_803d5
+        inc r14d
+        jmp short L_802e5
+L_802f7:
+        cmp dword [rel d_80c10],0x0
+        jz short L_80334
+        movzx eax,word [rbx]
+        shr eax,byte 0x8
+        and eax,0xf
+        shl eax,byte 0x5
+        add eax,0x80
+        mov [rel d_80be0],rax
+        mov byte [rel d_80c14],0x1
+        lea rax,[rel d_80e32]
+        mov [rel d_80bc8],rax
+        mov eax,0x1
+        jmp short L_80336
+L_80334:
+        xor eax,eax
+L_80336:
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbx
+        retq
+
+fn_80340:
+        push rbx
+        mov rbx,[rel d_80bd8]
+        mov eax,[rel d_80c08]
+        shl eax,byte 0x1c
+        shl edi,byte 0x14
+        or eax,edi
+        or eax,esi
+        mov rcx,[rel d_80bf0]
+        inc ecx
+        and ecx,0xff
+        mov [rel d_80bf0],rcx
+        mov rdx,[rel d_80bb8]
+        mov [rdx+rcx*4+0x400],eax
+        mov [rbx+0x48],cx
+        mov ecx,0x3e8
+L_80385:
+        movzx eax,word [rbx+0x58]
+        and eax,0xff
+        cmp rax,[rel d_80be8]
+        jnz short L_803ab
+        push rcx
+        mov ecx,0x64
+L_8039d:
+        out byte 0x80,al
+        loop L_8039d
+        pop rcx
+        loop L_80385
+        mov eax,0xffffffff
+        pop rbx
+        retq
+L_803ab:
+        mov rcx,[rel d_80be8]
+        inc ecx
+        and ecx,0xff
+        mov [rel d_80be8],rcx
+        mov rdx,[rel d_80bb8]
+        mov eax,[rdx+rcx*8+0x800]
+        mov byte [rbx+0x5d],0x5
+        pop rbx
+        retq
+
+fn_803d5:
+        push rbx
+        push r12
+        mov r12d,edi
+        mov esi,0xf0009
+        call fn_80340
+        cmp eax,0xffffffffffffffff
+        jz near L_804f4
+        mov ebx,eax
+        mov edi,r12d
+        mov esi,0x70500
+        call fn_80340
+        test ebx,0x4
+        jz short L_8042d
+        mov edi,r12d
+        mov esi,0xf0012
+        call fn_80340
+        and eax,0x7f
+        or eax,0xb000
+        shl eax,byte 0x0
+        mov esi,eax
+        or esi,0x30000
+        mov edi,r12d
+        call fn_80340
+L_8042d:
+        test ebx,0x2
+        jz short L_8045b
+        xor ecx,ecx
+L_80437:
+        cmp ecx,0x8
+        jnc short L_8045b
+        push rcx
+        mov esi,ecx
+        shl esi,byte 0x8
+        or esi,0x37040
+        and esi,0xffffff7f
+        mov edi,r12d
+        call fn_80340
+        pop rcx
+        inc ecx
+        jmp short L_80437
+L_8045b:
+        mov eax,ebx
+        shr eax,byte 0x14
+        and eax,0xf
+        cmp eax,0x0
+        jz short L_80472
+        cmp eax,0x4
+        jz short L_80494
+        jmp near L_804f4
+L_80472:
+        mov edi,r12d
+        mov esi,0x70610
+        call fn_80340
+        mov edi,r12d
+        mov esi,0x20011
+        call fn_80340
+        inc dword [rel d_80c10]
+        jmp short L_804f4
+L_80494:
+        mov edi,r12d
+        mov esi,0xf000c
+        call fn_80340
+        test eax,0x10
+        jz short L_804f4
+        mov ebx,eax
+        mov edi,r12d
+        mov esi,0xf1c00
+        call fn_80340
+        shr eax,byte 0x1e
+        cmp eax,0x1
+        jz short L_804f4
+        mov esi,0x70740
+        test ebx,0x8
+        jz short L_804d2
+        or esi,0x80
+L_804d2:
+        mov edi,r12d
+        call fn_80340
+        mov edi,r12d
+        mov esi,0x70c02
+        call fn_80340
+        mov edi,r12d
+        mov esi,0x70100
+        call fn_80340
+L_804f4:
+        pop r12
+        pop rbx
+        retq
+
+fn_804f8:
+        push rbx
+        push r12
+        mov r12,rdi
+        mov rbx,[rel d_80bd8]
+        add rbx,[rel d_80be0]
+        call fn_80567
+        mov rax,[rel d_80bb8]
+        mov rcx,[rel d_80bc0]
+        mov [rax],rcx
+        mov rdx,r12
+        shr rdx,1
+        mov [rax+0x8],edx
+        mov dword [rax+0xc],0x0
+        add rcx,rdx
+        mov [rax+0x10],rcx
+        mov [rax+0x18],edx
+        mov dword [rax+0x1c],0x0
+        mov [rbx+0x18],eax
+        mov dword [rbx+0x1c],0x0
+        mov [rbx+0x8],r12d
+        mov word [rbx+0xc],0x1
+        mov word [rbx+0x12],0x11
+        mov dword [rbx],0x100002
+        pop r12
+        pop rbx
+        retq
+
+fn_80567:
+        push rbx
+        mov rbx,[rel d_80bd8]
+        add rbx,[rel d_80be0]
+        mov dword [rbx],0x0
+        mov ecx,0x64
+L_80581:
+        test dword [rbx],0x2
+        jz short L_80597
+        push rcx
+        mov edi,0x1
+        call fn_6d788
+        pop rcx
+        loop L_80581
+L_80597:
+        mov dword [rbx],0x1
+        mov ecx,0x64
+L_805a2:
+        test dword [rbx],0x1
+        jnz short L_805ac
+        loop L_805a2
+L_805ac:
+        mov dword [rbx],0x0
+        mov ecx,0x64
+L_805b7:
+        test dword [rbx],0x1
+        jz short L_805cd
+        push rcx
+        mov edi,0x1
+        call fn_6d788
+        pop rcx
+        loop L_805b7
+L_805cd:
+        mov byte [rbx+0x3],0x1c
+        pop rbx
+        retq
+
+fn_805d3:
+        push rbx
+        push r12
+        mov r12,rdi
+        mov edi,[r12]
+        mov esi,0x4
+        call fn_63815
+        or eax,0x5
+        and eax,0xffff
+        mov edx,eax
+        mov edi,[r12]
+        mov esi,0x4
+        call fn_63831
+        mov edi,[r12]
+        mov esi,0x10
+        call fn_63815
+        test eax,0x1
+        jz near L_806b5
+        and eax,0xfffc
+        mov [rel d_80bf8],rax
+        mov edi,[r12]
+        mov esi,0x14
+        call fn_63815
+        test eax,0x1
+        jz short L_806b5
+        and eax,0xfffc
+        mov [rel d_80c00],rax
+        mov edx,[rel d_80c00]
+        add edx,0x2c
+        mov eax,0x2
+        out dx,eax
+        mov edi,0x14
+        call fn_6d788
+        mov edx,[rel d_80bf8]
+        xor eax,eax
+        out dx,ax
+        mov edi,0xa
+        call fn_6d788
+        mov edx,[rel d_80bf8]
+        add edx,0x2
+        xor eax,eax
+        out dx,ax
+        mov edx,[rel d_80bf8]
+        add edx,0x4
+        out dx,ax
+        mov edx,[rel d_80bf8]
+        add edx,0x18
+        mov ax,0x808
+        out dx,ax
+        mov byte [rel d_80c14],0x2
+        lea rax,[rel d_80e41]
+        mov [rel d_80bc8],rax
+        mov eax,0x1
+        jmp short L_806b7
+L_806b5:
+        xor eax,eax
+L_806b7:
+        pop r12
+        pop rbx
+        retq
+
+fn_806bb:
+        push rbx
+        mov rbx,rdi
+        call fn_8073a
+        mov rdi,[rel d_80bb8]
+        mov rsi,[rel d_80bc0]
+        shr rbx,1
+        xor ecx,ecx
+L_806d7:
+        test rbx,rbx
+        jz short L_8070b
+        cmp ecx,0x20
+        jnc short L_8070b
+        mov rax,rbx
+        cmp rax,0xfffe
+        jna short L_806f1
+        mov eax,0xfffe
+L_806f1:
+        mov [rdi+rcx*8],esi
+        mov [rdi+rcx*8+0x4],ax
+        mov word [rdi+rcx*8+0x6],0x0
+        sub rbx,rax
+        lea rsi,[rsi+rax*2]
+        inc ecx
+        jmp short L_806d7
+L_8070b:
+        dec ecx
+        or word [rdi+rcx*8+0x6],0x4000
+        mov edx,[rel d_80c00]
+        add edx,0x10
+        mov eax,edi
+        out dx,eax
+        mov edx,[rel d_80c00]
+        add edx,0x15
+        mov al,cl
+        out dx,al
+        mov edx,[rel d_80c00]
+        add edx,0x1b
+        mov al,0x1
+        out dx,al
+        pop rbx
+        retq
+
+fn_8073a:
+        mov edx,[rel d_80c00]
+        add edx,0x1b
+        xor eax,eax
+        out dx,al
+        mov al,0x2
+        out dx,al
+        mov ecx,0x3e8
+L_8074e:
+        in al,dx
+        test al,0x2
+        jz short L_80757
+        out byte 0x80,al
+        loop L_8074e
+L_80757:
+        retq
+
+fn_80758:
+        push rbx
+        mov rbx,rdi
+        call suit_table_end
+        test eax,eax
+        jz near L_807ea
+        add rbx,0xff
+        and rbx,0xffffffffffffff00
+        mov rdi,[rel d_80bc0]
+        add rdi,rbx
+        mov ecx,0x100000
+        sub rcx,rbx
+        cmp rcx,0x4b00
+        jna short L_80797
+        mov ecx,0x4b00
+L_80797:
+        push rcx
+        xor eax,eax
+        rep stosb
+        pop rcx
+        lea rdi,[rbx+rcx]
+        mov rax,rbx
+        xor edx,edx
+        mov ecx,0x780
+        div rcx
+        add rax,[rel d_14eea]
+        add rax,0x2
+        mov [rel d_80bd0],rax
+        cmp byte [rel d_80c14],0x1
+        jnz short L_807d7
+        and rdi,0xffffffffffffff00
+        call fn_804f8
+        jmp short L_807dc
+L_807d7:
+        call fn_806bb
+L_807dc:
+        mov byte [rel d_80c16],0x1
+        mov eax,0x1
+        pop rbx
+        retq
+L_807ea:
+        xor eax,eax
+        pop rbx
+        retq
+
+fn_807ee:
+        mov byte [rel d_80c16],0x0
+        cmp byte [rel d_80c14],0x1
+        jz near fn_80567
+        cmp byte [rel d_80c14],0x2
+        jz near fn_8073a
+        retq
+
+entry_00:
+        cmp byte [rel d_80c16],0x0
+        jz short L_8084a
+        mov rax,[rel d_14eea]
+        cmp rax,[rel d_80bd0]
+        jc short L_8084a
+        mov byte [rel d_80c16],0x0
+        cmp byte [rel d_80c14],0x1
+        jnz short L_8084a
+        mov rax,[rel d_80bd8]
+        add rax,[rel d_80be0]
+        and dword [rax],0xfffffffffffffffd
+L_8084a:
+        retq
+
+fn_8084b:
+        push rbx
+        push r12
+        push r13
+        push r14
+        mov r12,rdx
+        mov rax,rsi
+        imul rax,rax,0x30
+        mov r13,rax
+        lea rax,[r12+r13*4]
+        cmp rax,0xf8000
+        jna short L_8087a
+        mov eax,0xf8000
+        sub rax,r12
+        shr rax,byte 0x2
+        mov r13,rax
+L_8087a:
+        mov rax,rdi
+        shl rax,byte 0x20
+        xor edx,edx
+        mov ecx,0xbb80
+        div rcx
+        mov r14,rax
+        mov rdi,[rel d_80bc0]
+        add rdi,r12
+        xor ebx,ebx
+        xor ecx,ecx
+L_8089c:
+        cmp rcx,r13
+        jnc short L_80900
+        mov eax,ebx
+        shr eax,byte 0x18
+        lea rdx,[rel d_80c32]
+        movsx eax,word [rdx+rax*2]
+        test r14,r14
+        jnz short L_808b8
+        xor eax,eax
+L_808b8:
+        mov rdx,rcx
+        cmp rdx,0xf0
+        jnc short L_808d1
+        imul eax,edx
+        cdq
+        push rcx
+        mov ecx,0xf0
+        idiv ecx
+        pop rcx
+L_808d1:
+        mov rdx,r13
+        sub rdx,rcx
+        cmp rdx,0xf0
+        jnc short L_808ed
+        imul eax,edx
+        cdq
+        push rcx
+        mov ecx,0xf0
+        idiv ecx
+        pop rcx
+L_808ed:
+        mov [rdi],ax
+        mov [rdi+0x2],ax
+        add rdi,0x4
+        add ebx,r14d
+        inc rcx
+        jmp short L_8089c
+L_80900:
+        lea rax,[r12+r13*4]
+        pop r14
+        pop r13
+        pop r12
+        pop rbx
+        retq
+
+entry_01:
+        call suit_table_end
+        test eax,eax
+        jz short L_80939
+        lea rdi,[rel d_80e50]
+        call fn_08e24
+        mov rdi,[rel d_80bc8]
+        call fn_08e24
+        lea rdi,[rel d_153bf]
+        jmp near fn_08e24
+L_80939:
+        lea rdi,[rel d_80e58]
+        jmp near fn_08e24
+
+entry_02:
+        push rbx
+        push r12
+        push r13
+        mov rbx,rdi
+        call suit_table_end
+        test eax,eax
+        jz near L_80b0d
+        cmp byte [rbx],0x0
+        jz short L_809c1
+        mov al,[rbx]
+        cmp al,0x30
+        jc near L_809f7
+        cmp al,0x39
+        ja near L_809f7
+        mov rdi,rbx
+        call fn_0d4cd
+        mov r12,rax
+        mov rdi,rbx
+        call 0xe655
+        mov r13,rax
+        mov esi,0x1f4
+        test r12,r12
+        jz short L_8099c
+        mov rdi,r12
+        call 0xe655
+        mov rsi,rax
+L_8099c:
+        cmp rsi,0x1388
+        jna short L_809aa
+        mov esi,0x1388
+L_809aa:
+        mov rdi,r13
+        xor edx,edx
+        call fn_8084b
+        mov rdi,rax
+        call fn_80758
+        jmp near L_80ae3
+L_809c1:
+        xor r12d,r12d
+        lea r13,[rel d_80c18]
+L_809cb:
+        movzx edi,word [r13+0x0]
+        test edi,edi
+        jz short L_809ea
+        movzx esi,word [r13+0x2]
+        mov rdx,r12
+        call fn_8084b
+        mov r12,rax
+        add r13,0x4
+        jmp short L_809cb
+L_809ea:
+        mov rdi,r12
+        call fn_80758
+        jmp near L_80ae3
+L_809f7:
+        mov rdi,rbx
+        call fn_0ad17
+        test rax,rax
+        jz near L_80af1
+        mov r12,rax
+        mov rcx,[r12+0x58]
+        test rcx,rcx
+        jnz short L_80a1f
+        mov rcx,[r12+0x18]
+        sub rcx,[r12+0x10]
+L_80a1f:
+        mov rsi,r12
+        add rsi,[r12+0x10]
+        cmp rcx,0x2c
+        jc near L_80ac5
+        cmp dword [rsi],0x46464952
+        jnz near L_80ac5
+        cmp dword [rsi+0x8],0x45564157
+        jnz short L_80ac5
+        lea r8,[rsi+rcx]
+        lea rdx,[rsi+0xc]
+        xor r13d,r13d
+L_80a51:
+        lea rax,[rdx+0x8]
+        cmp rax,r8
+        ja near L_80aff
+        mov eax,[rdx+0x4]
+        cmp dword [rdx],0x20746d66
+        jnz short L_80a95
+        cmp word [rdx+0x8],0x1
+        jnz near L_80aff
+        cmp word [rdx+0xa],0x2
+        jnz near L_80aff
+        cmp dword [rdx+0xc],0xbb80
+        jnz short L_80aff
+        cmp word [rdx+0x16],0x10
+        jnz short L_80aff
+        mov r13d,0x1
+L_80a95:
+        cmp dword [rdx],0x61746164
+        jz short L_80aab
+        inc rax
+        and rax,0xfffffffffffffffe
+        lea rdx,[rdx+rax+0x8]
+        jmp short L_80a51
+L_80aab:
+        test r13d,r13d
+        jz short L_80aff
+        lea rsi,[rdx+0x8]
+        mov ecx,eax
+        lea rax,[rsi+rcx]
+        cmp rax,r8
+        jna short L_80ac5
+        mov rcx,r8
+        sub rcx,rsi
+L_80ac5:
+        cmp rcx,0xf8000
+        jna short L_80ad3
+        mov ecx,0xf8000
+L_80ad3:
+        mov rdi,[rel d_80bc0]
+        push rcx
+        rep movsb
+        pop rdi
+        call fn_80758
+L_80ae3:
+        lea rdi,[rel d_80e84]
+        call fn_08e24
+        jmp short L_80b19
+L_80af1:
+        lea rdi,[rel d_80e8e]
+        call fn_08e24
+        jmp short L_80b19
+L_80aff:
+        lea rdi,[rel d_80e9f]
+        call fn_08e24
+        jmp short L_80b19
+L_80b0d:
+        lea rdi,[rel d_80e58]
+        call fn_08e24
+L_80b19:
+        pop r13
+        pop r12
+        pop rbx
+        retq
+
+entry_03:
+        push rbx
+        mov rbx,rdi
+        call suit_table_end
+        test eax,eax
+        jz near L_80bb1
+        cmp rbx,0x0
+        jz short L_80baa
+        cmp rbx,0x2
+        jz short L_80b80
+        cmp rbx,0x3
+        jz short L_80ba5
+        cmp rbx,0x1
+        jnz short L_80bb1
+        mov rbx,rdx
+        cmp rbx,0xf8000
+        jna short L_80b59
+        mov ebx,0xf8000
+L_80b59:
+        mov rdi,rsi
+        push rsi
+        mov rsi,rbx
+        call fn_10784
+        pop rsi
+        test eax,eax
+        jz short L_80bb1
+        mov rdi,[rel d_80bc0]
+        mov rcx,rbx
+        rep movsb
+        mov rdi,rbx
+        call fn_80758
+        jmp short L_80baa
+L_80b80:
+        mov rdi,rsi
+        mov rsi,rdx
+        cmp rsi,0x1388
+        jna short L_80b94
+        mov esi,0x1388
+L_80b94:
+        xor edx,edx
+        call fn_8084b
+        mov rdi,rax
+        call fn_80758
+        jmp short L_80baa
+L_80ba5:
+        call fn_807ee
+L_80baa:
+        mov eax,0x1
+        pop rbx
+        retq
+L_80bb1:
+        xor eax,eax
+        pop rbx
+        retq
+        db 0x90, 0x90, 0x90
+d_80bb8:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_80bc0:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_80bc8:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_80bd0:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_80bd8:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_80be0:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_80be8:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_80bf0:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_80bf8:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_80c00:
+        db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+d_80c08:
+        db 0x00, 0x00, 0x00, 0x00
+d_80c0c:
+        db 0x00, 0x00, 0x00, 0x00
+d_80c10:
+        db 0x00, 0x00, 0x00, 0x00
+d_80c14:
+        db 0x00
+d_80c15:
+        db 0x00
+d_80c16:
+        db 0x00, 0x90
+d_80c18:
+        db 0x0B, 0x02, 0xA0, 0x00, 0x93, 0x02, 0xA0, 0x00, 0x10, 0x03, 0xA0, 0x00, 0x17, 0x04, 0x40, 0x01
+        db 0x10, 0x03, 0xA0, 0x00, 0x17, 0x04, 0xE0, 0x01, 0x00, 0x00
+d_80c32:
+        db 0x00, 0x00, 0x93, 0x00, 0x26, 0x01, 0xB9, 0x01, 0x4C, 0x02, 0xDE, 0x02, 0x70, 0x03, 0x02, 0x04
+        db 0x93, 0x04, 0x23, 0x05, 0xB2, 0x05, 0x40, 0x06, 0xCE, 0x06, 0x5A, 0x07, 0xE5, 0x07, 0x6F, 0x08
+        db 0xF8, 0x08, 0x7F, 0x09, 0x05, 0x0A, 0x8A, 0x0A, 0x0C, 0x0B, 0x8D, 0x0B, 0x0D, 0x0C, 0x8A, 0x0C
+        db 0x05, 0x0D, 0x7F, 0x0D, 0xF6, 0x0D, 0x6B, 0x0E, 0xDE, 0x0E, 0x4F, 0x0F, 0xBD, 0x0F, 0x29, 0x10
+        db 0x93, 0x10, 0xF9, 0x10, 0x5E, 0x11, 0xBF, 0x11, 0x1E, 0x12, 0x7A, 0x12, 0xD3, 0x12, 0x2A, 0x13
+        db 0x7D, 0x13, 0xCD, 0x13, 0x1A, 0x14, 0x65, 0x14, 0xAC, 0x14, 0xEF, 0x14, 0x30, 0x15, 0x6D, 0x15
+        db 0xA7, 0x15, 0xDE, 0x15, 0x11, 0x16, 0x41, 0x16, 0x6E, 0x16, 0x97, 0x16, 0xBC, 0x16, 0xDE, 0x16
+        db 0xFD, 0x16, 0x18, 0x17, 0x2F, 0x17, 0x43, 0x17, 0x53, 0x17, 0x60, 0x17, 0x69, 0x17, 0x6E, 0x17
+        db 0x70, 0x17, 0x6E, 0x17, 0x69, 0x17, 0x60, 0x17, 0x53, 0x17, 0x43, 0x17, 0x2F, 0x17, 0x18, 0x17
+        db 0xFD, 0x16, 0xDE, 0x16, 0xBC, 0x16, 0x97, 0x16, 0x6E, 0x16, 0x41, 0x16, 0x11, 0x16, 0xDE, 0x15
+        db 0xA7, 0x15, 0x6D, 0x15, 0x30, 0x15, 0xEF, 0x14, 0xAC, 0x14, 0x65, 0x14, 0x1A, 0x14, 0xCD, 0x13
+        db 0x7D, 0x13, 0x2A, 0x13, 0xD3, 0x12, 0x7A, 0x12, 0x1E, 0x12, 0xBF, 0x11, 0x5E, 0x11, 0xF9, 0x10
+        db 0x93, 0x10, 0x29, 0x10, 0xBD, 0x0F, 0x4F, 0x0F, 0xDE, 0x0E, 0x6B, 0x0E, 0xF6, 0x0D, 0x7F, 0x0D
+        db 0x05, 0x0D, 0x8A, 0x0C, 0x0D, 0x0C, 0x8D, 0x0B, 0x0C, 0x0B, 0x8A, 0x0A, 0x05, 0x0A, 0x7F, 0x09
+        db 0xF8, 0x08, 0x6F, 0x08, 0xE5, 0x07, 0x5A, 0x07, 0xCE, 0x06, 0x40, 0x06, 0xB2, 0x05, 0x23, 0x05
+        db 0x93, 0x04, 0x02, 0x04, 0x70, 0x03, 0xDE, 0x02, 0x4C, 0x02, 0xB9, 0x01, 0x26, 0x01, 0x93, 0x00
+        db 0x00, 0x00, 0x6D, 0xFF, 0xDA, 0xFE, 0x47, 0xFE, 0xB4, 0xFD, 0x22, 0xFD, 0x90, 0xFC, 0xFE, 0xFB
+        db 0x6D, 0xFB, 0xDD, 0xFA, 0x4E, 0xFA, 0xC0, 0xF9, 0x32, 0xF9, 0xA6, 0xF8, 0x1B, 0xF8, 0x91, 0xF7
+        db 0x08, 0xF7, 0x81, 0xF6, 0xFB, 0xF5, 0x76, 0xF5, 0xF4, 0xF4, 0x73, 0xF4, 0xF3, 0xF3, 0x76, 0xF3
+        db 0xFB, 0xF2, 0x81, 0xF2, 0x0A, 0xF2, 0x95, 0xF1, 0x22, 0xF1, 0xB1, 0xF0, 0x43, 0xF0, 0xD7, 0xEF
+        db 0x6D, 0xEF, 0x07, 0xEF, 0xA2, 0xEE, 0x41, 0xEE, 0xE2, 0xED, 0x86, 0xED, 0x2D, 0xED, 0xD6, 0xEC
+        db 0x83, 0xEC, 0x33, 0xEC, 0xE6, 0xEB, 0x9B, 0xEB, 0x54, 0xEB, 0x11, 0xEB, 0xD0, 0xEA, 0x93, 0xEA
+        db 0x59, 0xEA, 0x22, 0xEA, 0xEF, 0xE9, 0xBF, 0xE9, 0x92, 0xE9, 0x69, 0xE9, 0x44, 0xE9, 0x22, 0xE9
+        db 0x03, 0xE9, 0xE8, 0xE8, 0xD1, 0xE8, 0xBD, 0xE8, 0xAD, 0xE8, 0xA0, 0xE8, 0x97, 0xE8, 0x92, 0xE8
+        db 0x90, 0xE8, 0x92, 0xE8, 0x97, 0xE8, 0xA0, 0xE8, 0xAD, 0xE8, 0xBD, 0xE8, 0xD1, 0xE8, 0xE8, 0xE8
+        db 0x03, 0xE9, 0x22, 0xE9, 0x44, 0xE9, 0x69, 0xE9, 0x92, 0xE9, 0xBF, 0xE9, 0xEF, 0xE9, 0x22, 0xEA
+        db 0x59, 0xEA, 0x93, 0xEA, 0xD0, 0xEA, 0x11, 0xEB, 0x54, 0xEB, 0x9B, 0xEB, 0xE6, 0xEB, 0x33, 0xEC
+        db 0x83, 0xEC, 0xD6, 0xEC, 0x2D, 0xED, 0x86, 0xED, 0xE2, 0xED, 0x41, 0xEE, 0xA2, 0xEE, 0x07, 0xEF
+        db 0x6D, 0xEF, 0xD7, 0xEF, 0x43, 0xF0, 0xB1, 0xF0, 0x22, 0xF1, 0x95, 0xF1, 0x0A, 0xF2, 0x81, 0xF2
+        db 0xFB, 0xF2, 0x76, 0xF3, 0xF3, 0xF3, 0x73, 0xF4, 0xF4, 0xF4, 0x76, 0xF5, 0xFB, 0xF5, 0x81, 0xF6
+        db 0x08, 0xF7, 0x91, 0xF7, 0x1B, 0xF8, 0xA6, 0xF8, 0x32, 0xF9, 0xC0, 0xF9, 0x4E, 0xFA, 0xDD, 0xFA
+        db 0x6D, 0xFB, 0xFE, 0xFB, 0x90, 0xFC, 0x22, 0xFD, 0xB4, 0xFD, 0x47, 0xFE, 0xDA, 0xFE, 0x6D, 0xFF
+d_80e32:
+        db 'Intel HD Audio', 0
+d_80e41:
+        db 'AC', 39, '97', 0
+d_80e47:
+        db '[sound] ', 0
+d_80e50:
+        db 'Sound: ', 0
+d_80e58:
+        db 'No sound device found (HD Audio or AC', 39, '97).', 10, 0
+d_80e84:
+        db 'Playing.', 10, 0
+d_80e8e:
+        db 'No such object.', 10, 0
+d_80e9f:
+        db 'That WAV can', 39, 't be played yet: it must be 48000 Hz, 16 bits, stereo, not compressed.', 10, 0
+        db 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90

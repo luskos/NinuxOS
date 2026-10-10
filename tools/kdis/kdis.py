@@ -19,6 +19,7 @@
 import os
 import re
 import shutil
+import struct
 import subprocess
 import sys
 
@@ -40,6 +41,9 @@ ENTRIES = [(0x7E00, 16), (0x8360, 32), (0x840B, 64), (0x8423, 64)]
 POINTERS = {}                           # address -> (bytes, the address kept there, what is added to it)
 GIVEN = {}                              # address -> name
 BLOBS = None                            # (folder, name): long runs of plain data go into files there
+EXTERNAL = {}                           # address outside the image -> name (a suit calling the kernel)
+VARIABLES = False                       # name the memory outside the image the code points at (the kernel)
+SIZES = {}                              # a number in the code that is a size of the image -> how to say it
 HEADER = [
     '; Kernel.kasm - the NinuxOS v2.9.59 kernel: the core (with the loader in front) and the extension.',
     '; Recovered from the compiled kernel by tools/kdis/kdis.py; it assembles to the same 220000 bytes:',
@@ -164,6 +168,9 @@ PREFIX_WORDS = {'rep', 'repe', 'repne', 'repz', 'repnz', 'lock', 'o16', 'o32', '
                 'cs', 'ds', 'es', 'fs', 'gs', 'ss', 'wait', 'xacquire', 'xrelease', 'bnd'}
 BRANCH = re.compile(r'^((?:\w+\s+)*?)(call|jmp|j[a-z]+|loop[a-z]*)\s+(?:short\s+|near\s+)?0x([0-9a-f]+)$')
 RELREF = re.compile(r'\[rel 0x([0-9a-f]+)\]')
+# an address written as a plain number: in memory brackets, in a pointer register of the 16- and 32-bit
+# loader, in a far jump (the 64-bit code points relative to itself, and is caught by RELREF)
+ABSREF = re.compile(r'(\[(?:[cdefgs]s:)?(?:abs )?|\b(?:mov|lea) (?:e?si|e?di|e?bx|e?bp),|:d?word )0x([0-9a-f]+)(?=\]|$)')
 ENDS = {'ret', 'retq', 'retw', 'retd', 'retf', 'retfq', 'retn', 'iret', 'iretw', 'iretd', 'iretq', 'jmp', 'ud2',
         'sysret', 'sysretq'}
 LEGACY = {0x66, 0x67, 0x2E, 0x3E, 0x26, 0x36, 0x64, 0x65, 0xF0, 0xF2, 0xF3}
@@ -197,6 +204,7 @@ class Kernel:
         self.code = {}                          # vma -> (length, text, bits)
         self.owner = bytearray(len(image))      # per byte: 0 not code, 1 an instruction starts, 2 inside one
         self.calls, self.jumps, self.refs = set(), set(), set()
+        self.outside = set()                    # what the code points at beyond the image: the kernel's variables
         self.conflicts, self.bad = set(), set()
 
         self.work = []
@@ -211,6 +219,7 @@ class Kernel:
         self.code[a] = (n, text, bits)
         if a in FAR:
             self.work.append(FAR[a])
+            self.jumps.add(FAR[a][0])
             return False
         m = BRANCH.match(text)
         if m:
@@ -221,6 +230,12 @@ class Kernel:
         for r in RELREF.findall(text):
             t = int(r, 16)
             if section_of(t) or any(t == s.end for s in SECTIONS):
+                self.refs.add(t)
+            else:
+                self.outside.add(t)
+        for lead, r in ABSREF.findall(text):
+            t = int(r, 16)
+            if section_of(t) and (bits != 64 or 'abs ' in lead):
                 self.refs.add(t)
         return mnemonic(text) not in ENDS
 
@@ -391,8 +406,8 @@ class Writer:
                 f = line.split('#')[0].split()
                 if len(f) == 2:
                     self.given[int(f[0], 16)] = f[1]
-        for size, t, plus in POINTERS.values():
-            self.names[t] = 'p_%05x' % t
+        for p in POINTERS.values():
+            self.names[p[1]] = 'p_%05x' % p[1]
         for t in k.refs:
             self.names[t] = 'd_%05x' % t
         for t in k.jumps:
@@ -411,6 +426,7 @@ class Writer:
                 self.inside[t] = s
                 self.names.setdefault(s, 'L_%05x' % s)
         self.names.update(self.given)
+        self.variables()                        # gives the outside addresses their names
         self.items = []
         for s in SECTIONS:
             self.items.append(self.build(s))
@@ -422,8 +438,8 @@ class Writer:
         k = self.k
         items = []
         cuts = set(t for t in self.names if sec.vma <= t <= sec.end and t not in self.inside)
-        for a, (size, t, plus) in POINTERS.items():
-            cuts.update((a, a + size))
+        for a, p in POINTERS.items():
+            cuts.update((a, a + p[0]))
         cuts = sorted(cuts)
         ci = 0
         pos = sec.vma
@@ -446,9 +462,10 @@ class Writer:
                     cj += 1
                 b = min(end, cuts[cj]) if cj < len(cuts) else end
                 if a in POINTERS and a + POINTERS[a][0] <= end:     # an address is kept here: by its name
-                    size, t, plus = POINTERS[a]
+                    size, t, plus = POINTERS[a][:3]
                     text = '%s %s' % ('dq' if size == 8 else 'dd', self.pointer_name(t))
-                    items.append(Item(a, size, text + (' + 0x%X' % plus if plus else ''), False))
+                    text += ' + 0x%X' % plus if plus else ''
+                    items.append(Item(a, size, POINTERS[a][3] if len(POINTERS[a]) > 3 else text, False))
                     a += size
                     continue
                 items.extend(data_items(a, b))
@@ -456,6 +473,18 @@ class Writer:
             pos = end
         return items
 
+    def variables(self):
+        """what the code points at outside the image - the memory the kernel keeps its variables in -
+        gets names too (v_ADDR)"""
+        out = sorted(t for t in self.k.outside if not section_of(t) and not any(t == s.end for s in SECTIONS)
+                     and (t not in EXTERNAL or EXTERNAL[t] == 'v_%05x' % t))
+        if not out or not VARIABLES:
+            return []
+        lines = ['', '; ---- memory outside the file: the variables of the kernel, in the order they lie']
+        for t in out:
+            EXTERNAL[t] = 'v_%05x' % t
+            lines.append('v_%05x equ 0x%X' % (t, t))
+        return lines
     def pointer_name(self, t):
         if t in self.inside:
             return '%s + %d' % (self.names[self.inside[t]], t - self.inside[t])
@@ -467,7 +496,8 @@ class Writer:
         if it.fallback:
             return db_bytes(raw) + '    ; ' + text
         m = BRANCH.match(text)
-        if m and self.name(int(m.group(3), 16)):
+        if m and (self.name(int(m.group(3), 16)) or int(m.group(3), 16) in EXTERNAL):
+            target = self.name(int(m.group(3), 16)) or EXTERNAL[int(m.group(3), 16)]
             mn = m.group(2)
             op = opcode(raw, bits)
             if mn == 'jmp':
@@ -476,12 +506,26 @@ class Writer:
                 size = ''
             else:
                 size = 'short ' if 0x70 <= op[0] <= 0x7F else 'near '
-            return '%s%s %s%s' % (m.group(1), mn, size, self.name(int(m.group(3), 16)))
+            return '%s%s %s%s' % (m.group(1), mn, size, target)
 
         def rel(m):
-            nm = self.name(int(m.group(1), 16))
-            return '[rel %s]' % nm if nm else m.group(0)
-        return RELREF.sub(rel, text)
+            t = int(m.group(1), 16)
+            if self.name(t):
+                return '[rel %s]' % self.name(t)
+            if t in EXTERNAL:                   # a fixed place in memory: said from the start of this code,
+                base = SECTIONS[0]              # so that nasm keeps it relative to the instruction
+                return '[rel %s + (%s - 0x%X)]' % (self.names[base.vma], EXTERNAL[t], base.vma)
+            return m.group(0)
+
+        def absolute(m):
+            t = int(m.group(2), 16)
+            if self.name(t) and (bits != 64 or 'abs ' in m.group(1)):
+                return m.group(1) + self.name(t)
+            return m.group(0)
+        text = ABSREF.sub(absolute, RELREF.sub(rel, text))
+        for value, say in SIZES.items():
+            text = re.sub(r'(?<![\w\[])0x%x\b' % value, say, text)
+        return text
 
     def write(self, path):
         k = self.k
@@ -505,16 +549,83 @@ class Writer:
                         lines.append('')
                     lines.append(nm + ':')
                 for t in by_inside.get(it.addr, ()):
-                    if not POINTERS:
-                        lines.append('%s equ %s + %d' % (self.names[t], self.names[it.addr], t - it.addr))
+                    lines.append('%s equ %s + %d' % (self.names[t], self.names[it.addr], t - it.addr))
                 it.line = len(lines) + 1
                 lines.append('        ' + (self.render(it) if it.code else it.text))
             nm = self.name(sec.end)
             if nm and not section_of(sec.end):
                 lines.append(nm + ':')
+        lines.extend(self.variables())
         with open(path, 'w', newline='\n') as f:
             f.write('\n'.join(lines) + '\n')
         return len(lines)
+
+
+# ---------------------------------------------------------------- the tables of addresses in the kernel's data
+
+API_TABLE = 0x110C8                     # what a program gets in rsi: the functions of the system, 8 bytes each
+API_NAMES = {0x00: 'print', 0x08: 'put_letter', 0x10: 'screen_size', 0x18: 'fill', 0x30: 'text', 0x38: 'window',
+             0x40: 'poll', 0x48: 'cursor_show', 0x50: 'cursor_hide', 0x58: 'ob_count', 0x60: 'ob_by_number',
+             0x68: 'ob_by_name', 0x70: 'ob_meta', 0x90: 'random', 0xA0: 'ticks', 0xB0: 'memory', 0xC0: 'log',
+             0xE0: 'ob_save', 0x118: 'programs', 0x128: 'system_text', 0x138: 'sound', 0x140: 'fill_round',
+             0x150: 'network'}
+STARTS = (0x53, 0x55, 0x41, 0x48, 0x50, 0x51, 0x52, 0x56, 0x57)
+
+
+def text_at(v):
+    o = offset(v)
+    return o > 0 and image[o - 1] == 0 and all(32 <= c < 127 for c in image[o:o + 4])
+
+
+def find_pointers(k):
+    """8-byte values in the data that are addresses inside the kernel: tables of texts and of
+    functions (the shell's commands, the functions a program may call ...). A value counts when it
+    has a neighbour of the same kind 8 or 16 bytes away, or points at a function already known.
+    What a table points at is followed as code, so the tables also show where more code is."""
+    while True:
+        cands = {}
+        for sec in SECTIONS:
+            for a in range(sec.vma, sec.end - 7):
+                o = offset(a)
+                if any(k.owner[o:o + 8]):
+                    continue
+                v = struct.unpack_from('<Q', image, o)[0]
+                if v >> 20 == 0 and section_of(v) and k.owner[offset(v)] != 2 \
+                        and not any((a + i) in k.refs for i in range(1, 8)):     # no name falls inside it
+                    cands[a] = v
+        good = {a: v for a, v in cands.items()
+                if any((a + d) in cands for d in (-16, -8, 8, 16)) or v in k.calls}
+        before = len(k.code)
+        for a, v in sorted(good.items()):
+            if k.owner[offset(v)] == 0 and not text_at(v):
+                in_table = any((a + d) in good for d in (-16, -8, 8, 16))
+                if in_table or image[offset(v)] in STARTS:
+                    k.follow(v, 64)
+        if len(k.code) == before:
+            break
+    out = {}
+    last = -8
+    for a in sorted(good):
+        if a >= last + 8 and not any(k.owner[offset(a):offset(a) + 8]):
+            out[a] = (8, good[a], 0)
+            last = a
+    return out
+
+
+def table_names(pointers):
+    """names from the tables: the functions a program may call, and the shell's commands"""
+    given = {API_TABLE: 'api_table'}
+    for at, name in API_NAMES.items():
+        if API_TABLE + at in pointers:
+            given.setdefault(pointers[API_TABLE + at][1], 'api_' + name)
+    for a in sorted(pointers):                  # a text and, right after it, the function for it
+        v = pointers[a][1]
+        if text_at(v) and a + 8 in pointers and not text_at(pointers[a + 8][1]):
+            o = offset(v)
+            word = image[o:o + 24].split(b'\0')[0].decode('latin-1')
+            if word.isidentifier() and word.islower():
+                given.setdefault(pointers[a + 8][1], 'cmd_' + word)
+    return given
 
 
 # ---------------------------------------------------------------- assemble and compare
@@ -620,6 +731,20 @@ def main():
             if len(f) == 2:
                 k.follow(int(f[0], 16), int(f[1]))
 
+    global POINTERS, GIVEN, VARIABLES, SIZES
+    POINTERS = find_pointers(k)
+    GIVEN = table_names(POINTERS)
+    VARIABLES = True
+    # the size of the extension stands in its own header and, as a number, in the core that checks it
+    ext = SECTIONS[1]
+    GIVEN[ext.end] = 'ext_end'
+    GIVEN[ext.vma] = 'ext_start'
+    GIVEN[SECTIONS[0].vma] = 'core_start'
+    POINTERS[ext.vma + 8] = (8, ext.end, 0, 'dq ext_end - ext_start')
+    SIZES = {ext.size: '(ext_end - ext_start)'}
+    GIVEN[CORE_VMA + 0xF058] = 'ext_sha256'           # the SHA-256 the extension must have (the build fills it)
+    GIVEN[EXT_VMA + 0x2D280 - CORE_SIZE] = 'build_public_key'   # the key the Sentinel's list and the suits are checked with
+
     w = Writer(k)
     rounds = []
     for _ in range(40):
@@ -633,6 +758,14 @@ def main():
     w.write(OUT)
     out, lst, errors, stderr = assemble(OUT)
     same = open(out, 'rb').read() == image
+    # the names of the kernel, for what is assembled apart from it and calls it (the kernel suits)
+    with open(os.path.join(os.path.dirname(OUT), 'Kernel.sym.inc'), 'w', newline='\n') as f:
+        f.write('; Kernel.sym.inc - where everything in kernel/Kernel.kasm is; made by tools/kdis/kdis.py.\n')
+        for addr in sorted(w.names):
+            if section_of(addr):
+                f.write('%s equ 0x%X\n' % (w.names[addr], addr))
+        for addr in sorted(EXTERNAL):
+            f.write('%s equ 0x%X\n' % (EXTERNAL[addr], addr))
 
     code_bytes = sum(1 for x in k.owner if x)
     ins = [it for items in w.items for it in items if it.code]
@@ -647,6 +780,7 @@ def main():
         'functions: %d, jump labels: %d, data labels: %d' % (len(k.calls), len(k.jumps), len(k.refs)),
         'instructions kept as bytes: %d' % len(fb),
         '  by kind: ' + ', '.join('%s %d' % kv for kv in sorted(kinds.items(), key=lambda kv: -kv[1])[:40]),
+        'addresses in the data, now names: %d (the shell commands and the functions for programs among them)' % len(POINTERS),
         'targets inside another instruction: %d, runs that walked into data: %d' % (len(k.conflicts), k.dropped),
         'rounds: ' + '; '.join(rounds),
         'ndisasm runs: %d' % k.dec.spawns,
@@ -655,7 +789,7 @@ def main():
     ] + ['  %05x  %s' % (it.addr, k.code[it.addr][1]) for it in fb]
     with open(os.path.join(WORK, 'report.txt'), 'w') as f:
         f.write('\n'.join(rep) + '\n')
-    print('\n'.join(rep[:9]))
+    print('\n'.join(rep[:10]))
     return 0 if same else 1
 
 

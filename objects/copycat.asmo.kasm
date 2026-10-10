@@ -3784,10 +3784,12 @@ L_046fe:
         jnc short L_0470c
         mov al,0x20
 L_0470c:
+r_0470e equ L_0470c + 2
         mov [rcx+0x64b2],al
         inc rcx
         jmp short L_046fe
 L_04717:
+r_04719 equ L_04717 + 2
         mov byte [rcx+0x64b2],0x0
         mov rcx,r9
         lea rdx,[rel d_064b2]

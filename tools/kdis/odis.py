@@ -156,6 +156,78 @@ def disassemble(path, out):
                 funcs=len(k.calls), relocs=len(relocs), in_code=in_code, out=os.path.relpath(out, ROOT))
 
 
+def suit_code(b):
+    """a kernel suit: its DATA is 64 bytes of signature, the slot it runs at, its size, 16 zero bytes, the code"""
+    d = b[q(b, 0x10):q(b, 0x10) + q(b, 0x58)]
+    slot, size = struct.unpack_from('<QQ', d, 64)
+    return slot, d[96:96 + size]
+
+
+def suit(path, out):
+    """the code of a kernel suit as source: it runs at a fixed place and calls the kernel by name"""
+    b = open(path, 'rb').read()
+    slot, code = suit_code(b)
+    size = len(code)
+    os.makedirs(kdis.WORK, exist_ok=True)
+    sec = kdis.Section('suit', slot, 0, size)
+    with open(sec.file, 'wb') as f:
+        f.write(code)
+    kdis.image = code
+    kdis.SECTIONS = [sec]
+    kdis.FAR = {}
+    kdis.BLOBS = None
+    kdis.DIRECTIVES = {'suit': 'org 0x%X' % slot}
+    name = meta(b, 'name')
+    kdis.HEADER = [
+        '; %s - the kernel suit %s of NinuxOS v2.9.59 as NASM source: %d bytes of kernel code that' % (os.path.basename(out), name, size),
+        '; run at 0x%X. Made by tools/kdis/odis.py; it assembles to the same bytes:' % slot,
+        ';   nasm -f bin -I kernel/suits/ %s -o %s.bin' % (os.path.basename(out), name),
+        '; The build puts the code into the object %s (64 bytes of signature, the slot, the size, the' % name,
+        '; code) and signs it. The names fn_0xxxx, L_0xxxx, d_0xxxx are the kernel\'s (Kernel.sym.inc).',
+        '',
+        '%include "../Kernel.sym.inc"',
+        '',
+    ]
+    external = {}
+    sym = os.path.join(ROOT, 'kernel', 'Kernel.sym.inc')
+    if os.path.exists(sym):
+        for line in open(sym):
+            f = line.split()
+            if len(f) == 3 and f[1] == 'equ':
+                external.setdefault(int(f[2], 16), f[0])
+    kdis.EXTERNAL = external
+    pointers, given, seeds = {}, {slot: 'suit_start'}, []
+    at = 0x20                                   # after the mark, the size and the name: where the kernel comes in
+    while at + 8 <= size and slot <= q(code, at) < slot + size:
+        pointers[slot + at] = (8, q(code, at), 0)
+        seeds.append(q(code, at))
+        given.setdefault(q(code, at), 'entry_%02d' % ((at - 0x20) // 8))
+        at += 8
+    given.setdefault(slot + at, 'suit_table_end')
+    kdis.POINTERS = pointers
+    kdis.GIVEN = given
+    k = kdis.Kernel()
+    for s in seeds:
+        k.follow(s, 64)
+    w = kdis.Writer(k)
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    rounds = 0
+    while True:
+        rounds += 1
+        w.write(out)
+        n, what = kdis.verify(w, out)
+        if n == 0 or rounds > 40:
+            break
+    w.write(out)
+    built, lst, errors, stderr = kdis.assemble(out)
+    same = not errors and open(built, 'rb').read() == code
+    ins = [it for items in w.items for it in items if it.code]
+    kdis.EXTERNAL = {}
+    return dict(name=name, kind='suit', size=size, same=same, code=sum(1 for x in k.owner if x), ins=len(ins),
+                kept=sum(1 for it in ins if it.fallback), funcs=len(k.calls), relocs=len(seeds), in_code=0,
+                out=os.path.relpath(out, ROOT))
+
+
 def targets():
     found = []
     for folder, where, ending in (('build/objects', 'objects', '.asmo.kasm'), ('build/kernel', 'kernel/suits', '.kasm')):
@@ -165,24 +237,30 @@ def targets():
             b = open(p, 'rb').read(0x70)
             if b[:4] != b'OMSA' or struct.unpack_from('<Q', b, 0x38)[0] != 1:
                 continue
+            if folder == 'build/kernel':
+                found.append((p, os.path.join(ROOT, where, f.rsplit('.', 1)[0] + ending)))
+                continue
             base = f.rsplit('.', 1)[0]
             found.append((p, os.path.join(ROOT, where, base + ending)))
     return found
 
 
 def main():
-    jobs = [(os.path.abspath(a), os.path.join(ROOT, 'objects', os.path.basename(a).rsplit('.', 1)[0] + '.asmo.kasm'))
-            for a in sys.argv[1:]] or targets()
+    wanted = [os.path.abspath(a) for a in sys.argv[1:]]
+    jobs = [j for j in targets() if not wanted or j[0] in wanted]
     lines = []
     for path, out in jobs:
         b = open(path, 'rb').read()
         if b[:4] != b'OMSA':
             continue
-        # an object with nothing but stubs for sockets has no code worth a source
-        first = q(b, q(b, 0x28)) if 0 < q(b, 0x28) < len(b) else 0
-        if not first and not (0 < q(b, 0x60) < len(b)):
-            continue
-        r = disassemble(path, out)
+        if meta(b, 'type') == 'kernel':
+            r = suit(path, out)
+        else:
+            # an object with nothing but stubs for sockets has no code worth a source
+            first = q(b, q(b, 0x28)) if 0 < q(b, 0x28) < len(b) else 0
+            if not first and not (0 < q(b, 0x60) < len(b)):
+                continue
+            r = disassemble(path, out)
         if r is None:
             continue
         line = '%-22s %-8s %8d bytes  %s  code %5.1f%%  %6d instructions (%d as bytes)  %4d functions  ' \

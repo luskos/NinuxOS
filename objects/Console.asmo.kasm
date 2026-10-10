@@ -4531,10 +4531,12 @@ L_05cdf:
         jnc short L_05ced
         mov al,0x20
 L_05ced:
+r_05cef equ L_05ced + 2
         mov [rcx+0x7c2d],al
         inc rcx
         jmp short L_05cdf
 L_05cf8:
+r_05cfa equ L_05cf8 + 2
         mov byte [rcx+0x7c2d],0x0
         mov rcx,r9
         lea rdx,[rel d_07c2d]

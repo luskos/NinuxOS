@@ -1,7 +1,7 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.04 (the kernel is the one of v2.9.59, as source; the build
-writes the version into it, adds objects and signs).
+State on 10 October 2026, project v3.0.05 (everything that is compiled has a source now; the build
+writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
 
@@ -112,29 +112,43 @@ No class, on purpose: a program is made of objects (ASMO), not of classes.
 
 ## 4. The source of what is compiled
 
-- [x] v3.0.04: `tools/kdis/odis.py` - all 34 compiled objects as NASM source in `objects/`
-      (Desktop, Studio, NET, the 20 programs, the tests); each assembles to the same bytes; the
-      header, the socket tables and the relocations are names, so lines can be added.
-- [x] v3.0.04: kdis took `retq` for an ordinary instruction and ran on past the end of every
-      function. Corrected: the kernel is 41% recognised code now (the 55% before held data read
-      as code).
-- [ ] **The kernel** (`kernel/Kernel.kasm`): the rest of its code is reached only through tables
-      - the shell commands, the interrupt gates, the table of functions the programs call, the
-      system sockets. Find the tables and follow them.
-- [ ] Addresses kept in the kernel's data and absolute addresses in its code are still numbers
-      (it has no table of relocations as the objects have). Until they are names **no line of
-      Kernel.kasm may be added or removed**, only bytes changed in place.
-- [ ] 117 instructions of the kernel are `db` because nasm encodes them another way.
-- [ ] Names instead of addresses, in the kernel and in the objects: from the shell commands, the
-      log lines, the texts next to the code. Then cut the kernel into the old parts: Loader, Core,
-      Memory, Gates, Shield, Cart, ATA; PCI, AHCI, NVMe, XHCI, Crypto, Files, PyTonCompiler ...
-- [ ] **The kernel suits** (k_tools, k_net, k_usb12, k_sound): their code lies in their DATA in a
-      form of its own (no sockets, no relocations). Read how the kernel puts a suit on, then the
-      same treatment.
-- [ ] Photon, Puffer, Tuner, META: the objects are 560-byte launchers; the programs themselves
-      are in the extension of the kernel - they come with the kernel's source.
-- [ ] Rewrite, part by part, what is only disassembly into source meant to be read: begin where
-      changes are wanted first (the shell? the desktop?) - to decide with the owner.
+Done - everything assembles to the same bytes as v2.9.59:
+
+- [x] `boot/Boot.kasm` - by hand, with names and comments.
+- [x] `kernel/Kernel.kasm` (v3.0.05): 122 KB of code as 30952 instructions, none left as bytes;
+      the tables of addresses in the data found and followed (369 addresses, now names); the
+      variables in memory named; the loader's addresses named; the size of the extension written
+      as `ext_end - ext_start`. Real names from two tables: `api_*` (what a program may call) and
+      `cmd_*` (the shell's commands).
+- [x] `kernel/suits/*.kasm` (v3.0.05): the four kernel suits; the build assembles them, puts the
+      code into their objects and signs them.
+- [x] `objects/*.asmo.kasm` (v3.0.04): the 34 compiled objects - Desktop, Studio, NET, the 20
+      programs, the tests.
+
+Open:
+
+- [ ] **The proof.** Add one `nop` at the start of a function in `kernel/Kernel.kasm`, build,
+      start the system (the owner). If it starts and works, lines can be added to the kernel for
+      good; if not, an address is still a plain number somewhere - then compare where it fails.
+      The same once for a suit and for an object (`objects/calc.asmo.kasm` -> build/add).
+- [ ] A suit or an object of another size: the build takes only the same size from
+      `kernel/suits` and has no step yet that assembles `objects/*.asmo.kasm` into the image.
+- [ ] 84 places where a jump lands inside what was read as another instruction - look at each:
+      data read as code, or two ways into the same bytes.
+- [ ] The 16 KB of "other data" in the kernel, table by table: name them, and see whether code
+      hides there (constants of SHA-512 and Ed25519, Photon's tables, the keyboard maps ...).
+- [ ] Names. 655 functions of the kernel are still `fn_ADDR`. Sources of names: the log lines
+      (`[shield]`, `[smp]`, `[pci]`, `[room]`, `[mux]` ...), the texts each function prints, the
+      order of the old files. `tools/kdis/names.txt` (ADDR NAME) is read by kdis - put them there,
+      not into the generated file.
+- [ ] Cut the kernel into the old parts (Loader, Core, Memory, Gates, Shield, Cart, ATA; PCI,
+      AHCI, NVMe, XHCI, Crypto, Files, PyTonCompiler, Tuner, VirtioGPU, Photon ...) as `%include`s.
+- [ ] Photon, Puffer, Tuner, META: the objects are 560-byte launchers; the programs are functions
+      of the extension. Find where each begins (`cmd_puffer`, `cmd_tune`, `cmd_spaces` lead there).
+- [ ] **Rewriting.** What exists is exact, but it is a machine's reading: no structure, few
+      names, no comments. Rewriting a part by hand (same behaviour, source meant to be read) is
+      possible part by part; say which part first (the shell? the cabinet? the desktop?).
+      After the rewrite the bytes will differ - then only running it can say it is the same.
 
 ## 5. New: the disks of other systems - winlolz, linlolz
 
