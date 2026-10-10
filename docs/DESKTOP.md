@@ -116,6 +116,18 @@ desktop that can be started and tried beside the old one:
    Not begun: the desktop split in 4 or 9 (it needs the multiplexer to draw a task into a
    part of the screen).
 
+   **v3.0.31: the system's own actions.** Read in the old desktop: its context menu is not its
+   own - it calls NET's socket `context` with the object itself and where the mouse is; NET
+   shows the page `context` and *does* what is chosen (clone, rename, hide, inject, lock,
+   park, drop, clean, erase, share, transfer, broadcast, subscribe), and answers with a
+   number: 2 leave to the shell, 3 inject, 5 open, 6 edit in Studio; NET's socket `message`
+   then gives a text for the taskbar. Desk2 does the same (`ob_call_on`, `ob_text` in py2asm):
+   "The system's menu ..." in its own menu. Seen in QEMU: the whole menu comes up on Calc.
+   So Desk2 now has everything the old desktop has but: hidden objects shown on request,
+   inject by a click on a second object, the taskbar as a page. **It can take the old one's
+   place when the owner says so** (`desktop` would then run it; the old one stays in the
+   cabinet under its name for `desk desktop`... the other way round).
+
 1. **py2asm gets the functions above** that it does not have (pictures, the rectangle kept and
    put back, clip, power, the cabinet's counter, the page drawing, the multiplexer's numbers,
    calling a socket). Each has to be read whole in the kernel first - guessing a function that

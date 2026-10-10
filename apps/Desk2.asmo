@@ -5,8 +5,10 @@
 #   a click on an icon         open it: a program in a window, a drawer, a page in NET
 #   hold and move an icon      put it somewhere else (kept in the object desk2_places)
 #   the mouse resting on one   its card: what the object says about itself
-#   the right button on one    a menu: open, view, edit, data dump, about it
-#   the right button elsewhere a menu: settings, files, tidy the icons, the shell
+#   the right button on one    a menu: open, data dump, about it - and "The system's menu":
+#                              everything the system does to an object (view, edit, clone, rename,
+#                              hide, lock, inject, erase, share ...), the same menu the old desktop has
+#   the right button elsewhere a menu: settings, files, tidy the icons, the shell, the system's menu
 #   the button N               the start menu: settings, files, the shell, restart, shut down
 #   a button of the taskbar    that program to the front
 #   a click on a bag           what is inside, in a panel over the desk; a click there starts it
@@ -15,9 +17,8 @@
 #   PgUp / PgDn                screen goes to the desktop on that side (a new one, if there is none)
 #   ESC                        back to the shell
 #
-# What the old desktop does and this one does not yet: the taskbar and the menus as pages, the
-# system's own actions on an object (clone, rename, hide, lock, inject, erase, share ...),
-# messages of the system on the taskbar.
+# What the old desktop does and this one does not yet: the taskbar as a page, hidden objects
+# shown on request, "inject" by a click on a second object.
 #
 # Everything here is plain PyTon over the system's functions - this file is the source.
 
@@ -57,6 +58,8 @@ over_y = 0
 over_w = 0
 over_h = 0
 menu_for = -1   # the icon the menu is for, -1: the desk itself
+menu_x = 0      # where the right button was pressed
+menu_y = 0
 
 
 # ---------------------------------------------------------------- what is on the desk
@@ -534,6 +537,26 @@ def _do(act):
             _say("data dump: " + str(got) + " bytes are now the object '" + out + "'.")
     elif act == "about":
         _card(n)
+    elif act == "system":
+        # the menu of the system itself: NET shows the page "context" and does what is chosen there
+        cursor_hide()
+        got = ob_call_on("net", "context", name, menu_y * 65536 + menu_x)
+        if got == -1:
+            _say("NET is not in the cabinet: the system's menu cannot be shown.")
+            return 0
+        said = ob_text("net", "message")
+        _collect()
+        _all()
+        if len(said) > 0:
+            _say(said)
+        if got == 2:
+            return 1
+        if got == 5 and n >= 0 and n < len(ITEMS):
+            _open(n, 1)
+        elif got == 6 and len(name) > 0:
+            open_with("studio", "edit", name)
+        elif got == 3:
+            _say("Inject by a click on another object is not in Desk2 yet: use the old desktop for it.")
     elif act == "settings":
         if open_with("net", "show", "curtain") < 0:
             _say("The page of the settings (curtain) is not in the cabinet.")
@@ -651,18 +674,21 @@ def _click(mx, my):
 
 
 def _right(mx, my):
+    global menu_x, menu_y
     if my >= sh - TB:
         return 0
+    menu_x = mx
+    menu_y = my
     n = _at(mx, my)
     if n >= 0 and KIND[n] != 4:
-        _menu(mx, my, ["Open", "View in Studio", "Edit in Studio", "Data dump", "About it"],
-              ["open", "view", "edit", "dump", "about"], n)
+        _menu(mx, my, ["Open", "Data dump", "About it", "The system's menu ..."],
+              ["open", "dump", "about", "system"], n)
     elif drawer >= 0:
         _menu(mx, my, ["Back to the cabinet", "Settings", "Files", "The shell"],
               ["root", "settings", "files", "shell"], -1)
     else:
-        _menu(mx, my, ["Settings", "Files", "Tidy the icons", "The shell"],
-              ["settings", "files", "tidy", "shell"], -1)
+        _menu(mx, my, ["Settings", "Files", "Tidy the icons", "The shell", "The system's menu ..."],
+              ["settings", "files", "tidy", "shell", "system"], -1)
     return 0
 
 

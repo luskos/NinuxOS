@@ -3,6 +3,11 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.31** (11 October 2026) - seen in QEMU
+  - **Desk2 has the system's own menu on an object**: clone, rename, hide, inject, lock, park,
+    drop, clean, erase, share, transfer, broadcast, subscribe - the same page the old desktop
+    shows, through NET. With it Desk2 does all the old desktop does, save three small things.
+  - py2asm: `ob_call_on` (call a socket with an object itself), `ob_text` (a socket's text).
 - **v3.0.30** (11 October 2026) - seen in QEMU
   - **Desk2: what the old desktop could not do.** A bag opens as a panel *over the desk*, with
     the things' own pictures - a click starts one. A click on the top edge of the screen

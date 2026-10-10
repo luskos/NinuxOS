@@ -551,6 +551,58 @@ ninux_call_none:
         mov rax, -1
         ret
 
+sys_ob_call_on:                         ; (a program, one of its sockets, the name of an object or "", b): call the
+        push rbx                        ; socket with that object itself as its first value (0 for "") -> what it
+        push r12                        ; gave; -1: the program is not there. (NET's "context" and "popup" take this.)
+        push r13
+        push r14
+        mov r12, rsi
+        mov r13, rdx
+        mov r14, rcx
+        mov rax, [rel ninux_api]
+        call [rax + 0x68]
+        test rax, rax
+        jz ninux_on_none
+        mov rbx, rax
+        xor edx, edx
+        cmp byte [r13], 0
+        je ninux_on_call
+        mov rdi, r13
+        mov rax, [rel ninux_api]
+        call [rax + 0x68]
+        mov rdx, rax
+ninux_on_call:
+        mov rdi, rbx
+        mov rsi, r12
+        mov rcx, r14
+        mov rax, [rel ninux_api]
+        call [rax + 0x80]
+        jmp ninux_on_out
+ninux_on_none:
+        mov rax, -1
+ninux_on_out:
+        pop r14
+        pop r13
+        pop r12
+        pop rbx
+        ret
+sys_ob_text:                            ; (a program, one of its sockets) -> the text the socket gives ("" if none)
+        push rsi
+        mov rax, [rel ninux_api]
+        call [rax + 0x68]
+        pop rsi
+        test rax, rax
+        jz ninux_nothing
+        mov rdi, rax
+        xor edx, edx
+        xor ecx, ecx
+        mov rax, [rel ninux_api]
+        call [rax + 0x80]
+        cmp rax, -1
+        jne ninux_text_ok
+        xor eax, eax
+ninux_text_ok:
+        ret
 sys_cabinet_top:                        ; how many objects the cabinet itself has (the drawers' ones follow them)
         xor edi, edi
         NINUX_API 0x110

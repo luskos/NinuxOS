@@ -1,0 +1,19 @@
+# q_v3_desk2d.txt - v3.0.31: Desk2 - the system's own menu on an object
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type desk desk2
+wait 8
+moveto 64 410
+rclick
+wait 2
+snap h01_menu
+moveto 110 507
+click
+wait 4
+snap h02_system_menu
+esc
+wait 3
+snap h03_after
+esc
+wait 3
