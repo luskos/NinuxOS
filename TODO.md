@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.32 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.33 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -92,7 +92,7 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 | 33 | An instance of the system on every disk; the governor (`swap`, `sync`) | L |
 | 34 | The vDNA constructor: a universal one from the demo in the repository vDNA; closed programs as chains it builds into an ASMO object; an AI checks them | XL |
 | 35 | **[the empty program is there, v3.0.11]** Socials | L |
-| 36 | The other dialects over the one back end: c2asm, c++2asm, c#2asm, java2asm, js2asm - plain code only, no OOP (part 2a) | XL |
+| 36 | **[written, v3.0.33: c2asm, c++2asm, c#2asm, java2asm, js2asm - tried on Windows: one program in the five dialects prints what the Python one prints]** The other dialects over the one back end: c2asm, c++2asm, c#2asm, java2asm, js2asm - plain code only, no OOP (part 2a) | XL |
 
 ### Seen in QEMU on 11 October 2026 (v3.0.15; the owner allowed one quick test)
 
@@ -379,7 +379,7 @@ No class, on purpose: a program is made of objects (ASMO), not of classes.
 
 ## 2a. New: the other dialects - c2asm, c++2asm, c#2asm, java2asm, js2asm (the owner, 11 October 2026)
 
-An idea for now: to be in the list, not to be written yet.
+An idea at first; **written in v3.0.33** - see "What is there" at the end of this part.
 
 Back-end languages only. Each is supported the way PyTon is: **as a dialect** - the way of
 writing - and not as that language's own machinery. If `2 + 2` is written in any of them the
@@ -430,6 +430,33 @@ What that means for the work (Claude):
 - [ ] pyhello and pycalc in build/add are still the objects compiled in v3.0.02 (old runtime).
 - [ ] Known and accepted: a number that happens to equal the address of a block keeps that
       block; more than 256 chunks and nothing is given back any more.
+
+### What is there (v3.0.33)
+
+- [x] `pyton/clike.py` reads C, C++, C#, Java and JavaScript - one reader for the five, since
+      they write statements the same way - and turns the text into PyTon, which py2asm compiles.
+      So the back end is one, and `2 + 2` gives the same assembly whatever it was written in.
+      `python pyton/c2asm.py prog.c`, `c++2asm.py`, `c#2asm.py`, `java2asm.py`, `js2asm.py`
+      (the same options as py2asm: `--target ninux`, `--name`); `clike.py --show FILE` shows
+      the PyTon a text becomes.
+- [x] What may be written: names and values, arithmetic, comparisons, `&& || !`, `?:`,
+      `++ -- +=`, `if / else`, `while`, `do-while`, `for`, `break`, `continue`, `return`,
+      functions, arrays (lists), texts, printing in each language's own way (printf, cout <<,
+      Console.WriteLine with `$"..."`, System.out.println, console.log with `` `...${x}` ``).
+- [x] The decisions asked for above, as made: the types written in C, C#, Java are read and
+      decide two things only - `/` between whole numbers divides whole (not in JavaScript),
+      and `+` with a text joins. An array is a list; `new int[n]` is n zeros. A letter in
+      quotes in C is its number. `{ }` objects of JavaScript are not read yet.
+- [x] Refused, with a line that says why: `class` with things of its own, `struct`,
+      `interface`, `template`, inheritance, `new` of a class, `this`, `switch`, `try`.
+      In C# and Java the one class the language demands around `main` is read as a wrapper.
+- [x] `python pyton/test_dialects.py`: `examples/dialects/same.c .cpp .cs .java .js` against
+      `same.py` - 5 of 5 print the same; three texts that must be refused are.
+- [ ] Not there: `switch`, `struct` as a plain record (a dict), JavaScript's `{ }` and
+      `for ... of`, C's pointers, `++` inside an expression, `printf` widths (`%5d`, `%.2f`
+      print the plain value), what a function gives back when its type is not written (JS).
+- [ ] A program of NinuxOS written in one of them (a window, keys) has not been tried: the
+      system's functions are called by the same names, so it should compile as it is.
 
 ## 3. Testing
 

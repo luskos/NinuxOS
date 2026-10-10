@@ -27,9 +27,10 @@ it stands until the owner changes it. Set on 10 October 2026.
 - **The project travels inside the system**: the build puts CHANGELOG, TODO, DIRECTIVE and the
   sources of what is written into the drawer `project` of every image. A new paper or program
   of the project is added there too (tools/build_disk.py: INSIDE, apps/py2asm.txt).
-- **Other languages are dialects** (c2asm, c++2asm, c#2asm, java2asm, js2asm): the way of
-  writing only, over the same back end as py2asm; plain code, never classes, interfaces,
-  inheritance - object programming, not OOP.
+- **Other languages are dialects** (c2asm, c++2asm, c#2asm, java2asm, js2asm: pyton/clike.py):
+  the way of writing only, turned into PyTon and compiled by py2asm; plain code, never
+  classes, interfaces, inheritance - object programming, not OOP. What a dialect does not
+  read it refuses with a line that says so; nothing is quietly done differently.
 - **No installing.** A program is an object that carries all it needs: sent, it runs; `erase`
   removes it.
 - **No permissions and no prompts.** A program does its own work and is given no way to anything

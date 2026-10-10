@@ -14,3 +14,5 @@ build/try/
 build/key/
 build/font/
 test/qemu/out_v3/
+pyton/examples/dialects/out/
+*.pyton.py

@@ -3,6 +3,11 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.33** (11 October 2026) - tried on Windows
+  - **The other dialects: c2asm, c++2asm, c#2asm, java2asm, js2asm.** One reader for the five
+    (`pyton/clike.py`) turns the text into PyTon and py2asm compiles it - one back end, the
+    same assembly. Plain code only: no classes, structs, interfaces, inheritance.
+    `pyton/test_dialects.py`: one program written six ways prints the same six times.
 - **v3.0.32** (11 October 2026) - seen in QEMU
   - **The screen split in 4 or 9**: the desk and every program that runs, each in its part of
     the screen, made small, all live at once. A click on one makes the screen whole again with
