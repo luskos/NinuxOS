@@ -1563,6 +1563,11 @@ def _bitop(a, b, op):
 # ---------------------------------------------------------------- from the PyTon of v2.9
 # (the programs of apps/ use these; in new programs chr(), ord() and .split() do the same)
 
+def memory():
+    # how many bytes this program has asked from the system so far
+    return _heap()
+
+
 def char(n):
     return _chr(n)
 

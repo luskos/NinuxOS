@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.19 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.20 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -60,7 +60,7 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 | 16 | The silent backup of the user and its pool, with a manager of the pool's space | M-L |
 | 17 | A desktop program is handed only what it needs; relays for the rest (the keyboard on the screen for the shell is one) | L |
 | 18 | `cores solo`, `bench`, all cores for programs | M |
-| 19 | Memory given back by PyTon programs | M |
+| 19 | **[done, v3.0.20: tried on Windows and once in QEMU]** Memory given back by PyTon programs | M |
 | 20 | Photon, Puffer, Tuner, META out of the kernel: programs of their own | L each |
 | 21 | Names for the kernel's 655 functions; the kernel cut into its parts | L |
 
@@ -347,6 +347,25 @@ What that means for the work (Claude):
       dialect; a program's sockets are its functions, as in PyTon.
 - [ ] A test like pyton/test.py: the same small program written in every dialect must give
       the same assembly, or at least the same output.
+
+### Memory that comes back (v3.0.20)
+
+- [x] `pyton/runtime.inc`: every block has 16 bytes in front (its size, a mark); when a chunk of
+      1 MB is full the runtime looks for what is still pointed at - from the stack, the
+      registers, the program's own data, then from block to block - and the rest is free and
+      used again first. It does not need to know what is a pointer (any 8 bytes that hold the
+      address of a block count), so nothing in py2asm or the prelude had to change.
+- [x] Tried: `python pyton/test.py` (the new `examples/garbage.py` makes and drops about 160 MB
+      and must end having asked the system for less than 48 MB; it asks for a few), and
+      `python pyton/test.py --stress` (a look before *every* block: both big examples still
+      give what Python gives). In QEMU: Bags, Files, Socials with the new runtime.
+- [ ] It costs time: garbage.py takes 1.6 s, 0.6 s without giving back. The free blocks are one
+      list searched from its start; lists by size would be faster.
+- [ ] `nasm -DRT_NO_GC` builds a program that never gives back, as before - if a program
+      misbehaves, this tells whether the memory handling is the reason.
+- [ ] pyhello and pycalc in build/add are still the objects compiled in v3.0.02 (old runtime).
+- [ ] Known and accepted: a number that happens to equal the address of a block keeps that
+      block; more than 256 chunks and nothing is given back any more.
 
 ## 3. Testing
 

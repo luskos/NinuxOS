@@ -109,8 +109,10 @@ def _about():
     y = _line(y, "sockets", ob_meta(i, "sockets"))
     k = ob_meta(i, "kind")
     lang = ob_meta(i, "lang")
-    if len(lang) > 0:
+    if len(lang) > 0 and len(k) > 0:
         k = k + ", written in " + lang
+    elif len(lang) > 0:
+        k = "written in " + lang
     y = _line(y, "kind", k)
     y = _line(y, "made", ob_meta(i, "made"))
     y = _line(y, "holds", _size(ob_data(i)) + " of DATA in " + _size(ob_size(i)))

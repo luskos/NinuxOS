@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.19.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.20.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.19 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.20 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -746,6 +746,11 @@ Windows has.
       object is width, height, then four bytes a dot; a sound object; the network).
       \cmd{python tools/build\_disk.py -{}-compare} puts them into a drawer \texttt{compare} as
       \texttt{pyNAME}, beside the old ones.
+\item \textbf{Memory} (v3.0.20): a block has 16 bytes in front of it --- its size and a mark
+      word. Memory is taken from the system 1 MB at a time; when a chunk is full the runtime
+      marks every block that is pointed at (from the stack, the registers, the program's own
+      data, then from block to block; any 8 bytes holding the address of a block count) and
+      the rest becomes free and is used again first.
 \item \textbf{Other dialects} (an idea, \file{TODO.md} part 2a): C, C++, C\#, Java and
       JavaScript as ways of writing over the one back end of py2asm --- plain code only.
 \end{itemize}

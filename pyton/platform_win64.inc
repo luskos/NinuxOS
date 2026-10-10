@@ -6,6 +6,10 @@
 
 %define RT_DATA section .data
 %define RT_TEXT section .text
+%macro RT_ROOTS 0                       ; the program's own data, for rt_collect
+        lea rsi, [rel pe_data]
+        lea rdx, [rel pe_end]
+%endmacro
 
 ; the file: the headers, then the code (read, run), then the data (read, write) - each from a new page
 section .hdr start=0
@@ -112,6 +116,7 @@ pe_end:
 section .text
 pe_text:
 pe_entry:
+        mov [rel rt_stack_top], rsp     ; (memory: what lies on the stack from here down is the program's)
         sub rsp, 40
         call rt_start
         xor ecx, ecx

@@ -1,0 +1,67 @@
+# q_v3_memory.txt - v3.0.20: the programs of the new py2asm with memory that comes back
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type run pyhello
+type run pyhello numbers
+type run pyhello numbers
+type desktop
+waitlog [browser] page shown 60
+wait 2
+esc
+wait 2
+# Bags: open, put something in, close, open again, close
+moveto 351 510
+click
+wait 4
+moveto 510 265
+click
+wait 2
+moveto 400 330
+click
+wait 2
+esc
+wait 3
+moveto 351 510
+click
+wait 4
+snap m01_bags
+esc
+wait 3
+# Files: walk the whole list down and up (every line makes texts), one type, data dump
+moveto 447 232
+click
+wait 4
+key pgdn
+key pgdn
+key pgdn
+key pgdn
+key pgdn
+key pgdn
+key pgdn
+key pgdn
+key pgup
+key pgup
+key pgup
+key pgup
+key pgup
+key pgup
+key pgup
+key pgup
+key pgdn
+key pgdn
+text t
+text t
+text t
+key down
+key down
+wait 2
+snap m02_files
+esc
+wait 3
+moveto 447 418
+click
+wait 4
+esc
+wait 2
+snap m03_end

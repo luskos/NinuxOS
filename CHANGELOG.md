@@ -3,6 +3,12 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.20** (11 October 2026) - tried on Windows; the programs once in QEMU
+  - **PyTon programs give memory back.** The runtime looks for the blocks nothing points at any
+    more and uses them again (`rt_collect` in `pyton/runtime.inc`): a program that makes and
+    drops 160 MB now asks the system for a few. `memory()` says how much was asked.
+    `pyton/test.py --stress` checks it the hard way; `examples/garbage.py` is the new test.
+  - Files: a line of the description came out as ", written in pyton".
 - **v3.0.19** (11 October 2026) - seen in QEMU
   - **`tasks`** in the shell: the programs kept while the shell has the screen, a line each;
     **`tasks close N`** closes one (its memory comes back). The first command written since the

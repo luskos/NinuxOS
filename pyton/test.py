@@ -34,7 +34,11 @@ def lines(text):
 def main():
     os.makedirs(OUT, exist_ok=True)
     nasm = find_nasm()
-    names = sys.argv[1:] or sorted(f[:-3] for f in os.listdir(EX) if f.endswith('.py'))
+    # --stress: memory is looked through before every block is given out (slow; finds what the
+    # runtime forgot to keep hold of)
+    stress = ['-DRT_STRESS'] if '--stress' in sys.argv else []
+    args = [a for a in sys.argv[1:] if a != '--stress']
+    names = args or sorted(f[:-3] for f in os.listdir(EX) if f.endswith('.py') and not (stress and f == 'garbage.py'))
     failed = 0
     for name in names:
         src = os.path.join(EX, name + '.py')
@@ -47,7 +51,7 @@ def main():
             print('%-12s NOT COMPILED  %s' % (name, (r.stderr or r.stdout).strip()))
             failed += 1
             continue
-        r = subprocess.run([nasm, '-f', 'bin', '-I', HERE + os.sep, asm, '-o', exe], capture_output=True, text=True)
+        r = subprocess.run([nasm, '-f', 'bin'] + stress + ['-I', HERE + os.sep, asm, '-o', exe], capture_output=True, text=True)
         if r.returncode != 0:
             print('%-12s NASM STOPPED\n%s' % (name, r.stderr[:1500]))
             failed += 1

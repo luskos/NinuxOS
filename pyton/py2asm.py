@@ -44,7 +44,7 @@ def fail(node, text):
 # name in prelude.py -> (the label in runtime.inc, how many values it takes)
 INTRINSICS = {
     '_type': ('i_type', 1), '_str_new': ('i_str_new', 1), '_sget': ('i_sget', 2), '_sset': ('i_sset', 3),
-    '_list_new': ('i_list_new', 1), '_push': ('rt_list_push', 2), '_lget': ('i_lget', 2),
+    '_list_new': ('i_list_new', 1), '_push': ('rt_list_push', 2), '_lget': ('i_lget', 2), '_heap': ('i_heap', 0),
     '_lset': ('i_lset', 3), '_lsetlen': ('i_lsetlen', 2), '_settype': ('i_settype', 2),
     '_dkeys': ('i_dkeys', 1), '_dvals': ('i_dvals', 1), '_bval': ('i_bval', 1),
     '_fadd': ('i_fadd', 2), '_fsub': ('i_fsub', 2), '_fmul': ('i_fmul', 2), '_fdiv': ('i_fdiv', 2),

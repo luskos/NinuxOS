@@ -28,6 +28,10 @@
 ; cabinet (TODO.md).
 
 %define RT_DATA
+%macro RT_ROOTS 0                       ; the program's own data, for rt_collect: the whole object
+        lea rsi, [rel obj_start]
+        lea rdx, [rel obj_end]
+%endmacro
 %define RT_TEXT
 
 %include "ninux_system.inc"
@@ -42,6 +46,18 @@
         mov [rel ninux_object], rdi
         mov [rel ninux_api], rsi
         mov [rel ninux_rsp], rsp
+        cmp qword [rel ninux_depth], 0  ; (memory: the program's part of the stack starts where the
+        je %%outer                      ; outermost socket that runs was entered)
+        mov rax, [rel rt_stack_top]     ; a socket inside another one lies just under it on the same stack.
+        sub rax, rsp                    ; If not - the one before was closed from outside and never
+        jbe %%outer                     ; came back - this is an outermost one again
+        cmp rax, 0x100000
+        jb %%nested
+%%outer:
+        mov qword [rel ninux_depth], 0
+        mov [rel rt_stack_top], rsp
+%%nested:
+        inc qword [rel ninux_depth]
         mov qword [rel rt_handler], 0
         cmp byte [rel ninux_started], 0
         jne %%ready
@@ -68,6 +84,7 @@ ninux_socket_leave:                     ; rax = what the socket's function gave:
 ninux_no_number:
         xor eax, eax
 ninux_out:
+        dec qword [rel ninux_depth]
         pop r15
         pop r14
         pop r13
@@ -198,6 +215,7 @@ sys_meta:                               ; (key) -> the value from this object's 
 ninux_object:   dq 0
 ninux_api:      dq 0
 ninux_rsp:      dq 0
+ninux_depth:    dq 0                    ; how many sockets of this object run inside one another
 ninux_event:    dq 0, 0, 0
 ninux_started:  db 0
 ninux_newline:  db 10, 0

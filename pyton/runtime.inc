@@ -19,7 +19,7 @@
 ;           stack, pushed first to last, and the caller takes them off again.
 ; The platform file gives:  plat_alloc (rdi bytes -> rax), plat_write (rdi address, rsi length),
 ;           plat_read (rdi address, rsi room -> rax length), plat_exit (rdi code), plat_abort.
-; Memory is never given back yet (as before): a block lives until the program is unloaded.
+; Memory: a block nothing points at any more is given back and used again (rt_collect, v3.0.20).
 
 T_INT   equ 0
 T_STR   equ 1
@@ -63,44 +63,331 @@ rt_start:                               ; run the lines at the top of the progra
         call f___main__
         ret
 
+; Memory (v3.0.20): blocks that nothing points at any more are given back.
+;   Every block has 16 bytes in front of it: its whole size, and a mark word - 'NXMEM' in the
+;   upper bytes, bit 0 "something points at it", bit 1 "free", bit 2 "looked through".
+;   A free block keeps the address of the next free one in its first 8 bytes.
+;   Memory comes from the system a chunk at a time (rt_chunks: where each starts and ends).
+;   When a chunk is full, and enough was taken since the last time, rt_collect looks for what
+;   is still pointed at - from the stack, the registers and the program's own data, then from
+;   block to block - and everything else becomes free and is used again first.
+;   It does not know what is a pointer: any 8 bytes that hold the address of a block count
+;   (also the address of a text's letters, which the system functions are given). A number that
+;   happens to look like one only keeps a block longer.
+RT_MAGIC  equ 0x4E584D454D000000
+RT_CHUNKS equ 256
+
 rt_alloc:                               ; rdi = bytes -> rax = a zeroed block
-        add rdi, 15
-        and rdi, -16
+        add rdi, 31                     ; (keeps every register but rax, rcx, rdx, rdi)
+        and rdi, -16                    ; with the 16 bytes in front
+        mov eax, 32                     ; never smaller than a free block has to be
+        cmp rdi, rax
+        cmovb rdi, rax
+        push rbx
+        push rsi
+        mov rbx, rdi
+%ifdef RT_STRESS                        ; (nasm -DRT_STRESS: look before every block - slow, for finding mistakes)
+        call rt_collect
+%endif
 .again:
+        lea rsi, [rel rt_free]          ; first: a free block that is big enough
+.walk:
+        mov rax, [rsi]
+        test rax, rax
+        jz .bump
+        mov rdx, [rax]
+        cmp rdx, rbx
+        jae .take
+        lea rsi, [rax + 16]
+        jmp .walk
+.take:
+        sub rdx, rbx
+        cmp rdx, 48
+        jb .whole
+        lea rcx, [rax + rbx]            ; what is over stays free, in the same place of the list
+        mov [rcx], rdx
+        mov rdi, RT_MAGIC + 2
+        mov [rcx + 8], rdi
+        mov rdi, [rax + 16]
+        mov [rcx + 16], rdi
+        mov [rsi], rcx
+        mov [rax], rbx
+        jmp .got
+.whole:
+        mov rdi, [rax + 16]
+        mov [rsi], rdi
+        jmp .got
+.bump:                                  ; then: the rest of the present chunk
         mov rax, [rel rt_heap_ptr]
         test rax, rax
         jz .more
-        lea rdx, [rax + rdi]
+        lea rdx, [rax + rbx]
         cmp rdx, [rel rt_heap_end]
         ja .more
         mov [rel rt_heap_ptr], rdx
-        mov rdx, rax
-        mov rcx, rdi
+        mov [rax], rbx
+.got:
+        mov rdi, RT_MAGIC
+        mov [rax + 8], rdi
+        mov rcx, [rax]
+        add [rel rt_since], rcx
+        sub rcx, 16
         shr rcx, 3
-        mov rdi, rax
+        lea rdi, [rax + 16]
+        mov rdx, rdi
         xor eax, eax
         rep stosq
         mov rax, rdx
+        pop rsi
+        pop rbx
         ret
-.more:
-        push rdi
+.more:                                  ; the chunk is full: look for what can be given back,
+        cmp byte [rel rt_gc_off], 0     ; if enough was taken since the last look
+        jne .chunk
+        mov rax, [rel rt_since]
+        cmp rax, [rel rt_wait]
+        jb .chunk
+        call rt_collect
+        mov qword [rel rt_since], 0
+        mov rax, [rel rt_heap_all]      ; the next look: when half of what the program holds was taken again
+        shr rax, 1
+        mov rcx, RT_CHUNK / 2
+        cmp rax, rcx
+        cmovb rax, rcx
+        mov [rel rt_wait], rax
+        jmp .again
+.chunk:                                 ; a new chunk. What is left of the present one becomes a free block
+        mov rax, [rel rt_heap_ptr]
+        test rax, rax
+        jz .ask
+        mov rdx, [rel rt_heap_end]
+        sub rdx, rax
+        cmp rdx, 48
+        jb .close
+        mov [rax], rdx
+        mov rdi, RT_MAGIC + 2
+        mov [rax + 8], rdi
+        mov rdi, [rel rt_free]
+        mov [rax + 16], rdi
+        mov [rel rt_free], rax
+        add rax, rdx
+        mov [rel rt_heap_ptr], rax
+.close:
+        mov rcx, [rel rt_chunks_n]      ; its record: used up to here
+        test rcx, rcx
+        jz .ask
+        shl rcx, 4
+        lea rdx, [rel rt_chunks]
+        mov rax, [rel rt_heap_ptr]
+        mov [rdx + rcx - 8], rax
+.ask:
         mov rax, RT_CHUNK
-        cmp rdi, rax
-        cmova rax, rdi
+        cmp rbx, rax
+        cmova rax, rbx
         push rax
+        push r8
+        push r9
+        push r10
+        push r11
         mov rdi, rax
         call plat_alloc
+        pop r11
+        pop r10
+        pop r9
+        pop r8
         pop rcx
-        pop rdi
         test rax, rax
         jz .none
         mov [rel rt_heap_ptr], rax
-        add rax, rcx
-        mov [rel rt_heap_end], rax
+        lea rdx, [rax + rcx]
+        mov [rel rt_heap_end], rdx
+        add [rel rt_heap_all], rcx
+        mov rdx, [rel rt_chunks_n]
+        cmp rdx, RT_CHUNKS
+        jae .unknown
+        shl rdx, 4
+        lea rdi, [rel rt_chunks]
+        mov [rdi + rdx], rax
+        mov qword [rdi + rdx + 8], 0    ; 0: the present chunk - used up to rt_heap_ptr
+        inc qword [rel rt_chunks_n]
+        jmp .again
+.unknown:
+        mov byte [rel rt_gc_off], 1     ; more chunks than the table holds: nothing is given back any more
         jmp .again
 .none:
         lea rdi, [rel rt_msg_memory]
         jmp rt_fail
+
+rt_collect:                             ; give back every block nothing points at; keeps every register
+        cmp qword [rel rt_stack_top], 0
+        je .not
+        push rax
+        push rcx
+        push rdx
+        push rbx
+        push rbp
+        push rsi
+        push rdi
+        push r8
+        push r9
+        push r10
+        push r11
+        push r12
+        push r13
+        push r14
+        push r15
+        mov rsi, rsp                    ; what the stack holds, the registers just put there among it
+        mov rdx, [rel rt_stack_top]
+        call rt_mark_range
+        RT_ROOTS                        ; the program's own data: rsi = where it starts, rdx = where it ends
+        add rsi, 7
+        and rsi, -8
+        call rt_mark_range
+.pass:                                  ; from block to block, until nothing new is found
+        xor r15d, r15d
+        xor r13d, r13d
+.pass_chunk:
+        cmp r13, [rel rt_chunks_n]
+        jae .pass_end
+        call rt_chunk
+.pass_block:
+        cmp rbx, r14
+        jae .pass_next
+        mov rax, [rbx + 8]
+        and eax, 7
+        cmp eax, 1                      ; pointed at, not looked through yet
+        jne .pass_step
+        or byte [rbx + 8], 4
+        lea rsi, [rbx + 16]
+        mov rdx, rbx
+        add rdx, [rbx]
+        call rt_mark_range
+        mov r15d, 1
+.pass_step:
+        add rbx, [rbx]
+        jmp .pass_block
+.pass_next:
+        inc r13
+        jmp .pass_chunk
+.pass_end:
+        test r15d, r15d
+        jnz .pass
+        mov qword [rel rt_free], 0      ; the rest is free
+        xor r13d, r13d
+.sweep_chunk:
+        cmp r13, [rel rt_chunks_n]
+        jae .done
+        call rt_chunk
+        xor r12d, r12d                  ; the free block just before this one, if they touch
+.sweep_block:
+        cmp rbx, r14
+        jae .sweep_next
+        mov rcx, [rbx]                  ; its size
+        mov rax, [rbx + 8]
+        test al, 2
+        jnz .free
+        test al, 1
+        jz .free
+        mov rax, RT_MAGIC               ; kept: the marks are taken off
+        mov [rbx + 8], rax
+        xor r12d, r12d
+        jmp .sweep_step
+.free:
+        test r12, r12
+        jz .free_new
+        add [r12], rcx                  ; it grows the free block before it
+        jmp .sweep_step
+.free_new:
+        mov rax, RT_MAGIC + 2
+        mov [rbx + 8], rax
+        mov rax, [rel rt_free]
+        mov [rbx + 16], rax
+        mov [rel rt_free], rbx
+        mov r12, rbx
+.sweep_step:
+        add rbx, rcx
+        jmp .sweep_block
+.sweep_next:
+        inc r13
+        jmp .sweep_chunk
+.done:
+        inc qword [rel rt_collects]
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop r11
+        pop r10
+        pop r9
+        pop r8
+        pop rdi
+        pop rsi
+        pop rbp
+        pop rbx
+        pop rdx
+        pop rcx
+        pop rax
+.not:
+        ret
+
+rt_chunk:                               ; r13 = the number of a chunk -> rbx = its first block, r14 = its used end
+        mov rax, r13
+        shl rax, 4
+        lea rcx, [rel rt_chunks]
+        mov rbx, [rcx + rax]
+        mov r14, [rcx + rax + 8]
+        test r14, r14
+        jnz .have
+        mov r14, [rel rt_heap_ptr]
+.have:
+        ret
+
+rt_mark_range:                          ; rsi .. rdx: every 8 bytes that hold the address of a block mark it
+.next:
+        cmp rsi, rdx
+        jae .done
+        mov rax, [rsi]
+        add rsi, 8
+        test al, 15
+        jnz .next
+        call rt_mark_one
+        sub rax, 16                     ; or the address of the letters of a text
+        call rt_mark_one
+        jmp .next
+.done:
+        ret
+
+rt_mark_one:                            ; rax = perhaps the address of a block; keeps rax, rsi, rdx
+        lea rcx, [rax - 16]
+        mov r8, [rel rt_chunks_n]
+        lea r9, [rel rt_chunks]
+.chunk:
+        test r8, r8
+        jz .no
+        cmp rax, [r9]                   ; (the address itself, not the one 16 before it: a small number must not wrap round)
+        jbe .other
+        mov r11, [r9 + 8]
+        test r11, r11
+        jnz .end
+        mov r11, [rel rt_heap_ptr]
+.end:
+        cmp rax, r11
+        jae .other
+        mov r10, [rcx + 8]              ; in this chunk: is it the start of a block that is in use?
+        test r10b, 2
+        jnz .no
+        shr r10, 24
+        mov r11, RT_MAGIC >> 24
+        cmp r10, r11
+        jne .no
+        or byte [rcx + 8], 1
+        ret
+.other:
+        add r9, 16
+        dec r8
+        jmp .chunk
+.no:
+        ret
 
 rt_fail:                                ; rdi = a zero-ended text: say it and stop the program
         push rdi
@@ -707,6 +994,11 @@ i_sset:                                 ; (text, i, byte)
         lea rax, [rel rt_none]
         ret
 
+i_heap:                                 ; how many bytes the program has asked from the system
+        mov rax, [rel rt_heap_all]
+        lea rax, [rax*2 + 1]
+        ret
+
 i_lget:                                 ; (list, i) with no checks
         sar rsi, 1
         mov rax, [rdi + 24]
@@ -842,6 +1134,20 @@ rt_true:        dq T_BOOL, 1
 rt_false:       dq T_BOOL, 0
 rt_heap_ptr:    dq 0
 rt_heap_end:    dq 0
+rt_heap_all:    dq 0                    ; how much was asked from the system
+rt_free:        dq 0                    ; the first free block
+rt_since:       dq 0                    ; taken since the last look for what can be given back
+rt_wait:        dq RT_CHUNK / 2         ; so much must be taken before the next look
+rt_collects:    dq 0
+rt_stack_top:   dq 0                    ; where the program's part of the stack starts (the platform sets it)
+rt_chunks_n:    dq 0
+%ifdef RT_NO_GC
+rt_gc_off:      db 1                    ; (nasm -DRT_NO_GC: memory is never given back, as before v3.0.20)
+%else
+rt_gc_off:      db 0
+%endif
+        align 8
+rt_chunks:      times RT_CHUNKS * 2 dq 0
 rt_msg_error:   db 'PyTon: '
 rt_msg_error_len equ $ - rt_msg_error
 rt_msg_nl:      db 10, 0
