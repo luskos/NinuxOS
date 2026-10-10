@@ -66,6 +66,9 @@ SYSTEM = {
     'load_text': ('s', 's'), 'save_text': ('ss', 'i'), 'save_page': ('ss', 'i'), 'save_rating': ('i', 'n'),
     'system': ('s', 's'), 'logline': ('i', 's'), 'spawn': ('s', 'i'), 'kill': ('s', 'i'),
     'key_send': ('ii', 'n'), 'play': ('ii', 'n'), 'sound_stop': ('', 'n'),
+    # v3.0.11: what a folder and a file manager need
+    'ob_size': ('i', 'i'), 'ob_data': ('i', 'i'), 'data_dump': ('ss', 'i'),
+    'own_len': ('s', 'i'), 'own_code': ('si', 'i'), 'text_meta': ('iisi', 'n'),
 }
 
 # a built-in function of Python -> the function of prelude.py that does it

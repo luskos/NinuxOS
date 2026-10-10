@@ -2508,8 +2508,13 @@ api_poll:
         jnz near L_0a381
         cmp byte [rel d_119d3],0x0
         jnz near L_0a317
+%ifdef PLAIN_KERNEL
         movzx ecx,al
         cmp ecx,0x3a
+%else
+        call near display_key           ; v3.0.11: Alt + * turns the display off and on. The same
+        nop                             ; six bytes as the two lines above, which display_key does
+%endif
         jnc near L_0a261
         lea rdx,[rel d_11b66]
         cmp byte [rel d_1188a],0x0
@@ -42330,6 +42335,67 @@ L_76930:
         call fn_64c44
         jmp near L_642f0
         db 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
+
+%ifndef PLAIN_KERNEL
+; ---- v3.0.11: the first code written into the kernel after the recovery --------------------
+; Alt + * - the star of the number keys, or Alt + Shift + 8 - turns the display off, and on
+; again. Every key of the built-in and of the USB keyboards passes api_poll (the shell, the
+; desktop and the programs all read keys there), so it works everywhere.
+; It lies at the end of the extension, so that nothing that was there before has moved; the
+; extension may reach 0x78000. tools/build_disk.py --plain-kernel builds without it.
+;
+; The picture is switched off in the display adapter by its VGA registers. A machine whose
+; adapter does not obey them keeps its picture; the lamp behind a laptop's screen stays on
+; (that needs the graphics driver or ACPI: TODO.md, "sleep, the lid, brightness").
+display_key:                            ; al = the key that went down (its scan code)
+        cmp al,0x37                     ; the star of the number keys
+        jz short display_key_alt
+        cmp al,0x09                     ; the 8 of the top row: a star with Shift
+        jnz short display_key_no
+        cmp byte [rel d_1188a],0x0      ; Shift is held
+        jz short display_key_no
+display_key_alt:
+        cmp byte [rel d_118da],0x0      ; Alt is held
+        jz short display_key_no
+        call display_toggle
+        add rsp,0x8                     ; the key is used up: api_poll says "nothing came"
+        jmp near L_0a4cd
+display_key_no:
+        movzx ecx,al                    ; what api_poll did here before
+        cmp ecx,0x3a
+        retq
+
+display_toggle:
+        push rax
+        push rdx
+        xor byte [rel display_dark],0x1
+        mov dx,0x3c4                    ; the sequencer, register 1: bit 5 = no picture
+        mov al,0x1
+        out dx,al
+        inc dx
+        in al,dx
+        and al,0xdf
+        cmp byte [rel display_dark],0x0
+        jz short display_sequencer
+        or al,0x20
+display_sequencer:
+        out dx,al
+        mov dx,0x3da                    ; the attribute controller: reading here makes 0x3C0 take
+        in al,dx                        ; an index; bit 5 of the index = the picture is shown
+        mov dx,0x3c0
+        mov al,0x20
+        cmp byte [rel display_dark],0x0
+        jz short display_attribute
+        xor al,al
+display_attribute:
+        out dx,al
+        pop rdx
+        pop rax
+        retq
+display_dark:
+        db 0x00
+        align 16, db 0x90
+%endif
 ext_end:
 
 ; ---- memory outside the file: the variables of the kernel, in the order they lie

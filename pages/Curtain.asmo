@@ -1,0 +1,159 @@
+<html>
+<head>
+  <title>Settings</title>
+  <meta name="desktop" content="no">
+  <link rel="stylesheet" href="theme">
+  <style>
+    /* v3.0.11: the settings, as the curtain of a phone: a row of tiles on top, under them the
+       part that was picked. Opened by the button "Settings" of the taskbar (the page taskbar
+       names this object: onclick="curtain").
+       Pulling it down from the top edge of the screen is the desktop's work and is not there
+       yet (TODO.md): until then it opens as a page in a window.
+       A page may call: set_text, set_style, show, hide, value, use_theme, reload, close,
+       save_object, system. What has no function behind it yet says so, in grey. */
+    body { margin: 0; padding: 0; }
+    .tiles { display: flex; gap: 8px; padding: 10px 14px; background: rgba(28, 26, 50, 0.85);
+             border-bottom: 1px solid #7B5CFF; }
+    .tile { border-radius: 12px; background: rgba(255, 255, 255, 0.09); color: #F5F4FF;
+            padding: 8px 14px; min-width: 76px; }
+    .tile:hover { background: rgba(255, 255, 255, 0.2); }
+    .part { padding: 12px 16px; }
+    .part h2 { margin: 0 0 8px 0; }
+    .row { display: flex; gap: 10px; align-items: center; padding: 4px 0; }
+    .later { color: #6E6A88; }
+    .box { border: 1px solid #3A3550; padding: 8px 12px; margin-top: 8px; }
+    .box b { color: #2FB7FF; }
+    .handle { margin: 8px auto 6px auto; width: 80px; height: 4px; border-radius: 2px; background: #55526E; }
+  </style>
+</head>
+<body>
+  <div class="tiles">
+    <div class="tile" onclick="go_screen()">Screen</div>
+    <div class="tile" onclick="go_sound()">Sound</div>
+    <div class="tile" onclick="go_network()">Network</div>
+    <div class="tile" onclick="go_people()">People</div>
+    <div class="tile" onclick="go_machine()">Machine</div>
+    <div class="tile" onclick="go_power()">Power</div>
+  </div>
+
+  <div id="p_screen" class="part">
+    <h2>Screen</h2>
+    <div class="row"><span>Look:</span>
+      <button onclick="night()">Night</button>
+      <button onclick="day()">Day</button>
+      <button onclick="ocean()">Ocean</button>
+    </div>
+    <p class="muted">Every page uses the style object <b>theme</b>; picking a look copies it there.</p>
+    <p class="muted">The display off and on again: <b>Alt + *</b> (the star of the number keys), in the shell and on the desktop.</p>
+    <p class="later">Wallpaper, the size of the letters, brightness: no function for a page yet. In the shell: colors NAME.</p>
+  </div>
+
+  <div id="p_sound" class="part">
+    <h2>Sound</h2>
+    <p class="later">Loudness and the device that plays: no function for a page yet. In the shell: sound, sound test.</p>
+  </div>
+
+  <div id="p_network" class="part">
+    <h2>Network</h2>
+    <p class="later">Wi-Fi, Bluetooth, tether from another device: not in the system yet (TODO.md).</p>
+    <p class="muted">The wired network is set by itself. In the shell: net, ping ADDRESS.</p>
+  </div>
+
+  <div id="p_people" class="part">
+    <h2>People</h2>
+    <div class="row"><span>Your name:</span>
+      <input id="user" value="" onenter="keep()">
+      <button onclick="keep()">Keep</button>
+      <span id="msg" class="muted"></span>
+    </div>
+    <div class="row"><button onclick="desk.passwd">Set the administrator password...</button></div>
+    <p class="muted">At most five people on one machine. In the shell: user add NAME, user del NAME, whoami.</p>
+  </div>
+
+  <div id="p_machine" class="part">
+    <h2>This machine</h2>
+    <div class="box">
+      Processor: <span id="m_cpu"></span><br>
+      Cores: <span id="m_cores"></span> &nbsp;&nbsp;&nbsp; Memory: <span id="m_mem"></span><br>
+      Screen: <span id="m_screen"></span> &nbsp;&nbsp;&nbsp; Graphics: <span id="m_gfx"></span><br>
+      Disk: <span id="m_disk"></span><br>
+      <b><span id="m_ver"></span></b>
+    </div>
+    <p class="later">The battery: needs the machine's ACPI tables read (TODO.md).</p>
+  </div>
+
+  <div id="p_power" class="part">
+    <h2>Power</h2>
+    <div class="row">
+      <button onclick="system.shell">To the shell</button>
+      <button onclick="system.restart">Restart</button>
+      <button onclick="system.shutdown">Shut down</button>
+    </div>
+    <p class="later">Sleep and the lid: not in the system yet (TODO.md).</p>
+  </div>
+
+  <div class="handle" onclick="shut()"></div>
+  <script type="pyton">
+set_text("m_cpu", system("cpu"))
+set_text("m_cores", system("cores"))
+set_text("m_mem", system("memory"))
+set_text("m_screen", system("screen"))
+set_text("m_gfx", system("graphics"))
+set_text("m_disk", system("disk"))
+set_text("m_ver", system("version"))
+
+def only(part):
+    hide("p_screen")
+    hide("p_sound")
+    hide("p_network")
+    hide("p_people")
+    hide("p_machine")
+    hide("p_power")
+    show(part)
+
+def go_screen():
+    only("p_screen")
+
+def go_sound():
+    only("p_sound")
+
+def go_network():
+    only("p_network")
+
+def go_people():
+    only("p_people")
+
+def go_machine():
+    only("p_machine")
+
+def go_power():
+    only("p_power")
+
+def pick(look):
+    use_theme("theme_" + look)
+    reload()
+
+def night():
+    pick("night")
+
+def day():
+    pick("day")
+
+def ocean():
+    pick("ocean")
+
+def keep():
+    who = value("user")
+    if who == "":
+        set_text("msg", "Type a name first.")
+        return
+    save_object("settings", "settings", "user=" + who)
+    set_text("msg", "Kept.")
+
+def shut():
+    close()
+
+only("p_screen")
+  </script>
+</body>
+</html>

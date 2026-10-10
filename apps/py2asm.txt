@@ -1,0 +1,7 @@
+# The programs the build compiles with the new py2asm (pyton/py2asm.py) and puts into the
+# cabinet (build/add/NAME.asmo):  the source in this folder, then the name of the object.
+# The other programs of this folder are still the ones v2.9.59 came with, compiled by the
+# transpiler that was lost (TODO.md: "the 20 programs compiled by the new py2asm").
+Bags.asmo     bags
+Files.asmo    files
+Socials.asmo  socials

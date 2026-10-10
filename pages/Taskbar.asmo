@@ -9,6 +9,7 @@
        The desktop fills in {{tasks}}, {{title}}, {{msg}}, {{hint}}, {{clock}}
        and does what the clicked part says: start, system.shell,
        system.restart, system.shutdown, task.N, or the name of an object. */
+    /* v3.0.11: "Settings" opens the page curtain. */
     /* v2.8: the stencil's dock - glass pills floating on the wallpaper.
        The body is see-through: the desktop puts its wallpaper under the strip. */
     body { background: rgba(0, 0, 0, 0); margin: 0; padding: 3px 8px;
@@ -34,7 +35,7 @@
     <div class="btn" onclick="system.shell"><img src="ico_shell" width="20" height="20"></div>
     {{tasks}}<span class="title">{{title}}</span><span class="msg">{{msg}}</span>
   </div>
-  <div class="right"><span class="hint">{{hint}}</span><span class="clock">{{clock}}</span>
+  <div class="right"><span class="hint">{{hint}}</span><div class="task" onclick="curtain">Settings</div><span class="clock">{{clock}}</span>
     <div class="btn" onclick="donate"><img src="ico_heart" width="20" height="20"></div>
     <div class="btn" onclick="system.stone"><img src="ico_stone" width="20" height="20"></div></div>
 </body>

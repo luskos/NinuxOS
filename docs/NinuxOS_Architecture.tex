@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.10.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.11.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.10 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.11 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -223,7 +223,21 @@ whole objects --- the other 58 are older copies the build left between the live 
 
 \begin{itemize}
 \item \textbf{The kernel suits} are signed too, with the same key (below).
+\item \textbf{What the build adds} (v3.0.11): every object the build puts into the cabinet ---
+      a program compiled by py2asm, a new page --- gets a line of its own in the list, so the
+      list grows (98 lines in v2.9.59) and the object \texttt{sentinel} with it; an object that
+      no longer fits its sectors is moved behind the last object and its place in the table
+      follows. An object put in the place of another keeps the identity of the old one.
 \end{itemize}
+
+\subsection{The boot sector and other systems}
+
+Until v3.0.10 the boot sector was a whole FAT12 header, and Windows took a NinuxOS stick for a
+diskette: it mounted it and wrote \texttt{System Volume Information} over sectors 19, 44 and 45
+of the kernel. From v3.0.11 the header says ``no FAT'' (the byte at \texttt{0x10} is 0) and the
+end of the sector is a partition table (\texttt{0x1BE}) with one partition from sector 1, 1 GiB
+long, of the kind \texttt{0x7F}, which no other system opens. The parameters of the start
+(\texttt{0x1AC}--\texttt{0x1B5}) are where they were. Not yet seen on a machine.
 
 \noindent \file{tools/build\_disk.py} does all of it after every change; the order matters: the
 key goes into the extension, then the SHA-256 of the extension into the core, then the kernel is
@@ -673,6 +687,14 @@ path & what it is \\ \midrule
 \item \cmd{python tools/build\_disk.py} runs NASM on \file{boot/Boot.kasm} and
       \file{kernel/Kernel.kasm}, checks their sizes, puts them and every object of \file{build}
       into a copy of the base image and writes \file{disk.img}. It says what differs from v2.9.59.
+      From v3.0.11 the sources count: the text of a page, a script or a program
+      (\file{pages}, \file{scripts}, \file{apps}) becomes the DATA of its object when it
+      differs; \file{objects/NAME.asmo.kasm} and \file{kernel/suits/NAME.kasm} are assembled
+      and put in, also in another size; the programs of \file{apps/py2asm.txt} are compiled by
+      py2asm; a new file in \file{pages} becomes a page object.
+\item \cmd{python tools/make\_font.py Exo-Medium} draws the 256 letters of the object
+      \texttt{font} (8 by 16 dots, Windows-1251) from a \texttt{.ttf} and shows a preview;
+      \texttt{-{}-use} puts it into the next build.
 \item \file{Puffus.exe} (as Administrator) runs the build, lists the USB disks, locks and
       dismounts the chosen stick, writes \file{disk.img} from its first sector, reads it back,
       compares, ejects.
@@ -682,6 +704,26 @@ path & what it is \\ \midrule
 
 \noindent Needed on the PC: Python 3, NASM, QEMU; for Puffus only the .NET Framework that
 Windows has.
+
+\subsection{What was written after the recovery}
+
+\begin{itemize}
+\item \textbf{Alt + *} (v3.0.11) turns the display off and on. Every key --- built-in or USB,
+      for the shell, the desktop or a program --- passes \texttt{api\_poll} in the core; six
+      bytes there now call \texttt{display\_key}, which lies at the end of the extension (the
+      kernel takes \texttt{0x50000}--\texttt{0x78000} for it), so no address that existed
+      moved. The picture is switched in the adapter's VGA registers (sequencer 1 bit 5,
+      attribute index bit 5). \cmd{python tools/build\_disk.py -{}-plain-kernel} builds the
+      kernel without it. The suits take the kernel's addresses from
+      \file{kernel/Kernel.sym.inc} as numbers: until the build makes that file anew, code may
+      be added to the kernel only this way.
+\item \textbf{Programs compiled by the new py2asm} (\file{apps/py2asm.txt}): Bags (a folder on
+      the desktop: the icon is drawn by its socket \texttt{draw} and shows what is inside),
+      Files (the file manager, with \emph{data dump}), Socials (empty). The desktop draws the
+      picture named by \texttt{icon} in META and asks \texttt{draw} only when there is none.
+\item \textbf{Pages}: \file{pages/Curtain.asmo}, the settings; the taskbar opens it.
+\item \textbf{The protocols}: \file{docs/PROTOCOLS.md}, a first writing; no code.
+\end{itemize}
 
 \subsection{Versions}
 

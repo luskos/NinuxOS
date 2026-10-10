@@ -1,0 +1,41 @@
+# socials.py - Socials (NinuxOS v3.0.11): the empty program, put here so that it is not forgotten.
+#
+# What it is to become (TODO.md, part 5a): the place for people one knows by their handle -
+# messages, pictures, video, files - over the protocols of docs/PROTOCOLS.md, between NinuxOS
+# machines of NET. Not a platform and not a web page: any other program that speaks the same
+# protocols is as good as this one.
+#
+# Today it opens a window that says so, and waits for ESC.
+
+META = {"type": "icon", "label": "Socials", "kind": "app"}
+
+WW = 420
+WH = 200
+
+
+def draw(x, y):
+    # three people
+    fill_round(x + 26, y + 20, 14, 14, 0x2FB7FF, 7)
+    fill_round(x + 22, y + 36, 22, 14, 0x2FB7FF, 6)
+    fill_round(x + 56, y + 20, 14, 14, 0xFF3D8B, 7)
+    fill_round(x + 52, y + 36, 22, 14, 0xFF3D8B, 6)
+    fill_round(x + 40, y + 8, 16, 16, 0xFFB020, 8)
+    fill_round(x + 35, y + 26, 26, 22, 0xFFB020, 7)
+    text_meta(x + 48, y + 58, "label", 0xFFFFFF)
+
+
+def open(sw, sh):
+    x = (sw - WW) // 2
+    y = (sh - WH) // 2
+    cursor_hide()
+    window(x, y, WW, WH, "Socials")
+    text(x + 24, y + 56, "Socials is not written yet.", 0xECECF5)
+    text(x + 24, y + 84, "It will speak the protocols of NinuxOS:", 0xC9CEDE)
+    text(x + 24, y + 104, "messages, pictures, video and files between", 0xC9CEDE)
+    text(x + 24, y + 124, "people who know each other's handle.", 0xC9CEDE)
+    text(x + 24, y + 160, "ESC closes.", 0x9AA0B6)
+    while True:
+        if poll() == 1:
+            if key() == 27:
+                break
+    return 1

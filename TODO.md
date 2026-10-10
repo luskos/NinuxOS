@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.10 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.11 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -39,17 +39,17 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 
 | # | what | size | why here |
 |---|---|---|---|
-| 3 | The boot sector no longer looks like a FAT12 diskette (Windows eats the stick) | S | critical, one small file we have as source |
-| 4 | The build: added objects get lines in the Sentinel's list; an object or suit of another size; `objects/*.asmo.kasm` assembled into the image | M | without it nothing new is "genuine" |
-| 5 | `tools/make_font.py` again (a .ttf -> the object `font`), Exo for the shell | M | the fonts are back; needed for Greek and for other sizes |
-| 6 | How a page finds its PyTon script and what it may call - read it from NET | S | opens the next four |
-| 7 | Settings as a curtain pulled down from the top of the screen (a page: HTML + CSS + PyTon): screen, wallpaper, themes, sound, network | M | pages are source we have |
-| 8 | A file manager that explains itself (a page / ASMO object) | M | |
-| 9 | Bags as it was meant: folders on the desktop like on a phone - a small icon that shows what is inside, a click opens it; a home for clutter in the bottom right corner | M | Bags has a source; today it only faults |
-| 10 | `data dump` in the context menu: the DATA out of an object, kept as a thing of its own | S-M | the context menu is a page |
-| 11 | The last functions for py2asm: images, a sound object, the network -> Paint, Nest, PyNamp, Ask compile | M | 16 of 20 programs compile today |
-| 12 | The 20 programs compiled by the new py2asm, each beside the old one on the screen | M | proves py2asm in the system |
-| 13 | At most 5 users | S | if it is a check in a program or a page; kernel if in `user` |
+| 3 | **[written, v3.0.11]** The boot sector no longer looks like a FAT12 diskette (Windows eats the stick) | S | critical, one small file we have as source |
+| 4 | **[written, v3.0.11]** The build: added objects get lines in the Sentinel's list; an object or suit of another size; `objects/*.asmo.kasm` assembled into the image | M | without it nothing new is "genuine" |
+| 5 | **[written, v3.0.11]** `tools/make_font.py` again (a .ttf -> the object `font`), Exo for the shell | M | the fonts are back; needed for Greek and for other sizes |
+| 6 | **[done: read]** How a page finds its PyTon script and what it may call - read it from NET | S | opens the next four |
+| 7 | **[the page is written; the pull from the top edge waits for 22]** Settings as a curtain pulled down from the top of the screen (a page: HTML + CSS + PyTon): screen, wallpaper, themes, sound, network | M | pages are source we have |
+| 8 | **[written as a program (Files); as a page after 22]** A file manager that explains itself (a page / ASMO object) | M | |
+| 9 | **[written anew, v3.0.11; small pictures wait for 11, the tie to a drawer for the kernel]** Bags as it was meant: folders on the desktop like on a phone - a small icon that shows what is inside, a click opens it; a home for clutter in the bottom right corner | M | Bags has a source; today it only faults |
+| 10 | **[written: the key D in Files; in the context menu after 22]** `data dump` in the context menu: the DATA out of an object, kept as a thing of its own | S-M | the context menu is a page |
+| 11 | **[explained to the owner; waits for a yes]** The last functions for py2asm: images, a sound object, the network -> Paint, Nest, PyNamp, Ask compile | M | 16 of 20 programs compile today |
+| 12 | **[explained to the owner; waits for a yes]** The 20 programs compiled by the new py2asm, each beside the old one on the screen | M | proves py2asm in the system |
+| 13 | **[written, v3.0.11]** At most 5 users | S | if it is a check in a program or a page; kernel if in `user` |
 
 **Step 3 - the kernel, once step 1 has passed**
 
@@ -81,17 +81,44 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 | 27 | Unicode; languages; letters of any size | L |
 | 28 | Wi-Fi; Bluetooth; tether from another device | XL |
 | 29 | winlolz / linlolz: read NTFS, ext4 | L each |
-| 30 | Sleep, the lid, brightness | L |
+| 30 | **[only Alt + * (the display off and on) is written, v3.0.11]** Sleep, the lid, brightness | L |
 
 **Step 6 - what NinuxOS is for**
 
 | # | what | size |
 |---|---|---|
-| 31 | The protocols: messages, pictures, video, files between two programs that only share a handle | L |
+| 31 | **[first writing: docs/PROTOCOLS.md; no code]** The protocols: messages, pictures, video, files between two programs that only share a handle | L |
 | 32 | The chain of machines: each registers when installed, cloned, copied; where the data of NET and META lie | XL |
 | 33 | An instance of the system on every disk; the governor (`swap`, `sync`) | L |
 | 34 | The vDNA constructor: a universal one from the demo in the repository vDNA; closed programs as chains it builds into an ASMO object; an AI checks them | XL |
-| 35 | Socials | L |
+| 35 | **[the empty program is there, v3.0.11]** Socials | L |
+
+### Where the order stands after v3.0.11 (10 October 2026)
+
+The owner's word: 1, 2 later; 3-10, 13-28, 30, 31 to be done; 11, 12 to be explained first; 29,
+32, 34 stay in the list; of Socials only the empty program.
+
+Written in v3.0.11, **none of it has run in the system** (`docs/TESTS.md`, part K): 3, 4, 5, 7,
+8 (as a program), 9, 10 (in Files), 13, Alt + * of 30, the first writing of 31, the empty Socials.
+
+Not done, and why - said plainly, so that the list does not lie:
+
+- **14-21 (the kernel)**: programs that live on, the second copy of the table, the silent backup,
+  the smaller table of functions and relays, all cores, memory given back, Photon / Puffer /
+  Tuner / META as programs, names for the kernel's functions. Each is days to weeks of work
+  inside code that exists only as machine-read source, and each changes how the system starts
+  and runs. Writing them blind, before one changed kernel has been seen to start (tests C and
+  K), would pile untested change on untested change. Alt + * is the first, small piece of code
+  in the kernel and was written so that nothing else moves; if it works, the way is open.
+  What can be started without the gate: 21 (names - it changes no byte).
+- **22-24 (the desktop)**: Desktop has to be written anew as readable source first (22); more
+  desktops and the split screen stand on that.
+- **25-28, the rest of 30**: touchpads (I2C HID), the battery and the lid (ACPI: its tables hold
+  code that must be run), Unicode and letters of any size, Wi-Fi and Bluetooth (each chip its
+  own driver and its own firmware file), sleep. Drivers cannot be written without the machine
+  to try them on: for each the owner has to name the machine and its chips (`pci`, `machine`).
+- Still asked of the owner: `data dump` - today the DATA come out as a new object of the
+  cabinet (NAME_data). Should they (also) go out to a stick as a file?
 
 ## If the disk is lost again - where everything is
 
@@ -450,6 +477,9 @@ DIRECTIVE.md. Three rows of the table in 4c were written against these and are w
 
 ## 5a. New: Socials
 
+v3.0.11: the empty program is in the cabinet (`apps/Socials.asmo`), and the protocols it is to
+speak have a first writing: `docs/PROTOCOLS.md`.
+
 The social network that comes with the system - a program of the desktop, written in PyTon.
 Nothing is decided yet beyond that it must be made.
 
@@ -488,6 +518,19 @@ to be touched. A proposal for the rest, to decide:
 
 ## 7. Tools
 
+- [x] `tools/make_font.py` (v3.0.11): a .ttf -> the object `font` (8 x 16 dots, Windows-1251).
+      `python tools/make_font.py Exo-Medium` writes build/font/ and a preview; `--use` puts it
+      into the next build; `--back` takes it out. Exo has letters of different widths: in a
+      cell of 8 dots it comes out small - look at the preview before `--use`.
+      Open: does the shell draw with the object `font` or with letters inside the kernel?
+- [ ] The build: the hash a source object carries (`hash:`, 12 hex letters) and its program
+      (`source_hash:`) - how it is computed is not known; `sources` may call Bags OUT OF DATE.
+- [ ] The build: how many lines the Sentinel's list may have (the kernel's limit is not read;
+      103 now, 98 before).
+- [ ] The build makes kernel/Kernel.sym.inc anew when the core of the kernel changes size
+      (today the suits take the kernel's addresses from that file as numbers: code may be added
+      only at the end of the extension, as Alt + * was).
+
 - [ ] `tools/build_disk.py`: objects of another size and new objects; build the image from nothing
       (no base image); the nasm pin of the old build (`tools/nasm.sha256`).
 - [ ] `Puffus.exe`: a fresh machine identity for every stick (now every stick written from Windows
@@ -502,8 +545,8 @@ to be touched. A proposal for the rest, to decide:
 
 ## 8. Known faults of v2.9.59 (not now)
 
-- [ ] Bags: a page fault when it is closed with Esc (the shield catches it, the desktop goes on).
-      It does not work as wanted anyway - to be redone.
+- [x] Bags: a page fault when it is closed with Esc. v3.0.11: Bags is written anew (a folder, as
+      on a phone) and compiled by the new py2asm; whether the fault is gone is to be seen.
 - [ ] Support (the page `donate`) shows Puffer's text instead of the page with the QR code;
       probably the one object the Sentinel calls CHANGED.
 

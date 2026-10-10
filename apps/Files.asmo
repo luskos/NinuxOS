@@ -1,0 +1,242 @@
+# files.py - Files (NinuxOS v3.0.11): the cabinet, shown so that it explains itself.
+#
+# A line an object: its name, what it is, how big. Under the list the chosen object says about
+# itself what its META says: its label, what its DATA are, its sockets, its language, who made it.
+#   Up / Down, PgUp / PgDn, a click   choose
+#   Enter, a second click             open it (a program starts; a page or a text is opened)
+#   D                                 data dump: the DATA of the object come out as an object of
+#                                     their own (NAME_data); the object keeps them, nothing is deleted
+#   T                                 show only one type, then the next, then all again
+#   ESC                               close
+#
+# A program, not a page: a page's script has no function yet that lists the objects of the
+# cabinet. When the desktop is rewritten (TODO) this becomes a page of HTML + CSS over the same code.
+
+META = {"type": "icon", "label": "Files", "kind": "app"}
+
+WX = 0
+WY = 0
+WW = 640
+WH = 470
+ROWS = 14
+IDX = []
+TYPES = []
+only = 0        # 0: every type; else the number of the type in TYPES, plus 1
+top = 0
+sel = 0
+status = "Enter: open.  D: data dump.  T: one type.  ESC: close."
+
+
+def draw(x, y):
+    # a cabinet with three drawers
+    fill_round(x + 28, y + 6, 40, 46, 0x24324A, 6)
+    fill_round(x + 32, y + 10, 32, 11, 0x2FB7FF, 3)
+    fill_round(x + 32, y + 24, 32, 11, 0x7B5CFF, 3)
+    fill_round(x + 32, y + 38, 32, 11, 0x00D6B4, 3)
+    fill(x + 44, y + 14, 8, 3, 0x12131C)
+    fill(x + 44, y + 28, 8, 3, 0x12131C)
+    fill(x + 44, y + 42, 8, 3, 0x12131C)
+    text_meta(x + 48, y + 58, "label", 0xFFFFFF)
+
+
+def _size(n):
+    if n < 1024:
+        return str(n) + " B"
+    if n < 1048576:
+        return str(n // 1024) + " KB"
+    return str(n // 1048576) + " MB"
+
+
+def _collect():
+    while len(IDX) > 0:
+        IDX.pop()
+    n = ob_count()
+    i = 0
+    while i < n:
+        t = ob_meta(i, "type")
+        if t not in TYPES:
+            TYPES.append(t)
+        if only == 0 or TYPES[only - 1] == t:
+            IDX.append(i)
+        i = i + 1
+
+
+def _status(s):
+    global status
+    status = s
+    fill(WX + 12, WY + WH - 26, WW - 24, 18, 0x1C1C2A)
+    text(WX + 14, WY + WH - 25, status, 0xC9CEDE)
+
+
+def _row(r):
+    y = WY + 58 + (r - top) * 20
+    bg = 0x16161F
+    if r == sel:
+        bg = 0x33305A
+    fill(WX + 12, y, WW - 24, 20, bg)
+    if r >= len(IDX):
+        return 0
+    i = IDX[r]
+    text(WX + 20, y + 2, ob_meta(i, "name"), 0xECECF5)
+    text(WX + 160, y + 2, ob_meta(i, "type"), 0x00D6B4)
+    lab = ob_meta(i, "label")
+    if len(lab) > 28:
+        lab = lab[:28]
+    text(WX + 260, y + 2, lab, 0xC9CEDE)
+    s = _size(ob_size(i))
+    text(WX + WW - 24 - len(s) * 8, y + 2, s, 0x9AA0B6)
+    return 1
+
+
+def _line(y, what, value):
+    if len(value) == 0:
+        return y
+    if len(value) > 62:
+        value = value[:62]
+    text(WX + 20, y, what, 0x9AA0B6)
+    text(WX + 108, y, value, 0xECECF5)
+    return y + 18
+
+
+def _about():
+    # the chosen object says what it is
+    fill(WX + 12, WY + 344, WW - 24, 96, 0x1C1C2A)
+    if sel >= len(IDX):
+        return 0
+    i = IDX[sel]
+    y = WY + 348
+    y = _line(y, "DATA", ob_meta(i, "data"))
+    y = _line(y, "sockets", ob_meta(i, "sockets"))
+    k = ob_meta(i, "kind")
+    lang = ob_meta(i, "lang")
+    if len(lang) > 0:
+        k = k + ", written in " + lang
+    y = _line(y, "kind", k)
+    y = _line(y, "made", ob_meta(i, "made"))
+    y = _line(y, "holds", _size(ob_data(i)) + " of DATA in " + _size(ob_size(i)))
+    return 1
+
+
+def _list():
+    r = top
+    while r < top + ROWS:
+        _row(r)
+        r = r + 1
+    _about()
+
+
+def _frame():
+    cursor_hide()
+    window(WX, WY, WW, WH, "Files")
+    what = "every type"
+    if only > 0:
+        what = "only " + TYPES[only - 1]
+    fill(WX + 12, WY + 34, WW - 24, 20, 0x1C1C2A)
+    text(WX + 20, WY + 36, "name", 0x9AA0B6)
+    text(WX + 160, WY + 36, "type", 0x9AA0B6)
+    text(WX + 260, WY + 36, str(len(IDX)) + " objects, " + what, 0x9AA0B6)
+    _list()
+    _status(status)
+
+
+def _choose(r):
+    global sel, top
+    if r < 0:
+        r = 0
+    if r >= len(IDX):
+        r = len(IDX) - 1
+    if r < 0:
+        return 0
+    old = sel
+    sel = r
+    if sel < top or sel >= top + ROWS:
+        if sel < top:
+            top = sel
+        else:
+            top = sel - ROWS + 1
+        _list()
+    else:
+        _row(old)
+        _row(sel)
+        _about()
+    return 1
+
+
+def _go():
+    if sel >= len(IDX):
+        return 0
+    name = ob_meta(IDX[sel], "name")
+    if spawn(name) < 0:
+        _status("'" + name + "' cannot be opened from here.")
+    else:
+        _status("Opened '" + name + "'.")
+    return 1
+
+
+def _dump():
+    if sel >= len(IDX):
+        return 0
+    name = ob_meta(IDX[sel], "name")
+    out = name
+    if len(out) > 10:
+        out = out[:10]
+    out = out + "_data"
+    n = data_dump(name, out)
+    if n == 0:
+        _status("'" + name + "' has no DATA to take out.")
+    else:
+        _status("data dump: " + _size(n) + " are now the object '" + out + "'.")
+        _collect()
+        _frame()
+    return 1
+
+
+def open(sw, sh):
+    global WX, WY, sel, top, only
+    WX = (sw - WW) // 2
+    WY = (sh - WH) // 2
+    _collect()
+    _frame()
+    old_b = 0
+    running = 1
+    while running == 1:
+        e = poll()
+        if e == 1:
+            k = key()
+            if k == 27:
+                running = 0
+            elif k == 0x80:
+                _choose(sel - 1)
+            elif k == 0x81:
+                _choose(sel + 1)
+            elif k == 0x87:
+                _choose(sel - ROWS)
+            elif k == 0x88:
+                _choose(sel + ROWS)
+            elif k == 13 or k == 10:
+                _go()
+            elif k == 100 or k == 68:
+                _dump()
+            elif k == 116 or k == 84:
+                only = only + 1
+                if only > len(TYPES):
+                    only = 0
+                sel = 0
+                top = 0
+                _collect()
+                _frame()
+        elif e == 2:
+            b = mouse_buttons()
+            if b == 1 and old_b == 0:
+                mx = mouse_x()
+                my = mouse_y()
+                if mx >= WX + 12 and mx < WX + WW - 12 and my >= WY + 58 and my < WY + 58 + ROWS * 20:
+                    r = top + (my - WY - 58) // 20
+                    if r < len(IDX):
+                        if r == sel:
+                            _go()
+                        else:
+                            _choose(r)
+            old_b = b
+    log("Files closed")
+    return 1

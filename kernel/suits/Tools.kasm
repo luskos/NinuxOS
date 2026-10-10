@@ -6049,7 +6049,7 @@ L_39a7b:
         jnz short L_39abe
         mov rax,[rel d_39e20]
         add rax,0x70
-        mov ecx,0x6
+        mov ecx,0x5                     ; v3.0.11: at most five people (was 6)
 L_39aa0:
         cmp byte [rax],0x0
         jz short L_39abe
@@ -6316,7 +6316,7 @@ d_39fc8:
 d_39fdc:
         db 'Welcome, ', 0
 d_39fe6:
-        db 'Six people are known already: `user del NAME` first.', 10, 0
+        db 'Five people are known by now: `user del NAME` first.', 10, 0
 d_3a01c:
         db 'The two passwords were not the same: nothing was changed.', 10, 0
 d_3a057:

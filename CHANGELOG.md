@@ -3,6 +3,35 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.11** (10 October 2026) - written to the owner's order; none of it has run in the system
+  - **The boot sector** no longer looks like a FAT12 diskette: it says "no FAT" and carries a
+    partition table with one partition of a kind no other system opens (0x7F). Windows should
+    no longer write over the kernel. `--old-boot` builds with the old sector.
+  - **The kernel: Alt + \*** (the star of the number keys, or Alt + Shift + 8) turns the display
+    off and on, in the shell, on the desktop, in every program - the first code written into the
+    kernel since the recovery (112 bytes at the end of the extension, nothing else moved).
+    By the VGA registers of the display adapter. `--plain-kernel` builds without it.
+  - **At most five people** (`user add`): was six. In k_tools.
+  - **Bags, written anew**: a folder on the desktop as on a phone. The icon shows the first nine
+    things inside; a click opens a panel without a frame; a click starts a thing, the right
+    button takes it out; three pages; L makes it a vault that asks for a password. A clone with
+    another name is another folder. The old Bags (and its page fault on Esc) is gone.
+  - **Files**: the file manager - every object with its type and size, and what it says about
+    itself; Enter opens; **D = data dump**: the DATA of an object out as an object of its own.
+  - **Settings**: the page `curtain` (Screen, Sound, Network, People, Machine, Power), opened by
+    "Settings" on the taskbar. **Socials**: the empty program.
+  - **py2asm**: ob_size, ob_data, data_dump, own_len, own_code, text_meta. The build compiles
+    the programs of `apps/py2asm.txt` itself.
+  - **The build** (`tools/build_disk.py`): the sources are what counts now - a changed page,
+    script or program text, a changed `objects/*.asmo.kasm`, a suit of another size are put in;
+    an object that grew is moved behind the last one; a new file in `pages/` becomes a page;
+    everything the build adds gets a line in the Sentinel's list (98 -> 103); an object put in
+    the place of another keeps its identity.
+  - **tools/make_font.py**: a .ttf -> the object `font`. **docs/PROTOCOLS.md**: the first
+    writing of the protocols (messages, pictures, video, files between handles).
+  - Found on the way: the system's table +0x80 calls a named socket of another object; the
+    desktop draws the image named by `icon` in META, and asks the socket `draw` only if there is
+    none; the kernel takes 0x50000-0x78000 for its extension.
 - **v3.0.10** (10 October 2026)
   - TODO.md begins with "The order of work": 35 things in six steps - the gate (the owner's
     tests), what needs no kernel, the kernel, the desktop, machines, what NinuxOS is for - each

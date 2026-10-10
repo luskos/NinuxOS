@@ -1,9 +1,16 @@
-; Boot.kasm - the boot sector of NinuxOS v2.9.59 (512 bytes, loaded by the BIOS at 0x7C00).
-; Recovered from the disk image: it assembles back to the same 512 bytes.
+; Boot.kasm - the boot sector of NinuxOS (512 bytes, loaded by the BIOS at 0x7C00).
+; Recovered from the disk image of v2.9.59. Changed in v3.0.11 in two places, both data: see
+; "not a diskette for Windows" below. (tools/build_disk.py --old-boot puts the old sector in.)
 ;   nasm -f bin Boot.kasm -o Boot.bin
 ;
 ; It reads KERNEL_SECTORS sectors that follow it on the disk to 0x7E00 and jumps there.
-; The first bytes are a FAT12 diskette header so that a BIOS takes the stick for a bootable disk.
+; The first bytes are the header of a FAT12 diskette, as a BIOS likes to see on a stick.
+;
+; Not a diskette for Windows: with a whole FAT12 header Windows mounted a NinuxOS stick and wrote
+; "System Volume Information" over sectors 19, 44 and 45 of the kernel. Now the header says it has
+; no FAT at all (Windows then does not take it for a file system), and the end of the sector holds
+; a partition table with one partition of a kind Windows does not know (0x7F): the stick shows as
+; a disk with nothing Windows can open, and nothing is written or offered to be formatted.
 
 LOAD_SEG        equ 0x07E0              ; the kernel is read to 0x7E00
 LOAD_ADDR       equ 0x7E00
@@ -28,7 +35,7 @@ BOOT_START_HI   equ 0x0538              ; dword: the high half of it
         dw 512                          ; bytes per sector
         db 1                            ; sectors per cluster
         dw 1                            ; reserved sectors
-        db 2                            ; FAT copies
+        db 0                            ; FAT copies: none - this is not a FAT disk (was 2)
         dw 224                          ; root directory entries
         dw 2880                         ; sectors on the disk
         db 0xF0                         ; media
@@ -199,6 +206,15 @@ msg_error:      db 'Disk read error', 0
 start_lba_hi:   dd 0
 start_lba:      dd 0
 kernel_sectors: dw 480
+
+; ---- the partition table: one partition, from sector 1, of a kind no other system opens ----
+        times 0x1BE - ($ - $$) db 0
+        db 0x80                         ; the one to start from
+        db 0x00, 0x02, 0x00             ; its first sector as head, sector, cylinder
+        db 0x7F                         ; the kind: none that Windows, macOS or Linux mount
+        db 0xFE, 0xFF, 0xFF             ; its last sector (beyond what those three bytes can say)
+        dd 1                            ; it starts at sector 1
+        dd 0x001FFFFF                   ; and is 1 GiB long: the system and its room
 
         times 510 - ($ - $$) db 0
         dw 0xAA55
