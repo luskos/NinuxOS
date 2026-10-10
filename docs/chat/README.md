@@ -1,9 +1,9 @@
 # The conversation
 
-`2026-10-10_recovery_to_v3.0.08.zip` is the export of the Claude Code session in which NinuxOS
+`2026-10-10_recovery_to_v3.0.09.zip` is the export of the Claude Code session in which NinuxOS
 v2.9.59 was brought back and v3 was started: the whole transcript with every command that was
 run and its output. It is the record of how each file of this project was made. It ends shortly
-before v3.0.08 was committed. One file holds the whole conversation; a later export replaces it
+before v3.0.09 was committed. One file holds the whole conversation; a later export replaces it
 (the older ones stay in the history of git).
 
 In short, in the order it happened:
@@ -40,6 +40,7 @@ In short, in the order it happened:
 13. v3.0.06: the list of system tests (docs/TESTS.md).
 14. v3.0.07: the fonts; what the system still lacks as an operating system; the owner's notes.
 15. v3.0.08: the system measured against macOS, Windows, Linux and Android.
+16. v3.0.09: the owner's design written down (no installing, no permissions, no web; NET, relays, vDNA).
 
 The transcript holds what was on the screen of this PC during the work (paths, the account name,
 the identity of the test machine). Keep the repository private.

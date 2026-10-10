@@ -3,6 +3,13 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.09** (10 October 2026)
+  - TODO.md, part 4d, and DIRECTIVE.md: the owner's design, where NinuxOS is not like the other
+    systems - no installing (a program is a whole object), no permissions (relays instead), open
+    by presumption (vDNA for the closed case), no web and no browser (NET of NinuxOS machines,
+    protocols), the chain of machines that carries NET and META. To build: `data dump`, the silent
+    backup and its pool, touchpads and touch, languages, the battery, settings, a file manager,
+    the split desktop (multiboxing).
 - **v3.0.08** (10 October 2026)
   - TODO.md, part 4c: NinuxOS measured against macOS, Windows, Linux and Android, area by area -
     what it has, what is missing, what must be there before anyone else can use it; the order

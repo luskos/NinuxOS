@@ -24,6 +24,17 @@ it stands until the owner changes it. Set on 10 October 2026.
   NinuxOS uses PyTon. Everything written in PyTon goes through `pyton/py2asm.py` to assembly and
   becomes ASMO objects. No other language is added.
 - No file system: the cabinet, drawers, objects.
+- **No installing.** A program is an object that carries all it needs: sent, it runs; `erase`
+  removes it.
+- **No permissions and no prompts.** A program does its own work and is given no way to anything
+  else. Shell = the system; desktop = programs; NET = the internet; META = games, 3D, later
+  intelligences. Between two programs stands a relay (a bridge), never a question to the user.
+- **Open by presumption:** `view` shows the whole object, code and data. The closed, commercial
+  form is vDNA (data as chains a constructor loads).
+- **No web and no browser.** NET is the cluster of NinuxOS machines; what is shared between
+  programs is protocols, not platforms. Ask reaches intelligences through a relay with API keys.
+- Do not propose what the other systems do (stores, installers, permission prompts, a browser,
+  cookies, accounts) as something NinuxOS lacks. Measure it by its own design (TODO.md, 4d).
 
 ## After every piece of work
 

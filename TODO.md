@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.08 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.09 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -214,6 +214,9 @@ Looked at on 10 October 2026, against v2.9.59. Order = how much it hurts.
 
 ## 4c. Measured against macOS, Windows, Linux, Android
 
+**Read 4d with this: the owner answered it.** Installing programs, permissions and the web are
+not goals of NinuxOS - the rows stay as a record of how the other systems do it.
+
 What those systems have that a person meets every day. "Has" is what v2.9.59 shows or says of
 itself; where it was not read from the kernel it says so. **!** = without it the system cannot
 be given to someone else to use.
@@ -260,11 +263,8 @@ be given to someone else to use.
   is the truth (the governor always wins? the newest? ask the person?), and whether user objects
   are synced or only the system. A/B systems on one disk (two copies, one known-good) give most
   of the safety on a machine with a single disk, and are the smaller first step.
-- **Nothing on the desktop reaches the shell.** It is the same thing as per-program permissions
-  (row "Permissions"): today the wall is missing for every program, not only for the shell. A
-  keyboard on the screen that types into the shell is then simply the one program that has the
-  permission "send keys to the shell" - shown, given by the administrator, taken back at will.
-  Without the permissions it is a hole; with them it is an ordinary case.
+- **Nothing on the desktop reaches the shell.** Not by permissions (the owner: no such thing,
+  4d) but by what a program is handed: a smaller table of functions, and relays for the rest.
 - **`kill`, the desktop that closes everything, `cores solo`, `bench`** are one subject: how the
   system runs programs. Read the multiplexer in the kernel source before changing any of them.
 - **At most 5 users**: easy to enforce; say what should happen to their objects when a user is
@@ -272,7 +272,73 @@ be given to someone else to use.
 - **Order of work.** Nothing built since v2.9.59 has run (`docs/TESTS.md`, parts C and I). Until
   a changed kernel is seen to start, every point above that touches the kernel is a plan only.
 
-## 4b. From the owner, 10 October 2026
+## 4d. The owner's answer to 4c, and what to build (10 October 2026)
+
+**Decided - how NinuxOS is meant, where it is not like the other systems.** (Also in
+DIRECTIVE.md. Three rows of the table in 4c were written against these and are wrong as goals:
+"Getting programs", "Permissions", "The web".)
+
+- **No installing.** A program is an ASMO object and carries everything it needs. Send it to
+  someone and it runs; `erase` removes it. There is nothing to install or uninstall.
+- **No permissions to ask for.** A program does its work and asks for no access. There are no
+  administrator levels, no CMD / PowerShell, no pyramid: the shell is for the system's settings
+  and functions, the desktop for programs, NET for the internet, META for games, 3D-accelerated
+  programs and, later, intelligences. If a program needs another program or its data, the answer
+  is a **relay** (a bridge program) between them, not a question to the user. Asking and being
+  told "yes" guarantees nothing about what is then done with the data.
+- **Open by presumption.** `view` on an object must show all of it: the whole code and all the
+  data. The commercial case is the vDNA project: the data become virtual DNA-string chains that
+  a constructor loads, so the code cannot be read because the object is not loaded the same way.
+  Later even these chains are to be opened to ASMO code - probably by an AI, to verify a program
+  before it spreads.
+- **No web, no browser.** NinuxOS does not show the ordinary internet. NET is a super-cluster of
+  machines that run NinuxOS. What matters is **protocols**: my messenger and your "lessenger"
+  look different and speak the same protocol for messages, pictures, video, files; we know each
+  other's handle. No cookies, no caches of other people's content, nobody's machine used as
+  somebody's server.
+- **The infrastructure of NET and META** lies in immutable blocks of space on the machines of
+  the people (perhaps optional). Every NinuxOS machine registers when it is installed, cloned or
+  copied - each for the next - and together they form an immutable chain that says where the
+  data of NET and META are to be fetched from. Infrastructure node servers may exist; like the
+  disks, they keep copies and can start from a copy. The space is set apart for the
+  infrastructure only - not a mine for corporations.
+- **Trust** is the build's key for now; later programs come from NET.
+- **Ask** is the channel to intelligences: a relay with API keys, so that no browser is needed.
+
+**To build:**
+
+- [ ] **`data dump`** - a function of the context menu that was understood wrongly before and is
+      not there: take the DATA out of an object and **keep it on the disk as a thing of its
+      own**; the object is freed of it, the data are not deleted. Example: an interface object,
+      a button, with a picture in it - `data dump` and the PNG that was inside is there by
+      itself. (`dropdata` deletes; this does not.)
+- [ ] **Silent backup of the user.** A backup pool, perhaps of changing size; a manager of the
+      pool's space.
+- [ ] **Touchpads and touch screens** - critical (agreed with 4c).
+- [ ] **Languages**, as a system is expected to have them (with Unicode, 4c).
+- [ ] **The battery**: a meter.
+- [ ] **Settings**: the screen (wallpaper, themes), sound, the internet, Bluetooth, Wi-Fi, a
+      direct tether from another device.
+- [ ] **A file manager** that explains itself - an ASMO object made of HTML + CSS.
+- [ ] **The desktop split** (multiboxing, as the word is used in Eve Online): one screen shared
+      by 4 or 9 instances at once, each separate, all watched together as if they were 4 or 9
+      machines, any one picked to work in. Example: camera feeds, each relayed through META or a
+      program of one's own, full screen on its own desktop.
+
+**What follows from the decisions (Claude):**
+
+- "No permissions" and "nothing on the desktop reaches the shell" (4b) are met the same way: not
+  by asking, but by what a program is *given*. Today every program is handed the whole table of
+  the system's functions - saving over any object, starting and closing programs, sending keys.
+  The table for a desktop program has to hold only what a program needs for its own work; the
+  rest moves into relays. The keyboard on the screen for the shell is then a relay.
+- A relay needs programs that live on (4a) - it has to be there while two others talk.
+- "Programs come from NET" and "open by presumption" need `view` to show code as something a
+  person or an AI can read - the same work as the source of the compiled objects (part 4).
+- The chain of machines starts from what exists: `whoami` already keeps an ID, a generation, a
+  parent and how many clones were made; the chained log is there.
+
+## 4b. From the owner, 10 October 2026 (first notes)
 
 - [ ] **The fonts.** `assets/fonts`: Exo (the shell), JetBrains Mono, Russo One - the originals
       of v2.9.59. Write `tools/make_font.py` again (a .ttf -> the object `font`); find out where

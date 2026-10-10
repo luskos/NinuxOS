@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.08.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.09.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.08 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.09 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -53,7 +53,14 @@ NinuxOS is an operating system of \emph{functional objects}. Its own start line 
       of Python. It is translated to x86-64 assembly and stored as the code of an ASMO object. The
       compiler is inside the kernel: the system builds its own programs (\cmd{build}, Studio).
 \item \textbf{Pages.} Interfaces that are not programs are HTML with CSS and PyTon scripts, shown
-      by NET (the browser of the system): the start menu, the taskbar, the desktop menu, Setup.
+      by NET: the start menu, the taskbar, the desktop menu, Setup.
+\item \textbf{Four places.} The shell is for the system; the desktop for programs; NET for the
+      internet --- which here means the machines that run NinuxOS, not the web; META for games,
+      3D and, later, intelligences.
+\item \textbf{A program is whole.} It carries all it needs: there is nothing to install. It is
+      given no access to anything but its own work and asks for none; between two programs
+      stands a relay. Everything is open by presumption: \cmd{view} is meant to show the whole
+      object. (The design is the owner's; \file{TODO.md}, part 4d, has it in full.)
 \end{itemize}
 
 % ------------------------------------------------------------------------------------------
