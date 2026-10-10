@@ -1,0 +1,98 @@
+
+[ninux] NinuxOS v3.0.16 kernel started
+[ninux] relocated desktop: 10 places
+[ninux] relocated net: 105 places
+[ninux] relocated studio: 40 places
+[ninux] relocated calc: 32 places
+[ninux] relocated chronos: 224 places
+[ninux] relocated greet: 16 places
+[ninux] relocated paint: 150 places
+[ninux] relocated notepad: 23 places
+[ninux] relocated console: 19 places
+[ninux] relocated interfacer: 73 places
+[ninux] relocated device: 28 places
+[ninux] relocated nest: 49 places
+[ninux] relocated mail: 31 places
+[ninux] relocated pynamp: 19 places
+[ninux] relocated asmoncraft: 31 places
+[ninux] relocated search: 21 places
+[ninux] relocated projector: 21 places
+[ninux] relocated widgets: 26 places
+[ninux] relocated copycat: 20 places
+[ext] core 61968 bytes, extension 158528 bytes: SHA-256 ok
+[pci] 6 functions on the bus
+[acpi] power-off ready (FADT + \_S5_)
+[store] boot disk found: cabinet is writable in maintenance mode
+[room] loaded on first use: font
+[font] letters from the object 'font' (Latin + Cyrillic)
+[shield] 1/5 GDT with user segments + TSS
+[shield] 2/5 IDT gates 0x80 (API) and 0x81 (return)
+[shield] 3/5 trampolines and user stack
+[shield] 4/5 page tables: kernel below 1 MB is supervisor-only
+[shield] 5/5 self-test in ring 3
+[shield] hello from ring 3: the API works through int 0x80
+[shield] ON
+[smp] 2 of 2 cores running
+[ninux] video 1024x768
+[ninux] memory: 501 MB usable
+[ninux] cabinet objects: 120
+[ninux] interrupts on (timer 100 Hz, PS/2 IRQ 1/12)
+[room] loaded on first use: sentinel
+[room] loaded on first use: ask
+[room] loaded on first use: ask
+[room] loaded on first use: bags
+[room] loaded on first use: calc
+[room] loaded on first use: chronos
+[room] loaded on first use: console
+[room] loaded on first use: device
+[room] loaded on first use: greet
+[room] loaded on first use: keys
+[room] loaded on first use: keys
+[room] loaded on first use: mail
+[room] loaded on first use: nest
+[room] loaded on first use: notepad
+[room] loaded on first use: paint
+[room] loaded on first use: phone
+[room] loaded on first use: phone
+[room] loaded on first use: projector
+[room] loaded on first use: pynamp
+[room] loaded on first use: search
+[room] loaded on first use: widgets
+[sentinel] system objects checked
+[kasm] on: k_tools
+[chain] the system started
+[ninux] run pyhello
+pyhello: run 1
+[ninux] run pyhello
+[room] loaded on first use: directive
+[ninux] run desktop
+[mux] multiplexer on: the desktop is task 0
+[mux] programs take turns on the first core only ('cores all' = every core)
+[room] loaded on first use: taskbar
+  NinuxOS stopped: Invalid opcode  (exception 6)
+
+  RIP 0x0000000000000003
+      in the kernel
+  ERR 0x0000000000000000
+  CR2 0x0000000000000000
+  RSP 0x0000000000F19F40
+  RAX 0x000000000000000A
+  RBX 0x000000000000ECFB
+  RCX 0x00000000002309B2
+  RDX 0x000000000022F628
+  RSI 0x00000000002300C6
+  RDI 0x0000000000000000
+  RBP 0x0000000000000000
+  R8  0x0000000000100068
+  R9  0x0000000000000000
+  R10 0x00000000000110C8
+  R11 0x000000000000000A
+  R12 0x0000000000000000
+  R13 0x0000000000000000
+  R14 0x0000000000000000
+  R15 0x00000000009FE010
+  core 0x0000000000000000   calls: 0x000000000000ECFB 0x000000000000AE4B 0x000000000005433F 
+   stack: 0x000000000000ECFB 0x00000000009FE1BF 0x000000000000002B 0x0000000000000246 0x0000000000F5BF88 
+
+  The details are also on the serial port (QEMU: -serial stdio).
+  Restart the computer.

@@ -3,6 +3,14 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.17** (11 October 2026) - the image is the same but for the version
+  - Tried in QEMU whether the kernel can be moved (one `nop`): not yet. Found and named on the
+    way, the kernel staying the same bytes: 23 instructions that used addresses of the kernel
+    as numbers, the multiplexer's table of 18 functions and 4 more pointers that lay as plain
+    bytes. What is left is code never read as code. TODO.md has the whole account.
+  - `tools/kdis/numbers.py` (numbers that are addresses), `tools/kdis/pointers.py` (pointers in
+    rows of bytes get names).
+  - The rule until then: new kernel code at the end of the extension only.
 - **v3.0.16** (11 October 2026) - seen in QEMU
   - **Programs live on.** Leaving the desktop no longer closes the programs that run: they are
     kept as they are and the next `desktop` shows them again where they were, the keys going

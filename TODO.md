@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.16 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.17 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -147,6 +147,29 @@ Not done, and why - said plainly, so that the list does not lie:
   to try them on: for each the owner has to name the machine and its chips (`pci`, `machine`).
 - Still asked of the owner: `data dump` - today the DATA come out as a new object of the
   cabinet (NAME_data). Should they (also) go out to a stick as a file?
+
+### Can the kernel be moved? Tried in QEMU, v3.0.17: not yet - and why
+
+Test I of docs/TESTS.md, done with one `nop`: **a kernel in which anything moved does not run.**
+New code is therefore written only at the end of the extension and reached by a call that is
+exactly as long as what it stands for (Alt + *, "programs live on" were done so, and work).
+
+- A `nop` in the **core**: `SHA-256 MISMATCH`, then a page fault. The core's size (61968) is a
+  number somewhere, and the loader copies the extension by it. The core has to stay as it is.
+- A `nop` at the start of the **extension**, step by step:
+  1. stopped at the first command that used a table: 23 instructions held addresses of the
+     kernel as numbers (`mov [rcx*8+0x5b920],rax`). Named (`tools/kdis/numbers.py` finds them).
+  2. then stopped when the desktop started: the multiplexer's table of the 18 system functions
+     it takes over, and 4 pointers of the table of the kernel's small PyTon, lay as plain
+     bytes. Named (`tools/kdis/pointers.py`).
+  3. now the system starts, the shell works, the desktop starts - and the screen is garbage.
+     What is left: **code that was never read as code** (44% of the kernel is still rows of
+     bytes, and part of that is code: the functions the two tables above point at, for one).
+     Its jumps and calls are bytes, so they do not follow when something moves.
+- [ ] To do: read those rows as code, from the entry points now known (the h_ names), in place
+      in kernel/Kernel.kasm - a small kdis that works on the source. Then the `nop` test again,
+      until a moved extension runs everything.
+- All three steps left the kernel the same bytes; nothing of this changed the image.
 
 ### 14, read from the kernel (v3.0.14): how programs run side by side today
 

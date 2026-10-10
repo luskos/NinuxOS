@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.16.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.17.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.16 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.17 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -746,6 +746,16 @@ Windows has.
 \item \textbf{Other dialects} (an idea, \file{TODO.md} part 2a): C, C++, C\#, Java and
       JavaScript as ways of writing over the one back end of py2asm --- plain code only.
 \end{itemize}
+
+\subsection{Where new kernel code may go}
+
+The source of the kernel assembles to the same bytes, but a kernel in which something moved
+does not run yet (tried in QEMU, v3.0.17): the core's size is a number the loader uses, and
+part of the extension's code was never read as code, so its jumps are plain bytes. Until that
+is finished, new code is put at the end of the extension --- the kernel takes
+\texttt{0x50000}--\texttt{0x78000} for it --- and reached from the old code by a call exactly
+as long as the instructions it stands for. \file{tools/kdis/numbers.py} and
+\file{tools/kdis/pointers.py} find and name addresses that are still numbers.
 
 \subsection{Versions}
 
