@@ -3,6 +3,12 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.30** (11 October 2026) - seen in QEMU
+  - **Desk2: what the old desktop could not do.** A bag opens as a panel *over the desk*, with
+    the things' own pictures - a click starts one. A click on the top edge of the screen
+    brings the **curtain** down (settings, files, shell, power, what the machine is). **More
+    desktops**: `< 1/2 >` and PgUp / PgDn; an icon let go at the edge of the screen moves to
+    the desktop on that side.
 - **v3.0.29** (11 October 2026) - seen in QEMU
   - **Desk2 does what a desktop is expected to do**: the card of an object when the mouse rests
     on its icon; the right button's menu (Open, View, Edit, **Data dump**, About it - and on the

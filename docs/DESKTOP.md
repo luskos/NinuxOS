@@ -102,6 +102,20 @@ desktop that can be started and tried beside the old one:
    services, +108, not read yet); the system's messages on the taskbar. In QEMU the right
    button arrives as 4, not 2 - Desk2 takes both.
 
+   **Step 5, a first form, v3.0.30** (seen in QEMU, `test/qemu/q_v3_desk2c.txt`):
+   - *a bag over the desk*: an object whose META says `bag:yes` (Bags, and every clone of it)
+     opens as a panel over the desk with the things' own pictures; a click starts one, a
+     click beside closes it. An empty bag or a vault opens its own program; so does "Open" of
+     the right button's menu - that is where things are put in and taken out.
+   - *the curtain*: a click on the top edge of the screen brings it down - Settings, Files,
+     Shell, Tidy, Restart, Off, and what the machine is. It is clicked, not pulled yet.
+   - *more desktops*: up to nine. `< 1/2 >` on the taskbar and PgUp / PgDn change the
+     desktop; an icon let go at the left or right edge goes to the desktop on that side (a
+     new one if there is none). Kept with the places. No sliding picture, and not the film
+     strip that scrolls.
+   Not begun: the desktop split in 4 or 9 (it needs the multiplexer to draw a task into a
+   part of the screen).
+
 1. **py2asm gets the functions above** that it does not have (pictures, the rectangle kept and
    put back, clip, power, the cabinet's counter, the page drawing, the multiplexer's numbers,
    calling a socket). Each has to be read whole in the kernel first - guessing a function that

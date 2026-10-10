@@ -1,0 +1,50 @@
+# q_v3_desk2c.txt - v3.0.30: Desk2 - a bag's panel over the desk, the curtain, more desktops
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type desk desk2
+wait 8
+# Bags is empty: its own program opens; put two things in
+moveto 351 510
+click
+wait 4
+moveto 390 265
+click
+wait 2
+moveto 400 330
+click
+wait 2
+moveto 510 265
+click
+wait 2
+moveto 400 425
+click
+wait 2
+esc
+wait 4
+# now a click shows the panel over the desk
+moveto 351 510
+click
+wait 3
+snap f01_bag_panel
+esc
+wait 1
+# the curtain
+moveto 500 2
+click
+wait 2
+snap f02_curtain
+esc
+wait 1
+# Readme to the right edge: the second desktop
+moveto 64 45
+drag 1021 300
+wait 3
+snap f03_first
+key pgdn
+wait 3
+snap f04_second
+key pgup
+wait 2
+esc
+wait 3

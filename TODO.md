@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.29 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.30 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -43,9 +43,9 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 | 4 | **[written, v3.0.11]** The build: added objects get lines in the Sentinel's list; an object or suit of another size; `objects/*.asmo.kasm` assembled into the image | M | without it nothing new is "genuine" |
 | 5 | **[written, v3.0.11]** `tools/make_font.py` again (a .ttf -> the object `font`), Exo for the shell | M | the fonts are back; needed for Greek and for other sizes |
 | 6 | **[done: read]** How a page finds its PyTon script and what it may call - read it from NET | S | opens the next four |
-| 7 | **[the page is written; the pull from the top edge waits for 22]** Settings as a curtain pulled down from the top of the screen (a page: HTML + CSS + PyTon): screen, wallpaper, themes, sound, network | M | pages are source we have |
+| 7 | **[v3.0.30, in Desk2: a click at the top edge brings the curtain down (tiles, what the machine is); the page stays for the rest]** **[the page is written; the pull from the top edge waits for 22]** Settings as a curtain pulled down from the top of the screen (a page: HTML + CSS + PyTon): screen, wallpaper, themes, sound, network | M | pages are source we have |
 | 8 | **[written as a program (Files); as a page after 22]** A file manager that explains itself (a page / ASMO object) | M | |
-| 9 | **[v3.0.27: the icon and the panel show the things' own pictures]** **[written anew, v3.0.11; small pictures wait for 11, the tie to a drawer for the kernel]** Bags as it was meant: folders on the desktop like on a phone - a small icon that shows what is inside, a click opens it; a home for clutter in the bottom right corner | M | Bags has a source; today it only faults |
+| 9 | **[v3.0.30, in Desk2: a click on a bag shows what is inside in a panel over the desk]** **[v3.0.27: the icon and the panel show the things' own pictures]** **[written anew, v3.0.11; small pictures wait for 11, the tie to a drawer for the kernel]** Bags as it was meant: folders on the desktop like on a phone - a small icon that shows what is inside, a click opens it; a home for clutter in the bottom right corner | M | Bags has a source; today it only faults |
 | 10 | **[v3.0.29: "Data dump" is in the context menu of Desk2]** **[written: the key D in Files; in the context menu after 22]** `data dump` in the context menu: the DATA out of an object, kept as a thing of its own | S-M | the context menu is a page |
 | 11 | **[written, v3.0.13: all 20 compile and assemble; none has run]** The last functions for py2asm: images, a sound object, the network -> Paint, Nest, PyNamp, Ask compile | M | 16 of 20 programs compile today |
 | 12 | **[ready: `build_disk.py --compare` puts them in a drawer `compare` as pyNAME; the owner compares]** The 20 programs compiled by the new py2asm, each beside the old one on the screen | M | proves py2asm in the system |
@@ -68,8 +68,8 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 
 | # | what | size |
 |---|---|---|
-| 22 | **[steps 1-4 of 5 done, v3.0.29: Desk2 also has the card, the menus (with data dump), moving icons, the start menu; steps 1 and 2, v3.0.28: the new desktop Desk2 (apps/Desk2.asmo, 230 lines of PyTon) runs beside the old one - `desk desk2`; step 1 partly, v3.0.27: pictures, clip, the kept rectangle, power, calling a socket are in py2asm; begun, v3.0.26: the object read through and named - docs/DESKTOP.md has its parts and the five steps of the rewriting; no line of the new one is written yet]** Desktop rewritten as source meant to be read (PyTon + pages) | L |
-| 23 | More desktops: slide for a new one as on a phone; or one endless desktop that scrolls like a film strip, a column a frame, more added when needed | M after 22 |
+| 22 | **[all five steps have a first form, v3.0.30 (Desk2: a bag's panel over the desk, the curtain, more desktops); what is left: the system's own actions on an object, the taskbar as a page, then Desk2 in the place of the old one; steps 1-4, v3.0.29: Desk2 also has the card, the menus (with data dump), moving icons, the start menu; steps 1 and 2, v3.0.28: the new desktop Desk2 (apps/Desk2.asmo, 230 lines of PyTon) runs beside the old one - `desk desk2`; step 1 partly, v3.0.27: pictures, clip, the kept rectangle, power, calling a socket are in py2asm; begun, v3.0.26: the object read through and named - docs/DESKTOP.md has its parts and the five steps of the rewriting; no line of the new one is written yet]** Desktop rewritten as source meant to be read (PyTon + pages) | L |
+| 23 | **[v3.0.30, in Desk2: up to nine desktops - `< 1/2 >`, PgUp / PgDn, an icon let go at the edge moves over; no sliding picture, no film strip yet]** More desktops: slide for a new one as on a phone; or one endless desktop that scrolls like a film strip, a column a frame, more added when needed | M after 22 |
 | 24 | The desktop split in 4 or 9 instances at once (multiboxing) | L |
 
 **Step 5 - machines and the world**

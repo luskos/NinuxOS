@@ -19,7 +19,7 @@
 # Not there yet: a tie to a drawer of the cabinet (a program cannot move objects between drawers).
 # The lock keeps the panel shut; it does not encrypt anything.
 
-META = {"type": "icon", "label": "Bags", "kind": "app"}
+META = {"type": "icon", "label": "Bags", "kind": "app", "bag": "yes"}
 
 FRAME = 0       # 1: an ordinary window with a frame (if the desktop does not like a bare panel)
 PW = 372
