@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.13.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.14.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.13 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.14 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -380,6 +380,12 @@ they take the kernel's names from \file{kernel/Kernel.sym.inc}.
 
 \subsection{Programs side by side}
 
+Read from the extension (v3.0.14): the multiplexer is one loop, entered when the desktop starts.
+It has eight places for tasks (state 0 free, 1 running, 2 to be closed); the desktop is task 0.
+Every running task gets a turn, again and again, as long as task 0 runs. When the desktop ends
+every other task is marked to be closed and the multiplexer is switched off --- which is why
+leaving the desktop closes every program (\file{TODO.md} has what must change).
+
 The \emph{multiplexer} runs the programs of the desktop in windows, each with its own memory and
 time slices; the desktop is task 0. By default the programs take turns on the first processor core
 (\cmd{cores all} lets them run on every core). Shared work --- drawing windows, the SUB-GPU,
@@ -715,8 +721,8 @@ Windows has.
       moved. The picture is switched in the adapter's VGA registers (sequencer 1 bit 5,
       attribute index bit 5). \cmd{python tools/build\_disk.py -{}-plain-kernel} builds the
       kernel without it. The suits take the kernel's addresses from
-      \file{kernel/Kernel.sym.inc} as numbers: until the build makes that file anew, code may
-      be added to the kernel only this way.
+      \file{kernel/Kernel.sym.inc} as numbers; from v3.0.14 the build makes that file anew from
+      the kernel it has just assembled (NASM's map), so the suits follow a kernel that changed.
 \item \textbf{Programs compiled by the new py2asm} (\file{apps/py2asm.txt}): Bags (a folder on
       the desktop: the icon is drawn by its socket \texttt{draw} and shows what is inside),
       Files (the file manager, with \emph{data dump}), Socials (empty). The desktop draws the

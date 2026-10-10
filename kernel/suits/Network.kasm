@@ -500,6 +500,7 @@ fn_86757:
 L_867f6:
         retq
 
+; says: 'Network: through the phone (USB tethering).'
 fn_867f7:
         push rbx
         push r12
@@ -653,6 +654,8 @@ L_86b02:
         mov eax,0x1
         jmp short L_86b60
 
+; says: 'The phone is there but did not start (step '
+; says: '). Is '
 fn_86b09:
         lea rax,[rdi+0x1]
         imul rax,r15
@@ -2050,6 +2053,8 @@ L_87cd3:
         pop rbx
         retq
 
+; says: 'public'
+; says: 'type'
 fn_87cdb:
         push rbx
         mov rbx,rdi
@@ -2120,6 +2125,7 @@ fn_87d5b:
         lea rsi,[rel d_8aaa0]
         jmp near fn_6c2df
 
+; says: '[mnet] asked: '
 fn_87dba:
         push r12
         push r13
@@ -2430,6 +2436,10 @@ L_8828e:
         pop r12
         retq
 
+; says: 'That address does not answer (ARP).'
+; says: 'No connection (is '
+; says: 'No answer in time.'
+; says: ... and 4 more texts
 fn_88293:
         push r12
         push r13
@@ -2597,6 +2607,7 @@ L_8851c:
         pop r12
         retq
 
+; says: 'Not kept: the disk could not be written.'
 fn_88526:
         push rbx
         push r14
@@ -2634,6 +2645,10 @@ L_88597:
         pop rbx
         retq
 
+; says: 'No object of that name here.'
+; says: 'Only pages, styles, images and texts can travel.'
+; says: 'Too big for Meta Net (60 KB at most).'
+; says: ... and 1 more texts
 fn_8859d:
         push rbx
         push r12
@@ -2785,6 +2800,7 @@ L_8874e:
         jc short L_88742
         retq
 
+; says: 'shared'
 fn_88756:
         mov qword [rel d_8bfcc],0x0
         lea rdi,[rel d_89510]
@@ -2837,6 +2853,10 @@ L_887e3:
         mov rax,0xffffffffffffffff
         retq
 
+; says: 'No object of that name here.'
+; says: 'Only pages, styles, images and texts can travel.'
+; says: 'Too big for Meta Net (60 KB at most).'
+; says: ... and 2 more texts
 entry_13:
         push rbx
         push r12
@@ -3018,6 +3038,8 @@ L_88a2b:
         pop rbx
         retq
 
+; says: 'netkey'
+; says: 'type:key'
 fn_88a64:
         push rbx
         lea rdi,[rel d_89509]
@@ -3147,6 +3169,10 @@ L_88bd1:
 L_88bd6:
         retq
 
+; says: 'net [on | ip A.B.C.D [MASK [GATEWAY]]]  - on = the card + DHCP'
+; says: 'Network card on. Asking for an address (DHCP)...'
+; says: 'No DHCP answer. Set one: net ip A.B.C.D [MASK [GATEWAY]]'
+; says: ... and 8 more texts
 entry_01:
         push rbx
         push r12
@@ -3285,6 +3311,7 @@ L_88e01:
         pop rbx
         retq
 
+; says: '0123456789abcdef'
 fn_88e05:
         push rbx
         mov ebx,edi
@@ -3302,6 +3329,10 @@ fn_88e05:
         pop rbx
         retq
 
+; says: '  answer in '
+; says: '  no answer'
+; says: 'That address does not answer (ARP).'
+; says: ... and 2 more texts
 entry_02:
         push rbx
         push r12
@@ -3391,6 +3422,8 @@ entry_05:
         mov esi,0x1
         jmp short L_88f8a
 
+; says: 'Done. '
+; says: 'Shared (the public directory):'
 entry_06:
         xor esi,esi
 L_88f8a:
@@ -3427,6 +3460,10 @@ entry_12:
 L_88ffa:
         retq
 
+; says: 'shared'
+; says: 'Their public directory:'
+; says: 'look A.B.C.D'
+; says: ... and 1 more texts
 entry_07:
         push rbx
         push r15
@@ -3465,6 +3502,9 @@ L_89076:
         pop rbx
         retq
 
+; says: 'Sent, and kept there.'
+; says: 'send A.B.C.D NAME  - transfer a page / style / image / text there'
+; says: 'The network is off: net on'
 entry_08:
         push rbx
         cmp byte [rel d_89489],0x0
@@ -3503,6 +3543,10 @@ entry_09:
         mov byte [rel d_8952c],0x53
         jmp short L_890e8
 
+; says: 'shared'
+; says: 'Subscribed: what they broadcast comes here.'
+; says: 'Unsubscribed.'
+; says: ... and 2 more texts
 entry_10:
         mov byte [rel d_8952c],0x55
 L_890e8:
@@ -3581,6 +3625,10 @@ L_891b3:
         pop rbx
         retq
 
+; says: 'Broadcast to '
+; says: ' subscriber(s).'
+; says: 'broadcast NAME  - send it to everyone who subscribed here'
+; says: ... and 1 more texts
 entry_11:
         cmp byte [rel d_89489],0x0
         jz short L_891fa
@@ -3601,6 +3649,10 @@ L_891fa:
         lea rdi,[rel d_899d6]
         jmp near api_print
 
+; says: 'inbox'
+; says: 'Inbox closed: only machines we subscribed to may send here.'
+; says: 'Inbox open: anyone may send (transfer) public objects here.'
+; says: ... and 3 more texts
 entry_03:
         push rbx
         mov rbx,rdi
@@ -3647,6 +3699,9 @@ L_892a8:
         pop rbx
         retq
 
+; says: 'Received, checked (signature, HMAC, a data object) and kept as '
+; says: 'get A.B.C.D NAME [AS]  - fetch a public object from another NinuxOS'
+; says: 'The network is off: net on'
 entry_04:
         push rbx
         push r12

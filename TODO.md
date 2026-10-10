@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.13 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.14 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -120,6 +120,30 @@ Not done, and why - said plainly, so that the list does not lie:
   to try them on: for each the owner has to name the machine and its chips (`pci`, `machine`).
 - Still asked of the owner: `data dump` - today the DATA come out as a new object of the
   cabinet (NAME_data). Should they (also) go out to a stick as a file?
+
+### 14, read from the kernel (v3.0.14): how programs run side by side today
+
+The multiplexer is one loop in the extension (`L_53d40`, where the texts `[mux] multiplexer on`
+and `off` are). It is entered when the desktop starts and left when the desktop ends:
+
+- eight places for tasks (`fn_53fdf` gives the record of place n; its first number is the state:
+  0 free, 1 running, 2 to be closed); the desktop is task 0;
+- the loop: the housekeeping, then for every task that runs one turn (`fn_540e7`), then - as
+  long as task 0 still runs - again;
+- when task 0 has ended: **every other task is marked "to be closed"**, the memory of the
+  multiplexer is given back, `[mux] multiplexer off`. Starting the desktop again wipes the
+  table of tasks (`fn_53f25` clears 0x1000 bytes at 0x43F60).
+
+So "leaving the desktop closes nothing" is three changes, and each has to be seen working:
+
+- [ ] the end of task 0 no longer marks the others; their records and memory stay (frozen: they
+      get no turns while the shell has the screen, so they cannot draw over it);
+- [ ] the next start of the desktop does not wipe the table, and the desktop (which keeps its
+      own list of windows inside its object) is told which tasks are still there;
+- [ ] `tasks` in the shell lists the eight places; `kill N` closes a frozen one.
+- Later, for relays and music: turns also while the shell is in front, with drawing held back.
+
+Not written blind: it changes what happens at every start and end of the desktop.
 
 ## If the disk is lost again - where everything is
 
@@ -573,9 +597,13 @@ to be touched. A proposal for the rest, to decide:
       (`source_hash:`) - how it is computed is not known; `sources` may call Bags OUT OF DATE.
 - [ ] The build: how many lines the Sentinel's list may have (the kernel's limit is not read;
       103 now, 98 before).
-- [ ] The build makes kernel/Kernel.sym.inc anew when the core of the kernel changes size
-      (today the suits take the kernel's addresses from that file as numbers: code may be added
-      only at the end of the extension, as Alt + * was).
+- [x] The build makes kernel/Kernel.sym.inc anew from the kernel it has just assembled
+      (v3.0.14), so the suits follow when code is added anywhere in the kernel. Tried on the
+      PC with one `nop` under `cmd_version`: 1419 names moved, the four suits assembled against
+      them. Whether such a kernel also *runs* is still test I of docs/TESTS.md - data of the
+      kernel may hold addresses that are still numbers.
+- [x] `tools/kdis/says.py` (v3.0.14): above every function of the kernel and the suits, the
+      texts it points at (299 of 940 functions have some) - a first step to names (21).
 
 - [ ] `tools/build_disk.py`: objects of another size and new objects; build the image from nothing
       (no base image); the nasm pin of the old build (`tools/nasm.sha256`).

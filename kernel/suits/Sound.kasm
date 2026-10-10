@@ -70,6 +70,7 @@ L_800e7:
         setnz al
         retq
 
+; says: 'Intel HD Audio'
 fn_800f4:
         push rbx
         push r12
@@ -686,6 +687,8 @@ L_80900:
         pop rbx
         retq
 
+; says: 'Sound: '
+; says: 'No sound device found (HD Audio or AC'
 entry_01:
         call suit_table_end
         test eax,eax
@@ -700,6 +703,10 @@ L_80939:
         lea rdi,[rel d_80e58]
         jmp near api_print
 
+; says: 'Playing.'
+; says: 'No such object.'
+; says: 'That WAV can'
+; says: ... and 1 more texts
 entry_02:
         push rbx
         push r12

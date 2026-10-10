@@ -74,6 +74,10 @@ fn_30101:
         pop rbx
         retq
 
+; says: '  controller settings '
+; says: ' (translate ON)'
+; says: ' (translate off)'
+; says: ... and 1 more texts
 fn_30121:
         push rbx
         push r12
@@ -119,6 +123,10 @@ L_30198:
         pop rbx
         retq
 
+; says: 'Press keys on the BUILT-IN keyboard: every byte it sends is shown here.'
+; says: '  byte '
+; says: '  status '
+; says: ... and 7 more texts
 entry_20:
         push rbx
         push r12
@@ -256,6 +264,10 @@ d_30500:
 d_30511:
         db 'kbd: ended. If a number made the built-in keys type, tell which one.', 10, 0
 
+; says: 'back'
+; says: 'FORCE'
+; says: 'update GO: the system is being replaced from a stick'
+; says: ... and 18 more texts
 entry_00:
         push rbx
         push r12
@@ -601,6 +613,8 @@ L_30a96:
         xor eax,eax
         retq
 
+; says: 'No backup of an earlier system is kept on this disk.'
+; says: 'A backup is kept on this disk: '
 fn_30a99:
         call fn_30a1d
         lea rdi,[rel d_31621]
@@ -616,6 +630,10 @@ fn_30a99:
 L_30ad0:
         jmp near api_print
 
+; says: 'The backup made before this update was started is kept as it is.'
+; says: 'update: the system on this disk is bigger than 32 MB - no backup can be made.'
+; says: 'update: this disk (or partition) has no room at its end for a backup.'
+; says: ... and 2 more texts
 fn_30ad5:
         push rbx
         push r12
@@ -748,6 +766,10 @@ L_30cb3:
         pop rbx
         retq
 
+; says: 'No backup of an earlier system is kept on this disk.'
+; says: 'update: the backup on this disk is damaged (its check does not match) - not used.'
+; says: 'Bringing back '
+; says: ... and 2 more texts
 fn_30cbb:
         push rbx
         push r12
@@ -853,6 +875,10 @@ L_30e45:
         pop rbx
         retq
 
+; says: '  - written'
+; says: '  - NOT written (no intact copy on the stick)'
+; says: '  - NOT written (no memory)'
+; says: ... and 2 more texts
 fn_30e4b:
         lea rdi,[rel d_31d46]
         test eax,eax
@@ -890,6 +916,9 @@ L_30ec3:
         movzx eax,byte [rel suit_start + (d_6b130 - 0x30000)]
         retq
 
+; says: 'update: not enough memory.'
+; says: 'update: the stick could not be read.'
+; says: 'update: that stick does not hold a NinuxOS image (write disk.img to it in DD mode).'
 fn_30ecb:
         push rbx
         push r12
@@ -1076,6 +1105,10 @@ L_3113b:
         xor eax,eax
         retq
 
+; says: 'update: the image on the stick has no Sentinel list - it is older than v2.9.1.'
+; says: 'update: not enough memory.'
+; says: 'update: the stick could not be read.'
+; says: ... and 1 more texts
 fn_3113e:
         push rbx
         lea rdi,[rel suit_start + (d_5f2c8 - 0x30000)]
@@ -1553,6 +1586,10 @@ d_320f3:
 d_32180:
         db 'Done. Now: restart', 10, 0
 
+; says: 'CLONE'
+; says: 'clone'
+; says: 'Puffer: NinuxOS was started from the USB stick itself, so the stick can'
+; says: ... and 7 more texts
 entry_01:
         push rbx
         push r12
@@ -1773,6 +1810,7 @@ L_324bc:
         pop rbx
         retq
 
+; says: 'Puffer - a pen drive that starts NinuxOS'
 entry_02:
         call api_cursor_hide
         call fn_08c44
@@ -1874,6 +1912,7 @@ L_32615:
         pop rbx
         retq
 
+; says: 'made:build_disk.py'
 fn_3261c:
         push rbx
         mov eax,[rdi+0x10]
@@ -2011,6 +2050,10 @@ d_32bc6:
         db 0x0A
         db 'Enter = back to the desktop ', 0
 
+; says: 'files             what is in the stick'
+; says: 'files: that file is empty.'
+; says: 'files: that file is bigger than 8 MB - too big to become an object for now.'
+; says: ... and 16 more texts
 entry_03:
         push rbx
         push r12
@@ -2239,6 +2282,10 @@ fn_32f6b:
         jnz short fn_32f6b
         retq
 
+; says: 'files: no USB stick answers. Plug one in and try again.'
+; says: 'files: not enough memory.'
+; says: 'files: this stick is not FAT32 (the usual format of pen drives). Linux (ext4) and'
+; says: ... and 3 more texts
 fn_32f7a:
         push rbx
         push r12
@@ -2599,6 +2646,10 @@ L_33433:
         pop rbx
         retq
 
+; says: 'On the USB stick (FAT32), this folder:'
+; says: '  [folder]    '
+; says: ' bytes  '
+; says: ... and 3 more texts
 fn_33439:
         push rbx
         push r12
@@ -2649,6 +2700,9 @@ L_334e3:
         lea rdi,[rel d_338fc]
         jmp short L_334da
 
+; says: 'file'
+; says: 'sound'
+; says: 'text'
 fn_334ec:
         push rbx
         lea rsi,[rel d_33670]
@@ -2860,12 +2914,17 @@ d_33c6c:
 d_33ca2:
         db 'files: the object could not be written.', 10, 0
 
+; says: 'META needs the graphics screen.'
 entry_04:
         cmp qword [rel suit_start + (d_117cb - 0x30000)],0x0
         jnz short entry_05
         lea rdi,[rel d_33f8e]
         jmp near api_print
 
+; says: 'META - full-screen programs on this machine'
+; says: 'meta'
+; says: 'label'
+; says: ... and 5 more texts
 entry_05:
         push rbx
         push r12
@@ -3009,6 +3068,10 @@ d_34019:
         db 0x0A
         db 'A number and Enter starts it - only Enter goes back: ', 0
 
+; says: 'Measuring - about 8 seconds, the screen will flicker ...'
+; says: 'The quick brown fox jumps over the lazy dog - 0123456789 !?'
+; says: '[bench] NinuxOS performance:'
+; says: ... and 1 more texts
 entry_06:
         push rbx
         push r12
@@ -3263,6 +3326,10 @@ d_3456c:
 d_345a8:
         db 'Lines 7 and 8 alike = shared work is not shared (see ', 39, 'cores', 39, '). Also: sgpu bench, sgpu ptest.', 10, 0
 
+; says: 'type:image'
+; says: 'shot'
+; says: '[shot] there are 99 pictures already: delete some (shot1 ...).'
+; says: ... and 5 more texts
 entry_07:
         push rbx
         push r12
@@ -3899,6 +3966,7 @@ L_350b6:
 L_350e7:
         retq
 
+; says: '[tune] the mode kept for the start is on'
 entry_11:
         push rdi
         call fn_34984
@@ -3911,6 +3979,10 @@ entry_11:
 L_3510b:
         retq
 
+; says: 'boot'
+; says: 'limit'
+; says: 'board'
+; says: ... and 14 more texts
 entry_08:
         push rbx
         push r12
@@ -4127,6 +4199,9 @@ L_3541c:
         jnz short L_3541c
         retq
 
+; says: 'TUNER  -  the processor'
+; says: 'A auto (EMA cross)  M max (turbo)  S safe  N min  O hands off    L load on / off    + / - '
+; says: 'oamsn'
 entry_09:
         push rbx
         push r12
@@ -4254,6 +4329,9 @@ L_3560a:
         pop rbx
         retq
 
+; says: 'Temperature C   white: now   red: EMA fast (10)   yellow: EMA slow (30)   dashes: the limi'
+; says: 'Frequency MHz   green: real   magenta: asked'
+; says: 'Package power W'
 fn_35615:
         push rbx
         push r12
@@ -4569,6 +4647,10 @@ fn_35a0b:
         add dword [rel d_35fe4],0x16
         retq
 
+; says: 'DEMO - made-up numbers:'
+; says: 'no sensors on this machine'
+; says: 'Mode: '
+; says: ... and 34 more texts
 fn_35a34:
         push rbx
         mov rax,[rel suit_start + (d_11818 - 0x30000)]
@@ -5084,6 +5166,8 @@ d_37d18:
 d_380d8:
         times 96 db 0x00
 
+; says: 'type:log'
+; says: 'chainlog'
 fn_38138:
         cmp qword [rel d_38b28],0x0
         jnz near L_3821c
@@ -5144,6 +5228,7 @@ fn_38225:
         lea rdx,[rel d_38b90]
         jmp near fn_0f6ff
 
+; says: '[chain] '
 entry_12:
         push rbx
         push r12
@@ -5223,6 +5308,7 @@ L_38364:
         pop rbx
         retq
 
+; says: 'chainlog'
 fn_3836a:
         cmp byte [rel suit_start + (d_1553d - 0x30000)],0x0
         jz short L_38392
@@ -5247,6 +5333,10 @@ fn_38393:
         pop rbx
         retq
 
+; says: 'The chain: '
+; says: ' records kept ('
+; says: ' written since the first). The last ones:'
+; says: ... and 4 more texts
 entry_13:
         push rbx
         push r12
@@ -5358,6 +5448,7 @@ L_38566:
         pop rbx
         retq
 
+; says: 'the system started'
 entry_16:
         lea rdi,[rel d_38de0]
         call entry_12
@@ -5410,6 +5501,10 @@ L_38618:
         pop rbx
         retq
 
+; says: 'BURN is only for a system that was uprooted (`uproot GO` first).'
+; says: 'Burning: your objects are removed and written over with zeros ...'
+; says: 'BURNED: the objects are gone, this is a fresh machine'
+; says: ... and 1 more texts
 fn_3861e:
         push rbx
         lea rdi,[rel suit_start + (d_60519 - 0x30000)]
@@ -5543,6 +5638,10 @@ L_3880e:
         pop rbx
         retq
 
+; says: 'keep media'
+; says: 'discard media'
+; says: 'build refresh keep media      back to a new build'
+; says: ... and 8 more texts
 entry_19:
         push rbx
         push r12
@@ -5645,6 +5744,10 @@ L_38974:
         pop rbx
         retq
 
+; says: 'BURN'
+; says: 'uproot GO (maint) moves this system - the kernel, every object, the passwords, its identit'
+; says: 'This system runs from a stick: it is already uprooted - `root` puts it down on a disk.'
+; says: ... and 5 more texts
 entry_14:
         push rbx
         mov rbx,rdi
@@ -5702,6 +5805,10 @@ L_38a63:
         pop rbx
         retq
 
+; says: 'here'
+; says: 'rooted here again: this one is the living system'
+; says: 'This is the living system again.'
+; says: ... and 4 more texts
 entry_15:
         push rbx
         mov rbx,rdi
@@ -5876,6 +5983,8 @@ d_39755:
 d_39808:
         db 'This is the living system again.', 10, 0
 
+; says: 'type:data'
+; says: 'accounts'
 fn_3982a:
         cmp qword [rel d_39e20],0x0
         jnz near L_39905
@@ -5922,6 +6031,7 @@ L_3990b:
         xor eax,eax
         retq
 
+; says: 'accounts'
 fn_3990e:
         cmp byte [rel suit_start + (d_1553d - 0x30000)],0x0
         jz short L_39936
@@ -5985,6 +6095,10 @@ L_399aa:
         jnz short L_399a3
         retq
 
+; says: 'Five people are known by now: `user del NAME` first.'
+; says: 'A person'
+; says: 'The password for this person:'
+; says: ... and 8 more texts
 entry_17:
         push rbx
         push r12
@@ -6188,6 +6302,10 @@ L_39cc6:
         pop rbx
         retq
 
+; says: 'NinuxOS - who is it?'
+; says: 'Your name:'
+; says: 'Your password:'
+; says: ... and 3 more texts
 entry_18:
         push rbx
         call fn_3982a

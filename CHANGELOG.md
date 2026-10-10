@@ -3,6 +3,13 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.14** (11 October 2026) - nothing in the image changed but the version
+  - The build makes `kernel/Kernel.sym.inc` anew from the kernel it has just assembled: the
+    suits follow when code is added anywhere in the kernel, not only at the end of the extension.
+  - `tools/kdis/says.py`: comment lines above the functions of the kernel and the suits with the
+    texts each points at (`; says: '...'`). The same bytes come out.
+  - TODO.md: how the multiplexer runs programs, read from the kernel, and the three changes
+    "programs live on" needs.
 - **v3.0.13** (11 October 2026) - not run in the system
   - **py2asm: the last functions the programs of v2.9.59 call** - load_image, save_image
     (Paint, Nest), sound_play (PyNamp), net_ask, net_state, net_answer (Ask) - written after

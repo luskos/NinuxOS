@@ -185,6 +185,40 @@ def verify(pub, message, signature):
     return _encode(_add(_mul(s, BASE), _mul(k, minus_a))) == signature[:32]
 
 
+def kernel_and_symbols(nasm, define, changed):
+    """assemble kernel/Kernel.kasm; then make kernel/Kernel.sym.inc say where everything is NOW.
+    The suits are linked against the kernel by that file (every name an address as a number),
+    so after code was added to the kernel it has to be made anew before the suits are assembled."""
+    import re
+    wrap = os.path.join(WORK, 'Kernel.map.asm')
+    where = os.path.join(WORK, 'Kernel.map')
+    out = os.path.join(WORK, 'Kernel.bin')
+    with open(wrap, 'w') as f:
+        f.write('[map symbols %s]\n%%include "Kernel.kasm"\n' % where.replace('\\', '/'))
+    r = subprocess.run([nasm, '-f', 'bin', '-w-all'] + ['-D' + d for d in define]
+                       + ['-I', os.path.join(ROOT, 'kernel') + os.sep, '-o', out, wrap], capture_output=True, text=True)
+    if r.returncode != 0:
+        sys.exit('build: nasm stopped on kernel/Kernel.kasm\n%s' % r.stderr[:4000])
+    now = {}
+    for line in open(where):
+        parts = line.split()
+        if len(parts) in (2, 3) and all(re.fullmatch('[0-9A-Fa-f]{1,16}', p) for p in parts[:-1]):
+            now[parts[-1]] = int(parts[-2], 16)         # the address in memory
+    sym = os.path.join(ROOT, 'kernel', 'Kernel.sym.inc')
+    lines = open(sym).read().split('\n')
+    moved = 0
+    for i, line in enumerate(lines):
+        m = re.fullmatch(r'(\w+) equ 0x([0-9A-Fa-f]+)', line)
+        if m and m.group(1) in now and now[m.group(1)] != int(m.group(2), 16):
+            lines[i] = '%s equ 0x%X' % (m.group(1), now[m.group(1)])
+            moved += 1
+    if moved:
+        with open(sym, 'w', newline='\n') as f:
+            f.write('\n'.join(lines))
+        changed.append('kernel/Kernel.sym.inc: %d names have other addresses now (the suits follow)' % moved)
+    return open(out, 'rb').read()
+
+
 def build_key():
     """this project's own signing key: made once, kept out of git"""
     if os.path.exists(KEY):
@@ -629,8 +663,7 @@ def main():
         changed.append('the boot sector')
     img[0:SECTOR] = boot
 
-    kernel = assemble(nasm, os.path.join('kernel', 'Kernel.kasm'), 'Kernel.bin',
-                      ['PLAIN_KERNEL'] if a.plain_kernel else [])
+    kernel = kernel_and_symbols(nasm, ['PLAIN_KERNEL'] if a.plain_kernel else [], changed)
     if len(kernel) > KERNEL_ROOM:
         sys.exit('build: the kernel is %d bytes, the boot sector reads only %d' % (len(kernel), KERNEL_ROOM))
     base_kernel = base[SECTOR:SECTOR + len(kernel)]

@@ -45,6 +45,8 @@ L_82087:
         pop rbx
         retq
 
+; says: '[ehci] controller at '
+; says: '[ehci] high-speed device on port '
 fn_8208d:
         push rbx
         push r12
@@ -372,6 +374,7 @@ L_824f2:
         pop rbx
         retq
 
+; says: '[ehci] USB stick ready, sectors: '
 fn_82531:
         push rbx
         push r12
@@ -565,6 +568,9 @@ L_82817:
         pop rbx
         retq
 
+; says: 'USB 2 (EHCI): '
+; says: ' controller(s); '
+; says: ' slower device(s) handed to the USB 1 controller'
 entry_03:
         cmp qword [rel d_82890],0x0
         jz short L_8286e
@@ -648,6 +654,7 @@ L_82b91:
         pop rbx
         retq
 
+; says: '[uhci] controller at I/O '
 fn_82ba3:
         push rbx
         push r12
@@ -957,6 +964,8 @@ fn_82fb7:
         lea rdi,[rel d_83620]
         jmp near L_82e56
 
+; says: '[usb1] keyboard ready'
+; says: '[usb1] mouse ready'
 fn_82fec:
         push rbx
         push r12
@@ -1246,6 +1255,10 @@ L_83454:
         pop rbx
         retq
 
+; says: 'USB 1 (UHCI / OHCI): '
+; says: ' controller(s)'
+; says: '  USB 1 keyboard - reports '
+; says: ... and 1 more texts
 entry_04:
         push rbx
         cmp qword [rel d_834e8],0x0
@@ -1358,6 +1371,7 @@ L_83c1e:
         pop r13
         retq
 
+; says: '[ohci] controller at '
 fn_83c21:
         push rbx
         push r12
