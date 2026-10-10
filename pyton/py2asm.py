@@ -72,6 +72,10 @@ SYSTEM = {
     # v3.0.13: the last ones the programs of v2.9.59 call (l: a list, given as it is)
     'load_image': ('sl', 'i'), 'save_image': ('siil', 'i'), 'sound_play': ('si', 'i'),
     'net_ask': ('sis', 'i'), 'net_state': ('', 'i'), 'net_answer': ('', 's'),
+    # v3.0.27: what the desktop stands on
+    'image': ('iis', 'n'), 'image_fit': ('iiiis', 'n'), 'clip': ('iiii', 'n'), 'clip_off': ('', 'n'),
+    'rect_save': ('iiii', 'i'), 'rect_restore': ('i', 'n'), 'cabinet_changes': ('', 'i'),
+    'power': ('i', 'n'), 'ob_call': ('ssii', 'i'),
 }
 
 # a built-in function of Python -> the function of prelude.py that does it

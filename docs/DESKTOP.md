@@ -68,6 +68,14 @@ whole.
 In PyTon, compiled by py2asm, with the pages it already uses. In this order, each step a
 desktop that can be started and tried beside the old one:
 
+   *v3.0.27:* read whole and connected: `image(x, y, name)`, `image_fit(x, y, w, h, name)`
+   (+20, +28: a picture object is width, height, dots; 0xFF00FF is see-through), `clip`,
+   `clip_off` (+100), `rect_save`, `rect_restore` (+D0, +D8: restore also frees it, so once),
+   `cabinet_changes` (+F0), `power` (+E8), `ob_call(name, socket, a, b)` (+80). Seen working
+   in Bags (the things' own pictures). Still to read: the page drawing (+108), the facts
+   about the cabinet (+110), the multiplexer's numbers (+118), the META lines (+C8), the
+   procket (+88), +148, and +F8 (five values; not the clip).
+
 1. **py2asm gets the functions above** that it does not have (pictures, the rectangle kept and
    put back, clip, power, the cabinet's counter, the page drawing, the multiplexer's numbers,
    calling a socket). Each has to be read whole in the kernel first - guessing a function that

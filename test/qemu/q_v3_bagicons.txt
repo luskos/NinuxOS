@@ -1,0 +1,34 @@
+# q_v3_bagicons.txt - v3.0.27: Bags shows the things' own pictures
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type desktop
+waitlog [browser] page shown 60
+wait 2
+esc
+wait 2
+moveto 351 510
+click
+wait 4
+moveto 390 265
+click
+wait 2
+moveto 400 300
+click
+wait 2
+moveto 510 265
+click
+wait 2
+moveto 400 330
+click
+wait 2
+moveto 620 265
+click
+wait 2
+moveto 400 425
+click
+wait 2
+snap g01_panel
+esc
+wait 3
+snap g02_icon

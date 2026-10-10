@@ -18,7 +18,12 @@
 ;       +0x80  call a socket of an object: rdi = object, rsi = the socket's name, rdx, rcx = two values
 ;              (read from Desktop, which asks a program's "draw" for its icon this way; not connected
 ;              yet - it is what a relay between two programs will stand on)
-;   meaning not known yet: +0x20 +0xA8
+;       +0x20  a picture: rdi, rsi = x, y, rdx = the picture (width, height, dots), ecx bit 0: 0xFF00FF see-through
+;       +0x28  a picture made to fit: rdi, rsi, rdx, rcx = x, y, width, height, r8 = the picture
+;       +0xD0 / +0xD8  keep what the screen shows in a rectangle / put it back (and free it)
+;       +0xE8  power: rdi = 0 off, else restart      +0xF0  the cabinet's counter of changes
+;       +0x100 draw only inside a rectangle
+;   meaning not known yet: +0xA8 +0xF8
 ; v3.0.11, from the same places: ob_size, ob_data (+0x60), own_len, own_code (+0x70, +0x68),
 ;       text_meta (+0x70, +0x30), data_dump (+0x68, +0xE0).
 ; v3.0.13: load_image, save_image (Paint, Nest), sound_play (PyNamp), net_ask, net_answer,
@@ -473,6 +478,73 @@ ninux_net_have:
         mov rax, [rel ninux_api]
         call [rax + 0x150]
         mov rax, [rel ninux_net_room]
+        ret
+
+; ---- v3.0.27: what the desktop stands on (read whole in the kernel: docs/DESKTOP.md) -----------
+sys_image:                              ; (x, y, name of a picture object): draw it; 0xFF00FF is see-through
+        push rdi
+        push rsi
+        mov rdi, rdx
+        mov rax, [rel ninux_api]
+        call [rax + 0x68]
+        pop rsi
+        pop rdi
+        test rax, rax
+        jz ninux_nothing
+        mov rdx, rax
+        add rdx, [rax + 0x10]
+        mov ecx, 1
+        NINUX_API 0x20
+sys_image_fit:                          ; (x, y, width, height, name): the picture made to fit that rectangle
+        push rdi
+        push rsi
+        push rdx
+        push rcx
+        mov rdi, r8
+        mov rax, [rel ninux_api]
+        call [rax + 0x68]
+        pop rcx
+        pop rdx
+        pop rsi
+        pop rdi
+        test rax, rax
+        jz ninux_nothing
+        mov r8, rax
+        add r8, [rax + 0x10]
+        NINUX_API 0x28
+sys_clip:                               ; (x, y, width, height): draw only inside this rectangle
+        NINUX_API 0x100
+sys_clip_off:                           ; the whole screen again
+        mov rax, [rel ninux_api]
+        call [rax + 0x10]
+        mov rcx, rdx
+        mov rdx, rax
+        xor edi, edi
+        xor esi, esi
+        NINUX_API 0x100
+sys_rect_save:                          ; (x, y, width, height) -> what the screen shows there, kept (a number to
+        NINUX_API 0xD0                  ; give to rect_restore; 0: no memory)
+sys_rect_restore:                       ; (the number): put it back on the screen; it can be put back once
+        NINUX_API 0xD8
+sys_cabinet_changes:                    ; -> a number that grows with every change of the cabinet
+        NINUX_API 0xF0
+sys_power:                              ; (0: power off, 1: restart)
+        NINUX_API 0xE8
+sys_ob_call:                            ; (name of an object, name of a socket, a, b): call the socket -> what it gave;
+        push rsi                        ; -1: no such object
+        push rdx
+        push rcx
+        mov rax, [rel ninux_api]
+        call [rax + 0x68]
+        pop rcx
+        pop rdx
+        pop rsi
+        test rax, rax
+        jz ninux_call_none
+        mov rdi, rax
+        NINUX_API 0x80
+ninux_call_none:
+        mov rax, -1
         ret
 
 sys_data_dump:                          ; (name of an object, a new name): its DATA out, as an object of

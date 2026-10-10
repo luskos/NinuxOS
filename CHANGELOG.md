@@ -3,6 +3,13 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.27** (11 October 2026) - seen in QEMU
+  - **py2asm: pictures and more of what the desktop stands on** - `image`, `image_fit`, `clip`,
+    `clip_off`, `rect_save`, `rect_restore`, `cabinet_changes`, `power`, `ob_call` - each read
+    whole in the kernel first.
+  - **Bags shows the things' own pictures**: 48 x 48 in the panel, made small on its icon (nine
+    of them, as on a phone). A thing without a picture of its own keeps the coloured tile.
+  - `tools/kdis/show.py`: read one function compactly, or how a system function is called.
 - **v3.0.26** (11 October 2026) - the image is the same but for the version
   - **The desktop read through** (the first step of writing it anew): it is 47 functions, 2510
     instructions - the 1.3 MB are the wallpaper. 36 of its functions have names now

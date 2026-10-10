@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.26 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.27 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -45,7 +45,7 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 | 6 | **[done: read]** How a page finds its PyTon script and what it may call - read it from NET | S | opens the next four |
 | 7 | **[the page is written; the pull from the top edge waits for 22]** Settings as a curtain pulled down from the top of the screen (a page: HTML + CSS + PyTon): screen, wallpaper, themes, sound, network | M | pages are source we have |
 | 8 | **[written as a program (Files); as a page after 22]** A file manager that explains itself (a page / ASMO object) | M | |
-| 9 | **[written anew, v3.0.11; small pictures wait for 11, the tie to a drawer for the kernel]** Bags as it was meant: folders on the desktop like on a phone - a small icon that shows what is inside, a click opens it; a home for clutter in the bottom right corner | M | Bags has a source; today it only faults |
+| 9 | **[v3.0.27: the icon and the panel show the things' own pictures]** **[written anew, v3.0.11; small pictures wait for 11, the tie to a drawer for the kernel]** Bags as it was meant: folders on the desktop like on a phone - a small icon that shows what is inside, a click opens it; a home for clutter in the bottom right corner | M | Bags has a source; today it only faults |
 | 10 | **[written: the key D in Files; in the context menu after 22]** `data dump` in the context menu: the DATA out of an object, kept as a thing of its own | S-M | the context menu is a page |
 | 11 | **[written, v3.0.13: all 20 compile and assemble; none has run]** The last functions for py2asm: images, a sound object, the network -> Paint, Nest, PyNamp, Ask compile | M | 16 of 20 programs compile today |
 | 12 | **[ready: `build_disk.py --compare` puts them in a drawer `compare` as pyNAME; the owner compares]** The 20 programs compiled by the new py2asm, each beside the old one on the screen | M | proves py2asm in the system |
@@ -68,7 +68,7 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 
 | # | what | size |
 |---|---|---|
-| 22 | **[begun, v3.0.26: the object read through and named - docs/DESKTOP.md has its parts and the five steps of the rewriting; no line of the new one is written yet]** Desktop rewritten as source meant to be read (PyTon + pages) | L |
+| 22 | **[step 1 of 5 partly done, v3.0.27: pictures, clip, the kept rectangle, power, calling a socket are in py2asm; begun, v3.0.26: the object read through and named - docs/DESKTOP.md has its parts and the five steps of the rewriting; no line of the new one is written yet]** Desktop rewritten as source meant to be read (PyTon + pages) | L |
 | 23 | More desktops: slide for a new one as on a phone; or one endless desktop that scrolls like a film strip, a column a frame, more added when needed | M after 22 |
 | 24 | The desktop split in 4 or 9 instances at once (multiboxing) | L |
 
