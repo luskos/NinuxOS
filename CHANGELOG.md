@@ -3,6 +3,10 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.19** (11 October 2026) - seen in QEMU
+  - **`tasks`** in the shell: the programs kept while the shell has the screen, a line each;
+    **`tasks close N`** closes one (its memory comes back). The first command written since the
+    recovery: the shell asks new code in the extension about a word its own table does not have.
 - **v3.0.18** (11 October 2026) - the image is the same but for the version
   - **The extension of the kernel can be moved.** The compiled kernel was read again with the
     22 pointers and 77 code starts found since (the graphics drawing, a driver, the interrupt

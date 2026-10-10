@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.18 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.19 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -55,7 +55,7 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 
 | # | what | size |
 |---|---|---|
-| 14 | **[written and seen in QEMU, v3.0.16; `tasks` still to do]** Programs live on: leaving the desktop closes nothing; `tasks`; then `kill` means something | L |
+| 14 | **[done: v3.0.16 and `tasks` in v3.0.19, seen in QEMU]** Programs live on: leaving the desktop closes nothing; `tasks`; then `kill` means something | L |
 | 15 | A second copy of the table of the cabinet and of the kernel; writes whole or not at all | M |
 | 16 | The silent backup of the user and its pool, with a manager of the pool's space | M-L |
 | 17 | A desktop program is handed only what it needs; relays for the rest (the keyboard on the screen for the shell is one) | L |
@@ -207,8 +207,15 @@ So "leaving the desktop closes nothing" is three changes, and each has to be see
       telling: it asks the multiplexer for the tasks. Seen in QEMU (`test/qemu/q_v3_live.txt`):
       Files left open, to the shell, `mem`, `desktop` - Files is there with the same line
       chosen, takes keys, closes with Esc; leaving with nothing open ends as before.
-- [ ] `tasks` in the shell lists the eight places; `kill N` closes a kept one (today `kill NAME`
-      is the old command; not tried on a kept program).
+- [x] v3.0.19: `tasks` in the shell lists the kept programs (number, name); `tasks close N`
+      closes one and gives its memory back; when the last is closed the multiplexer's own memory
+      goes too. Seen in QEMU (`test/qemu/q_v3_tasks.txt`). The shell's table of commands is in
+      the core, which cannot grow: the shell now asks `shell_more` (in the extension) about a
+      word it does not know, before it looks for an object of that name - new commands go there.
+      `help` does not list `tasks` (its text is in the core too).
+- [ ] The extension has room up to 0x78000 and ends at 0x76DC0 now: about 4.6 KB are left for
+      new kernel code. Before more is written the limit has to be understood and raised (the
+      kernel checks addresses against 0x78000; the first suit is loaded at 0x80000).
 - [ ] Not tried: several kept programs at once, a full-screen one (Photon), `cores all`,
       what `update`, `maint` and `shutdown` do while programs are kept.
 - Later, for relays and music: turns also while the shell is in front, with drawing held back.

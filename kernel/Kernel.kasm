@@ -4182,8 +4182,13 @@ L_0b018:
         jmp short L_0b044
 
 L_0b021:
+%ifdef PLAIN_KERNEL
         mov rdi,rbx
         call fn_0ad17
+%else
+        call near shell_more            ; v3.0.19: commands written after the recovery (the same 8 bytes)
+        times 3 nop
+%endif
         test rax,rax
         jz short L_0b038
         mov rdi,rbx
@@ -50242,6 +50247,111 @@ mux_order_put:
         mov rdx,[rax+rcx*8-0x8]
         mov [rel d_56480],rdx
         retq
+; ---- v3.0.19: `tasks` - the programs that are kept while the shell has the screen -----------
+;       tasks             a line a kept program: its number and its name
+;       tasks close N     close the kept program number N (what it had not saved is lost)
+; The table of the shell's commands is in the core, which cannot grow. So the shell comes here
+; when a word is not in that table, before it looks for an object of that name.
+shell_more:                             ; rbx = the word, r12 = what follows it
+        lea rsi,[rel tasks_word]        ; stands for: mov rdi,rbx / call fn_0ad17
+        mov rdi,rbx
+        call fn_5612f                   ; the same word?
+        test eax,eax
+        jnz near tasks_command
+        mov rdi,rbx                     ; not ours: on with what the shell did here
+        jmp near fn_0ad17
+tasks_command:
+        add rsp,0x8                     ; the command is done here: back to the end of the shell's function
+        cmp byte [rel mux_kept],0x0
+        jz near tasks_nothing
+        cmp byte [r12],0x0
+        jnz near tasks_close
+        mov ebx,0x1
+tasks_line:
+        mov rdi,rbx
+        call fn_53fdf                   ; the record of task rbx
+        mov r13,rax
+        cmp qword [r13],0x1
+        jnz near tasks_next
+        lea rdi,[rel tasks_says_gap]
+        call api_print
+        lea edi,[rbx+0x30]
+        call api_put_letter
+        lea rdi,[rel tasks_says_gap]
+        call api_print
+        lea rdi,[r13+0x120]             ; its name
+        call api_print
+        lea rdi,[rel tasks_says_end]
+        call api_print
+tasks_next:
+        inc rbx
+        cmp rbx,0x8
+        jc near tasks_line
+        lea rdi,[rel tasks_says_how]
+        call api_print
+        jmp near L_0b044
+tasks_close:                            ; the first of the digits 1 .. 7 in what was typed
+        mov al,[r12]
+        test al,al
+        jz near tasks_usage
+        inc r12
+        cmp al,0x31
+        jc near tasks_close
+        cmp al,0x37
+        ja near tasks_close
+        movzx ebx,al
+        sub ebx,0x30
+        mov rdi,rbx
+        call fn_53fdf
+        cmp qword [rax],0x1
+        jnz near tasks_no_such
+        mov rdi,rbx
+        call fn_543c2                   ; its memory, its window, its place
+        mov ebx,0x1                     ; was it the last one?
+tasks_left:
+        mov rdi,rbx
+        call fn_53fdf
+        cmp qword [rax],0x1
+        jz near tasks_closed
+        inc rbx
+        cmp rbx,0x8
+        jc near tasks_left
+        mov rdi,[rel d_564b8]           ; nothing is kept any more: the multiplexer's own memory goes too
+        call fn_0ca3c
+        mov qword [rel d_564b8],0x0
+        mov byte [rel mux_kept],0x0
+tasks_closed:
+        lea rdi,[rel tasks_says_closed]
+        call api_print
+        jmp near L_0b044
+tasks_no_such:
+        lea rdi,[rel tasks_says_no_such]
+        call api_print
+        jmp near L_0b044
+tasks_usage:
+        lea rdi,[rel tasks_says_usage]
+        call api_print
+        jmp near L_0b044
+tasks_nothing:
+        lea rdi,[rel tasks_says_nothing]
+        call api_print
+        jmp near L_0b044
+tasks_word:
+        db 'tasks', 0
+tasks_says_gap:
+        db '  ', 0
+tasks_says_end:
+        db 10, 0
+tasks_says_how:
+        db 'They wait until the desktop is started again. tasks close N closes one.', 10, 0
+tasks_says_nothing:
+        db 'No programs are kept. Leave the desktop with programs open and they wait here.', 10, 0
+tasks_says_usage:
+        db 'Usage: tasks | tasks close N   (N = the number tasks shows)', 10, 0
+tasks_says_no_such:
+        db 'No kept program has that number.', 10, 0
+tasks_says_closed:
+        db 'Closed.', 10, 0
 mux_kept:
         db 0x00
 mux_again:

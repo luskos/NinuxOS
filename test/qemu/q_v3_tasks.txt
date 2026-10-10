@@ -1,0 +1,38 @@
+# q_v3_tasks.txt - v3.0.19: the command tasks; a word that is no command; an object started by its name
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type tasks
+type nosuchword
+type hello
+type desktop
+waitlog [browser] page shown 60
+wait 2
+esc
+wait 2
+moveto 447 232
+click
+wait 4
+moveto 447 325
+click
+wait 4
+moveto 60 749
+click
+wait 4
+type cls
+type tasks
+type tasks close 9
+type tasks close 1
+type tasks
+type mem
+snap t01_tasks
+type desktop
+wait 8
+snap t02_desktop_one_left
+esc
+wait 3
+moveto 60 749
+click
+wait 4
+type tasks
+snap t03_tasks_end
