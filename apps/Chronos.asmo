@@ -1,0 +1,764 @@
+# Chronos - time in every shape (NinuxOS v2.9; was Clock, v1.4)
+#
+# Tabs: Clock | Stopwatch | Timer | Alarms | Calendar | World
+# The time comes from the PC's clock (the CMOS real-time clock) through
+# system("hour") ... system("year"). Alarms ring while Chronos is open.
+# v2.9.2: alarms, events and the clock's zone are kept in the object
+# "chronos_data" (save_text / load_text) - they survive power-off.
+# ESC closes (or cancels typing an event).
+
+META = {"type": "icon", "label": "Chronos", "kind": "app", "icon": "icon_chronos", "buttons": "close,min,max"}
+
+W = 600
+H = 440
+wx = 0
+wy = 0
+tab = 0
+yy = 2026
+mo = 1
+dd = 1
+hh = 0
+mi = 0
+ss = 0
+last = -1
+mx = 0
+my = 0
+# stopwatch (hundredths of a second)
+sw_run = 0
+sw_t0 = 0
+sw_acc = 0
+laps = [0, 0, 0, 0, 0, 0]
+lap_n = 0
+sw_shown = -1
+# timer (seconds)
+tm_set = 300
+tm_left = 300
+tm_run = 0
+tm_end = 0
+# alarms: hour, minute, on
+al_h = [7, 8, 12, 18, 22]
+al_m = [0, 30, 0, 0, 0]
+al_on = [0, 0, 0, 0, 0]
+ring = 0
+ring_txt = ""
+# calendar
+cal_y = 2026
+cal_m = 1
+sel_d = 1
+ev_key = [0]
+ev_txt = ["-"]
+ev_n = 1
+typing = 0
+ty = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+ty_n = 0
+# world: the zone the PC's clock shows (index into the zones)
+home = 11
+loaded = 0
+
+TABS = ["Clock", "Stopwatch", "Timer", "Alarms", "Calendar", "World"]
+MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+WDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+WD2 = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
+MDAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+SAK = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4]
+SEGS = [63, 6, 91, 79, 102, 109, 125, 7, 127, 111]
+ZN = ["Honolulu US", "Anchorage US", "Los Angeles US", "Denver US", "Chicago US", "New York US", "Sao Paulo BR", "Reykjavik IS", "London UK", "Berlin DE", "Paris FR", "Sofia BG", "Athens GR", "Cairo EG", "Istanbul TR", "Moscow RU", "Dubai AE", "Karachi PK", "New Delhi IN", "Dhaka BD", "Bangkok TH", "Beijing CN", "Tokyo JP", "Sydney AU", "Auckland NZ"]
+ZO = [-600, -540, -480, -420, -360, -300, -180, 0, 0, 60, 60, 120, 120, 120, 180, 180, 240, 300, 330, 360, 420, 480, 540, 600, 720]
+CHARS = [" ", "!", "?", "#", "$", "%", "&", "'", "(", ")", "*", "+", ",", "-", ".", "/", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":", ";", "<", "=", ">", "?", "@", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "[", "/", "]", "^", "_", "'", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "(", "|", ")", "~"]
+
+BG = 0x17161F
+PANEL = 0x1F1D2C
+BTN = 0x2E2C44
+INK = 0xECECF5
+MUTED = 0x9B9DB2
+ION = 0x7B5CFF
+AURORA = 0x00D6B4
+SOLAR = 0xFFB020
+PLASMA = 0xFF3D8B
+SKY = 0x2FB7FF
+
+
+def draw(x, y):
+    fill(x + 24, y + 4, 48, 48, 0x23415E)
+    text(x + 20, y + 58, "Chronos", 0xFFFFFF)
+
+
+def _two(n):
+    if n < 10:
+        return "0" + str(n)
+    return str(n)
+
+
+def _leap(y):
+    if y % 400 == 0:
+        return 1
+    if y % 100 == 0:
+        return 0
+    if y % 4 == 0:
+        return 1
+    return 0
+
+
+def _mdays(y, m):
+    if m == 2:
+        return 28 + _leap(y)
+    return MDAYS[m - 1]
+
+
+def _wday(y, m, d):
+    if m < 3:
+        y = y - 1
+    return (y + y // 4 - y // 100 + y // 400 + SAK[m - 1] + d) % 7
+
+
+# v2.9.6: summer time. Region of every zone: 0 none, 1 EU, 2 US, 3 AU, 4 NZ
+ZR = [0, 2, 2, 2, 2, 2, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 4]
+
+
+def _nthsun(y, m, n):
+    first = 1 + (7 - _wday(y, m, 1)) % 7
+    return first + 7 * (n - 1)
+
+
+def _lastsun(y, m):
+    last = _mdays(y, m)
+    return last - _wday(y, m, last)
+
+
+def _dst(i):
+    # 1 if zone i keeps summer time today (by the date; the switching hour is ignored)
+    r = ZR[i]
+    md = mo * 100 + dd
+    if r == 1:
+        if md >= 300 + _lastsun(yy, 3) and md < 1000 + _lastsun(yy, 10):
+            return 1
+    elif r == 2:
+        if md >= 300 + _nthsun(yy, 3, 2) and md < 1100 + _nthsun(yy, 11, 1):
+            return 1
+    elif r == 3:
+        if md >= 1000 + _nthsun(yy, 10, 1) or md < 400 + _nthsun(yy, 4, 1):
+            return 1
+    elif r == 4:
+        if md >= 900 + _lastsun(yy, 9) or md < 400 + _nthsun(yy, 4, 1):
+            return 1
+    return 0
+
+
+def _off(i):
+    return ZO[i] + 60 * _dst(i)
+
+
+def _now():
+    global yy, mo, dd, hh, mi, ss
+    yy = int(system("year"))
+    mo = int(system("month"))
+    dd = int(system("day"))
+    hh = int(system("hour"))
+    mi = int(system("minute"))
+    ss = int(system("second"))
+
+
+def _btn(x, y, w, h, label, style):
+    # style: 0 plain, 1 chosen (ion), 2 go (aurora), 3 stop (plasma)
+    color = BTN
+    ink = INK
+    if style == 1:
+        color = ION
+        ink = 0xFFFFFF
+    elif style == 2:
+        color = AURORA
+        ink = 0x0C0A1E
+    elif style == 3:
+        color = PLASMA
+        ink = 0xFFFFFF
+    fill_round(wx + x, wy + y, w, h, color, 9)
+    text(wx + x + (w - len(label) * 8) // 2, wy + y + (h - 16) // 2, label, ink)
+
+
+def _in(x, y, w, h):
+    if mx >= wx + x and mx < wx + x + w and my >= wy + y and my < wy + y + h:
+        return 1
+    return 0
+
+
+def _seg(x, y, s, n, color):
+    m = SEGS[n]
+    t = s // 5 + 2
+    if m & 1:
+        fill_round(x + t, y, s, t, color, t // 2)
+    if m & 2:
+        fill_round(x + s + t, y + t, t, s, color, t // 2)
+    if m & 4:
+        fill_round(x + s + t, y + s + t * 2, t, s, color, t // 2)
+    if m & 8:
+        fill_round(x + t, y + s * 2 + t * 2, s, t, color, t // 2)
+    if m & 16:
+        fill_round(x, y + s + t * 2, t, s, color, t // 2)
+    if m & 32:
+        fill_round(x, y + t, t, s, color, t // 2)
+    if m & 64:
+        fill_round(x + t, y + s + t, s, t, color, t // 2)
+
+
+def _big(x, y, s, n2, color):
+    _seg(x, y, s, n2 // 10, color)
+    _seg(x + s + s // 2 + 12, y, s, n2 % 10, color)
+
+
+def _colon(x, y, s, color):
+    t = s // 5 + 2
+    fill_round(x, y + s // 2 + t, t, t, color, t // 2)
+    fill_round(x, y + s + s // 2 + t, t, t, color, t // 2)
+
+
+def _save():
+    # record 0: the alarms (h, m, on x 5), 1: the clock's zone, then key / text pairs
+    s = ""
+    i = 0
+    while i < 5:
+        if i > 0:
+            s = s + ","
+        s = s + str(al_h[i]) + "," + str(al_m[i]) + "," + str(al_on[i])
+        i = i + 1
+    s = s + "\n" + str(home)
+    i = 1
+    while i < ev_n:
+        if ev_key[i] != 0:
+            s = s + "\n" + str(ev_key[i]) + "\n" + ev_txt[i]
+        i = i + 1
+    save_text("chronos_data", s)
+
+
+def _load():
+    global home, ev_n, loaded
+    if loaded == 1:
+        return 0
+    loaded = 1
+    d = load_text("chronos_data")
+    if len(d) == 0:
+        return 0
+    a = field(d, 10, 0)
+    i = 0
+    while i < 5:
+        al_h[i] = int(field(a, 44, i * 3))
+        al_m[i] = int(field(a, 44, i * 3 + 1))
+        al_on[i] = int(field(a, 44, i * 3 + 2))
+        i = i + 1
+    home = int(field(d, 10, 1))
+    k = 2
+    going = 1
+    while going == 1:
+        ks = field(d, 10, k)
+        if len(ks) == 0:
+            going = 0
+        else:
+            ev_key.append(int(ks))
+            ev_txt.append(field(d, 10, k + 1))
+            ev_n = ev_n + 1
+            k = k + 2
+    return 1
+
+
+def _frame():
+    cursor_hide()
+    window(wx, wy, W, H, "Chronos")
+    _tabs()
+    _panel()
+
+
+def _tabs():
+    i = 0
+    while i < 6:
+        st = 0
+        if i == tab:
+            st = 1
+        _btn(16 + i * 96, 40, 88, 26, TABS[i], st)
+        i = i + 1
+
+
+def _panel():
+    cursor_hide()
+    fill_round(wx + 12, wy + 74, W - 24, H - 86, PANEL, 14)
+    if tab == 0:
+        _p_clock()
+    elif tab == 1:
+        _p_stop()
+    elif tab == 2:
+        _p_timer()
+    elif tab == 3:
+        _p_alarms()
+    elif tab == 4:
+        _p_cal()
+    else:
+        _p_world()
+    if ring > 0:
+        _ringbar()
+    if mx > 0:
+        cursor_show(mx, my)
+
+
+def _p_clock():
+    s = 34
+    x = wx + 52
+    y = wy + 120
+    _big(x, y, s, hh, INK)
+    _colon(x + 158, y, s, ION)
+    _big(x + 180, y, s, mi, INK)
+    _colon(x + 338, y, s, ION)
+    _big(x + 360, y, s, ss, AURORA)
+    t = WDAYS[_wday(yy, mo, dd)] + ", " + str(dd) + " " + MONTHS[mo - 1] + " " + str(yy)
+    text(wx + (W - len(t) * 8) // 2, wy + 250, t, INK)
+    z = "This PC's clock shows the time in " + ZN[home] + " (" + _gmt(_off(home)) + ")"
+    text(wx + (W - len(z) * 8) // 2, wy + 280, z, MUTED)
+    n = 0
+    i = 0
+    while i < 5:
+        if al_on[i] == 1:
+            n = n + 1
+        i = i + 1
+    a = "Alarms on: " + str(n) + "     Events today: " + str(_events_on(yy * 10000 + mo * 100 + dd))
+    text(wx + (W - len(a) * 8) // 2, wy + 310, a, SOLAR)
+    text(wx + 40, wy + 400, "World tab: pick the zone of this PC's clock.   ESC closes.", MUTED)
+
+
+def _sw_now():
+    if sw_run == 1:
+        return sw_acc + ticks() - sw_t0
+    return sw_acc
+
+
+def _p_stop():
+    _sw_draw()
+    st = 2
+    lab = "Start"
+    if sw_run == 1:
+        st = 3
+        lab = "Stop"
+    _btn(150, 250, 90, 32, lab, st)
+    _btn(255, 250, 90, 32, "Lap", 0)
+    _btn(360, 250, 90, 32, "Reset", 0)
+    i = 0
+    while i < lap_n:
+        v = laps[i]
+        text(wx + 200, wy + 300 + i * 18, "Lap " + str(i + 1) + "   " + _two(v // 6000) + ":" + _two((v // 100) % 60) + "." + _two(v % 100), MUTED)
+        i = i + 1
+
+
+def _sw_draw():
+    v = _sw_now()
+    fill(wx + 40, wy + 100, W - 80, 130, PANEL)
+    s = 30
+    x = wx + 80
+    y = wy + 120
+    _big(x, y, s, (v // 6000) % 100, INK)
+    _colon(x + 142, y, s, ION)
+    _big(x + 164, y, s, (v // 100) % 60, INK)
+    _colon(x + 306, y, s, ION)
+    _big(x + 328, y, s, v % 100, AURORA)
+
+
+def _p_timer():
+    _tm_draw()
+    _btn(70, 250, 70, 30, "+10 s", 0)
+    _btn(150, 250, 70, 30, "+1 m", 0)
+    _btn(230, 250, 70, 30, "+5 m", 0)
+    _btn(310, 250, 70, 30, "-1 m", 0)
+    st = 2
+    lab = "Start"
+    if tm_run == 1:
+        st = 3
+        lab = "Pause"
+    _btn(390, 250, 70, 30, lab, st)
+    _btn(470, 250, 70, 30, "Reset", 0)
+    text(wx + 70, wy + 310, "Set the time, then Start. It rings at 0.", MUTED)
+
+
+def _tm_draw():
+    v = tm_left
+    fill(wx + 40, wy + 100, W - 80, 130, PANEL)
+    s = 34
+    x = wx + 140
+    y = wy + 120
+    col = INK
+    if tm_run == 1:
+        col = SOLAR
+    _big(x, y, s, (v // 60) % 100, col)
+    _colon(x + 158, y, s, ION)
+    _big(x + 180, y, s, v % 60, col)
+
+
+def _p_alarms():
+    text(wx + 40, wy + 92, "They ring while Chronos runs (also minimised).", MUTED)
+    i = 0
+    while i < 5:
+        y = 124 + i * 52
+        fill_round(wx + 36, wy + y, W - 72, 42, BG, 12)
+        col = MUTED
+        if al_on[i] == 1:
+            col = AURORA
+        text(wx + 56, wy + y + 13, "Alarm " + str(i + 1), MUTED)
+        text(wx + 150, wy + y + 13, _two(al_h[i]) + ":" + _two(al_m[i]), col)
+        _btn(220, y + 8, 46, 26, "-h", 0)
+        _btn(272, y + 8, 46, 26, "+h", 0)
+        _btn(324, y + 8, 46, 26, "-m", 0)
+        _btn(376, y + 8, 46, 26, "+m", 0)
+        lab = "Off"
+        st = 0
+        if al_on[i] == 1:
+            lab = "On"
+            st = 2
+        _btn(440, y + 8, 100, 26, lab, st)
+        i = i + 1
+
+
+def _events_on(key):
+    n = 0
+    i = 0
+    while i < ev_n:
+        if ev_key[i] == key:
+            n = n + 1
+        i = i + 1
+    return n
+
+
+def _p_cal():
+    _btn(24, 86, 34, 26, "<", 0)
+    _btn(282, 86, 34, 26, ">", 0)
+    t = MONTHS[cal_m - 1] + " " + str(cal_y)
+    text(wx + 170 - len(t) * 4, wy + 91, t, INK)
+    i = 0
+    while i < 7:
+        text(wx + 34 + i * 40, wy + 124, WD2[i], MUTED)
+        i = i + 1
+    first = _wday(cal_y, cal_m, 1)
+    n = _mdays(cal_y, cal_m)
+    d = 1
+    while d <= n:
+        p = first + d - 1
+        cx = 24 + (p % 7) * 40
+        cy = 146 + (p // 7) * 36
+        c = BG
+        k = INK
+        if cal_y == yy and cal_m == mo and d == dd:
+            c = 0x3A2F7A
+        if d == sel_d:
+            c = ION
+            k = 0xFFFFFF
+        fill_round(wx + cx, wy + cy, 36, 32, c, 9)
+        text(wx + cx + 18 - len(str(d)) * 4, wy + cy + 8, str(d), k)
+        if _events_on(cal_y * 10000 + cal_m * 100 + d) > 0:
+            fill_round(wx + cx + 15, wy + cy + 25, 6, 4, SOLAR, 2)
+        d = d + 1
+    # the events of the chosen day
+    fill_round(wx + 330, wy + 86, 248, 330, BG, 12)
+    h = "Events, " + str(sel_d) + " " + MONTHS[cal_m - 1]
+    text(wx + 344, wy + 96, h, SOLAR)
+    key = cal_y * 10000 + cal_m * 100 + sel_d
+    row = 0
+    i = 0
+    while i < ev_n:
+        if ev_key[i] == key and row < 11:
+            text(wx + 344, wy + 124 + row * 22, ev_txt[i], INK)
+            text(wx + 556, wy + 124 + row * 22, "x", PLASMA)
+            row = row + 1
+        i = i + 1
+    if row == 0:
+        text(wx + 344, wy + 124, "(none)", MUTED)
+    if typing == 1:
+        fill_round(wx + 340, wy + 366, 228, 24, 0x0C0B16, 8)
+        text(wx + 348, wy + 370, _typed() + "_", AURORA)
+        text(wx + 340, wy + 394, "Enter saves, ESC cancels", MUTED)
+    else:
+        _btn(340, 370, 228, 30, "+ Add an event", 1)
+
+
+def _typed():
+    s = ""
+    i = 0
+    while i < ty_n:
+        s = s + ty[i]
+        i = i + 1
+    return s
+
+
+def _gmt(m):
+    s = "GMT+"
+    if m < 0:
+        s = "GMT-"
+        m = 0 - m
+    r = s + str(m // 60)
+    if m % 60 != 0:
+        r = r + ":" + _two(m % 60)
+    return r
+
+
+def _p_world():
+    # the globe: an ocean disc with meridians every 15 degrees (= 1 hour)
+    gx = wx + 34
+    gy = wy + 96
+    fill_round(gx, gy, 150, 150, 0x0B3D91, 75)
+    fill_round(gx + 10, gy + 10, 130, 130, 0x1D5FA0, 65)
+    k = 0
+    while k < 7:
+        fill(gx + 20 + k * 18, gy + 14, 1, 122, 0x6FC3FF)
+        k = k + 1
+    fill(gx + 8, gy + 75, 134, 1, 0x6FC3FF)
+    fill_round(gx + 40, gy + 40, 34, 22, 0x2E9D4E, 9)
+    fill_round(gx + 84, gy + 58, 26, 40, 0x2E9D4E, 9)
+    fill_round(gx + 30, gy + 82, 22, 30, 0x2E9D4E, 9)
+    # 24 hour bands under it: where it is day now
+    u = (hh * 60 + mi - _off(home) + 1440) % 1440
+    b = 0
+    while b < 24:
+        lt = (u + b * 60 - 720 + 1440) % 1440
+        c = 0x10142A
+        if lt >= 360 and lt < 1080:
+            c = 0xFFB020
+        fill(gx - 6 + b * 7, gy + 160, 6, 10, c)
+        b = b + 1
+    text(gx - 6, gy + 174, "-12      0     +12", MUTED)
+    text(gx - 6, gy + 196, "UTC " + _two(u // 60) + ":" + _two(u % 60), INK)
+    text(gx - 6, gy + 220, "Click a city:", MUTED)
+    text(gx - 6, gy + 238, "it becomes this", MUTED)
+    text(gx - 6, gy + 256, "PC's clock zone.", MUTED)
+    i = 0
+    while i < 25:
+        col = i // 13
+        r = i % 13
+        x = 214 + col * 188
+        y = 92 + r * 24
+        t = (u + _off(i) + 1440) % 1440
+        c = INK
+        if i == home:
+            fill_round(wx + x - 6, wy + y - 3, 172, 22, 0x3A2F7A, 8)
+            c = SOLAR
+        text(wx + x, wy + y, ZN[i], c)
+        text(wx + x + 122, wy + y, _two(t // 60) + ":" + _two(t % 60), AURORA)
+        i = i + 1
+    text(wx + 214, wy + 410, "Summer time counted (EU, US, AU, NZ rules).", MUTED)
+
+
+def _ringbar():
+    fill_round(wx + 60, wy + H - 64, W - 120, 40, PLASMA, 14)
+    text(wx + 80, wy + H - 52, ring_txt + "  - click to stop", 0xFFFFFF)
+
+
+def _ring(t):
+    global ring, ring_txt
+    ring = 1
+    ring_txt = t
+    play(880, 300)
+    _panel()
+
+
+def _second():
+    # once a second: the clock, the timer, the alarms
+    global tm_left, tm_run
+    _now()
+    if tm_run == 1:
+        tm_left = tm_left - 1
+        if tm_left <= 0:
+            tm_left = 0
+            tm_run = 0
+            _ring("Timer: the time is up")
+    i = 0
+    while i < 5:
+        if al_on[i] == 1 and al_h[i] == hh and al_m[i] == mi and ss == 0:
+            _ring("Alarm " + str(i + 1) + ": " + _two(hh) + ":" + _two(mi))
+        i = i + 1
+    if ring > 0 and ss % 2 == 0:
+        play(880, 200)
+    if tab == 0 or tab == 2 or tab == 5:
+        _panel()
+
+
+def _click():
+    global tab, sw_run, sw_t0, sw_acc, lap_n, tm_set, tm_left, tm_run
+    global cal_y, cal_m, sel_d, typing, ty_n, home, ring
+    if ring > 0:
+        ring = 0
+        _panel()
+        return 0
+    i = 0
+    while i < 6:
+        if _in(16 + i * 96, 40, 88, 26) == 1:
+            tab = i
+            _tabs()
+            _panel()
+            return 0
+        i = i + 1
+    if tab == 1:
+        if _in(150, 250, 90, 32) == 1:
+            if sw_run == 1:
+                sw_acc = sw_acc + ticks() - sw_t0
+                sw_run = 0
+            else:
+                sw_t0 = ticks()
+                sw_run = 1
+            _panel()
+        elif _in(255, 250, 90, 32) == 1:
+            if lap_n < 6:
+                laps[lap_n] = _sw_now()
+                lap_n = lap_n + 1
+                _panel()
+        elif _in(360, 250, 90, 32) == 1:
+            sw_run = 0
+            sw_acc = 0
+            lap_n = 0
+            _panel()
+    elif tab == 2:
+        if _in(70, 250, 70, 30) == 1:
+            tm_left = tm_left + 10
+        elif _in(150, 250, 70, 30) == 1:
+            tm_left = tm_left + 60
+        elif _in(230, 250, 70, 30) == 1:
+            tm_left = tm_left + 300
+        elif _in(310, 250, 70, 30) == 1:
+            tm_left = tm_left - 60
+            if tm_left < 0:
+                tm_left = 0
+        elif _in(390, 250, 70, 30) == 1:
+            if tm_run == 1:
+                tm_run = 0
+            elif tm_left > 0:
+                tm_run = 1
+                tm_set = tm_left
+        elif _in(470, 250, 70, 30) == 1:
+            tm_run = 0
+            tm_left = tm_set
+        if tm_left > 5999:
+            tm_left = 5999
+        _panel()
+    elif tab == 3:
+        i = 0
+        while i < 5:
+            y = 124 + i * 52 + 8
+            if _in(220, y, 46, 26) == 1:
+                al_h[i] = (al_h[i] + 23) % 24
+            elif _in(272, y, 46, 26) == 1:
+                al_h[i] = (al_h[i] + 1) % 24
+            elif _in(324, y, 46, 26) == 1:
+                al_m[i] = (al_m[i] + 55) % 60
+            elif _in(376, y, 46, 26) == 1:
+                al_m[i] = (al_m[i] + 5) % 60
+            elif _in(440, y, 100, 26) == 1:
+                al_on[i] = 1 - al_on[i]
+            i = i + 1
+        _save()
+        _panel()
+    elif tab == 4:
+        if _in(24, 86, 34, 26) == 1:
+            cal_m = cal_m - 1
+            if cal_m < 1:
+                cal_m = 12
+                cal_y = cal_y - 1
+            sel_d = 1
+            _panel()
+            return 0
+        if _in(282, 86, 34, 26) == 1:
+            cal_m = cal_m + 1
+            if cal_m > 12:
+                cal_m = 1
+                cal_y = cal_y + 1
+            sel_d = 1
+            _panel()
+            return 0
+        first = _wday(cal_y, cal_m, 1)
+        n = _mdays(cal_y, cal_m)
+        d = 1
+        while d <= n:
+            p = first + d - 1
+            if _in(24 + (p % 7) * 40, 146 + (p // 7) * 36, 36, 32) == 1:
+                sel_d = d
+                _panel()
+                return 0
+            d = d + 1
+        if typing == 0 and _in(340, 370, 228, 30) == 1:
+            typing = 1
+            ty_n = 0
+            _panel()
+            return 0
+        key = cal_y * 10000 + cal_m * 100 + sel_d
+        row = 0
+        i = 0
+        while i < ev_n:
+            if ev_key[i] == key and row < 11:
+                if _in(550, 120 + row * 22, 20, 20) == 1:
+                    ev_key[i] = 0
+                    _save()
+                    _panel()
+                    return 0
+                row = row + 1
+            i = i + 1
+    elif tab == 5:
+        i = 0
+        while i < 25:
+            if _in(208 + (i // 13) * 188, 89 + (i % 13) * 24, 172, 22) == 1:
+                home = i
+                _save()
+                _panel()
+                return 0
+            i = i + 1
+    return 0
+
+
+def _typekey(k):
+    global typing, ty_n, ev_n
+    if k == 27:
+        typing = 0
+    elif k == 10 or k == 13:
+        if ty_n > 0:
+            ev_key.append(cal_y * 10000 + cal_m * 100 + sel_d)
+            ev_txt.append(_typed())
+            ev_n = ev_n + 1
+            _save()
+        typing = 0
+    elif k == 8:
+        if ty_n > 0:
+            ty_n = ty_n - 1
+    elif (k >= 32 and k <= 126) or (k >= 0xA0 and k <= 0xFF):   # v2.9.20: Cyrillic too
+        if ty_n < 26:
+            ty[ty_n] = CHARS[k - 32]
+            ty_n = ty_n + 1
+    _panel()
+
+
+def open(sw, sh):
+    global wx, wy, last, mx, my, cal_y, cal_m, sel_d, sw_shown
+    wx = (sw - W) // 2
+    wy = (sh - 34 - H) // 2
+    _now()
+    _load()
+    cal_y = yy
+    cal_m = mo
+    sel_d = dd
+    _frame()
+    old_b = 0
+    running = 1
+    while running == 1:
+        t = ticks()
+        if t // 100 != last:
+            last = t // 100
+            _second()
+        if tab == 1 and sw_run == 1 and t // 7 != sw_shown:
+            sw_shown = t // 7
+            cursor_hide()
+            _sw_draw()
+            cursor_show(mx, my)
+        e = poll()
+        if e == 1:
+            k = key()
+            if typing == 1:
+                _typekey(k)
+            elif k == 27:
+                running = 0
+        elif e == 2:
+            mx = mouse_x()
+            my = mouse_y()
+            b = mouse_buttons()
+            if b == 1 and old_b == 0:
+                _click()
+            old_b = b
+    log("Chronos closed")
+    return 1
+ 

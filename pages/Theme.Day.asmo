@@ -1,0 +1,13 @@
+/* theme_day - a light look. The Setup page copies it to "theme". */
+body { background: #F2F4F7; color: #1E2A36; margin: 0; }
+.top { background: #FFFFFF; padding: 14px 24px; border-bottom: 2px solid #2F6FB0; }
+.top h1 { color: #2F6FB0; margin: 0; }
+.muted { color: #5A6B7C; }
+.wrap { padding: 8px 24px; }
+.cards { display: flex; gap: 16px; }
+.card { background: #FFFFFF; border: 1px solid #C9D3DD; padding: 12px; width: 300px; }
+.card h3 { color: #2F6FB0; margin-top: 0; }
+button { background: #2F6FB0; color: #FFFFFF; border: 1px solid #1F5FA0; }
+a { color: #1F5FA0; }
+.gold { color: #B07800; }
+input { background: #FFFFFF; color: #1E2A36; border: 1px solid #2F6FB0; }

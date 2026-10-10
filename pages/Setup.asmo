@@ -1,0 +1,83 @@
+<html>
+<head>
+  <title>Setup</title>
+  <meta name="desktop" content="no">
+  <link rel="stylesheet" href="theme">
+  <style>
+    .step { padding: 10px 0; }
+    .step h2 { margin: 0 0 6px 0; }
+    .row { display: flex; gap: 10px; align-items: center; }
+    .note { border: 1px solid #7B5CFF; padding: 8px; margin-top: 10px; }
+    .big { font-size: 32px; }
+    .machine { border: 1px solid #3A3550; padding: 8px 12px; margin-top: 8px; }
+    .machine b { color: #2FB7FF; }
+  </style>
+</head>
+<body>
+  <div class="top"><h1>Welcome to NinuxOS</h1><span class="muted">First start: three small steps. You can open this page again from the desktop menu (right-click the desktop, Setup).</span></div>
+  <div class="wrap">
+    <div class="machine">
+      <b>This machine</b><br>
+      Processor: <span id="m_cpu"></span><br>
+      Cores: <span id="m_cores"></span> &nbsp;&nbsp;&nbsp; Memory: <span id="m_mem"></span><br>
+      Screen: <span id="m_screen"></span> &nbsp;&nbsp;&nbsp; Graphics: <span id="m_gfx"></span><br>
+      Disk: <span id="m_disk"></span> &nbsp;&nbsp;&nbsp; <span class="muted" id="m_ver"></span>
+    </div>
+    <div class="step">
+      <h2>1. Pick a look</h2>
+      <p class="muted">Every page uses the style object <b>theme</b>. Picking one copies it there.</p>
+      <div class="row">
+        <button onclick="night()">Night</button>
+        <button onclick="day()">Day</button>
+        <button onclick="ocean()">Ocean</button>
+      </div>
+    </div>
+    <div class="step">
+      <h2>2. Your name</h2>
+      <div class="row">
+        <input id="user" value="" onenter="done()">
+        <span class="muted">Type, then Enter or Done.</span>
+      </div>
+    </div>
+    <div class="step">
+      <h2>3. Administrator password</h2>
+      <p class="muted">It protects hidden objects. The kernel asks for it in its own window.</p>
+      <button onclick="desk.passwd">Set the password...</button>
+    </div>
+    <div class="row">
+      <button onclick="done()">Done</button>
+      <span id="msg" class="muted"></span>
+    </div>
+  </div>
+  <script type="pyton">
+set_text("m_cpu", system("cpu"))
+set_text("m_cores", system("cores"))
+set_text("m_mem", system("memory"))
+set_text("m_screen", system("screen"))
+set_text("m_gfx", system("graphics"))
+set_text("m_disk", system("disk"))
+set_text("m_ver", system("version"))
+
+def pick(name):
+    use_theme("theme_" + name)
+    reload()
+
+def night():
+    pick("night")
+
+def day():
+    pick("day")
+
+def ocean():
+    pick("ocean")
+
+def done():
+    name = value("user")
+    if name == "":
+        set_text("msg", "Please type your name first.")
+        return
+    save_object("settings", "settings", "user=" + name)
+    close()
+  </script>
+</body>
+</html>

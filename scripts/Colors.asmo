@@ -1,0 +1,14 @@
+# Colour grid - loops, if / else, and text built with str().
+window(150, 90, 540, 380, "Colours")
+row = 0
+while row < 8:
+    col = 0
+    while col < 12:
+        c = row * 32 * 65536 + col * 21 * 256 + 160
+        if (row + col) % 2 == 0:
+            c += 60
+        fill(170 + col * 42, 136 + row * 36, 38, 32, c)
+        col += 1
+    row += 1
+text(170, 432, "8 x 12 = " + str(8 * 12) + " boxes", 0xC9CEDE)
+print("drew", 8 * 12, "boxes")

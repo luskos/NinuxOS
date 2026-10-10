@@ -1,0 +1,13 @@
+/* theme_ocean - deep sea blues and coral. The Setup page copies it to "theme". */
+body { background: #062A35; color: #E4F4F7; margin: 0; }
+.top { background: #0A3D4D; padding: 14px 24px; border-bottom: 2px solid #FF8A65; }
+.top h1 { color: #FFB199; margin: 0; }
+.muted { color: #8CC4CF; }
+.wrap { padding: 8px 24px; }
+.cards { display: flex; gap: 16px; }
+.card { background: #0A3D4D; border: 1px solid #1F6B7D; padding: 12px; width: 300px; }
+.card h3 { color: #7FE0F0; margin-top: 0; }
+button { background: #127A8C; color: #FFFFFF; border: 1px solid #7FE0F0; }
+a { color: #7FE0F0; }
+.gold { color: #FFB199; }
+input { background: #0A3D4D; color: #E4F4F7; border: 1px solid #7FE0F0; }

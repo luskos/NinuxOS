@@ -1,0 +1,34 @@
+<html>
+<head>
+  <title>Studio toolbar</title>
+  <meta name="desktop" content="no">
+  <style>
+    /* v1.19: Studio's toolbar is this page. Each part names a key:
+       key.149 = F5 run, key.146 = F2 save, key.147 = F3 open,
+       key.148 = F4 new, key.145 = F1 help, key.27 = close (ESC).
+       Studio fills in {{name}} and {{star}} ("*" when changed). */
+    /* v2.9.39: a calm dark IDE look (as the editor below it): grey bar, flat buttons */
+    body { background: #3C3F41; margin: 0; padding: 6px 9px;
+           display: flex; justify-content: space-between; align-items: center; }
+    .tools { display: flex; gap: 6px; align-items: center; }
+    .b { background: #4C5052; color: #BBBBBB; padding: 4px 12px; border-radius: 4px; }
+    .b:hover { background: #4A88C7; color: #FFFFFF; }
+    .run { background: #499C54; color: #FFFFFF; }
+    .run:hover { background: #5FB865; }
+    .close:hover { background: #C75450; }
+    .info { color: #9AA7B0; }
+    .name { color: #FFC66D; }
+  </style>
+</head>
+<body>
+  <div class="tools">
+    <span class="b run" onclick="key.149">Run  F5</span>
+    <span class="b" onclick="key.146">Save F2</span>
+    <span class="b" onclick="key.147">Open F3</span>
+    <span class="b" onclick="key.148">New  F4</span>
+    <span class="b" onclick="key.145">Help F1</span>
+    <span class="b close" onclick="key.27">Close</span>
+  </div>
+  <div class="info">PyTon - runs inside NinuxOS: <span class="name">{{name}}{{star}}</span></div>
+</body>
+</html>

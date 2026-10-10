@@ -1,0 +1,48 @@
+<html>
+<head>
+  <title>Object menu</title>
+  <meta name="desktop" content="no">
+  <link rel="stylesheet" href="theme">
+  <style>
+    body { background: #1C1A2E; border: 1px solid #3E3A5C; border-radius: 16px; padding: 5px; }
+    /* v2.8: the stencil's menu */
+    .head { padding: 6px 11px; }
+    .head b { color: #F5F4FF; }
+    .list { padding: 2px 0; }
+    .item { border-radius: 11px; padding: 3px 11px; color: #ECECF5; }
+    .item:hover { background: #7B5CFF; color: #FFFFFF; }
+    .warn { color: #FF8FB8; }
+    .warn:hover { background: #FF3D8B; color: #FFFFFF; }
+    .off { color: #5A5870; }
+    .off:hover { background: #1C1A2E; color: #5A5870; }
+    .sep { height: 1px; background: #34314A; margin: 3px 8px; }
+  </style>
+</head>
+<body>
+  <div class="head"><b>{{name}}</b> <span class="muted">{{type}}, {{size}} bytes, {{state}}, {{owner}}</span></div>
+  <div class="list">
+    <div class="item" onclick="object.open">Open</div>
+    <div class="item" onclick="object.view">View</div>
+    <div class="item" onclick="object.inspect">Inspect (ASMO)</div>
+    <div class="item {{offedit}}" onclick="object.edit">Edit in Studio</div>
+    <div class="item {{offplay}}" onclick="object.play">Play</div>
+    <div class="sep"></div>
+    <div class="item" onclick="object.clone">Clone...</div>
+    <div class="item {{offsys}}" onclick="object.rename">Rename...</div>
+    <div class="item {{offsys}}" onclick="object.{{hideop}}">{{hidelabel}}</div>
+    <div class="item {{offsys}}" onclick="object.inject">Inject data from...</div>
+    <div class="item {{offsys}}" onclick="object.{{lockop}}">{{locklabel}}</div>
+    <div class="sep"></div>
+    <div class="item warn {{offsys}}" onclick="object.park">Park (recoverable)</div>
+    <div class="item warn {{offsys}}" onclick="object.drop">Drop data</div>
+    <div class="item warn {{offsys}}" onclick="object.clean">Clean data (zero)</div>
+    <div class="item warn {{offsys}} {{offcode}}" onclick="object.cleansockets">Clean sockets</div>
+    <div class="item warn {{offsys}}" onclick="object.erase">Erase for good</div>
+    <div class="sep"></div>
+    <div class="item {{offnet}}" onclick="object.share">Share</div>
+    <div class="item {{offnet}}" onclick="object.transfer">Transfer</div>
+    <div class="item {{offnet}}" onclick="object.broadcast">Broadcast</div>
+    <div class="item {{offnet}}" onclick="object.subscribe">Subscribe</div>
+  </div>
+</body>
+</html>

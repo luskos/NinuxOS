@@ -1,0 +1,4 @@
+# what the tools make again by themselves
+tools/kdis/work/
+__pycache__/
+*.pyc

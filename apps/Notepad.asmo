@@ -1,0 +1,511 @@
+# notepad.py - Notepad: write and keep plain text (NinuxOS v2.9.6)
+#
+# Type to write. Arrows, Home / End, PgUp / PgDn move; Backspace / Delete erase.
+# Long lines wrap. Click the name box (or Tab) to type a name; F2 or Save keeps
+# the text as an object with that name, F3 or Open brings it back. New empties.
+# ESC closes (twice if the text was changed and not saved).
+# v2.9.33 - the clipboard (the object "clipboard", shared by every program):
+# Ctrl+C copies the whole text, Ctrl+X cuts the line the cursor is on,
+# Ctrl+V pastes at the cursor.
+# v2.9.40 - choosing text: Shift + the arrows (Home, End, PgUp, PgDn) marks
+# from where the cursor was; Ctrl+A marks everything. With something marked,
+# Ctrl+C / Ctrl+X take just that, typing or Ctrl+V replaces it, Backspace /
+# Delete remove it.
+
+META = {"type": "icon", "label": "Notepad", "kind": "app", "icon": "icon_notepad"}
+
+WX = 190
+WY = 70
+WW = 640
+WH = 560
+C = 76
+R = 24
+TX0 = 202
+TY0 = 140
+LH = 18
+MAXN = 20000
+TX = []
+NM = []
+CL = []
+RATES = [0, 7, 12, 16, 18]
+rate_i = 0
+cur = 0
+sel = -1
+top = 0
+crow = 0
+ccol = 0
+rows = 1
+focus = 0
+changed = 0
+warned = 0
+status = "Type to write. F2 saves, F3 opens, Tab: the name."
+
+
+def draw(x, y):
+    fill_round(x + 28, y + 4, 40, 48, 0xF5F4FF, 6)
+    fill(x + 34, y + 14, 28, 3, 0x7B5CFF)
+    fill(x + 34, y + 22, 28, 3, 0x9AA0B6)
+    fill(x + 34, y + 30, 22, 3, 0x9AA0B6)
+    fill(x + 34, y + 38, 26, 3, 0x9AA0B6)
+    text(x + 18, y + 58, "Notepad", 0xFFFFFF)
+
+
+def _name():
+    return textof(NM)
+
+
+def _status(s):
+    global status
+    status = s
+    fill(WX + 12, WY + 532, WW - 24, 18, 0x1C1C2A)
+    text(WX + 14, WY + 533, status, 0xC9CEDE)
+
+
+def _bar():
+    fill(WX + 12, WY + 36, WW - 24, 30, 0x1D1D27)
+    fill_round(WX + 12, WY + 38, 60, 26, 0x2A2A3C, 8)
+    text(WX + 26, WY + 43, "New", 0xF5F4FF)
+    fill_round(WX + 78, WY + 38, 60, 26, 0x2A2A3C, 8)
+    text(WX + 88, WY + 43, "Open", 0xF5F4FF)
+    fill_round(WX + 144, WY + 38, 60, 26, 0x7B5CFF, 8)
+    text(WX + 154, WY + 43, "Save", 0xF5F4FF)
+    c = 0x2A2A3C
+    if focus == 1:
+        c = 0x3A3460
+    fill_round(WX + 214, WY + 38, 240, 26, c, 8)
+    nm = _name()
+    if focus == 1:
+        nm = nm + "_"
+    text(WX + 224, WY + 43, nm, 0xECECF5)
+    mark = ""
+    if changed == 1:
+        mark = "changed"
+    fill(WX + 466, WY + 43, 84, 18, 0x1D1D27)
+    text(WX + 470, WY + 43, mark, 0xFFB020)
+    # v2.9.49: for what age the text is (a click goes to the next one) - it is
+    # stamped on the object when it is saved, and the machine's `level` decides
+    # who may open it
+    fill_round(WX + WW - 86, WY + 38, 72, 26, 0x2A2A3C, 8)
+    text(WX + WW - 78, WY + 43, "age " + str(RATES[rate_i]), 0xECECF5)
+
+
+def _layout():
+    # where every visual row starts (long lines wrap) and where the cursor is
+    global crow, ccol, rows
+    while len(STARTS) > 0:
+        STARTS.pop()
+    while len(LENS) > 0:
+        LENS.pop()
+    n = len(TX)
+    i = 0
+    row = 0
+    col = 0
+    start = 0
+    crow = 0
+    ccol = 0
+    while i < n:
+        if i == cur:
+            crow = row
+            ccol = col
+        c = TX[i]
+        if c == 10:
+            STARTS.append(start)
+            LENS.append(col)
+            row = row + 1
+            col = 0
+            i = i + 1
+            start = i
+        elif col >= C:
+            STARTS.append(start)
+            LENS.append(col)
+            row = row + 1
+            col = 0
+            start = i
+        else:
+            col = col + 1
+            i = i + 1
+    if cur >= n:
+        crow = row
+        ccol = col
+    STARTS.append(start)
+    LENS.append(col)
+    rows = row + 1
+
+
+def _scroll():
+    global top
+    if crow < top:
+        top = crow
+    if crow >= top + R:
+        top = crow - R + 1
+
+
+def _text():
+    _layout()
+    _scroll()
+    fill(WX + 12, WY + 68, WW - 24, R * LH + 8, 0x0E1016)
+    a = sel
+    b = cur
+    if a > b:
+        a = cur
+        b = sel
+    r = 0
+    while r < R and top + r < rows:
+        s = STARTS[top + r]
+        e = s + LENS[top + r]
+        if sel >= 0 and a < b:
+            # the marked part of this row (a row's end counts too: its new line)
+            ia = a
+            if ia < s:
+                ia = s
+            ib = b
+            if ib > e + 1:
+                ib = e + 1
+            if ia < ib and ia <= e:
+                fill(TX0 + (ia - s) * 8, TY0 + r * LH - 1, (ib - ia) * 8, 17, 0x2A4A7A)
+        textl(TX0, TY0 + r * LH, TX, s, LENS[top + r], 0xE6E8F2)
+        r = r + 1
+    if focus == 0:
+        fill(TX0 + ccol * 8, TY0 + (crow - top) * LH - 1, 2, 17, 0x00D6B4)
+
+
+def _frame():
+    window(WX, WY, WW, WH, "Notepad")
+    _bar()
+    _text()
+    _status(status)
+
+
+def _clear():
+    while len(TX) > 0:
+        TX.pop()
+
+
+def _save():
+    global changed, warned
+    if len(NM) == 0:
+        _status("Type a name first (click the name box or press Tab).")
+        return 0
+    n = len(TX)
+    save_rating(RATES[rate_i])
+    r = save_text(_name(), textof(TX))
+    if r == 0:
+        changed = 0
+        warned = 0
+        _bar()
+        _status("Saved as '" + _name() + "' (" + str(n) + " characters).")
+    else:
+        _status("Could not save '" + _name() + "' (code " + str(r) + ").")
+    return r
+
+
+def _open():
+    global cur, top, changed, warned
+    if len(NM) == 0:
+        _status("Type the name of the text to open first.")
+        return 0
+    s = load_text(_name())
+    n = len(s)
+    if n == 0:
+        _status("No text called '" + _name() + "'.")
+        return 0
+    _clear()
+    i = 0
+    while i < n and i < MAXN:
+        TX.append(code(s, i))
+        i = i + 1
+    cur = 0
+    top = 0
+    changed = 0
+    warned = 0
+    _bar()
+    _text()
+    _status("Opened '" + _name() + "' (" + str(n) + " characters).")
+    return 1
+
+
+def _line_start(i):
+    while i > 0 and TX[i - 1] != 10:
+        i = i - 1
+    return i
+
+
+def _del_sel():
+    # the marked text goes -> 1 (nothing marked: 0)
+    global cur, sel, changed
+    if sel < 0 or sel == cur:
+        sel = -1
+        return 0
+    a = sel
+    b = cur
+    if a > b:
+        a = cur
+        b = sel
+    i = a
+    while i < b:
+        TX.pop(a)
+        i = i + 1
+    cur = a
+    sel = -1
+    changed = 1
+    return 1
+
+
+def _copy_sel():
+    # the marked text into the clipboard -> how many characters
+    a = sel
+    b = cur
+    if a > b:
+        a = cur
+        b = sel
+    while len(CL) > 0:
+        CL.pop()
+    i = a
+    while i < b:
+        CL.append(TX[i])
+        i = i + 1
+    save_text("clipboard", textof(CL))
+    return b - a
+
+
+def _clip(k):
+    # v2.9.33: 3 = Ctrl+C, 24 = Ctrl+X, 22 = Ctrl+V; v2.9.40: 1 = Ctrl+A
+    global cur, sel, changed, warned
+    if k == 1:
+        sel = 0
+        cur = len(TX)
+        _text()
+        _bar()
+        _status("Everything is marked: Ctrl+C copies, Ctrl+X cuts, typing replaces it.")
+        return 1
+    if sel >= 0 and sel != cur and (k == 3 or k == 24):
+        n = _copy_sel()
+        if k == 24:
+            _del_sel()
+            warned = 0
+            _text()
+            _bar()
+            _status("Cut: " + str(n) + " characters. Ctrl+V pastes them.")
+        else:
+            _status("Copied: " + str(n) + " characters. Ctrl+V pastes them - here or in another program.")
+        return 1
+    if k == 3:
+        save_text("clipboard", textof(TX))
+        _status("Copied: the whole text. Ctrl+V pastes it - here or in another program.")
+        return 1
+    if k == 24:
+        a = _line_start(cur)
+        b = a
+        while b < len(TX) and TX[b] != 10:
+            b = b + 1
+        while len(CL) > 0:
+            CL.pop()
+        i = a
+        while i < b:
+            CL.append(TX[i])
+            i = i + 1
+        save_text("clipboard", textof(CL))
+        i = a
+        while i < b:
+            TX.pop(a)
+            i = i + 1
+        if a < len(TX):
+            TX.pop(a)
+        cur = a
+        changed = 1
+        warned = 0
+        _text()
+        _bar()
+        _status("Cut: this line. Ctrl+V pastes it.")
+        return 1
+    s = load_text("clipboard")
+    n = len(s)
+    if n == 0:
+        _status("The clipboard is empty.")
+        return 0
+    _del_sel()
+    i = 0
+    while i < n and len(TX) < MAXN:
+        TX.insert(cur, code(s, i))
+        cur = cur + 1
+        i = i + 1
+    changed = 1
+    warned = 0
+    _text()
+    _bar()
+    _status("Pasted " + str(i) + " characters.")
+    return 1
+
+
+def _row_col(row, col):
+    # the buffer index at a visual row and column (as near as the row allows)
+    if row < 0:
+        return 0
+    if row >= rows:
+        return len(TX)
+    if col > LENS[row]:
+        col = LENS[row]
+    return STARTS[row] + col
+
+
+def _edit(k):
+    global cur, sel, changed, warned
+    n = len(TX)
+    if k >= 0x80 and k <= 0x88 and k != 0x86:
+        # a key that moves: with Shift it marks from where the cursor was
+        if key_mods() & 1 == 1:
+            if sel < 0:
+                sel = cur
+        else:
+            sel = -1
+    elif sel >= 0:
+        if _del_sel() == 1:
+            n = len(TX)
+            if k == 8 or k == 0x86:
+                warned = 0
+                _text()
+                _bar()
+                return 0
+    if k == 8:
+        if cur > 0:
+            TX.pop(cur - 1)
+            cur = cur - 1
+            changed = 1
+    elif k == 0x86:
+        if cur < n:
+            TX.pop(cur)
+            changed = 1
+    elif k == 10 or k == 13:
+        if n < MAXN:
+            TX.insert(cur, 10)
+            cur = cur + 1
+            changed = 1
+    elif k == 0x82:
+        if cur > 0:
+            cur = cur - 1
+    elif k == 0x83:
+        if cur < n:
+            cur = cur + 1
+    elif k == 0x80:
+        cur = _row_col(crow - 1, ccol)
+    elif k == 0x81:
+        cur = _row_col(crow + 1, ccol)
+    elif k == 0x84:
+        cur = _row_col(crow, 0)
+    elif k == 0x85:
+        cur = _row_col(crow, 9999)
+    elif k == 0x87:
+        cur = _row_col(crow - R, ccol)
+    elif k == 0x88:
+        cur = _row_col(crow + R, ccol)
+    elif (k >= 32 and k <= 126) or (k >= 0xA0 and k <= 0xFF):
+        # v2.9.20: also the letters above 127 - Cyrillic from the BG layout
+        # (Windows-1251: 0xC0..0xFF, and a few signs from 0xA0). 0x80..0x9F stay
+        # what they are here: the arrow, Home / End, F and Windows keys.
+        if n < MAXN:
+            TX.insert(cur, k)
+            cur = cur + 1
+            changed = 1
+    warned = 0
+    _text()
+    _bar()
+
+
+def _namekey(k):
+    global focus
+    if k == 8:
+        if len(NM) > 0:
+            NM.pop()
+    elif k == 10 or k == 13 or k == 9:
+        focus = 0
+    elif (k >= 48 and k <= 57) or (k >= 65 and k <= 90) or (k >= 97 and k <= 122) or k == 95 or k == 45:
+        if len(NM) < 15:
+            NM.append(k)
+    _bar()
+    _text()
+
+
+def _click(mx, my):
+    global focus, cur, changed, warned, top, sel, rate_i
+    if my >= WY + 38 and my < WY + 64:
+        if mx >= WX + 12 and mx < WX + 72:
+            _clear()
+            cur = 0
+            top = 0
+            changed = 0
+            warned = 0
+            _bar()
+            _text()
+            _status("A new, empty text.")
+        elif mx >= WX + 78 and mx < WX + 138:
+            _open()
+        elif mx >= WX + 144 and mx < WX + 204:
+            _save()
+        elif mx >= WX + 214 and mx < WX + 454:
+            focus = 1
+            _bar()
+            _text()
+        elif mx >= WX + WW - 86:
+            rate_i = rate_i + 1
+            if rate_i > 4:
+                rate_i = 0
+            _bar()
+            _status("Saved from now on as: for age " + str(RATES[rate_i]) + " and up (0 = everybody).")
+        return 0
+    if mx >= TX0 and my >= TY0 and my < TY0 + R * LH:
+        focus = 0
+        sel = -1
+        row = top + (my - TY0) // LH
+        col = (mx - TX0 + 4) // 8
+        cur = _row_col(row, col)
+        _bar()
+        _text()
+    return 0
+
+
+STARTS = []
+LENS = []
+
+
+def open(sw, sh):
+    global focus, warned
+    if len(NM) == 0:
+        NM.append(110)
+        NM.append(111)
+        NM.append(116)
+        NM.append(101)
+    _frame()
+    old_b = 0
+    running = 1
+    while running == 1:
+        e = poll()
+        if e == 1:
+            k = key()
+            if k == 27:
+                if changed == 1 and warned == 0:
+                    warned = 1
+                    _status("Not saved! ESC again closes anyway; F2 saves.")
+                else:
+                    running = 0
+            elif k == 0x92:
+                _save()
+            elif k == 0x93:
+                _open()
+            elif k == 9 and focus == 0:
+                focus = 1
+                _bar()
+                _text()
+            elif focus == 0 and (k == 1 or k == 3 or k == 22 or k == 24):
+                _clip(k)
+            elif focus == 1:
+                _namekey(k)
+            else:
+                _edit(k)
+        elif e == 2:
+            b = mouse_buttons()
+            if b == 1 and old_b == 0:
+                _click(mouse_x(), mouse_y())
+            old_b = b
+    log("Notepad closed")
+    return 1
+ 

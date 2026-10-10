@@ -1,0 +1,17 @@
+# v1.15: floats, dicts, slices and f-texts - PyTon inside NinuxOS
+scores = {"Ana": 9.5, "Ben": 7.25, "Cid": 8.0, "Dea": 6.75}
+window(180, 120, 660, 360, "Stats")
+total = 0.0
+row = 0
+for name in sorted(scores):
+    s = scores[name]
+    total = total + s
+    fill(200, 165 + row * 40, int(s * 34), 28, 0x6FC3FF)
+    text(560, 172 + row * 40, f"{name}: {s:.2f}", 0xECECF5)
+    row += 1
+avg = total / len(scores)
+best = max(scores.values())
+text(200, 340, f"average {avg:.3f}, best {best}, sqrt(2) = {sqrt(2):.4f}", 0xECECF5)
+word = "functional objects"
+text(200, 370, f"{word[:10]} + {word[-7:]} = {len(word)} letters", 0xECECF5)
+print(f"stats: {len(scores)} names, average {avg:.3f}")

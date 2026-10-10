@@ -1,0 +1,46 @@
+<html>
+<head>
+  <title>Welcome to NinuxOS</title>
+  <link rel="stylesheet" href="theme">
+</head>
+<body>
+  <div class="top">
+    <h1>NinuxOS</h1>
+    <span class="muted">Functional Objects: DATA + META + SOCKETS.  This page is an ASMO object too.</span>
+  </div>
+  <div class="wrap">
+    <p>Pages are written in <b>HTML + CSS</b>, the format everybody knows. There is
+    <b>no JavaScript</b>: buttons and links run <span class="gold">PyTon</span> programs,
+    object sockets and functions from the page's own <b>&lt;script type="pyton"&gt;</b>. One language everywhere.</p>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Programs</h3>
+        <p>PyTon written inside NinuxOS, run without a compiler.</p>
+        <button onclick="colors">Run colors</button>
+        <button onclick="bounce">Run bounce</button>
+      </div>
+      <div class="card">
+        <h3>Apps</h3>
+        <p>Compiled PyTon objects with their own sockets.</p>
+        <button onclick="calc">Calc</button>
+        <button onclick="studio.open">Studio</button>
+      </div>
+      <div class="card">
+        <h3>Pictures</h3>
+        <img src="photo" width="276">
+      </div>
+    </div>
+
+    <h2>Read more</h2>
+    <ul>
+      <li><a href="about">How pages work</a> - links open other page objects</li>
+      <li><a href="guide">Page guide</a> - which HTML and CSS NinuxOS understands</li>
+      <li><a href="counter">Counter</a> - a page with a PyTon script: functions, set_text, hide / show</li>
+      <li>Right-click any object for its menu: View, Inspect, Clone, Hide, Park, Erase ... (the pages <b>context</b> and <b>deskmenu</b>)</li>
+      <li>Right-click the empty desktop: hidden objects, parked objects, the administrator password</li>
+      <li>Change <b>theme</b> (a CSS object) and all pages follow</li>
+    </ul>
+  </div>
+</body>
+</html>

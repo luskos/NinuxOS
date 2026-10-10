@@ -1,0 +1,31 @@
+<html>
+<head>
+  <title>Desktop menu</title>
+  <meta name="desktop" content="no">
+  <link rel="stylesheet" href="theme">
+  <style>
+    body { background: #1C1A2E; border: 1px solid #3E3A5C; border-radius: 16px; padding: 5px; }
+    /* v2.8: the stencil's menu */
+    .head { padding: 6px 11px; }
+    .head b { color: #9B9DB2; }
+    .list { padding: 2px 0; }
+    .item { border-radius: 11px; padding: 4px 11px; color: #ECECF5; }
+    .item:hover { background: #7B5CFF; color: #FFFFFF; }
+    .sep { height: 1px; background: #34314A; margin: 3px 8px; }
+  </style>
+</head>
+<body>
+  <div class="head"><b>Desktop</b></div>
+  <div class="list">
+    <div class="item" onclick="desk.showhidden">Show hidden objects...</div>
+    <div class="item" onclick="desk.hidehidden">Hide them again</div>
+    <div class="item" onclick="desk.parked">Parked objects</div>
+    <div class="item" onclick="desk.passwd">Administrator password...</div>
+    <div class="item" onclick="desk.setup">Setup (look, name)</div>
+    <div class="sep"></div>
+    <div class="item" onclick="desk.studio">Studio (new program or page)</div>
+    <div class="item" onclick="desk.browser">NET</div>
+    <div class="item" onclick="system.shell">Shell</div>
+  </div>
+</body>
+</html>

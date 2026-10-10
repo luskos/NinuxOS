@@ -1,0 +1,204 @@
+; Boot.kasm - the boot sector of NinuxOS v2.9.59 (512 bytes, loaded by the BIOS at 0x7C00).
+; Recovered from the disk image: it assembles back to the same 512 bytes.
+;   nasm -f bin Boot.kasm -o Boot.bin
+;
+; It reads KERNEL_SECTORS sectors that follow it on the disk to 0x7E00 and jumps there.
+; The first bytes are a FAT12 diskette header so that a BIOS takes the stick for a bootable disk.
+
+LOAD_SEG        equ 0x07E0              ; the kernel is read to 0x7E00
+LOAD_ADDR       equ 0x7E00
+
+; what the boot sector leaves for the loader
+BOOT_DRIVE      equ 0x0500              ; byte:  the BIOS drive number
+BOOT_LBA_OK     equ 0x0501              ; byte:  1 = the BIOS reads by LBA (int 13h, AH=42h)
+BOOT_SPT        equ 0x0502              ; word:  sectors per track
+BOOT_HEADS      equ 0x0504              ; word:  heads
+BOOT_KSECTORS   equ 0x0506              ; word:  how many sectors the kernel takes
+BOOT_START_LO   equ 0x0534              ; dword: where this system starts on the disk (LBA)
+BOOT_START_HI   equ 0x0538              ; dword: the high half of it
+
+[bits 16]
+[org 0x7C00]
+
+        jmp short start
+        nop
+
+; ---- the FAT12 header (a 1.44 MB diskette) ----
+        db 'NINUXOS '                   ; OEM name
+        dw 512                          ; bytes per sector
+        db 1                            ; sectors per cluster
+        dw 1                            ; reserved sectors
+        db 2                            ; FAT copies
+        dw 224                          ; root directory entries
+        dw 2880                         ; sectors on the disk
+        db 0xF0                         ; media
+        dw 9                            ; sectors per FAT
+        dw 18                           ; sectors per track
+        dw 2                            ; heads
+        dd 0                            ; hidden sectors
+        dd 0                            ; sectors (32-bit)
+        db 0                            ; drive number
+        db 0
+        db 0x29                         ; extended boot signature
+        db 'XNIN'                       ; volume ID
+        db 'NINUX OS   '                ; volume label
+        db 'FAT12   '                   ; file system
+
+start:
+        cli
+        xor ax, ax
+        mov ds, ax
+        mov es, ax
+        mov ss, ax
+        mov sp, 0x7C00
+        sti
+        cld
+        jmp 0x0000:.flat                ; CS = 0
+.flat:
+        mov [BOOT_DRIVE], dl
+        mov si, msg_boot
+        call print
+
+        mov word [BOOT_SPT], 18         ; until the BIOS says otherwise: a diskette
+        mov word [BOOT_HEADS], 2
+        mov byte [BOOT_LBA_OK], 0
+
+        mov ah, 0x41                    ; does the BIOS read by LBA?
+        mov bx, 0x55AA
+        mov dl, [BOOT_DRIVE]
+        int 0x13
+        jc .geometry
+        cmp bx, 0xAA55
+        jne .geometry
+        test cl, 1
+        jz .geometry
+        mov byte [BOOT_LBA_OK], 1
+
+.geometry:
+        push es
+        xor di, di
+        mov ah, 0x08                    ; the drive's geometry, for reading by CHS
+        mov dl, [BOOT_DRIVE]
+        int 0x13
+        pop es
+        jc .load
+        and cx, 0x3F
+        jz .load
+        mov [BOOT_SPT], cx
+        movzx dx, dh
+        inc dx
+        mov [BOOT_HEADS], dx
+
+.load:
+        mov cx, [kernel_sectors]
+        mov [BOOT_KSECTORS], cx
+        mov eax, [start_lba]
+        mov [BOOT_START_LO], eax
+        mov edx, [start_lba_hi]
+        mov [BOOT_START_HI], edx
+        inc eax                         ; the kernel starts in the sector after this one
+        mov bx, LOAD_SEG
+.next:
+        mov es, bx
+        call read_sector
+        add bx, 0x20                    ; 512 bytes further
+        inc eax
+        loop .next
+
+        xor ax, ax
+        mov es, ax
+        mov dl, [BOOT_DRIVE]
+        jmp 0x0000:LOAD_ADDR
+
+; read_sector: sector EAX to ES:0000, three tries, then "Disk read error" and stop
+read_sector:
+        pushad
+        mov bp, 3
+.try:
+        cmp byte [BOOT_LBA_OK], 1
+        jne .chs
+        mov [dap_segment], es
+        mov [dap_lba], eax
+        mov si, dap
+        mov dl, [BOOT_DRIVE]
+        mov ah, 0x42
+        int 0x13
+        jnc .done
+        jmp short .again
+.chs:
+        push eax
+        xor edx, edx
+        movzx ecx, word [BOOT_SPT]
+        div ecx
+        mov di, dx
+        inc di                          ; DI = sector (1-based)
+        xor edx, edx
+        movzx ecx, word [BOOT_HEADS]
+        div ecx                         ; EAX = cylinder, DX = head
+        mov ch, al
+        mov cl, ah
+        shl cl, 6
+        mov ax, di
+        or cl, al
+        mov dh, dl
+        mov dl, [BOOT_DRIVE]
+        xor bx, bx
+        mov ax, 0x0201
+        int 0x13
+        pop eax
+        jnc .done
+.again:
+        push eax
+        xor ah, ah                      ; reset the drive
+        mov dl, [BOOT_DRIVE]
+        int 0x13
+        pop eax
+        dec bp
+        jnz .try
+        mov si, msg_error
+        call print
+        cli
+        hlt
+.stop:
+        jmp short .stop
+.done:
+        popad
+        ret
+
+; print: the zero-ended text at SI, through the BIOS
+print:
+        pusha
+.char:
+        lodsb
+        test al, al
+        jz .end
+        mov ah, 0x0E
+        mov bx, 0x0007
+        int 0x10
+        jmp short .char
+.end:
+        popa
+        ret
+
+; the packet for int 13h, AH=42h
+dap:
+        db 0x10, 0
+        dw 1                            ; one sector
+        dw 0                            ; offset
+dap_segment:
+        dw 0
+dap_lba:
+        dd 0
+        dd 0
+
+msg_boot:       db 'NinuxOS boot', 13, 10, 0
+msg_error:      db 'Disk read error', 0
+
+; ---- filled in by the build / by install: where this system lies on its disk ----
+        times 0x1AC - ($ - $$) db 0
+start_lba_hi:   dd 0
+start_lba:      dd 0
+kernel_sectors: dw 480
+
+        times 510 - ($ - $$) db 0
+        dw 0xAA55

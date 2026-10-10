@@ -1,0 +1,336 @@
+# phone.py - Phone (NinuxOS v2.9.49)
+#
+# Tabs: Dial | Contacts | Messages (click, or F1 F2 F3).
+# Dial: the pad or the number keys; Backspace erases; "Save" keeps the number
+#   as a contact (type its name on the Contacts tab, Enter).
+# Contacts: a click puts that number on the dial. Messages: type, Enter keeps
+#   it (a note to yourself until there is somebody to send it to).
+# Kept in the object "phone_data". ESC closes.
+
+META = {"type": "icon", "label": "Phone", "kind": "app", "icon": "icon_phone", "buttons": "close,min"}
+
+WW = 300
+WH = 520
+MAXC = 8
+MAXM = 8
+wx = 0
+wy = 0
+tab = 0
+NUM = []
+NAME = []
+MSG = []
+CN = []
+CP = []
+MS = []
+nc = 0
+nm = 0
+PAD = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"]
+TABS = ["Dial", "Contacts", "Messages"]
+status = "No SIM: calls need a modem (not there yet)."
+
+
+def draw(x, y):
+    fill_round(x + 34, y + 4, 28, 50, 0x1C2030, 6)
+    fill_round(x + 37, y + 9, 22, 34, 0x00D6B4, 3)
+    fill_round(x + 45, y + 46, 6, 4, 0x9AA0B6, 2)
+    text(x + 28, y + 58, "Phone", 0xFFFFFF)
+
+
+def _status(s):
+    global status
+    status = s
+    fill(wx + 12, wy + 494, WW - 24, 18, 0x10141C)
+    text(wx + 14, wy + 495, status, 0x9AA0B6)
+
+
+def _set(L, s):
+    while len(L) > 0:
+        L.pop()
+    i = 0
+    while i < len(s):
+        L.append(code(s, i))
+        i = i + 1
+
+
+def _save():
+    s = str(nc) + char(30) + str(nm)
+    i = 0
+    while i < nc:
+        s = s + char(30) + CN[i] + char(30) + CP[i]
+        i = i + 1
+    i = 0
+    while i < nm:
+        s = s + char(30) + MS[i]
+        i = i + 1
+    save_text("phone_data", s)
+
+
+def _load():
+    global nc, nm
+    d = load_text("phone_data")
+    if len(d) == 0:
+        return 0
+    a = int(field(d, 30, 0))
+    b = int(field(d, 30, 1))
+    if a > MAXC:
+        a = MAXC
+    if b > MAXM:
+        b = MAXM
+    i = 0
+    while i < a:
+        CN[i] = field(d, 30, 2 + i * 2)
+        CP[i] = field(d, 30, 3 + i * 2)
+        i = i + 1
+    i = 0
+    while i < b:
+        MS[i] = field(d, 30, 2 + a * 2 + i)
+        i = i + 1
+    nc = a
+    nm = b
+    return 1
+
+
+def _top():
+    fill(wx + 12, wy + 36, WW - 24, 30, 0x10141C)
+    text(wx + 20, wy + 43, system("hour") + ":" + system("minute"), 0xECECF5)
+    text(wx + WW - 76, wy + 43, "no SIM", 0x6B7088)
+    i = 0
+    while i < 3:
+        c = 0x1C2030
+        if i == tab:
+            c = 0x00917A
+        fill_round(wx + 14 + i * 92, wy + 70, 88, 26, c, 8)
+        text(wx + 24 + i * 92, wy + 75, TABS[i], 0xF5F4FF)
+        i = i + 1
+
+
+def _dial():
+    fill(wx + 12, wy + 102, WW - 24, 386, 0x16161F)
+    fill_round(wx + 20, wy + 110, WW - 40, 40, 0x10141C, 8)
+    text(wx + 30, wy + 122, textof(NUM), 0x00D6B4)
+    i = 0
+    while i < 12:
+        bx = wx + 30 + (i % 3) * 82
+        by = wy + 162 + (i // 3) * 62
+        fill_round(bx, by, 74, 54, 0x2A2A3C, 12)
+        text(bx + 33, by + 19, PAD[i], 0xF5F4FF)
+        i = i + 1
+    fill_round(wx + 30, wy + 414, 74, 44, 0x1F6B3A, 12)
+    text(wx + 50, wy + 428, "Call", 0xF5F4FF)
+    fill_round(wx + 112, wy + 414, 74, 44, 0x24324A, 12)
+    text(wx + 132, wy + 428, "Save", 0xF5F4FF)
+    fill_round(wx + 194, wy + 414, 74, 44, 0x4A2430, 12)
+    text(wx + 214, wy + 428, "Back", 0xF5F4FF)
+
+
+def _contacts():
+    fill(wx + 12, wy + 102, WW - 24, 386, 0x16161F)
+    text(wx + 20, wy + 108, "New: type a name, Enter keeps it with", 0x6B7088)
+    text(wx + 20, wy + 126, "the number on the dial: " + textof(NUM), 0x6B7088)
+    fill_round(wx + 20, wy + 148, WW - 40, 28, 0x2A2A3C, 8)
+    text(wx + 28, wy + 154, textof(NAME) + "_", 0xECECF5)
+    i = 0
+    while i < nc:
+        y = wy + 186 + i * 34
+        fill_round(wx + 20, y, WW - 40, 30, 0x1C2030, 8)
+        text(wx + 28, y + 7, CN[i], 0xECECF5)
+        text(wx + 160, y + 7, CP[i], 0x00D6B4)
+        i = i + 1
+    if nc == 0:
+        text(wx + 28, wy + 192, "(no contacts yet)", 0x6B7088)
+
+
+def _messages():
+    fill(wx + 12, wy + 102, WW - 24, 386, 0x16161F)
+    i = 0
+    while i < nm:
+        y = wy + 110 + i * 40
+        fill_round(wx + 40, y, WW - 60, 34, 0x00917A, 10)
+        text(wx + 48, y + 9, MS[i], 0xF5F4FF)
+        i = i + 1
+    if nm == 0:
+        text(wx + 28, wy + 116, "(nothing yet - type below)", 0x6B7088)
+    fill_round(wx + 20, wy + 448, WW - 40, 30, 0x2A2A3C, 8)
+    text(wx + 28, wy + 455, textof(MSG) + "_", 0xECECF5)
+
+
+def _body():
+    if tab == 0:
+        _dial()
+    elif tab == 1:
+        _contacts()
+    else:
+        _messages()
+
+
+def _frame():
+    cursor_hide()
+    window(wx, wy, WW, WH, "Phone")
+    _top()
+    _body()
+    _status(status)
+
+
+def _digit(c):
+    if len(NUM) < 20:
+        NUM.append(c)
+    if tab == 0:
+        _dial()
+
+
+def _keep_contact():
+    global nc
+    if len(NAME) == 0 or len(NUM) == 0:
+        _status("A contact is a name and a number (put the number on the dial).")
+        return 0
+    if nc >= MAXC:
+        _status("The book holds " + str(MAXC) + " contacts.")
+        return 0
+    CN[nc] = textof(NAME)
+    CP[nc] = textof(NUM)
+    nc = nc + 1
+    _set(NAME, "")
+    _save()
+    _contacts()
+    _status("Kept.")
+    return 1
+
+
+def _keep_message():
+    global nm
+    if len(MSG) == 0:
+        return 0
+    if nm >= MAXM:
+        i = 0
+        while i < MAXM - 1:
+            MS[i] = MS[i + 1]
+            i = i + 1
+        nm = MAXM - 1
+    MS[nm] = textof(MSG)
+    nm = nm + 1
+    _set(MSG, "")
+    _save()
+    _messages()
+    _status("Kept (sending needs a modem or the network).")
+    return 1
+
+
+def _press(mx, my):
+    global tab
+    if my >= wy + 70 and my < wy + 96:
+        i = (mx - wx - 14) // 92
+        if mx >= wx + 14 and i < 3:
+            tab = i
+            _top()
+            _body()
+        return 1
+    if tab == 0:
+        if my >= wy + 162 and my < wy + 162 + 4 * 62 and mx >= wx + 30:
+            c = (mx - wx - 30) // 82
+            r = (my - wy - 162) // 62
+            if c < 3 and r < 4:
+                _digit(code(PAD[r * 3 + c], 0))
+            return 1
+        if my >= wy + 414 and my < wy + 458:
+            if mx >= wx + 30 and mx < wx + 104:
+                _status("No SIM: calling needs a modem and its driver.")
+            elif mx >= wx + 112 and mx < wx + 186:
+                tab = 1
+                _top()
+                _body()
+                _status("Type the contact's name, then Enter.")
+            elif mx >= wx + 194 and mx < wx + 268:
+                if len(NUM) > 0:
+                    NUM.pop()
+                _dial()
+            return 1
+        return 0
+    if tab == 1:
+        if my >= wy + 186:
+            i = (my - wy - 186) // 34
+            if i < nc:
+                _set(NUM, CP[i])
+                tab = 0
+                _top()
+                _body()
+                _status("On the dial: " + CN[i] + ".")
+        return 1
+    return 0
+
+
+def _key(k):
+    global tab
+    if k == 0x91 or k == 0x92 or k == 0x93:
+        tab = k - 0x91
+        _top()
+        _body()
+        return 1
+    if tab == 0:
+        if (k >= 48 and k <= 57) or k == 42 or k == 35 or k == 43:
+            _digit(k)
+        elif k == 8:
+            if len(NUM) > 0:
+                NUM.pop()
+            _dial()
+        return 1
+    if tab == 1:
+        if k == 10 or k == 13:
+            _keep_contact()
+        elif k == 8:
+            if len(NAME) > 0:
+                NAME.pop()
+            _contacts()
+        elif (k >= 32 and k <= 126) or (k >= 0xC0 and k <= 0xFF):
+            if len(NAME) < 14:
+                NAME.append(k)
+            _contacts()
+        return 1
+    if k == 10 or k == 13:
+        _keep_message()
+    elif k == 8:
+        if len(MSG) > 0:
+            MSG.pop()
+        _messages()
+    elif (k >= 32 and k <= 126) or (k >= 0xC0 and k <= 0xFF):
+        if len(MSG) < 26:
+            MSG.append(k)
+        _messages()
+    return 1
+
+
+def open(sw, sh):
+    global wx, wy
+    wx = sw - WW - 360
+    if wx < 20:
+        wx = 20
+    wy = 40
+    if len(CN) == 0:
+        i = 0
+        while i < MAXC:
+            CN.append("")
+            CP.append("")
+            i = i + 1
+        i = 0
+        while i < MAXM:
+            MS.append("")
+            i = i + 1
+        _load()
+    _frame()
+    old_b = 0
+    running = 1
+    while running == 1:
+        e = poll()
+        if e == 1:
+            k = key()
+            if k == 27:
+                running = 0
+            else:
+                _key(k)
+        elif e == 2:
+            b = mouse_buttons()
+            if b == 1 and old_b == 0:
+                _press(mouse_x(), mouse_y())
+            old_b = b
+    log("Phone closed")
+    return 1
+ 

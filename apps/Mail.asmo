@@ -1,0 +1,460 @@
+# mail.py - Mail (NinuxOS v2.9.28) - the program before the post office
+#
+# What works now: your address (name@ninux), the boxes Inbox / Outbox /
+# Sent, writing a letter (To, Subject, the text), reading, deleting. Letters
+# are kept in the object "mailbox" - they are there after a restart.
+# A letter to YOURSELF arrives at once (the whole way works inside one
+# machine). A letter to anybody else waits in the Outbox: carrying it to
+# another machine needs the network on real PCs (Meta Net), which is not
+# there yet - the Outbox is exactly what will be sent when it is.
+#
+# Keys when writing: Tab = the next field, Enter in the text = a new line.
+# Click your address (top right) to change your name.
+
+META = {"type": "icon", "label": "Mail", "kind": "app", "icon": "icon_mail"}
+
+WX = 40
+WY = 30
+WW = 800
+WH = 560
+MAXM = 40
+MB = []
+MW = []
+MS = []
+MT = []
+IDX = []
+TO = []
+SUBJ = []
+BODY = []
+ME = []
+VIEW = []
+nmsg = 0
+box = 0
+sel = -1
+mode = 0
+focus = 0
+BOXES = ["Inbox", "Outbox", "Sent"]
+status = "Write = a new letter. A letter to yourself arrives at once."
+
+
+def draw(x, y):
+    fill_round(x + 26, y + 6, 44, 44, 0x2A2440, 10)
+    fill_round(x + 32, y + 16, 32, 22, 0xECECF5, 3)
+    fill(x + 34, y + 18, 28, 2, 0x2FB7FF)
+    fill(x + 40, y + 24, 16, 2, 0x9AA0B6)
+    fill(x + 40, y + 30, 16, 2, 0x9AA0B6)
+    text(x + 32, y + 58, "Mail", 0xFFFFFF)
+
+
+def _me():
+    return textof(ME) + "@ninux"
+
+
+def _set(L, s):
+    # the list L = the codes of the text s
+    while len(L) > 0:
+        L.pop()
+    i = 0
+    while i < len(s):
+        L.append(code(s, i))
+        i = i + 1
+
+
+def _status(s):
+    global status
+    status = s
+    fill(WX + 12, WY + 532, WW - 24, 18, 0x1C1C2A)
+    text(WX + 14, WY + 533, status, 0xC9CEDE)
+
+
+def _save():
+    s = str(nmsg) + "\n" + textof(ME)
+    i = 0
+    while i < nmsg:
+        s = s + "\n" + str(MB[i]) + "\n" + MW[i] + "\n" + MS[i] + "\n" + MT[i]
+        i = i + 1
+    save_text("mailbox", s)
+
+
+def _add(b, who, subj, body):
+    global nmsg
+    if nmsg >= MAXM:
+        return 0
+    MB[nmsg] = b
+    MW[nmsg] = who
+    MS[nmsg] = subj
+    MT[nmsg] = body
+    nmsg = nmsg + 1
+    return 1
+
+
+def _load():
+    global nmsg
+    d = load_text("mailbox")
+    if len(d) == 0:
+        _set(ME, "me")
+        _add(0, "ninux@ninux", "Welcome to Mail", "This is your Inbox. Write a letter to your own address to try the whole way: it arrives at once. Letters to others wait in the Outbox until NinuxOS machines can reach each other.")
+        return 0
+    m = int(field(d, 10, 0))
+    _set(ME, field(d, 10, 1))
+    if m > MAXM:
+        m = MAXM
+    i = 0
+    while i < m:
+        MB[i] = int(field(d, 10, 2 + i * 4))
+        MW[i] = field(d, 10, 3 + i * 4)
+        MS[i] = field(d, 10, 4 + i * 4)
+        MT[i] = field(d, 10, 5 + i * 4)
+        i = i + 1
+    nmsg = m
+    return 1
+
+
+def _collect():
+    global sel
+    while len(IDX) > 0:
+        IDX.pop()
+    i = nmsg - 1
+    while i >= 0:
+        if MB[i] == box:
+            IDX.append(i)
+        i = i - 1
+    sel = -1
+
+
+def _wrap(x, y, L, wide, rows, c):
+    # the codes of L as lines of at most `wide` letters; code 1 = a new line
+    n = len(L)
+    s = 0
+    k = 0
+    r = 0
+    i = 0
+    while i < n and r < rows:
+        if L[i] == 1:
+            textl(x, y + r * 18, L, s, k, c)
+            r = r + 1
+            s = i + 1
+            k = 0
+        else:
+            k = k + 1
+            if k == wide:
+                textl(x, y + r * 18, L, s, k, c)
+                r = r + 1
+                s = i + 1
+                k = 0
+        i = i + 1
+    if k > 0 and r < rows:
+        textl(x, y + r * 18, L, s, k, c)
+
+
+def _top():
+    fill(WX + 12, WY + 36, WW - 24, 30, 0x1C1C2A)
+    i = 0
+    while i < 3:
+        bx = WX + 12 + i * 96
+        c = 0x2A2A3C
+        if i == box and mode == 0:
+            c = 0x7B5CFF
+        fill_round(bx, WY + 38, 90, 26, c, 8)
+        text(bx + 12, WY + 43, BOXES[i], 0xF5F4FF)
+        i = i + 1
+    c = 0x24324A
+    if mode == 1:
+        c = 0x7B5CFF
+    fill_round(WX + 312, WY + 38, 90, 26, c, 8)
+    text(WX + 334, WY + 43, "Write", 0xF5F4FF)
+    c = 0x2A2A3C
+    if focus == 3:
+        c = 0x3A3A60
+    fill_round(WX + WW - 280, WY + 38, 264, 26, c, 8)
+    text(WX + WW - 272, WY + 43, _me(), 0x00D6B4)
+
+
+def _listing():
+    fill(WX + 12, WY + 72, WW - 24, 456, 0x16161F)
+    r = 0
+    while r < 9 and r < len(IDX):
+        i = IDX[r]
+        y = WY + 78 + r * 22
+        if r == sel:
+            fill(WX + 14, y - 2, WW - 28, 22, 0x34314A)
+        text(WX + 20, y, MW[i], 0x00D6B4)
+        text(WX + 240, y, MS[i], 0xECECF5)
+        r = r + 1
+    if len(IDX) == 0:
+        text(WX + 20, WY + 80, "(nothing in this box)", 0x6B7088)
+    fill(WX + 14, WY + 282, WW - 28, 1, 0x34314A)
+    if sel >= 0 and sel < len(IDX):
+        i = IDX[sel]
+        if box == 0:
+            text(WX + 20, WY + 292, "From: " + MW[i], 0x9AA0B6)
+        else:
+            text(WX + 20, WY + 292, "To: " + MW[i], 0x9AA0B6)
+        text(WX + 20, WY + 312, MS[i], 0xF5F4FF)
+        _set(VIEW, MT[i])
+        _wrap(WX + 20, WY + 340, VIEW, 92, 9, 0xC9CEDE)
+        fill_round(WX + WW - 110, WY + 290, 90, 26, 0x4A2430, 8)
+        text(WX + WW - 92, WY + 295, "Delete", 0xF5F4FF)
+        if box == 1:
+            text(WX + 20, WY + 508, "Waiting for the network: it leaves when this machine can reach the other one.", 0xFFB020)
+
+
+def _compose():
+    fill(WX + 12, WY + 72, WW - 24, 456, 0x16161F)
+    text(WX + 20, WY + 84, "To:", 0x9AA0B6)
+    c = 0x2A2A3C
+    if focus == 0:
+        c = 0x3A3A60
+    fill_round(WX + 100, WY + 80, 420, 24, c, 6)
+    text(WX + 108, WY + 84, textof(TO), 0xECECF5)
+    text(WX + 20, WY + 116, "Subject:", 0x9AA0B6)
+    c = 0x2A2A3C
+    if focus == 1:
+        c = 0x3A3A60
+    fill_round(WX + 100, WY + 112, 600, 24, c, 6)
+    text(WX + 108, WY + 116, textof(SUBJ), 0xECECF5)
+    c = 0x20202C
+    if focus == 2:
+        c = 0x2A2A40
+    fill_round(WX + 20, WY + 148, WW - 40, 330, c, 8)
+    _wrap(WX + 30, WY + 156, BODY, 90, 17, 0xECECF5)
+    fill_round(WX + 20, WY + 490, 90, 28, 0x24324A, 8)
+    text(WX + 44, WY + 496, "Send", 0xF5F4FF)
+    fill_round(WX + 120, WY + 490, 90, 28, 0x2A2A3C, 8)
+    text(WX + 138, WY + 496, "Cancel", 0xF5F4FF)
+    text(WX + 230, WY + 496, "Tab = the next field    (someone@ninux)", 0x6B7088)
+
+
+def _frame():
+    window(WX, WY, WW, WH, "Mail")
+    _top()
+    if mode == 1:
+        _compose()
+    else:
+        _listing()
+    _status(status)
+
+
+def _same(a, b):
+    # are two texts the same letters
+    if len(a) != len(b):
+        return 0
+    i = 0
+    while i < len(a):
+        if code(a, i) != code(b, i):
+            return 0
+        i = i + 1
+    return 1
+
+
+def _send():
+    global mode, box
+    if len(TO) == 0:
+        _status("Who is it for? Type an address in To (name@ninux).")
+        return 0
+    who = textof(TO)
+    subj = textof(SUBJ)
+    body = textof(BODY)
+    if len(subj) == 0:
+        subj = "(no subject)"
+    if _same(who, _me()) == 1 or _same(who, textof(ME)) == 1:
+        _add(2, _me(), subj, body)
+        _add(0, _me(), subj, body)
+        box = 0
+        _status("Sent - and it arrived: it is in your Inbox.")
+    else:
+        _add(1, who, subj, body)
+        box = 1
+        _status("In the Outbox: it leaves when this machine can reach '" + who + "'.")
+    _save()
+    mode = 0
+    _collect()
+    _top()
+    _listing()
+    return 1
+
+
+def _delete():
+    global nmsg
+    if sel < 0 or sel >= len(IDX):
+        return 0
+    i = IDX[sel]
+    while i < nmsg - 1:
+        MB[i] = MB[i + 1]
+        MW[i] = MW[i + 1]
+        MS[i] = MS[i + 1]
+        MT[i] = MT[i + 1]
+        i = i + 1
+    nmsg = nmsg - 1
+    _save()
+    _collect()
+    _listing()
+    _status("Deleted.")
+    return 1
+
+
+def _press(mx, my):
+    global box, mode, focus, sel
+    if my >= WY + 38 and my < WY + 64:
+        if mx >= WX + WW - 280:
+            focus = 3
+            _top()
+            _status("Type your name (letters, digits). Enter = done.")
+            return 1
+        if mx >= WX + 312 and mx < WX + 402:
+            mode = 1
+            focus = 0
+            _set(TO, "")
+            _set(SUBJ, "")
+            _set(BODY, "")
+            _top()
+            _compose()
+            return 1
+        i = (mx - WX - 12) // 96
+        if mx >= WX + 12 and i >= 0 and i < 3 and (mx - WX - 12) % 96 < 90:
+            box = i
+            mode = 0
+            focus = 0
+            _collect()
+            _top()
+            _listing()
+        return 1
+    if mode == 1:
+        if my >= WY + 80 and my < WY + 104:
+            focus = 0
+        elif my >= WY + 112 and my < WY + 136:
+            focus = 1
+        elif my >= WY + 148 and my < WY + 478:
+            focus = 2
+        elif my >= WY + 490 and my < WY + 518:
+            if mx >= WX + 20 and mx < WX + 110:
+                _send()
+                return 1
+            if mx >= WX + 120 and mx < WX + 210:
+                mode = 0
+                _top()
+                _listing()
+                return 1
+        _compose()
+        return 1
+    if my >= WY + 76 and my < WY + 76 + 9 * 22:
+        r = (my - WY - 76) // 22
+        if r < len(IDX):
+            sel = r
+            _listing()
+        return 1
+    if sel >= 0 and my >= WY + 290 and my < WY + 316 and mx >= WX + WW - 110:
+        _delete()
+        return 1
+    return 0
+
+
+def _typekey(k):
+    global focus
+    if focus == 3:
+        if k == 10 or k == 13 or k == 9:
+            focus = 0
+            if len(ME) == 0:
+                _set(ME, "me")
+            _save()
+            _status("Your address: " + _me())
+        elif k == 8:
+            if len(ME) > 0:
+                ME.pop()
+        elif (k >= 48 and k <= 57) or (k >= 97 and k <= 122) or k == 95 or k == 46:
+            if len(ME) < 20:
+                ME.append(k)
+        _top()
+        return 1
+    if mode == 0:
+        if k == 3 and sel >= 0 and sel < len(IDX):
+            _set(VIEW, MT[IDX[sel]])                      # v2.9.33: Ctrl+C = this letter's text
+            i = 0
+            while i < len(VIEW):
+                if VIEW[i] == 1:
+                    VIEW[i] = 10                          # Mail's own "new line" -> the usual one
+                i = i + 1
+            save_text("clipboard", textof(VIEW))
+            _status("Copied: the letter's text (Ctrl+V pastes it).")
+            return 1
+        return 0
+    if k == 22 and focus == 2:
+        s = load_text("clipboard")                        # v2.9.33: Ctrl+V into the letter
+        i = 0
+        while i < len(s) and len(BODY) < 1200:
+            c = code(s, i)
+            if c == 10:
+                BODY.append(1)
+            elif c >= 32:
+                BODY.append(c)
+            i = i + 1
+        _compose()
+        return 1
+    if k == 9:
+        focus = focus + 1
+        if focus > 2:
+            focus = 0
+        _compose()
+        return 1
+    if focus == 0:
+        if k == 8:
+            if len(TO) > 0:
+                TO.pop()
+        elif k == 10 or k == 13:
+            focus = 1
+        elif k > 32 and k < 127:
+            if len(TO) < 40:
+                TO.append(k)
+    elif focus == 1:
+        if k == 8:
+            if len(SUBJ) > 0:
+                SUBJ.pop()
+        elif k == 10 or k == 13:
+            focus = 2
+        elif (k >= 32 and k <= 126) or (k >= 0xA0 and k <= 0xFF):
+            if len(SUBJ) < 60:
+                SUBJ.append(k)
+    else:
+        if k == 8:
+            if len(BODY) > 0:
+                BODY.pop()
+        elif k == 10 or k == 13:
+            if len(BODY) < 1200:
+                BODY.append(1)
+        elif (k >= 32 and k <= 126) or (k >= 0xA0 and k <= 0xFF):
+            if len(BODY) < 1200:
+                BODY.append(k)
+    _compose()
+    return 1
+
+
+def open(sw, sh):
+    if len(MB) == 0:
+        i = 0
+        while i < MAXM:
+            MB.append(0)
+            MW.append("")
+            MS.append("")
+            MT.append("")
+            i = i + 1
+        _load()
+    _collect()
+    _frame()
+    old_b = 0
+    running = 1
+    while running == 1:
+        e = poll()
+        if e == 1:
+            k = key()
+            if k == 27:
+                running = 0
+            else:
+                _typekey(k)
+        elif e == 2:
+            b = mouse_buttons()
+            if b == 1 and old_b == 0:
+                _press(mouse_x(), mouse_y())
+            old_b = b
+    log("Mail closed")
+    return 1
+ 

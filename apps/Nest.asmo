@@ -1,0 +1,298 @@
+# nest.py - Nest: a source, a chain of steps, a result (NinuxOS v2.9.27)
+#
+# First version: the source is a PICTURE made in Paint (240 x 160). Type its
+# name, set up to six steps (a click on a step goes to the next kind), press
+# Run: the picture goes through the steps from left to right, and what comes
+# out is shown and saved as a new picture object  NAME_n  (with a desktop
+# icon - Paint and NET open it). The source is never changed.
+# Steps: Invert, Grey, Mirror (left <-> right), Flip (top <-> bottom),
+# Lighter, Darker, Red / Green / Blue only, Edges.
+# Later: steps that are objects of their own (their socket is the step), and
+# other sources than pictures.
+
+META = {"type": "icon", "label": "Nest", "kind": "app", "icon": "icon_nest"}
+
+WX = 60
+WY = 40
+WW = 700
+WH = 470
+CW = 240
+CH = 160
+PIX = []
+TMP = []
+STEPS = [0, 0, 0, 0, 0, 0]
+KINDS = ["-", "Invert", "Grey", "Mirror", "Flip", "Lighter", "Darker", "Red", "Green", "Blue", "Edges"]
+NK = 11
+NM = ["d", "r", "a", "w", "i", "n", "g", "", "", "", "", "", "", "", "", ""]
+nm_n = 7
+have = 0
+status = "Type the name of a picture made in Paint, set the steps, press Run."
+
+
+def draw(x, y):
+    fill_round(x + 26, y + 6, 44, 44, 0x2A2440, 10)
+    fill_round(x + 32, y + 22, 10, 12, 0xA3E635, 3)
+    fill(x + 43, y + 27, 4, 2, 0xECECF5)
+    fill_round(x + 48, y + 22, 10, 12, 0x00D6B4, 3)
+    fill(x + 59, y + 27, 4, 2, 0xECECF5)
+    fill_round(x + 64, y + 22, 4, 12, 0xFFB020, 2)
+    text(x + 32, y + 58, "Nest", 0xFFFFFF)
+
+
+def _name():
+    s = ""
+    i = 0
+    while i < nm_n:
+        s = s + NM[i]
+        i = i + 1
+    return s
+
+
+def _status(s):
+    global status
+    status = s
+    fill(WX + 12, WY + 440, WW - 24, 18, 0x1C1C2A)
+    text(WX + 14, WY + 441, status, 0xC9CEDE)
+
+
+def _namebox():
+    fill(WX + 12, WY + 38, 420, 26, 0x1C1C2A)
+    text(WX + 16, WY + 43, "Source:", 0x9AA0B6)
+    fill_round(WX + 82, WY + 40, 200, 22, 0x2A2A3C, 6)
+    text(WX + 90, WY + 43, _name() + "_", 0xECECF5)
+    fill_round(WX + 300, WY + 38, 64, 26, 0x24324A, 8)
+    text(WX + 316, WY + 43, "Run", 0xF5F4FF)
+
+
+def _chain():
+    fill(WX + 12, WY + 76, WW - 24, 40, 0x1C1C2A)
+    i = 0
+    while i < 6:
+        bx = WX + 16 + i * 110
+        c = 0x2A2A3C
+        if STEPS[i] != 0:
+            c = 0x7B5CFF
+        fill_round(bx, WY + 82, 92, 28, c, 8)
+        text(bx + 10, WY + 88, KINDS[STEPS[i]], 0xF5F4FF)
+        if i < 5:
+            fill(bx + 95, WY + 95, 12, 2, 0x9AA0B6)
+        i = i + 1
+
+
+def _show(x0, y0):
+    # PIX as a picture at a place, in runs of one colour
+    y = 0
+    while y < CH:
+        row = y * CW
+        x = 0
+        while x < CW:
+            c = PIX[row + x]
+            x2 = x + 1
+            going = 1
+            while going == 1:
+                if x2 >= CW:
+                    going = 0
+                elif PIX[row + x2] != c:
+                    going = 0
+                else:
+                    x2 = x2 + 1
+            fill(x0 + x, y0 + y, x2 - x, 1, c)
+            x = x2
+        y = y + 1
+
+
+def _frame():
+    window(WX, WY, WW, WH, "Nest")
+    _namebox()
+    _chain()
+    text(WX + 40, WY + 130, "the source", 0x9AA0B6)
+    text(WX + 400, WY + 130, "what comes out", 0x9AA0B6)
+    fill(WX + 38, WY + 148, CW + 4, CH + 4, 0x3A3A50)
+    fill(WX + 398, WY + 148, CW + 4, CH + 4, 0x3A3A50)
+    fill(WX + 40, WY + 150, CW, CH, 0x101820)
+    fill(WX + 400, WY + 150, CW, CH, 0x101820)
+    fill(WX + 300, WY + 228, 80, 2, 0x9AA0B6)
+    text(WX + 40, WY + 330, "A click on a step changes what it does. The source is never changed;", 0x6B7088)
+    text(WX + 40, WY + 350, "the result is saved as a new picture: the source's name + _n.", 0x6B7088)
+    _status(status)
+
+
+def _step(k):
+    # one step over the whole picture
+    n = CW * CH
+    i = 0
+    if k == 1:
+        while i < n:
+            PIX[i] = 0xFFFFFF - PIX[i]
+            i = i + 1
+    elif k == 2:
+        while i < n:
+            c = PIX[i]
+            g = (((c >> 16) & 255) * 77 + ((c >> 8) & 255) * 150 + (c & 255) * 29) >> 8
+            PIX[i] = g * 65536 + g * 256 + g
+            i = i + 1
+    elif k == 3:
+        y = 0
+        while y < CH:
+            a = y * CW
+            b = a + CW - 1
+            while a < b:
+                c = PIX[a]
+                PIX[a] = PIX[b]
+                PIX[b] = c
+                a = a + 1
+                b = b - 1
+            y = y + 1
+    elif k == 4:
+        y = 0
+        while y < CH // 2:
+            a = y * CW
+            b = (CH - 1 - y) * CW
+            x = 0
+            while x < CW:
+                c = PIX[a + x]
+                PIX[a + x] = PIX[b + x]
+                PIX[b + x] = c
+                x = x + 1
+            y = y + 1
+    elif k == 5 or k == 6:
+        while i < n:
+            c = PIX[i]
+            r = (c >> 16) & 255
+            g = (c >> 8) & 255
+            b = c & 255
+            if k == 5:
+                r = r + ((255 - r) >> 2)
+                g = g + ((255 - g) >> 2)
+                b = b + ((255 - b) >> 2)
+            else:
+                r = r - (r >> 2)
+                g = g - (g >> 2)
+                b = b - (b >> 2)
+            PIX[i] = r * 65536 + g * 256 + b
+            i = i + 1
+    elif k == 7:
+        while i < n:
+            PIX[i] = PIX[i] & 0xFF0000
+            i = i + 1
+    elif k == 8:
+        while i < n:
+            PIX[i] = PIX[i] & 0x00FF00
+            i = i + 1
+    elif k == 9:
+        while i < n:
+            PIX[i] = PIX[i] & 0x0000FF
+            i = i + 1
+    elif k == 10:
+        # edges: where a pixel differs from its right or lower neighbour
+        while i < n:
+            TMP[i] = PIX[i]
+            i = i + 1
+        y = 0
+        while y < CH:
+            x = 0
+            while x < CW:
+                i = y * CW + x
+                e = 0
+                if x < CW - 1:
+                    if TMP[i] != TMP[i + 1]:
+                        e = 1
+                if y < CH - 1:
+                    if TMP[i] != TMP[i + CW]:
+                        e = 1
+                if e == 1:
+                    PIX[i] = 0x000000
+                else:
+                    PIX[i] = 0xFFFFFF
+                x = x + 1
+            y = y + 1
+
+
+def _run():
+    global have
+    if nm_n == 0:
+        _status("Type the source's name first.")
+        return 0
+    n = load_image(_name(), PIX)
+    if n <= 0:
+        _status("No picture called '" + _name() + "' (make one in Paint and Save it).")
+        return 0
+    _show(WX + 40, WY + 150)
+    done = 0
+    i = 0
+    while i < 6:
+        if STEPS[i] != 0:
+            _status("Step " + str(i + 1) + ": " + KINDS[STEPS[i]] + " ...")
+            _step(STEPS[i])
+            done = done + 1
+        i = i + 1
+    _show(WX + 400, WY + 150)
+    have = 1
+    if done == 0:
+        _status("No step is set: click the boxes of the chain.")
+        return 0
+    r = save_image(_name() + "_n", CW, CH, PIX)
+    if r == 0:
+        _status("Done: " + str(done) + " steps. Saved as '" + _name() + "_n' - it is on the desktop.")
+    else:
+        _status("Done, but '" + _name() + "_n' could not be saved (code " + str(r) + ").")
+    return 1
+
+
+def _press(mx, my):
+    if my >= WY + 38 and my < WY + 64 and mx >= WX + 300 and mx < WX + 364:
+        _run()
+        return 1
+    if my >= WY + 82 and my < WY + 110:
+        i = (mx - WX - 16) // 110
+        if mx >= WX + 16 and i >= 0 and i < 6 and (mx - WX - 16) % 110 < 92:
+            STEPS[i] = STEPS[i] + 1
+            if STEPS[i] >= NK:
+                STEPS[i] = 0
+            _chain()
+        return 1
+    return 0
+
+
+def _typekey(k):
+    global nm_n
+    if k == 10 or k == 13:
+        _run()
+        return 0
+    if k == 8:
+        if nm_n > 0:
+            nm_n = nm_n - 1
+    elif (k >= 48 and k <= 57) or (k >= 97 and k <= 122) or k == 95:
+        if nm_n < 13:
+            NM[nm_n] = char(k)
+            nm_n = nm_n + 1
+    _namebox()
+    return 1
+
+
+def open(sw, sh):
+    if len(PIX) == 0:
+        i = 0
+        while i < CW * CH:
+            PIX.append(0x101820)
+            TMP.append(0)
+            i = i + 1
+    _frame()
+    old_b = 0
+    running = 1
+    while running == 1:
+        e = poll()
+        if e == 1:
+            k = key()
+            if k == 27:
+                running = 0
+            else:
+                _typekey(k)
+        elif e == 2:
+            b = mouse_buttons()
+            if b == 1 and old_b == 0:
+                _press(mouse_x(), mouse_y())
+            old_b = b
+    log("Nest closed")
+    return 1
+ 

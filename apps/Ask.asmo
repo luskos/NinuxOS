@@ -1,0 +1,473 @@
+# ask.py - Ask (NinuxOS v2.9.56)
+#
+# Before: `net on` in the shell, and the relay running on the other machine.
+# Click the address (top right) to set where the relay is; it is remembered.
+#
+# Keys: Enter = ask, Shift+Enter = a new line in the question, Ctrl+V = paste,
+# Ctrl+C = copy the last answer, Ctrl+S = keep the last answer as the text
+# object "answer" (Notepad opens it), Up / Down / PgUp / PgDn = scroll,
+# ESC = close. "New" starts a fresh conversation with the chosen service.
+# In Web the question is a page's address; in Search it is the words.
+
+META = {"type": "icon", "label": "Ask", "kind": "app", "icon": "icon_ask"}
+
+WX = 40
+WY = 30
+WW = 920
+WH = 660
+WIDE = 110
+ROWS = 25
+PORT = 7080
+MAXLOG = 90000
+TABS = ["Claude", "ChatGPT", "DeepSeek", "Web", "Search"]
+SV = ["claude", "chatgpt", "deepseek", "web", "search"]
+LOG = []
+LS = []
+LK = []
+QN = []
+LAST = []
+ADDR = []
+sv = 0
+top = 0
+focus = 0
+waiting = 0
+t0 = 0
+shown = -1
+status = "Type a question, Enter sends it. First: 'net on' in the shell, and the relay on your other PC."
+
+
+def draw(x, y):
+    fill_round(x + 26, y + 6, 44, 44, 0x1C1830, 10)
+    fill_round(x + 32, y + 14, 32, 22, 0x7B5CFF, 8)
+    fill(x + 40, y + 34, 8, 6, 0x7B5CFF)
+    text(x + 42, y + 17, "?", 0xFFFFFF)
+    text(x + 36, y + 58, "Ask", 0xFFFFFF)
+
+
+def _set(L, s):
+    while len(L) > 0:
+        L.pop()
+    i = 0
+    while i < len(s):
+        L.append(code(s, i))
+        i = i + 1
+
+
+def _status(s):
+    global status
+    status = s
+    fill(WX + 12, WY + 634, WW - 24, 18, 0x1C1C2A)
+    text(WX + 14, WY + 635, status, 0xC9CEDE)
+
+
+def _say(s):
+    # a line of Ask's own into the conversation
+    i = 0
+    while i < len(s):
+        LOG.append(code(s, i))
+        i = i + 1
+    LOG.append(10)
+
+
+def _layout():
+    # LOG -> lines of at most WIDE letters, broken at a space when there is one
+    while len(LS) > 0:
+        LS.pop()
+    while len(LK) > 0:
+        LK.pop()
+    n = len(LOG)
+    s = 0
+    k = 0
+    spc = -1
+    i = 0
+    while i < n:
+        c = LOG[i]
+        if c == 10:
+            LS.append(s)
+            LK.append(k)
+            s = i + 1
+            k = 0
+            spc = -1
+        else:
+            if c == 32:
+                spc = i
+            k = k + 1
+            if k == WIDE:
+                if spc > s and c != 32:
+                    LS.append(s)
+                    LK.append(spc - s)
+                    s = spc + 1
+                    k = i - spc
+                else:
+                    LS.append(s)
+                    LK.append(k)
+                    s = i + 1
+                    k = 0
+                spc = -1
+        i = i + 1
+    if k > 0:
+        LS.append(s)
+        LK.append(k)
+
+
+def _bottom():
+    global top
+    top = len(LS) - ROWS
+    if top < 0:
+        top = 0
+
+
+def _talk():
+    fill(WX + 12, WY + 72, WW - 24, ROWS * 18 + 12, 0x16161F)
+    r = 0
+    while r < ROWS and top + r < len(LS):
+        s = LS[top + r]
+        k = LK[top + r]
+        if k > 0:
+            c = 0xD8DCEA
+            if LOG[s] == 62:
+                c = 0x00D6B4
+            elif LOG[s] == 91:
+                c = 0xFFB020
+            textl(WX + 20, WY + 78 + r * 18, LOG, s, k, c)
+        r = r + 1
+    if len(LS) > ROWS:
+        h = ROWS * 18 * ROWS // len(LS)
+        if h < 12:
+            h = 12
+        y = (ROWS * 18 - h) * top // (len(LS) - ROWS)
+        fill(WX + WW - 18, WY + 78 + y, 4, h, 0x4A4A66)
+
+
+def _entry():
+    # the question: its last three lines
+    c = 0x20202C
+    if focus == 0:
+        c = 0x2A2A40
+    fill_round(WX + 12, WY + 540, WW - 24, 62, c, 8)
+    n = len(QN)
+    rows = 1
+    k = 0
+    i = 0
+    while i < n:
+        if QN[i] == 10 or k == WIDE:
+            rows = rows + 1
+            k = 0
+        if QN[i] != 10:
+            k = k + 1
+        i = i + 1
+    skip = rows - 3
+    if skip < 0:
+        skip = 0
+    r = 0
+    s = 0
+    k = 0
+    i = 0
+    while i < n:
+        if QN[i] == 10 or k == WIDE:
+            if r >= skip:
+                textl(WX + 20, WY + 546 + (r - skip) * 18, QN, s, k, 0xECECF5)
+            r = r + 1
+            k = 0
+            s = i
+            if QN[i] == 10:
+                s = i + 1
+        if QN[i] != 10:
+            k = k + 1
+        i = i + 1
+    if k > 0:
+        textl(WX + 20, WY + 546 + (r - skip) * 18, QN, s, k, 0xECECF5)
+    if focus == 0:
+        fill(WX + 20 + k * 8, WY + 547 + (r - skip) * 18, 7, 14, 0x7B5CFF)
+    fill(WX + 12, WY + 608, WW - 24, 20, 0x1C1C2A)
+    text(WX + 14, WY + 610, "Enter = ask   Shift+Enter = new line   Ctrl+V paste   Ctrl+C copy the answer   Ctrl+S keep it as 'answer'", 0x6B7088)
+
+
+def _top():
+    fill(WX + 12, WY + 36, WW - 24, 30, 0x1C1C2A)
+    i = 0
+    while i < 5:
+        bx = WX + 12 + i * 100
+        c = 0x2A2A3C
+        if i == sv:
+            c = 0x7B5CFF
+        fill_round(bx, WY + 38, 94, 26, c, 8)
+        text(bx + 12, WY + 43, TABS[i], 0xF5F4FF)
+        i = i + 1
+    fill_round(WX + 524, WY + 38, 60, 26, 0x24324A, 8)
+    text(WX + 538, WY + 43, "New", 0xF5F4FF)
+    c = 0x2A2A3C
+    if focus == 1:
+        c = 0x3A3A60
+    fill_round(WX + WW - 250, WY + 38, 238, 26, c, 8)
+    text(WX + WW - 242, WY + 43, "Relay " + textof(ADDR), 0x00D6B4)
+
+
+def _frame():
+    window(WX, WY, WW, WH, "Ask")
+    _top()
+    _talk()
+    _entry()
+    _status(status)
+
+
+def _go():
+    global waiting, t0, shown
+    if waiting == 1:
+        _status("Still waiting for the last answer.")
+        return 0
+    if len(QN) == 0:
+        return 0
+    q = textof(QN)
+    req = "NX1 " + SV[sv] + " " + str(len(q)) + "\n" + q
+    r = net_ask(textof(ADDR), PORT, req)
+    if r == -1:
+        _status("The network is off. In the shell: net on")
+        return 0
+    if r != 1:
+        _status("No relay answers at " + textof(ADDR) + " port 7080. Is ninux_relay.py running there?")
+        return 0
+    if len(LOG) + len(QN) > MAXLOG:
+        while len(LOG) > 0:
+            LOG.pop()
+    LOG.append(62)
+    LOG.append(32)
+    i = 0
+    while i < len(QN):
+        LOG.append(QN[i])
+        i = i + 1
+    LOG.append(10)
+    LOG.append(10)
+    while len(QN) > 0:
+        QN.pop()
+    waiting = 1
+    t0 = ticks()
+    shown = -1
+    _layout()
+    _bottom()
+    _talk()
+    _entry()
+    return 1
+
+
+def _arrived():
+    global waiting, top
+    waiting = 0
+    s = net_answer()
+    n = len(s)
+    if n == 0:
+        _say("[an empty answer]")
+    if len(LOG) + n > MAXLOG:
+        while len(LOG) > 0:
+            LOG.pop()
+    while len(LAST) > 0:
+        LAST.pop()
+    first = len(LOG)
+    i = 0
+    while i < n:
+        c = code(s, i)
+        if c == 9:
+            c = 32
+        if c == 10 or c >= 32:
+            LOG.append(c)
+            LAST.append(c)
+        i = i + 1
+    LOG.append(10)
+    LOG.append(10)
+    _layout()
+    # show the answer from its first line
+    top = 0
+    r = 0
+    while r < len(LS):
+        if LS[r] <= first:
+            top = r
+        r = r + 1
+    if top > 0:
+        top = top - 2
+    _talk()
+    _status("Answered: " + str(n) + " letters, " + str((ticks() - t0) // 100) + " s.   PgDn / PgUp scroll.")
+
+
+def _wait():
+    global waiting, shown
+    state = net_state()
+    if state == 2:
+        _arrived()
+        return 1
+    if state != 1:
+        waiting = 0
+        _say("[no answer: the line was lost or the relay took more than 5 minutes]")
+        _layout()
+        _bottom()
+        _talk()
+        _status("No answer came.")
+        return 0
+    sec = (ticks() - t0) // 100
+    if sec != shown:
+        shown = sec
+        _status("Waiting for " + TABS[sv] + " ... " + str(sec) + " s")
+    return 1
+
+
+def _new():
+    if waiting == 1:
+        _status("Still waiting for the last answer.")
+        return 0
+    while len(LOG) > 0:
+        LOG.pop()
+    _layout()
+    _bottom()
+    _talk()
+    if sv < 3:
+        _set(QN, "/new")
+        _go()
+        while len(LOG) > 0:
+            LOG.pop()
+        _layout()
+        _bottom()
+        _talk()
+    return 1
+
+
+def _scroll(d):
+    global top
+    top = top + d
+    if top > len(LS) - ROWS:
+        top = len(LS) - ROWS
+    if top < 0:
+        top = 0
+    _talk()
+
+
+def _press(mx, my):
+    global sv, focus
+    if my >= WY + 38 and my < WY + 64:
+        if mx >= WX + WW - 250:
+            focus = 1
+            _top()
+            _entry()
+            _status("The relay's address: digits and dots (in QEMU 10.0.2.2). Enter = done.")
+            return 1
+        if mx >= WX + 524 and mx < WX + 584:
+            _new()
+            return 1
+        i = (mx - WX - 12) // 100
+        if mx >= WX + 12 and i >= 0 and i < 5 and (mx - WX - 12) % 100 < 94:
+            sv = i
+            _top()
+            if sv == 3:
+                _status("Web: type a page's address (example.com). It comes as plain text.")
+            elif sv == 4:
+                _status("Search: type the words. The results come with their addresses.")
+            else:
+                _status(TABS[sv] + ": type a question. 'New' starts a fresh conversation.")
+        return 1
+    if my >= WY + 540 and my < WY + 602:
+        focus = 0
+        _top()
+        _entry()
+        return 1
+    return 0
+
+
+def _typekey(k):
+    global focus
+    if focus == 1:
+        if k == 10 or k == 13 or k == 9:
+            focus = 0
+            if len(ADDR) == 0:
+                _set(ADDR, "10.0.2.2")
+            save_text("ask_relay", textof(ADDR))
+            _status("The relay: " + textof(ADDR) + " port 7080 (remembered).")
+            _entry()
+        elif k == 8:
+            if len(ADDR) > 0:
+                ADDR.pop()
+        elif (k >= 48 and k <= 57) or k == 46:
+            if len(ADDR) < 15:
+                ADDR.append(k)
+        _top()
+        return 1
+    if k == 0x80:
+        _scroll(-1)
+    elif k == 0x81:
+        _scroll(1)
+    elif k == 0x87:
+        _scroll(2 - ROWS)
+    elif k == 0x88:
+        _scroll(ROWS - 2)
+    elif k == 3:
+        if len(LAST) > 0:
+            save_text("clipboard", textof(LAST))
+            _status("Copied: the last answer (Ctrl+V pastes it anywhere).")
+    elif k == 19:
+        if len(LAST) > 0:
+            save_text("answer", textof(LAST))
+            _status("Kept: the last answer is the text object 'answer' (Notepad opens it).")
+    elif k == 22:
+        s = load_text("clipboard")
+        i = 0
+        while i < len(s) and len(QN) < 8000:
+            c = code(s, i)
+            if c == 10 or c >= 32:
+                QN.append(c)
+            i = i + 1
+        _entry()
+    elif k == 10 or k == 13:
+        if key_mods() % 2 == 1:
+            if len(QN) < 8000:
+                QN.append(10)
+            _entry()
+        else:
+            _go()
+    elif k == 8:
+        if len(QN) > 0:
+            QN.pop()
+        _entry()
+    elif (k >= 32 and k <= 126) or (k >= 0xA0 and k <= 0xFF):
+        if len(QN) < 8000:
+            QN.append(k)
+        _entry()
+    return 1
+
+
+def open(sw, sh):
+    if len(ADDR) == 0:
+        d = load_text("ask_relay")
+        if len(d) == 0:
+            _set(ADDR, "10.0.2.2")
+        else:
+            _set(ADDR, d)
+    if len(LOG) == 0:
+        _say("[Ask] This is not a browser: it asks the services themselves, through the relay.")
+        _say("[Ask] 1. On your other PC: python tools/relay/ninux_relay.py   (the keys stay there)")
+        _say("[Ask] 2. Here, in the shell: net on")
+        _say("[Ask] 3. Click 'Relay' (top right) and type that PC's address.")
+        _say("")
+    _layout()
+    _bottom()
+    _frame()
+    old_b = 0
+    last = 0
+    running = 1
+    while running == 1:
+        e = poll()
+        if e == 1:
+            k = key()
+            if k == 27:
+                running = 0
+            else:
+                _typekey(k)
+        elif e == 2:
+            b = mouse_buttons()
+            if b == 1 and old_b == 0:
+                _press(mouse_x(), mouse_y())
+            old_b = b
+        if waiting == 1:
+            now = ticks()
+            if now - last >= 10:
+                last = now
+                _wait()
+    log("Ask closed")
+    return 1
+ 

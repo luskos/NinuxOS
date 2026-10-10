@@ -1,0 +1,88 @@
+<html>
+<head>
+  <title>Page guide</title>
+  <link rel="stylesheet" href="theme">
+  <style>
+    table { display: block; }
+    .k { color: #FFB020; }
+    .note { border: 1px solid #7B5CFF; padding: 8px; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <div class="top"><h1>Page guide</h1><span class="muted">What NinuxOS pages understand (v1.11). Scroll with the arrows, PgUp / PgDn, Space; Backspace goes back.</span></div>
+  <div class="wrap">
+    <h2>Objects, not files</h2>
+    <ul>
+      <li>a page is an object with <b>type:page</b>; its DATA is the HTML</li>
+      <li>a style sheet is an object with <b>type:style</b>: <span class="k">&lt;link rel="stylesheet" href="theme"&gt;</span></li>
+      <li>a picture is an object whose DATA is an image: <span class="k">&lt;img src="photo" width="200"&gt;</span></li>
+      <li>links name objects: <span class="k">&lt;a href="about"&gt;</span> - no .html endings anywhere</li>
+    </ul>
+
+    <h2>Actions are PyTon</h2>
+    <p>There is no JavaScript. <span class="k">onclick</span> names what to run:</p>
+    <ul>
+      <li><span class="k">onclick="colors"</span> runs a PyTon program (made in Studio)</li>
+      <li><span class="k">onclick="calc"</span> opens an app (its <b>open</b> socket)</li>
+      <li><span class="k">onclick="studio.open"</span> calls one socket of an object</li>
+      <li><span class="k">onclick="inc()"</span> calls a function from the page's own script</li>
+      <li><span class="k">onclick="system.shutdown"</span>, <span class="k">system.restart</span>, <span class="k">system.shell</span></li>
+    </ul>
+
+    <h2>Page scripts (v1.9)</h2>
+    <p>A page may carry PyTon in <span class="k">&lt;script type="pyton"&gt;</span>. The top runs once when the
+    page opens; <span class="k">def name():</span> functions run from onclick. They change the page with:</p>
+    <ul>
+      <li><span class="k">set_text("id", "text " + str(n))</span> - new content for the element with that id</li>
+      <li><span class="k">set_style("id", "color", "#FF8A80")</span> - one CSS property</li>
+      <li><span class="k">hide("id")</span>, <span class="k">show("id")</span></li>
+    </ul>
+
+    <h2>Text fields (v1.11)</h2>
+    <ul>
+      <li><span class="k">&lt;input id="name" value="" onenter="save()"&gt;</span> - click it and type; Enter runs onenter, Tab goes to the next field</li>
+      <li><span class="k">&lt;input type="password" id="pw"&gt;</span> shows stars</li>
+      <li>in the script: <span class="k">value("name")</span> gives the text, <span class="k">set_value("name", "...")</span> changes it</li>
+      <li><span class="k">save_object("settings", "settings", "user=" + name)</span> keeps data as an object;
+        <span class="k">use_theme("theme_day")</span> + <span class="k">reload()</span> changes the look; <span class="k">close()</span> closes NET</li>
+    </ul>
+    <p>PyTon in pages and in Studio now has text variables, lists, <b>for</b>, and functions with parameters
+    that return values: see the program <b>words</b> and the page <b>setup</b>.</p>
+    <p>See <a href="counter">Counter</a>. The Start menu (the power button) is a page too: <b>start</b>.</p>
+
+    <h2>Object menus (v1.10)</h2>
+    <p>The menus you get with a right-click are pages too: <b>context</b> (an object) and <b>deskmenu</b> (the desktop).
+    In them <span class="k">{{name}}</span>, <span class="k">{{type}}</span>, <span class="k">{{size}}</span>, <span class="k">{{state}}</span>
+    become the object's data, and <span class="k">class="off"</span> greys an item out.</p>
+    <ul>
+      <li><span class="k">onclick="object.view"</span>, <span class="k">object.inspect</span>, <span class="k">object.clone</span>, <span class="k">object.park</span>, <span class="k">object.erase</span> ... - the system sockets</li>
+      <li><span class="k">onclick="desk.parked"</span>, <span class="k">desk.showhidden</span>, <span class="k">desk.passwd</span></li>
+      <li>anything that changes or removes an object is asked by the kernel in its own window - a page cannot answer for you</li>
+    </ul>
+
+    <h2>Elements</h2>
+    <p>div, p, span, a, b, strong, i, em, u, h1 - h4, br, hr, img, button, ul, ol, li, pre, code,
+    section, header, footer, nav, main, article, aside, small, center, label, blockquote.
+    head, title, style, link and meta work as usual; script runs only with type="pyton".</p>
+
+    <h2>CSS</h2>
+    <p>Selectors: tag, .class, #id, tag.class, *, lists with commas, and :hover (.item:hover). In "a b" only the last part counts.
+    Order: *, tags, classes, ids, then style="...".</p>
+    <ul>
+      <li>color, background, background-color: #rgb, #rrggbb, rgb(r, g, b), names</li>
+      <li>width, height (px, %, auto) - they include padding and border</li>
+      <li>margin, padding (1 to 4 values, margin: 0 auto centres), border, border-width, border-color</li>
+      <li>display: block, inline, inline-block, flex, none, list-item</li>
+      <li>flex-direction, gap, justify-content, align-items</li>
+      <li>font-size (16px steps of the 8x16 font: 16, 32, 48, 64), font-weight, text-align, text-decoration, white-space: pre</li>
+    </ul>
+
+    <div class="note">Not yet: border-radius, shadows, proportional fonts, position, tables,
+    proportional fonts in fields, forms that send data to other machines. They come step by step.</div>
+
+    <h2>Try it</h2>
+    <p>Open Studio, press F4 twice for a page template, F5 shows it here, F2 saves it to the desktop.</p>
+    <p><button onclick="studio.open">Open Studio</button> <a href="welcome">Back home</a></p>
+  </div>
+</body>
+</html>

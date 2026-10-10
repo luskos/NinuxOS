@@ -1,0 +1,417 @@
+# paint.py - Paint: draw with the mouse, save the picture as an object (NinuxOS v2.9.3)
+#
+# Tools: Pen, Line (two clicks), Rect (two clicks), Fill, Erase; Clear.
+# v2.9.22: the brush has three sizes (the "1 px / 3 px / 5 px" button - pen,
+# line, rectangle and eraser use it), and Undo takes back the last thing you
+# did (Undo again brings it back).
+# Colours: click the palette. The picture is 240 x 160 (shown twice as big).
+# Type a name (letters, digits, _ -), then Save: the picture becomes an
+# object with that name (type:image) and gets an icon on the desktop.
+# Load brings a saved picture back. ESC closes.
+
+META = {"type": "icon", "label": "Paint", "kind": "app", "icon": "icon_paint"}
+
+WX = 60
+WY = 40
+WW = 680
+WH = 470
+CW = 240
+CH = 160
+Z = 2
+CX = 72
+CY = 112
+PIX = []
+UNDO = []
+STACK = []
+COLORS = [0x000000, 0xFFFFFF, 0xE53935, 0xFB8C00, 0xFDD835, 0x43A047, 0x00ACC1, 0x1E88E5, 0x5E35B1, 0xD81B60, 0x8D6E63, 0x9E9E9E]
+TOOLS = ["Pen", "Line", "Rect", "Fill", "Erase", "Clear", "Save", "Load", "1 px", "Undo"]
+SIZES = ["1 px", "3 px", "5 px"]
+NT = 10
+BP = 58
+BW = 54
+CHARS = [" ", "!", "?", "#", "$", "%", "&", "'", "(", ")", "*", "+", ",", "-", ".", "/", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":", ";", "<", "=", ">", "?", "@", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "[", "/", "]", "^", "_", "'", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "(", "|", ")", "~"]
+NM = ["d", "r", "a", "w", "i", "n", "g", "", "", "", "", "", "", "", "", ""]
+nm_n = 7
+tool = 0
+size = 0
+color = 0
+lastx = -1
+lasty = -1
+ax = -1
+ay = -1
+status = "Draw with the mouse. Type a name, then Save."
+RATES = [0, 7, 12, 16, 18]
+rate_i = 0
+
+
+def draw(x, y):
+    fill_round(x + 26, y + 6, 44, 44, 0x2A2440, 10)
+    fill(x + 34, y + 16, 10, 10, 0xE53935)
+    fill(x + 46, y + 16, 10, 10, 0xFDD835)
+    fill(x + 34, y + 28, 10, 10, 0x1E88E5)
+    fill(x + 46, y + 28, 10, 10, 0x43A047)
+    text(x + 24, y + 58, "Paint", 0xFFFFFF)
+
+
+def _name():
+    s = ""
+    i = 0
+    while i < nm_n:
+        s = s + NM[i]
+        i = i + 1
+    return s
+
+
+def _status(s):
+    global status
+    status = s
+    fill(WX + 12, WY + 432, WW - 24, 18, 0x1C1C2A)
+    text(WX + 14, WY + 433, status, 0xC9CEDE)
+
+
+def _namebox():
+    fill(WX + 12, WY + 402, 480, 24, 0x1C1C2A)
+    text(WX + 16, WY + 406, "Name:", 0x9AA0B6)
+    fill_round(WX + 70, WY + 403, 200, 22, 0x2A2A3C, 6)
+    text(WX + 78, WY + 406, _name() + "_", 0xECECF5)
+    # v2.9.50: for what age the picture is (F6 = the next one) - stamped on it when saved
+    text(WX + 284, WY + 406, "age " + str(RATES[rate_i]) + " (F6)  then Save", 0x6B7088)
+
+
+def _tools():
+    i = 0
+    while i < NT:
+        bx = WX + 12 + i * BP
+        c = 0x2A2A3C
+        if i == tool:
+            c = 0x7B5CFF
+        if i >= 5:
+            c = 0x24324A
+        fill_round(bx, WY + 38, BW, 26, c, 8)
+        if i == 8:
+            text(bx + 8, WY + 43, SIZES[size], 0xF5F4FF)
+        else:
+            text(bx + 8, WY + 43, TOOLS[i], 0xF5F4FF)
+        i = i + 1
+
+
+def _snap():
+    # keep the picture as it is now: Undo goes back to it
+    i = 0
+    while i < CW * CH:
+        UNDO[i] = PIX[i]
+        i = i + 1
+
+
+def _undo():
+    # the picture and the kept one change places (so Undo again = redo)
+    i = 0
+    while i < CW * CH:
+        c = PIX[i]
+        PIX[i] = UNDO[i]
+        UNDO[i] = c
+        i = i + 1
+    _canvas()
+
+
+def _palette():
+    i = 0
+    while i < 12:
+        px = WX + 508 + (i % 2) * 40
+        py = CY + (i // 2) * 40
+        edge = 0x3A3A50
+        if i == color:
+            edge = 0xF5F4FF
+        fill_round(px, py, 34, 34, edge, 8)
+        fill_round(px + 3, py + 3, 28, 28, COLORS[i], 6)
+        i = i + 1
+    text(WX + 508, CY + 250, "colour", 0x9AA0B6)
+    fill_round(WX + 508, CY + 270, 74, 30, COLORS[color], 8)
+
+
+def _canvas():
+    y = 0
+    while y < CH:
+        row = y * CW
+        x = 0
+        while x < CW:
+            c = PIX[row + x]
+            x2 = x + 1
+            going = 1
+            while going == 1:
+                if x2 >= CW:
+                    going = 0
+                elif PIX[row + x2] != c:
+                    going = 0
+                else:
+                    x2 = x2 + 1
+            fill(CX + x * Z, CY + y * Z, (x2 - x) * Z, Z, c)
+            x = x2
+        y = y + 1
+
+
+def _frame():
+    window(WX, WY, WW, WH, "Paint")
+    fill(CX - 2, CY - 2, CW * Z + 4, CH * Z + 4, 0x3A3A50)
+    _tools()
+    _palette()
+    _canvas()
+    _namebox()
+    _status(status)
+
+
+def _cell(x, y, c):
+    if x >= 0 and x < CW and y >= 0 and y < CH:
+        PIX[y * CW + x] = c
+        fill(CX + x * Z, CY + y * Z, Z, Z, c)
+
+
+def _dot(x, y, c, big):
+    # a square of the brush's size: 1, 3 or 5 pixels (the eraser one size bigger)
+    r = size + big
+    if r == 0:
+        _cell(x, y, c)
+    else:
+        dy = 0 - r
+        while dy <= r:
+            dx = 0 - r
+            while dx <= r:
+                _cell(x + dx, y + dy, c)
+                dx = dx + 1
+            dy = dy + 1
+
+
+def _line(x0, y0, x1, y1, c, big):
+    dx = x1 - x0
+    sx = 1
+    if dx < 0:
+        dx = 0 - dx
+        sx = -1
+    dy = y1 - y0
+    sy = 1
+    if dy < 0:
+        dy = 0 - dy
+        sy = -1
+    err = dx - dy
+    x = x0
+    y = y0
+    going = 1
+    while going == 1:
+        _dot(x, y, c, big)
+        if x == x1 and y == y1:
+            going = 0
+        else:
+            e2 = err * 2
+            if e2 > 0 - dy:
+                err = err - dy
+                x = x + sx
+            if e2 < dx:
+                err = err + dx
+                y = y + sy
+
+
+def _rect(x0, y0, x1, y1, c):
+    _line(x0, y0, x1, y0, c, 0)
+    _line(x1, y0, x1, y1, c, 0)
+    _line(x1, y1, x0, y1, c, 0)
+    _line(x0, y1, x0, y0, c, 0)
+
+
+def _flood(x, y, c):
+    old = PIX[y * CW + x]
+    if old == c:
+        return 0
+    STACK.append(y * CW + x)
+    n = 0
+    while len(STACK) > 0:
+        i = STACK.pop()
+        if PIX[i] == old:
+            PIX[i] = c
+            n = n + 1
+            px = i % CW
+            if px > 0:
+                STACK.append(i - 1)
+            if px < CW - 1:
+                STACK.append(i + 1)
+            if i >= CW:
+                STACK.append(i - CW)
+            if i < CW * (CH - 1):
+                STACK.append(i + CW)
+    _canvas()
+    return n
+
+
+def _clear():
+    i = 0
+    while i < CW * CH:
+        PIX[i] = 0xFFFFFF
+        i = i + 1
+    _canvas()
+
+
+def _button(mx, my):
+    global tool, color, ax, ay, size
+    if my >= WY + 38 and my < WY + 64:
+        i = (mx - WX - 12) // BP
+        if mx >= WX + 12 and i >= 0 and i < NT and (mx - WX - 12) % BP < BW:
+            if i < 5:
+                tool = i
+                ax = -1
+                _tools()
+                if i == 1 or i == 2:
+                    _status("Click the first corner, then the second.")
+                elif i == 3:
+                    _status("Click a place to fill it with the colour.")
+                else:
+                    _status("Draw with the mouse.")
+            elif i == 5:
+                _snap()
+                _clear()
+                _status("Cleared. (Undo brings it back.)")
+            elif i == 8:
+                size = size + 1
+                if size > 2:
+                    size = 0
+                _tools()
+                _status("Brush: " + SIZES[size] + ".")
+            elif i == 9:
+                _undo()
+                _status("Undone. (Undo again puts it back.)")
+            elif i == 6:
+                save_rating(RATES[rate_i])
+                r = save_image(_name(), CW, CH, PIX)
+                if r == 0:
+                    _status("Saved as '" + _name() + "' - it is on the desktop now.")
+                else:
+                    _status("Could not save '" + _name() + "' (code " + str(r) + ").")
+            else:
+                _snap()
+                n = load_image(_name(), PIX)
+                if n > 0:
+                    _canvas()
+                    _status("Loaded '" + _name() + "'.")
+                else:
+                    _status("No picture called '" + _name() + "'.")
+        return 1
+    if mx >= WX + 508 and mx < WX + 588 and my >= CY and my < CY + 240:
+        i = ((my - CY) // 40) * 2 + (mx - WX - 508) // 40
+        if i >= 0 and i < 12:
+            color = i
+            _palette()
+        return 1
+    return 0
+
+
+def _typekey(k):
+    global nm_n, rate_i
+    if k == 0x96:
+        rate_i = rate_i + 1
+        if rate_i > 4:
+            rate_i = 0
+    elif k == 8:
+        if nm_n > 0:
+            nm_n = nm_n - 1
+    elif (k >= 48 and k <= 57) or (k >= 65 and k <= 90) or (k >= 97 and k <= 122) or k == 95 or k == 45:
+        if nm_n < 15:
+            NM[nm_n] = CHARS[k - 32]
+            nm_n = nm_n + 1
+    _namebox()
+
+
+def _press(mx, my):
+    # the left button went down
+    global lastx, lasty, ax, ay
+    if _button(mx, my) == 1:
+        return 0
+    x = (mx - CX) // Z
+    y = (my - CY) // Z
+    if mx < CX or my < CY or x >= CW or y >= CH:
+        return 0
+    c = COLORS[color]
+    if tool == 0:
+        _snap()
+        _dot(x, y, c, 0)
+        lastx = x
+        lasty = y
+    elif tool == 4:
+        _snap()
+        _dot(x, y, 0xFFFFFF, 1)
+        lastx = x
+        lasty = y
+    elif tool == 3:
+        _snap()
+        _flood(x, y, c)
+    else:
+        if ax < 0:
+            _snap()
+            ax = x
+            ay = y
+            _cell(x, y, c)
+            _status("Now the second point.")
+        else:
+            if tool == 1:
+                _line(ax, ay, x, y, c, 0)
+            else:
+                _rect(ax, ay, x, y, c)
+            ax = -1
+            _status("Done. Click again for another one.")
+    return 1
+
+
+def _drag(mx, my):
+    # the mouse moved with the left button held (pen and eraser)
+    global lastx, lasty
+    if lastx < 0:
+        return 0
+    x = (mx - CX) // Z
+    y = (my - CY) // Z
+    if x < 0:
+        x = 0
+    if y < 0:
+        y = 0
+    if x >= CW:
+        x = CW - 1
+    if y >= CH:
+        y = CH - 1
+    if tool == 0:
+        _line(lastx, lasty, x, y, COLORS[color], 0)
+    elif tool == 4:
+        _line(lastx, lasty, x, y, 0xFFFFFF, 1)
+    lastx = x
+    lasty = y
+    return 1
+
+
+def open(sw, sh):
+    global lastx, lasty
+    if len(PIX) == 0:
+        i = 0
+        while i < CW * CH:
+            PIX.append(0xFFFFFF)
+            UNDO.append(0xFFFFFF)
+            i = i + 1
+    _frame()
+    old_b = 0
+    running = 1
+    while running == 1:
+        e = poll()
+        if e == 1:
+            k = key()
+            if k == 27:
+                running = 0
+            else:
+                _typekey(k)
+        elif e == 2:
+            mx = mouse_x()
+            my = mouse_y()
+            b = mouse_buttons()
+            if b == 1 and old_b == 0:
+                _press(mx, my)
+            elif b == 1:
+                _drag(mx, my)
+            else:
+                lastx = -1
+            old_b = b
+    log("Paint closed")
+    return 1
+ 

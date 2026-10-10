@@ -1,0 +1,13 @@
+/* theme_night - the dark NinuxOS look (the default). The Setup page copies it to "theme". */
+body { background: #12131C; color: #ECECF5; margin: 0; }
+.top { background: #1D1D27; padding: 14px 24px; border-bottom: 2px solid #7B5CFF; }
+.top h1 { color: #FFB020; margin: 0; }
+.muted { color: #9B9DB2; }
+.wrap { padding: 8px 24px; }
+.cards { display: flex; gap: 16px; }
+.card { border-radius: 10px; background: #1D1D27; border: 1px solid #3A3550; padding: 12px; width: 300px; }
+.card h3 { color: #2FB7FF; margin-top: 0; }
+button { border-radius: 10px; background: #7B5CFF; color: #FFFFFF; border: 1px solid #2FB7FF; }
+a { color: #2FB7FF; }
+.gold { color: #FFB020; }
+input { border-radius: 8px; background: #1D1D27; color: #ECECF5; border: 1px solid #2FB7FF; }

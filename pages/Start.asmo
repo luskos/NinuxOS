@@ -1,0 +1,38 @@
+<html>
+<head>
+  <title>Start</title>
+  <meta name="desktop" content="no">
+  <link rel="stylesheet" href="theme">
+  <style>
+    body { background: #1C1A2E; border: 1px solid #3E3A5C; border-radius: 16px; padding: 5px; }
+    /* v2.8: the stencil's menu - a dark glass panel, radius 16, rows of radius 11 */
+    .head { padding: 7px 11px; }
+    .head b { color: #F5F4FF; }
+    .list { padding: 2px 0; }
+    .item { border-radius: 11px; padding: 5px 11px; color: #ECECF5; }
+    .item:hover { background: #7B5CFF; color: #FFFFFF; }
+    .sys { color: #FF8FB8; }
+    .sys:hover { background: #FF3D8B; color: #FFFFFF; }
+    .sep { height: 1px; background: #34314A; margin: 4px 8px; }
+  </style>
+</head>
+<body>
+  <div class="head"><b>NinuxOS</b> <span class="muted">start</span></div>
+  <div class="list">
+    <div class="item" onclick="net.open">NET</div>
+    <div class="item" onclick="studio.open">Studio</div>
+    <div class="item" onclick="calc">Calc</div>
+    <div class="item" onclick="chronos">Chronos</div>
+    <div class="item" onclick="search">Search</div>
+    <div class="item" onclick="bags">Bags</div>
+    <div class="item" onclick="pynamp">PyNamp</div>
+    <div class="item" onclick="ask">Ask</div>
+    <div class="item" onclick="keys">Keys (on-screen keyboard)</div>
+    <div class="item" onclick="welcome">Welcome page</div>
+    <div class="sep"></div>
+    <div class="item" onclick="system.shell">Shell</div>
+    <div class="item sys" onclick="system.restart">Restart</div>
+    <div class="item sys" onclick="system.shutdown">Shut down</div>
+  </div>
+</body>
+</html>

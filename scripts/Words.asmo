@@ -1,0 +1,26 @@
+# Text, lists, for and functions with parameters (v1.11)
+def count_words(text):
+    words = []
+    w = ""
+    for c in text + " ":
+        if c == " ":
+            if w != "":
+                words.append(w)
+            w = ""
+        else:
+            w = w + c
+    return words
+
+def bar(n, color):
+    fill(220, 200 + n * 34, (n + 1) * 40, 26, color)
+
+window(200, 150, 620, 330, "Words")
+words = count_words("the quick brown fox jumps over the lazy dog")
+print("words:", len(words), words)
+i = 0
+for w in words:
+    if i < 6:
+        bar(i, 0x6FC3FF)
+        text(270, 205 + i * 34, w.upper() + " (" + str(len(w)) + ")", 0xECECF5)
+    i += 1
+print("longest:", max(len(words[0]), len(words[1])))

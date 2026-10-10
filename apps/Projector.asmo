@@ -1,0 +1,337 @@
+# projector.py - Projector (NinuxOS v2.9.33)
+#
+# Left: the projects. Right: the chosen project's lines, the newest at the
+# bottom. Type a line and press Enter: it is added with today's date and
+# the time. "New" (or F2) asks for a project's name. PgUp / PgDn scroll.
+# The list of projects is the object "projector_data"; a project's lines
+# are the object "prj_" + its name. ESC closes.
+
+META = {"type": "icon", "label": "Projector", "kind": "app", "icon": "icon_projector"}
+
+WX = 60
+WY = 40
+WW = 820
+WH = 580
+MAXP = 14
+VR = 22
+PN = []
+LINE = []
+BODY = []
+NAME = []
+np = 0
+cur = -1
+mode = 0
+scroll = 0
+lines = 0
+status = "New = a project. Then type a line and press Enter."
+
+
+def draw(x, y):
+    fill_round(x + 26, y + 6, 44, 44, 0x2A2440, 10)
+    fill_round(x + 32, y + 12, 32, 32, 0xECECF5, 4)
+    fill(x + 32, y + 12, 6, 32, 0x7B5CFF)
+    fill(x + 42, y + 20, 18, 2, 0x7B5CFF)
+    fill(x + 42, y + 26, 18, 2, 0x9AA0B6)
+    fill(x + 42, y + 32, 12, 2, 0x9AA0B6)
+    text(x + 12, y + 58, "Projector", 0xFFFFFF)
+
+
+def _status(s):
+    global status
+    status = s
+    fill(WX + 12, WY + 552, WW - 24, 18, 0x1C1C2A)
+    text(WX + 14, WY + 553, status, 0xC9CEDE)
+
+
+def _set(L, s):
+    while len(L) > 0:
+        L.pop()
+    i = 0
+    while i < len(s):
+        L.append(code(s, i))
+        i = i + 1
+
+
+def _two(n):
+    if n < 10:
+        return "0" + str(n)
+    return str(n)
+
+
+def _stamp():
+    return system("year") + "-" + _two(int(system("month"))) + "-" + _two(int(system("day"))) + " " + _two(int(system("hour"))) + ":" + _two(int(system("minute")))
+
+
+def _save_index():
+    s = str(np)
+    i = 0
+    while i < np:
+        s = s + "\n" + PN[i]
+        i = i + 1
+    save_text("projector_data", s)
+
+
+def _load_index():
+    global np
+    d = load_text("projector_data")
+    if len(d) == 0:
+        return 0
+    m = int(field(d, 10, 0))
+    if m > MAXP:
+        m = MAXP
+    i = 0
+    while i < m:
+        PN[i] = field(d, 10, 1 + i)
+        i = i + 1
+    np = m
+    return 1
+
+
+def _load_body():
+    global lines, scroll
+    while len(BODY) > 0:
+        BODY.pop()
+    lines = 0
+    if cur < 0:
+        return 0
+    s = load_text("prj_" + PN[cur])
+    i = 0
+    n = len(s)
+    k = 0
+    while i < n and i < 30000:
+        c = code(s, i)
+        BODY.append(c)
+        if c == 10:
+            lines = lines + 1
+            k = 0
+        else:
+            k = k + 1
+            if k == 74:
+                lines = lines + 1
+                k = 0
+        i = i + 1
+    if k > 0:
+        lines = lines + 1
+    scroll = lines - VR
+    if scroll < 0:
+        scroll = 0
+    return 1
+
+
+def _left():
+    fill(WX + 12, WY + 36, 180, 510, 0x16161F)
+    fill_round(WX + 20, WY + 42, 164, 26, 0x24324A, 8)
+    text(WX + 60, WY + 47, "New (F2)", 0xF5F4FF)
+    i = 0
+    while i < np:
+        y = WY + 78 + i * 24
+        if i == cur:
+            fill_round(WX + 16, y - 2, 172, 22, 0x7B5CFF, 6)
+        text(WX + 24, y + 1, PN[i], 0xECECF5)
+        i = i + 1
+    if np == 0:
+        text(WX + 24, WY + 80, "(no projects yet)", 0x6B7088)
+
+
+def _view():
+    # the wrapped lines scroll .. scroll + VR - 1 of BODY
+    fill(WX + 200, WY + 36, WW - 212, 470, 0x16161F)
+    if cur < 0:
+        text(WX + 214, WY + 50, "Choose a project on the left, or make a new one.", 0x6B7088)
+        return 0
+    text(WX + 214, WY + 42, PN[cur], 0x00D6B4)
+    n = len(BODY)
+    s = 0
+    k = 0
+    r = 0
+    i = 0
+    while i < n and r < scroll + VR:
+        if BODY[i] == 10:
+            if r >= scroll:
+                textl(WX + 214, WY + 66 + (r - scroll) * 20, BODY, s, k, 0xC9CEDE)
+            r = r + 1
+            s = i + 1
+            k = 0
+        else:
+            k = k + 1
+            if k == 74:
+                if r >= scroll:
+                    textl(WX + 214, WY + 66 + (r - scroll) * 20, BODY, s, k, 0xC9CEDE)
+                r = r + 1
+                s = i + 1
+                k = 0
+        i = i + 1
+    if k > 0 and r >= scroll and r < scroll + VR:
+        textl(WX + 214, WY + 66 + (r - scroll) * 20, BODY, s, k, 0xC9CEDE)
+    if n == 0:
+        text(WX + 214, WY + 70, "(empty - the first line starts the diary)", 0x6B7088)
+    return 1
+
+
+def _input():
+    fill_round(WX + 200, WY + 514, WW - 212, 30, 0x2A2A3C, 8)
+    if mode == 1:
+        text(WX + 210, WY + 521, "Name of the project: " + textof(NAME), 0xFFB020)
+    else:
+        n = len(LINE)
+        a = 0
+        if n > 72:
+            a = n - 72
+        textl(WX + 210, WY + 521, LINE, a, n - a, 0xF5F4FF)
+        fill(WX + 210 + (n - a) * 8, WY + 520, 2, 18, 0x7B5CFF)
+
+
+def _frame():
+    cursor_hide()
+    window(WX, WY, WW, WH, "Projector")
+    _left()
+    _view()
+    _input()
+    _status(status)
+
+
+def _pick(i):
+    global cur
+    cur = i
+    _load_body()
+    _left()
+    _view()
+    _input()
+    _status("'" + PN[i] + "': " + str(lines) + " lines. Its object is prj_" + PN[i] + ".")
+
+
+def _add_line():
+    if cur < 0:
+        _status("Make or choose a project first.")
+        return 0
+    if len(LINE) == 0:
+        return 0
+    s = load_text("prj_" + PN[cur])
+    if len(s) > 0:
+        s = s + "\n"
+    s = s + _stamp() + "  " + textof(LINE)
+    r = save_text("prj_" + PN[cur], s)
+    _set(LINE, "")
+    _load_body()
+    _view()
+    _input()
+    if r == 0:
+        _status("Added.")
+    else:
+        _status("Could not be kept (code " + str(r) + ").")
+    return 1
+
+
+def _new_done():
+    global np, mode
+    mode = 0
+    if len(NAME) == 0:
+        _input()
+        return 0
+    if np >= MAXP:
+        _input()
+        _status("The book holds " + str(MAXP) + " projects.")
+        return 0
+    PN[np] = textof(NAME)
+    np = np + 1
+    _save_index()
+    _pick(np - 1)
+    return 1
+
+
+def _key(k):
+    global mode, scroll
+    if mode == 1:
+        if k == 10 or k == 13:
+            _new_done()
+            return 1
+        if k == 8:
+            if len(NAME) > 0:
+                NAME.pop()
+        elif (k >= 48 and k <= 57) or (k >= 97 and k <= 122) or k == 95:
+            if len(NAME) < 10:
+                NAME.append(k)
+        elif k >= 65 and k <= 90:
+            if len(NAME) < 10:
+                NAME.append(k + 32)
+        _input()
+        return 1
+    if k == 0x92:
+        mode = 1
+        _set(NAME, "")
+        _input()
+        _status("Letters and digits, 10 at most. Enter = done.")
+    elif k == 10 or k == 13:
+        _add_line()
+    elif k == 8:
+        if len(LINE) > 0:
+            LINE.pop()
+        _input()
+    elif k == 0x87:
+        scroll = scroll - VR
+        if scroll < 0:
+            scroll = 0
+        _view()
+    elif k == 0x88:
+        if scroll + VR < lines:
+            scroll = scroll + VR
+        _view()
+    elif k == 22:
+        s = load_text("clipboard")
+        i = 0
+        while i < len(s) and len(LINE) < 300:
+            c = code(s, i)
+            if c >= 32:
+                LINE.append(c)
+            i = i + 1
+        _input()
+    elif (k >= 32 and k <= 126) or (k >= 0xA0 and k <= 0xFF):
+        if len(LINE) < 300:
+            LINE.append(k)
+        _input()
+    return 1
+
+
+def open(sw, sh):
+    global mode
+    if len(PN) == 0:
+        i = 0
+        while i < MAXP:
+            PN.append("")
+            i = i + 1
+        _load_index()
+    _load_body()
+    _frame()
+    old_b = 0
+    running = 1
+    while running == 1:
+        e = poll()
+        if e == 1:
+            k = key()
+            if k == 27:
+                if mode == 1:
+                    mode = 0
+                    _input()
+                else:
+                    running = 0
+            else:
+                _key(k)
+        elif e == 2:
+            b = mouse_buttons()
+            if b == 1 and old_b == 0:
+                mx = mouse_x()
+                my = mouse_y()
+                if mx >= WX + 12 and mx < WX + 192:
+                    if my >= WY + 42 and my < WY + 68:
+                        mode = 1
+                        _set(NAME, "")
+                        _input()
+                        _status("Letters and digits, 10 at most. Enter = done.")
+                    elif my >= WY + 76:
+                        i = (my - WY - 76) // 24
+                        if i < np:
+                            _pick(i)
+            old_b = b
+    log("Projector closed")
+    return 1
+ 

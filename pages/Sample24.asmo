@@ -1,0 +1,10 @@
+<html><head><style>
+body { background: #10202c; color: #e8eef4; padding: 16px; }
+h1 { color: #6fc3ff; }
+.chip { background: #284860; padding: 8px; border: 1px solid #6fc3ff; }
+</style></head><body>
+<h1>Sample 24 of 40</h1>
+<p>This page is the object <b>sample24</b>. It lives in the drawer <b>samples</b> of the storage room.</p>
+<p class="chip">It was not in memory at boot: the kernel read it from the disk the first time it was used.</p>
+<p>The main cabinet holds 62 entries; every drawer holds 63 more.</p>
+</body></html>

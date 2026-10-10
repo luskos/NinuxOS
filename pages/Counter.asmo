@@ -1,0 +1,65 @@
+<html>
+<head>
+  <title>Counter</title>
+  <link rel="stylesheet" href="theme">
+  <style>
+    .big { font-size: 48px; color: #FFB020; padding: 12px 0; }
+    .row { display: flex; gap: 10px; }
+    .tip { border: 1px solid #7B5CFF; padding: 8px; margin-top: 12px; }
+    button:hover { background: #4F8FD0; }
+  </style>
+</head>
+<body>
+  <div class="top"><h1>Counter</h1><span class="muted">A page with a PyTon script - no JavaScript.</span></div>
+  <div class="wrap">
+    <div id="num" class="big">0</div>
+    <div class="row">
+      <button onclick="inc()">+1</button>
+      <button onclick="dec()">-1</button>
+      <button onclick="reset()">Reset</button>
+      <button onclick="toggle()">Show / hide tip</button>
+    </div>
+    <div id="msg" class="muted">Press +1.</div>
+    <div id="tip" class="tip">Functions in the script run when a button names them: onclick="inc()".
+      set_text, set_style, show and hide change the page, then it is drawn again.</div>
+    <p><a href="welcome">Back home</a> - <a href="guide">Page guide</a></p>
+  </div>
+  <script type="pyton">
+n = 0
+tip = 1
+
+def inc():
+    global n
+    n += 1
+    paint()
+
+def dec():
+    global n
+    n -= 1
+    paint()
+
+def reset():
+    global n
+    n = 0
+    paint()
+
+def paint():
+    set_text("num", str(n))
+    if n > 9:
+        set_style("num", "color", "#FF8A80")
+        set_text("msg", "That is a lot: " + str(n))
+    else:
+        set_style("num", "color", "#FFB020")
+        set_text("msg", "Count is " + str(n))
+
+def toggle():
+    global tip
+    if tip == 1:
+        hide("tip")
+        tip = 0
+    else:
+        show("tip")
+        tip = 1
+  </script>
+</body>
+</html>

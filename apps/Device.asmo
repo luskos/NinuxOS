@@ -1,0 +1,285 @@
+# device.py - Device: what is in this machine's cabinet (NinuxOS v2.9.27)
+#
+# There are no drives and no files here: there is the cabinet, and objects
+# in it. This window shows them:
+#   the top lines   the machine: its disk, its memory
+#   the buttons     which kind to show: All, Programs, Pages, Pictures,
+#                   Texts, Sounds, Drawers, Other
+#   the list        an object a line: its name, its kind, what it says of
+#                   itself. Up / Down, PgUp / PgDn and the mouse wheel area
+#                   (the two arrows at the right) move through it.
+#   typing          searches: only the objects with those letters in their
+#                   name stay in the list (Backspace takes a letter back)
+#   a click         picks an object: more about it below the list
+#   Open            starts the picked object if it is a program
+# Not yet here: making drawers and moving objects between them (those need
+# the administrator's shell: drawer NAME, stow NAME DRAWER).
+
+META = {"type": "icon", "label": "Device", "kind": "app", "icon": "icon_device"}
+
+WX = 50
+WY = 34
+WW = 760
+WH = 560
+ROWS = 16
+LX = 62
+LY = 180
+IDX = []
+Q = []
+flt = 0
+top = 0
+sel = -1
+total = 0
+FILTERS = ["All", "Programs", "Pages", "Pictures", "Texts", "Sounds", "Drawers", "Other"]
+status = "Click an object to see more about it."
+
+
+def draw(x, y):
+    fill_round(x + 26, y + 6, 44, 44, 0x2A2440, 10)
+    fill_round(x + 33, y + 14, 30, 30, 0xFFB020, 4)
+    fill(x + 36, y + 22, 24, 2, 0x2A2440)
+    fill(x + 36, y + 30, 24, 2, 0x2A2440)
+    fill(x + 44, y + 17, 8, 3, 0x2A2440)
+    fill(x + 44, y + 25, 8, 3, 0x2A2440)
+    fill(x + 44, y + 34, 8, 3, 0x2A2440)
+    text(x + 24, y + 58, "Device", 0xFFFFFF)
+
+
+def _kind(i):
+    # which of the filters an object belongs to (1 .. 7)
+    t = ob_meta(i, "type")
+    k = ob_meta(i, "kind")
+    if t == "page":
+        return 2
+    if t == "image":
+        return 3
+    if t == "text" or k == "text":
+        return 4
+    if t == "sound":
+        return 5
+    if t == "cabinet":
+        return 6
+    if t == "icon" or t == "script" or k == "app" or k == "game":
+        return 1
+    return 7
+
+
+def _collect():
+    # IDX = the objects the filter lets through
+    global total, top, sel
+    while len(IDX) > 0:
+        IDX.pop()
+    n = ob_count()
+    total = n
+    i = 0
+    while i < n:
+        ok = 0
+        if flt == 0:
+            ok = 1
+        elif _kind(i) == flt:
+            ok = 1
+        if ok == 1 and len(Q) > 0:
+            ok = _has(ob_meta(i, "name"))      # v2.9.28: search - the typed letters in its name
+            if ok == 0:
+                ok = _has(ob_meta(i, "label"))
+        if ok == 1:
+            IDX.append(i)
+        i = i + 1
+    top = 0
+    sel = -1
+
+
+def _has(s):
+    # do the typed letters Q stand somewhere in the text s (capitals = small)
+    n = len(s)
+    m = len(Q)
+    a = 0
+    while a + m <= n:
+        j = 0
+        same = 1
+        while j < m and same == 1:
+            c = code(s, a + j)
+            if c >= 65 and c <= 90:
+                c = c + 32
+            if c != Q[j]:
+                same = 0
+            j = j + 1
+        if same == 1:
+            return 1
+        a = a + 1
+    return 0
+
+
+def _find():
+    fill_round(WX + WW - 290, WY + 38, 272, 24, 0x2A2A3C, 8)
+    text(WX + WW - 282, WY + 42, "Find: " + textof(Q) + "_", 0xECECF5)
+
+
+def _status(s):
+    global status
+    status = s
+    fill(WX + 12, WY + 532, WW - 24, 18, 0x1C1C2A)
+    text(WX + 14, WY + 533, status, 0xC9CEDE)
+
+
+def _head():
+    fill(WX + 12, WY + 36, WW - 24, 44, 0x1C1C2A)
+    text(WX + 16, WY + 40, "Disk:   " + system("disk"), 0xECECF5)
+    text(WX + 16, WY + 60, "Memory: " + system("memory"), 0xECECF5)
+    _find()
+
+
+def _filters():
+    i = 0
+    while i < 8:
+        bx = WX + 12 + i * 92
+        c = 0x2A2A3C
+        if i == flt:
+            c = 0x7B5CFF
+        fill_round(bx, WY + 86, 86, 24, c, 8)
+        text(bx + 8, WY + 90, FILTERS[i], 0xF5F4FF)
+        i = i + 1
+
+
+def _list():
+    fill(LX - 4, LY - 26, WW - 32, ROWS * 18 + 34, 0x1C1C2A)
+    text(LX, LY - 22, "name", 0x9AA0B6)
+    text(LX + 150, LY - 22, "kind", 0x9AA0B6)
+    text(LX + 250, LY - 22, "what it is", 0x9AA0B6)
+    text(LX + 560, LY - 22, str(len(IDX)) + " of " + str(total), 0x9AA0B6)
+    r = 0
+    while r < ROWS:
+        k = top + r
+        if k < len(IDX):
+            i = IDX[k]
+            y = LY + r * 18
+            if k == sel:
+                fill(LX - 2, y - 1, WW - 80, 18, 0x34314A)
+            text(LX, y, ob_meta(i, "name"), 0xECECF5)
+            text(LX + 150, y, ob_meta(i, "type"), 0x00D6B4)
+            text(LX + 250, y, ob_meta(i, "data"), 0xC9CEDE)
+        r = r + 1
+    fill_round(WX + WW - 46, LY, 30, 30, 0x24324A, 8)
+    text(WX + WW - 36, LY + 7, "^", 0xF5F4FF)
+    fill_round(WX + WW - 46, LY + ROWS * 18 - 30, 30, 30, 0x24324A, 8)
+    text(WX + WW - 36, LY + ROWS * 18 - 23, "v", 0xF5F4FF)
+
+
+def _detail():
+    fill(WX + 12, WY + 480, WW - 24, 48, 0x1C1C2A)
+    if sel < 0 or sel >= len(IDX):
+        return 0
+    i = IDX[sel]
+    text(WX + 16, WY + 484, ob_meta(i, "name") + "  -  " + ob_meta(i, "label"), 0xECECF5)
+    text(WX + 16, WY + 504, "type " + ob_meta(i, "type") + "   kind " + ob_meta(i, "kind") + "   made by " + ob_meta(i, "made"), 0x9AA0B6)
+    if _kind(i) == 1:
+        fill_round(WX + WW - 110, WY + 486, 90, 28, 0x24324A, 8)
+        text(WX + WW - 88, WY + 492, "Open", 0xF5F4FF)
+    return 1
+
+
+def _frame():
+    window(WX, WY, WW, WH, "Device")
+    _head()
+    _filters()
+    _list()
+    _detail()
+    _status(status)
+
+
+def _scroll(d):
+    global top
+    t = top + d
+    if t > len(IDX) - ROWS:
+        t = len(IDX) - ROWS
+    if t < 0:
+        t = 0
+    if t != top:
+        top = t
+        _list()
+
+
+def _press(mx, my):
+    global flt, sel
+    if my >= WY + 86 and my < WY + 110:
+        i = (mx - WX - 12) // 92
+        if mx >= WX + 12 and i >= 0 and i < 8 and (mx - WX - 12) % 92 < 86:
+            flt = i
+            _filters()
+            _collect()
+            _list()
+            _detail()
+        return 1
+    if mx >= WX + WW - 46 and mx < WX + WW - 16:
+        if my >= LY and my < LY + 30:
+            _scroll(0 - 6)
+            return 1
+        if my >= LY + ROWS * 18 - 30 and my < LY + ROWS * 18:
+            _scroll(6)
+            return 1
+    if mx >= LX - 2 and mx < WX + WW - 60 and my >= LY and my < LY + ROWS * 18:
+        k = top + (my - LY) // 18
+        if k < len(IDX):
+            sel = k
+            _list()
+            _detail()
+        return 1
+    if sel >= 0 and mx >= WX + WW - 110 and mx < WX + WW - 20 and my >= WY + 486 and my < WY + 514:
+        i = IDX[sel]
+        if _kind(i) == 1:
+            r = spawn(ob_meta(i, "name"))
+            if r < 0:
+                _status("'" + ob_meta(i, "name") + "' could not be started.")
+            else:
+                _status("Started '" + ob_meta(i, "name") + "'.")
+        return 1
+    return 0
+
+
+def open(sw, sh):
+    _collect()
+    _frame()
+    old_b = 0
+    running = 1
+    while running == 1:
+        e = poll()
+        if e == 1:
+            k = key()
+            if k == 27:
+                running = 0
+            elif k == 0x80:
+                _scroll(0 - 1)
+            elif k == 0x81:
+                _scroll(1)
+            elif k == 0x87:
+                _scroll(0 - ROWS)
+            elif k == 0x88:
+                _scroll(ROWS)
+            else:
+                # v2.9.28: typing = search by name (Backspace takes a letter back)
+                ch = 0
+                if k == 8:
+                    if len(Q) > 0:
+                        Q.pop()
+                        ch = 1
+                elif (k >= 48 and k <= 57) or (k >= 97 and k <= 122) or k == 95:
+                    if len(Q) < 20:
+                        Q.append(k)
+                        ch = 1
+                elif k >= 65 and k <= 90:
+                    if len(Q) < 20:
+                        Q.append(k + 32)
+                        ch = 1
+                if ch == 1:
+                    _collect()
+                    _find()
+                    _list()
+                    _detail()
+        elif e == 2:
+            b = mouse_buttons()
+            if b == 1 and old_b == 0:
+                _press(mouse_x(), mouse_y())
+            old_b = b
+    log("Device closed")
+    return 1
+ 

@@ -1,0 +1,31 @@
+<html>
+<head>
+  <title>How pages work</title>
+  <link rel="stylesheet" href="theme">
+  <style>
+    .row { display: flex; gap: 12px; align-items: center; }
+    .tag { background: #2E7D4E; color: white; padding: 2px 8px; }
+    .box { border: 1px solid #3A3550; padding: 10px; margin: 8px 0; }
+    .center { text-align: center; }
+    body { font-family: sans-serif; }  /* v2.0.4: proportional letters */
+  </style>
+</head>
+<body>
+  <div class="top"><h1>How pages work</h1></div>
+  <div class="wrap">
+    <div class="box">
+      <div class="row"><span class="tag">page</span> an ASMO object with <b>type:page</b>; DATA is this HTML text</div>
+    </div>
+    <div class="box">
+      <div class="row"><span class="tag">style</span> <b>theme</b> is a <b>type:style</b> object; pages link it by name, no file endings</div>
+    </div>
+    <div class="box">
+      <div class="row"><span class="tag">action</span> onclick="name" runs a PyTon program; onclick="object.socket" calls a socket</div>
+    </div>
+    <pre>
+&lt;button onclick="colors"&gt;Run colors&lt;/button&gt;
+&lt;a href="welcome"&gt;back home&lt;/a&gt;</pre>
+    <p class="center"><a href="welcome">Back to the welcome page</a></p>
+  </div>
+</body>
+</html>

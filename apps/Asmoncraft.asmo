@@ -1,0 +1,565 @@
+# asmoncraft.py - ASMONCRAFT, a demo (NinuxOS v2.9.24)
+#
+# A world of 48 x 48 x 24 blocks: grass, earth, stone, sand, water, trees.
+# How it is drawn: one ray a "pixel" (160 x 90 of them, shown as big squares
+# over the whole screen). A ray steps from block to block until it meets
+# one, and takes that block's colour (top, and two kinds of side). Whole
+# numbers only: places are in 1/256 of a block, directions in 1/1024.
+#
+# Keys:  W S  forward / back      A D  step left / right
+#        arrows  turn, look up / down
+#        Space  jump (fly: up)    C  down (fly)     F  fly on / off
+#        E or right button  put a block     Q or left button  dig the block
+#        1 .. 6  which block to put         Esc  back to META
+# The small cross in the middle is where you dig and build (6 blocks' reach).
+
+META = {"type": "icon", "label": "ASMONCRAFT", "kind": "game", "meta": "open"}
+
+RW = 160
+RH = 90
+WW = 48
+WD = 48
+WH = 24
+SINT = [1024, 1049, 1074, 1099, 1124, 1149, 1174, 1199, 1224, 1248, 1273, 1297, 1321, 1345, 1369, 1393, 1416, 1439, 1462, 1484, 1507, 1529, 1550, 1572, 1593, 1614, 1634, 1654, 1674, 1693, 1712, 1730, 1748, 1766, 1783, 1799, 1816, 1831, 1846, 1861, 1875, 1889, 1902, 1915, 1927, 1939, 1950, 1960, 1970, 1979, 1988, 1996, 2004, 2011, 2017, 2023, 2028, 2033, 2037, 2040, 2043, 2045, 2047, 2048, 2048]
+W = []
+S = []
+C = []
+SKY = []
+COLD = []
+COL = [0, 0, 0, 0x5E9A3C, 0x7BC043, 0x4F8433, 0x8A5A2B, 0x9B6A38, 0x7A4E24, 0x808488, 0x9A9EA2, 0x6E7276, 0x6B4A2A, 0x8A6A3A, 0x5C3F22, 0x2F7D32, 0x3C9A40, 0x276A2A, 0x2B6FD6, 0x3A86F0, 0x2460BE, 0xD9C27A, 0xEBD58C, 0xC7B06A, 0xB58A4A, 0xCFA25C, 0x9E773E, 0xA8452E, 0xC0553A, 0x903A26]
+PICK = [8, 9, 3, 2, 7, 5]
+NAMES = ["planks", "brick", "stone", "earth", "sand", "leaves"]
+posx = 0
+posy = 0
+posz = 0
+yaw = 32
+pitch = 0
+fly = 0
+pick = 0
+cell = 4
+ox = 0
+oy = 0
+scw = 0
+sch = 0
+aim = 0
+ax = 0
+ay = 0
+az = 0
+nx = 0
+ny = 0
+nz = 0
+dirty = 1
+
+
+def _tables():
+    # sine and cosine of 256 steps round the circle, as -1024 .. 1024
+    i = 0
+    while i < 256:
+        q = i & 63
+        if i < 64:
+            v = SINT[q] - 1024
+        elif i < 128:
+            v = SINT[64 - q] - 1024
+        elif i < 192:
+            v = 1024 - SINT[q]
+        else:
+            v = 1024 - SINT[64 - q]
+        S.append(v)
+        i = i + 1
+    i = 0
+    while i < 256:
+        C.append(S[(i + 64) & 255])
+        i = i + 1
+    # every block colour once more, a little darker (for every second block)
+    i = 0
+    while i < 30:
+        c = COL[i]
+        r = (((c >> 16) & 255) * 13) >> 4
+        g = (((c >> 8) & 255) * 13) >> 4
+        b = ((c & 255) * 13) >> 4
+        COLD.append(r * 65536 + g * 256 + b)
+        i = i + 1
+    # the sky: 24 colours from the haze at the horizon up to deep blue
+    i = 0
+    while i < 24:
+        r = 190 - i * 6
+        g = 226 - i * 4
+        b = 255 - i * 2
+        SKY.append(r * 65536 + g * 256 + b)
+        i = i + 1
+
+
+def _ground(x, z):
+    a = S[(x * 9) & 255] * 3 + S[(z * 7 + 40) & 255] * 3 + S[((x + z) * 5) & 255] * 2
+    return 9 + (a >> 10)
+
+
+def _world():
+    i = 0
+    while i < WW * WD * WH:
+        W.append(0)
+        i = i + 1
+    z = 0
+    while z < WD:
+        x = 0
+        while x < WW:
+            h = _ground(x, z)
+            y = 0
+            while y < h:
+                b = 3
+                if y >= h - 3:
+                    b = 2
+                if y == h - 1:
+                    b = 1
+                    if h <= 7:
+                        b = 7
+                W[(y * WD + z) * WW + x] = b
+                y = y + 1
+            while y < 6:
+                W[(y * WD + z) * WW + x] = 6
+                y = y + 1
+            x = x + 1
+        z = z + 1
+    # trees: a trunk of four, leaves round its top
+    z = 3
+    while z < WD - 3:
+        x = 3
+        while x < WW - 3:
+            h = _ground(x, z)
+            if (x * 31 + z * 17) % 59 == 0 and h > 8 and h < 16:
+                y = h
+                while y < h + 4:
+                    W[(y * WD + z) * WW + x] = 4
+                    y = y + 1
+                y = h + 3
+                while y < h + 6 and y < WH:
+                    lz = z - 2
+                    while lz <= z + 2:
+                        lx = x - 2
+                        while lx <= x + 2:
+                            far = 0
+                            if lx == x - 2 or lx == x + 2:
+                                if lz == z - 2 or lz == z + 2:
+                                    far = 1
+                            if y == h + 5:
+                                if lx < x - 1 or lx > x + 1 or lz < z - 1 or lz > z + 1:
+                                    far = 1
+                            if far == 0:
+                                if W[(y * WD + lz) * WW + lx] == 0:
+                                    W[(y * WD + lz) * WW + lx] = 5
+                            lx = lx + 1
+                        lz = lz + 1
+                    y = y + 1
+            x = x + 1
+        z = z + 1
+
+
+def _solid(x, y, z):
+    # is there something to stand on / bump into at this place (1/256 blocks)
+    if x < 0 or z < 0 or x >= WW * 256 or z >= WD * 256 or y < 0:
+        return 1
+    if y >= WH * 256:
+        return 0
+    b = W[((y >> 8) * WD + (z >> 8)) * WW + (x >> 8)]
+    if b == 0 or b == 6:
+        return 0
+    return 1
+
+
+def _render():
+    cy = C[yaw]
+    sy = S[yaw]
+    cp = C[pitch & 255]
+    sp = S[pitch & 255]
+    fx = (sy * cp) >> 10
+    fy = sp
+    fz = (cy * cp) >> 10
+    rx = cy
+    rz = 0 - sy
+    ux = 0 - ((sy * sp) >> 10)
+    uy = cp
+    uz = 0 - ((cy * sp) >> 10)
+    ex = posx
+    ey = posy + 410
+    ez = posz
+    cbx = ex >> 8
+    cby = ey >> 8
+    cbz = ez >> 8
+    frx = ex & 255
+    fry = ey & 255
+    frz = ez & 255
+    big = 4194304
+    huge = 1099511627776
+    py = 0
+    while py < RH:
+        v = (RH // 2 - py) * 9
+        ax0 = fx + ((ux * v) >> 10)
+        ay0 = fy + ((uy * v) >> 10)
+        az0 = fz + ((uz * v) >> 10)
+        runx = 0
+        runc = -1
+        px = 0
+        while px < RW:
+            u = (px - RW // 2) * 9
+            dx = ax0 + ((rx * u) >> 10)
+            dy = ay0
+            dz = az0 + ((rz * u) >> 10)
+            bx = cbx
+            by = cby
+            bz = cbz
+            if dx > 0:
+                stx = 1
+                tdx = big // dx
+                tmx = ((256 - frx) * tdx) >> 8
+            elif dx < 0:
+                stx = -1
+                tdx = big // (0 - dx)
+                tmx = (frx * tdx) >> 8
+            else:
+                stx = 0
+                tdx = huge
+                tmx = huge
+            if dy > 0:
+                sty = 1
+                tdy = big // dy
+                tmy = ((256 - fry) * tdy) >> 8
+            elif dy < 0:
+                sty = -1
+                tdy = big // (0 - dy)
+                tmy = (fry * tdy) >> 8
+            else:
+                sty = 0
+                tdy = huge
+                tmy = huge
+            if dz > 0:
+                stz = 1
+                tdz = big // dz
+                tmz = ((256 - frz) * tdz) >> 8
+            elif dz < 0:
+                stz = -1
+                tdz = big // (0 - dz)
+                tmz = (frz * tdz) >> 8
+            else:
+                stz = 0
+                tdz = huge
+                tmz = huge
+            hit = 0
+            side = 0
+            step = 0
+            while step < 72:
+                if tmx < tmy:
+                    if tmx < tmz:
+                        bx = bx + stx
+                        tmx = tmx + tdx
+                        side = 0
+                    else:
+                        bz = bz + stz
+                        tmz = tmz + tdz
+                        side = 2
+                else:
+                    if tmy < tmz:
+                        by = by + sty
+                        tmy = tmy + tdy
+                        side = 1
+                    else:
+                        bz = bz + stz
+                        tmz = tmz + tdz
+                        side = 2
+                if bx < 0 or bx >= WW or bz < 0 or bz >= WD or by < 0 or by >= WH:
+                    step = 72
+                else:
+                    hit = W[(by * WD + bz) * WW + bx]
+                    if hit != 0:
+                        step = 72
+                    else:
+                        step = step + 1
+            if hit != 0:
+                # every second block a shade darker: the blocks show as blocks
+                if ((bx + by + bz) & 1) == 1:
+                    c = COLD[hit * 3 + side]
+                else:
+                    c = COL[hit * 3 + side]
+            else:
+                k = (dy + 1100) >> 6
+                if k < 0:
+                    k = 0
+                if k > 23:
+                    k = 23
+                c = SKY[k]
+            if c != runc:
+                if runc >= 0:
+                    fill(ox + runx * cell, oy + py * cell, (px - runx) * cell, cell, runc)
+                runx = px
+                runc = c
+            px = px + 1
+        fill(ox + runx * cell, oy + py * cell, (RW - runx) * cell, cell, runc)
+        py = py + 1
+    _hud()
+
+
+def _aim():
+    # the block the cross points at (ax, ay, az) and the empty place before
+    # it (nx, ny, nz), up to about 6 blocks away; aim = 1 when there is one
+    global aim, ax, ay, az, nx, ny, nz
+    cy = C[yaw]
+    sy = S[yaw]
+    cp = C[pitch & 255]
+    sp = S[pitch & 255]
+    dx = (sy * cp) >> 10
+    dy = sp
+    dz = (cy * cp) >> 10
+    ex = posx
+    ey = posy + 410
+    ez = posz
+    bx = ex >> 8
+    by = ey >> 8
+    bz = ez >> 8
+    big = 4194304
+    huge = 1099511627776
+    stx = 0
+    tdx = huge
+    tmx = huge
+    if dx > 0:
+        stx = 1
+        tdx = big // dx
+        tmx = ((256 - (ex & 255)) * tdx) >> 8
+    elif dx < 0:
+        stx = -1
+        tdx = big // (0 - dx)
+        tmx = ((ex & 255) * tdx) >> 8
+    sty = 0
+    tdy = huge
+    tmy = huge
+    if dy > 0:
+        sty = 1
+        tdy = big // dy
+        tmy = ((256 - (ey & 255)) * tdy) >> 8
+    elif dy < 0:
+        sty = -1
+        tdy = big // (0 - dy)
+        tmy = ((ey & 255) * tdy) >> 8
+    stz = 0
+    tdz = huge
+    tmz = huge
+    if dz > 0:
+        stz = 1
+        tdz = big // dz
+        tmz = ((256 - (ez & 255)) * tdz) >> 8
+    elif dz < 0:
+        stz = -1
+        tdz = big // (0 - dz)
+        tmz = ((ez & 255) * tdz) >> 8
+    aim = 0
+    step = 0
+    while step < 14:
+        nx = bx
+        ny = by
+        nz = bz
+        if tmx < tmy:
+            if tmx < tmz:
+                bx = bx + stx
+                tmx = tmx + tdx
+            else:
+                bz = bz + stz
+                tmz = tmz + tdz
+        else:
+            if tmy < tmz:
+                by = by + sty
+                tmy = tmy + tdy
+            else:
+                bz = bz + stz
+                tmz = tmz + tdz
+        if bx < 0 or bx >= WW or bz < 0 or bz >= WD or by < 0 or by >= WH:
+            step = 14
+        else:
+            b = W[(by * WD + bz) * WW + bx]
+            if b != 0 and b != 6:
+                aim = 1
+                ax = bx
+                ay = by
+                az = bz
+                step = 14
+            else:
+                step = step + 1
+
+
+def _hud():
+    mx = ox + RW * cell // 2
+    my = oy + RH * cell // 2
+    fill(mx - 8, my - 1, 16, 2, 0xFFFFFF)
+    fill(mx - 1, my - 8, 2, 16, 0xFFFFFF)
+    by = oy + RH * cell - 44
+    i = 0
+    while i < 6:
+        bx = ox + 12 + i * 40
+        edge = 0x202028
+        if i == pick:
+            edge = 0xFFFFFF
+        fill(bx, by, 34, 34, edge)
+        fill(bx + 3, by + 3, 28, 28, COL[PICK[i] * 3 + 1])
+        i = i + 1
+    text(ox + 260, by + 9, NAMES[pick], 0xFFFFFF)
+    if fly == 1:
+        text(ox + 340, by + 9, "flying", 0xFFE08A)
+    text(ox + 12, oy + 8, "ASMONCRAFT  W A S D  arrows  Space  F fly  Q dig  E put  1-6  Esc", 0xFFFFFF)
+
+
+def _move(mx, mz):
+    # walk by (mx, mz) if nothing is in the way; one block up is a step
+    global posx, posy, posz
+    tx = posx + mx
+    tz = posz + mz
+    if _solid(tx, posy + 300, tz) == 1:
+        return 0
+    if _solid(tx, posy + 20, tz) == 1:
+        if fly == 1:
+            return 0
+        if _solid(tx, posy + 276, tz) == 1 or _solid(tx, posy + 556, tz) == 1:
+            return 0
+        posy = ((posy >> 8) + 1) * 256
+    posx = tx
+    posz = tz
+    return 1
+
+
+def _dig():
+    _aim()
+    if aim == 1:
+        W[(ay * WD + az) * WW + ax] = 0
+        return 1
+    return 0
+
+
+def _put():
+    _aim()
+    if aim == 0:
+        return 0
+    if nx == (posx >> 8) and nz == (posz >> 8):
+        if ny == (posy >> 8) or ny == ((posy + 300) >> 8):
+            return 0
+    W[(ny * WD + nz) * WW + nx] = PICK[pick]
+    return 1
+
+
+def _key(k):
+    global yaw, pitch, fly, pick, posy
+    if k >= 65 and k <= 90:
+        k = k + 32
+    if k == 119:
+        _move((S[yaw] * 70) >> 10, (C[yaw] * 70) >> 10)
+    elif k == 115:
+        _move(0 - ((S[yaw] * 70) >> 10), 0 - ((C[yaw] * 70) >> 10))
+    elif k == 97:
+        _move(0 - ((C[yaw] * 60) >> 10), (S[yaw] * 60) >> 10)
+    elif k == 100:
+        _move((C[yaw] * 60) >> 10, 0 - ((S[yaw] * 60) >> 10))
+    elif k == 0x82:
+        yaw = (yaw + 250) & 255
+    elif k == 0x83:
+        yaw = (yaw + 6) & 255
+    elif k == 0x80:
+        if pitch < 52:
+            pitch = pitch + 4
+    elif k == 0x81:
+        if pitch > -52:
+            pitch = pitch - 4
+    elif k == 102:
+        fly = 1 - fly
+    elif k == 32:
+        if fly == 1:
+            if posy < (WH - 3) * 256:
+                if _solid(posx, posy + 620, posz) == 0:
+                    posy = posy + 128
+        elif _solid(posx, posy - 8, posz) == 1:
+            if _solid(posx, posy + 700, posz) == 0:
+                posy = posy + 300
+    elif k == 99:
+        if fly == 1:
+            if _solid(posx, posy - 130, posz) == 0:
+                posy = posy - 128
+    elif k == 113:
+        _dig()
+    elif k == 101:
+        _put()
+    elif k >= 49 and k <= 54:
+        pick = k - 49
+    else:
+        return 0
+    return 1
+
+
+def draw(x, y):
+    # v2.9.40: an icon on the desktop too - started from there it is a program
+    # of its own, and Alt + the Ngage key swaps it and the desktop
+    fill_round(x + 26, y + 6, 44, 44, 0x1F2A1A, 10)
+    fill(x + 34, y + 14, 28, 9, 0x5DBB3A)
+    fill(x + 34, y + 23, 28, 19, 0x8A5A2B)
+    fill(x + 40, y + 28, 6, 6, 0x6B4420)
+    fill(x + 52, y + 34, 6, 6, 0x6B4420)
+    text(x + 8, y + 58, "ASMONCRAFT", 0xFFFFFF)
+
+
+def open(sw, sh):
+    global posx, posy, posz, cell, ox, oy, scw, sch, dirty
+    scw = sw
+    sch = sh
+    if len(W) == 0:
+        _tables()
+        _world()
+        # start on dry land with open sky: the first such place from the middle on
+        sx = 24
+        sz = 24
+        found = 0
+        while found == 0 and sz < WD - 2:
+            h = _ground(sx, sz)
+            if h >= 9 and h < 15:
+                if W[(h * WD + sz) * WW + sx] == 0 and W[((h + 1) * WD + sz) * WW + sx] == 0:
+                    found = 1
+            if found == 0:
+                sx = sx + 1
+                if sx >= WW - 2:
+                    sx = 2
+                    sz = sz + 1
+        posx = sx * 256 + 128
+        posz = sz * 256 + 128
+        posy = _ground(sx, sz) * 256
+    cell = sw // RW
+    if sh // RH < cell:
+        cell = sh // RH
+    if cell < 1:
+        cell = 1
+    ox = (sw - RW * cell) // 2
+    oy = (sh - RH * cell) // 2
+    cursor_hide()
+    fill(0, 0, sw, sh, 0x000000)
+    dirty = 1
+    old_b = 0
+    running = 1
+    while running == 1:
+        e = poll()
+        if e == 1:
+            k = key()
+            if k == 27:
+                running = 0
+            elif _key(k) == 1:
+                dirty = 1
+        elif e == 2:
+            b = mouse_buttons()
+            if b == 1 and old_b == 0:
+                if _dig() == 1:
+                    dirty = 1
+            elif b == 2 and old_b == 0:
+                if _put() == 1:
+                    dirty = 1
+            old_b = b
+        else:
+            if fly == 0:
+                if _solid(posx, posy - 8, posz) == 0:
+                    posy = posy - 48
+                    dirty = 1
+        if dirty == 1:
+            _render()
+            dirty = 0
+    log("ASMONCRAFT closed")
+    return 1
+ 

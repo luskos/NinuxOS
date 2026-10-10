@@ -1,0 +1,513 @@
+# interfacer.py - Interfacer: put a page together with the mouse (NinuxOS v2.9.23)
+#
+# The white-on-dark field is the page. The buttons on top add a part to it:
+#   Text    a line of text          Title   a bigger line
+#   Box     a coloured block        Button  a rounded block with text in it
+# Click a part to pick it. Drag it to move it; drag its bottom-right corner to
+# change its size. With a part picked, typing writes its text; a click on a
+# colour gives it that colour; Delete takes it away.
+# Tab moves the typing to the page's name (and back). Save writes two objects:
+#   NAME      the page itself (HTML + CSS) - it gets a desktop icon, NET opens it
+#   NAME_i    the design, so Load can bring it back here to go on working
+# How the page is written: NET lays blocks out from top to bottom, so every
+# part becomes a block with its distance from the left edge and from the part
+# above it. Parts that stand side by side here come one under the other there.
+
+META = {"type": "icon", "label": "Interfacer", "kind": "app", "icon": "icon_interfacer"}
+
+WX = 40
+WY = 30
+WW = 780
+WH = 560
+CX = 52
+CY = 104
+CW = 560
+CH = 400
+PX = 628
+MAXE = 24
+ET = []
+EX = []
+EY = []
+EW = []
+EH = []
+EC = []
+ETX = []
+ORD = []
+n = 0
+sel = -1
+mode = 0
+gx = 0
+gy = 0
+focus = 0
+COLORS = [0xECECF5, 0x7B5CFF, 0x00D6B4, 0xFFB020, 0xFF3D8B, 0x2FB7FF, 0x34314A, 0x101820]
+TOOLS = ["Text", "Title", "Box", "Button", "Delete", "Save", "Load"]
+KINDS = ["text", "title", "box", "button"]
+HEXD = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"]
+NM = ["m", "y", "p", "a", "g", "e", "", "", "", "", "", "", "", "", "", ""]
+nm_n = 6
+status = "Add a part with the buttons on top, then drag it into place."
+
+
+def draw(x, y):
+    fill_round(x + 26, y + 6, 44, 44, 0x2A2440, 10)
+    fill(x + 32, y + 14, 32, 6, 0x2FB7FF)
+    fill(x + 32, y + 24, 14, 18, 0x7B5CFF)
+    fill(x + 50, y + 24, 14, 8, 0x00D6B4)
+    fill(x + 50, y + 34, 14, 8, 0xFFB020)
+    text(x + 8, y + 58, "Interfacer", 0xFFFFFF)
+
+
+def _name():
+    s = ""
+    i = 0
+    while i < nm_n:
+        s = s + NM[i]
+        i = i + 1
+    return s
+
+
+def _hex(c):
+    s = ""
+    sh = 20
+    while sh >= 0:
+        s = s + HEXD[(c >> sh) & 15]
+        sh = sh - 4
+    return s
+
+
+def _status(s):
+    global status
+    status = s
+    fill(WX + 12, WY + 532, WW - 24, 18, 0x3C3F41)
+    text(WX + 14, WY + 533, status, 0xBBBBBB)
+
+
+def _namebox():
+    fill(WX + 12, WY + 504, 560, 24, 0x3C3F41)
+    text(WX + 16, WY + 508, "Page:", 0x9AA7B0)
+    c = 0x4C5052
+    if focus == 1:
+        c = 0x4A88C7
+    fill_round(WX + 70, WY + 505, 200, 22, c, 6)
+    if focus == 1:
+        text(WX + 78, WY + 508, _name() + "_", 0xECECF5)
+        text(WX + 284, WY + 508, "typing the name (Tab = back to the part)", 0x787878)
+    else:
+        text(WX + 78, WY + 508, _name(), 0xECECF5)
+        text(WX + 284, WY + 508, "Tab = type the page's name", 0x787878)
+
+
+def _tools():
+    i = 0
+    while i < 7:
+        bx = WX + 12 + i * 80
+        c = 0x4C5052
+        if i >= 4:
+            c = 0x4A88C7
+        fill_round(bx, WY + 38, 74, 26, c, 8)
+        text(bx + 10, WY + 43, TOOLS[i], 0xF5F4FF)
+        i = i + 1
+
+
+def _panel():
+    fill(PX, CY, 180, CH, 0x3C3F41)
+    text(PX + 8, CY + 6, "The picked part", 0x9AA7B0)
+    if sel < 0:
+        text(PX + 8, CY + 30, "none - click one", 0x787878)
+    else:
+        text(PX + 8, CY + 30, KINDS[ET[sel]], 0xECECF5)
+        text(PX + 8, CY + 50, "at " + str(EX[sel]) + ", " + str(EY[sel]), 0xBBBBBB)
+        text(PX + 8, CY + 70, "size " + str(EW[sel]) + " x " + str(EH[sel]), 0xBBBBBB)
+    text(PX + 8, CY + 104, "Colour", 0x9AA7B0)
+    i = 0
+    while i < 8:
+        px = PX + 8 + (i % 4) * 42
+        py = CY + 126 + (i // 4) * 42
+        edge = 0x555759
+        if sel >= 0:
+            if EC[sel] == i:
+                edge = 0xF5F4FF
+        fill_round(px, py, 36, 36, edge, 8)
+        fill_round(px + 3, py + 3, 30, 30, COLORS[i], 6)
+        i = i + 1
+    text(PX + 8, CY + 230, "drag = move", 0x787878)
+    text(PX + 8, CY + 250, "corner = size", 0x787878)
+    text(PX + 8, CY + 270, "type = its text", 0x787878)
+
+
+def _part(i):
+    x = CX + EX[i]
+    y = CY + EY[i]
+    c = COLORS[EC[i]]
+    t = ET[i]
+    if t == 2:
+        fill(x, y, EW[i], EH[i], c)
+    elif t == 3:
+        fill_round(x, y, EW[i], EH[i], c, 10)
+        text(x + 10, y + (EH[i] - 16) // 2, ETX[i], 0xFFFFFF)
+    elif t == 1:
+        text(x, y + 2, ETX[i], c)
+        text(x + 1, y + 2, ETX[i], c)
+    else:
+        text(x, y + 2, ETX[i], c)
+    if i == sel:
+        fill(x - 1, y - 1, EW[i] + 2, 1, 0xF5F4FF)
+        fill(x - 1, y + EH[i], EW[i] + 2, 1, 0xF5F4FF)
+        fill(x - 1, y - 1, 1, EH[i] + 2, 0xF5F4FF)
+        fill(x + EW[i], y - 1, 1, EH[i] + 2, 0xF5F4FF)
+        fill(x + EW[i] - 6, y + EH[i] - 6, 8, 8, 0x00D6B4)
+
+
+def _canvas():
+    fill(CX - 2, CY - 2, CW + 4, CH + 4, 0x555759)
+    fill(CX, CY, CW, CH, 0x101820)
+    i = 0
+    while i < n:
+        _part(i)
+        i = i + 1
+
+
+def _frame():
+    window(WX, WY, WW, WH, "Interfacer")
+    _tools()
+    _canvas()
+    _panel()
+    _namebox()
+    _status(status)
+
+
+def _add(t):
+    global n, sel
+    if n >= MAXE:
+        _status("The page is full (" + str(MAXE) + " parts).")
+        return 0
+    ET[n] = t
+    EX[n] = 24
+    EY[n] = 16 + (n * 28) % 320
+    EW[n] = 200
+    EH[n] = 20
+    EC[n] = 0
+    ETX[n] = "text"
+    if t == 1:
+        ETX[n] = "Title"
+        EW[n] = 300
+        EH[n] = 24
+    elif t == 2:
+        ETX[n] = ""
+        EW[n] = 160
+        EH[n] = 80
+        EC[n] = 6
+    elif t == 3:
+        ETX[n] = "Button"
+        EW[n] = 120
+        EH[n] = 32
+        EC[n] = 1
+    sel = n
+    n = n + 1
+    _canvas()
+    _panel()
+    _status("Added. Drag it into place; type to change its text.")
+    return 1
+
+
+def _delete():
+    global n, sel
+    if sel < 0:
+        _status("Pick a part first.")
+        return 0
+    i = sel
+    while i < n - 1:
+        ET[i] = ET[i + 1]
+        EX[i] = EX[i + 1]
+        EY[i] = EY[i + 1]
+        EW[i] = EW[i + 1]
+        EH[i] = EH[i + 1]
+        EC[i] = EC[i + 1]
+        ETX[i] = ETX[i + 1]
+        i = i + 1
+    n = n - 1
+    sel = -1
+    _canvas()
+    _panel()
+    _status("Taken away.")
+    return 1
+
+
+def _sort():
+    # ORD = the parts from the top of the page down
+    i = 0
+    while i < n:
+        ORD[i] = i
+        i = i + 1
+    i = 0
+    while i < n:
+        j = i + 1
+        while j < n:
+            if EY[ORD[j]] < EY[ORD[i]]:
+                k = ORD[i]
+                ORD[i] = ORD[j]
+                ORD[j] = k
+            j = j + 1
+        i = i + 1
+
+
+def _html():
+    _sort()
+    s = "<html>\n<head>\n<title>" + _name() + "</title>\n<style>\n"
+    s = s + "body { background: #101820; color: #ececf5; padding: 0; margin: 0; }\n"
+    prev = 0
+    k = 0
+    while k < n:
+        i = ORD[k]
+        top = EY[i] - prev
+        if top < 0:
+            top = 0
+        s = s + ".p" + str(k) + " { margin-left: " + str(EX[i]) + "px; margin-top: " + str(top) + "px; "
+        s = s + "width: " + str(EW[i]) + "px; height: " + str(EH[i]) + "px; "
+        t = ET[i]
+        if t == 2:
+            s = s + "background: #" + _hex(COLORS[EC[i]]) + "; "
+        elif t == 3:
+            s = s + "background: #" + _hex(COLORS[EC[i]]) + "; color: #ffffff; border-radius: 10px; text-align: center; "
+        elif t == 1:
+            s = s + "color: #" + _hex(COLORS[EC[i]]) + "; font-size: 24px; font-weight: bold; "
+        else:
+            s = s + "color: #" + _hex(COLORS[EC[i]]) + "; "
+        s = s + "}\n"
+        prev = EY[i] + EH[i]
+        k = k + 1
+    s = s + "</style>\n</head>\n<body>\n"
+    k = 0
+    while k < n:
+        i = ORD[k]
+        s = s + '<div class="p' + str(k) + '">' + ETX[i] + "</div>\n"
+        k = k + 1
+    s = s + "</body>\n</html>\n"
+    return s
+
+
+def _design():
+    # the parts as text: the count, then two lines a part
+    s = str(n)
+    i = 0
+    while i < n:
+        s = s + "\n" + str(ET[i]) + "," + str(EX[i]) + "," + str(EY[i]) + "," + str(EW[i]) + "," + str(EH[i]) + "," + str(EC[i])
+        s = s + "\n" + ETX[i]
+        i = i + 1
+    return s
+
+
+def _save():
+    if nm_n == 0:
+        _status("Type a name for the page first (Tab).")
+        return 0
+    r = save_page(_name(), _html())
+    if r != 0:
+        _status("Could not save the page '" + _name() + "' (code " + str(r) + ").")
+        return 0
+    save_text(_name() + "_i", _design())
+    _status("Saved: the page '" + _name() + "' is on the desktop - NET opens it.")
+    return 1
+
+
+def _load():
+    global n, sel
+    d = load_text(_name() + "_i")
+    if len(d) == 0:
+        _status("No design called '" + _name() + "_i'.")
+        return 0
+    m = int(field(d, 10, 0))
+    if m < 0:
+        m = 0
+    if m > MAXE:
+        m = MAXE
+    i = 0
+    while i < m:
+        a = field(d, 10, 1 + i * 2)
+        ET[i] = int(field(a, 44, 0))
+        EX[i] = int(field(a, 44, 1))
+        EY[i] = int(field(a, 44, 2))
+        EW[i] = int(field(a, 44, 3))
+        EH[i] = int(field(a, 44, 4))
+        EC[i] = int(field(a, 44, 5))
+        ETX[i] = field(d, 10, 2 + i * 2)
+        if ET[i] < 0 or ET[i] > 3:
+            ET[i] = 0
+        if EC[i] < 0 or EC[i] > 7:
+            EC[i] = 0
+        i = i + 1
+    n = m
+    sel = -1
+    _canvas()
+    _panel()
+    _status("Loaded '" + _name() + "_i': " + str(n) + " parts.")
+    return 1
+
+
+def _hit(x, y):
+    # the top part at a place on the page (-1 = none)
+    i = n - 1
+    while i >= 0:
+        if x >= EX[i] and x < EX[i] + EW[i] and y >= EY[i] and y < EY[i] + EH[i]:
+            return i
+        i = i - 1
+    return -1
+
+
+def _press(mx, my):
+    global sel, mode, gx, gy
+    if my >= WY + 38 and my < WY + 64:
+        i = (mx - WX - 12) // 80
+        if mx >= WX + 12 and i >= 0 and i < 7 and (mx - WX - 12) % 80 < 74:
+            if i < 4:
+                _add(i)
+            elif i == 4:
+                _delete()
+            elif i == 5:
+                _save()
+            else:
+                _load()
+        return 1
+    if mx >= PX + 8 and mx < PX + 176 and my >= CY + 126 and my < CY + 210:
+        i = ((my - CY - 126) // 42) * 4 + (mx - PX - 8) // 42
+        if i >= 0 and i < 8 and sel >= 0:
+            EC[sel] = i
+            _canvas()
+            _panel()
+        return 1
+    if mx < CX or my < CY or mx >= CX + CW or my >= CY + CH:
+        return 0
+    x = mx - CX
+    y = my - CY
+    i = _hit(x, y)
+    sel = i
+    mode = 0
+    if i >= 0:
+        if x >= EX[i] + EW[i] - 10 and y >= EY[i] + EH[i] - 10:
+            mode = 2
+        else:
+            mode = 1
+            gx = x - EX[i]
+            gy = y - EY[i]
+    _canvas()
+    _panel()
+    return 1
+
+
+def _drag(mx, my):
+    # the mouse moved with the left button held: move the part, or size it
+    if sel < 0 or mode == 0:
+        return 0
+    x = mx - CX
+    y = my - CY
+    if mode == 1:
+        nx = ((x - gx) // 4) * 4
+        ny = ((y - gy) // 4) * 4
+        if nx < 0:
+            nx = 0
+        if ny < 0:
+            ny = 0
+        if nx > CW - EW[sel]:
+            nx = CW - EW[sel]
+        if ny > CH - EH[sel]:
+            ny = CH - EH[sel]
+        if nx == EX[sel] and ny == EY[sel]:
+            return 0
+        EX[sel] = nx
+        EY[sel] = ny
+    else:
+        nw = ((x - EX[sel]) // 4) * 4
+        nh = ((y - EY[sel]) // 4) * 4
+        if nw < 16:
+            nw = 16
+        if nh < 16:
+            nh = 16
+        if nw > CW - EX[sel]:
+            nw = CW - EX[sel]
+        if nh > CH - EY[sel]:
+            nh = CH - EY[sel]
+        if nw == EW[sel] and nh == EH[sel]:
+            return 0
+        EW[sel] = nw
+        EH[sel] = nh
+    _canvas()
+    _panel()
+    return 1
+
+
+def _typekey(k):
+    global nm_n, focus
+    if k == 9:
+        focus = 1 - focus
+        _namebox()
+        return 0
+    if focus == 1:
+        if k == 8:
+            if nm_n > 0:
+                nm_n = nm_n - 1
+        elif (k >= 48 and k <= 57) or (k >= 97 and k <= 122) or k == 95:
+            if nm_n < 13:
+                NM[nm_n] = char(k)
+                nm_n = nm_n + 1
+        _namebox()
+        return 0
+    if sel < 0:
+        return 0
+    if k == 8:
+        old = ETX[sel]
+        s = ""
+        i = 0
+        while i < len(old) - 1:
+            s = s + char(code(old, i))
+            i = i + 1
+        ETX[sel] = s
+    elif k == 60 or k == 62 or k == 38:
+        return 0
+    elif (k >= 32 and k <= 126) or (k >= 0xA0 and k <= 0xFF):
+        if len(ETX[sel]) < 60:
+            ETX[sel] = ETX[sel] + char(k)
+    else:
+        return 0
+    _canvas()
+    return 1
+
+
+def open(sw, sh):
+    global mode
+    if len(ET) == 0:
+        i = 0
+        while i < MAXE:
+            ET.append(0)
+            EX.append(0)
+            EY.append(0)
+            EW.append(0)
+            EH.append(0)
+            EC.append(0)
+            ETX.append("")
+            ORD.append(0)
+            i = i + 1
+    _frame()
+    old_b = 0
+    running = 1
+    while running == 1:
+        e = poll()
+        if e == 1:
+            k = key()
+            if k == 27:
+                running = 0
+            else:
+                _typekey(k)
+        elif e == 2:
+            mx = mouse_x()
+            my = mouse_y()
+            b = mouse_buttons()
+            if b == 1 and old_b == 0:
+                _press(mx, my)
+            elif b == 1:
+                _drag(mx, my)
+            else:
+                mode = 0
+            old_b = b
+    log("Interfacer closed")
+    return 1
+ 

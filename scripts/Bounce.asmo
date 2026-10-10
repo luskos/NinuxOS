@@ -1,0 +1,26 @@
+# Bouncing square - a PyTon program that runs inside NinuxOS.
+# ESC stops it. Right-click its icon on the desktop to edit it in Studio.
+w = screen_w()
+h = screen_h() - 34
+fill(0, 0, w, h, 0x0B1320)
+text(20, 16, "Bouncing square - ESC stops it", 0x8FA5B8)
+x = 100
+y = 120
+dx = 6
+dy = 4
+n = 0
+while n < 300:
+    fill(x, y, 40, 40, 0x0B1320)
+    x += dx
+    y += dy
+    if x < 0 or x > w - 40:
+        dx = -dx
+        x += dx
+    if y < 40 or y > h - 40:
+        dy = -dy
+        y += dy
+    fill(x, y, 40, 40, 0xFFD45A)
+    sleep(10)
+    poll()
+    n += 1
+print("bounced for " + str(n) + " frames")
