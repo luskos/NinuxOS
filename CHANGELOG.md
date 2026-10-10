@@ -3,6 +3,15 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.13** (11 October 2026) - not run in the system
+  - **py2asm: the last functions the programs of v2.9.59 call** - load_image, save_image
+    (Paint, Nest), sound_play (PyNamp), net_ask, net_state, net_answer (Ask) - written after
+    the runtime found in those four programs. All 20 programs of `apps/` now compile and
+    assemble with the new py2asm (they were 16).
+  - `python tools/build_disk.py --compare`: a drawer `compare` with those programs compiled by
+    the new py2asm as `pyNAME`, to be tried beside the old ones. The old ones are not touched.
+  - Read on the way: a picture object is width, height, then 4 bytes a dot; a sound object may
+    be a WAV (its part `data` is played, at most 0xBB800 bytes a call).
 - **v3.0.12** (11 October 2026) - not run in the system
   - **The project inside the system.** Every build makes a drawer `project` in the cabinet:
     the texts `changelog`, `todo`, `directive`, `protocols`, `tests` (read with `view`), and

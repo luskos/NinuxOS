@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.12 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.13 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -47,8 +47,8 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 | 8 | **[written as a program (Files); as a page after 22]** A file manager that explains itself (a page / ASMO object) | M | |
 | 9 | **[written anew, v3.0.11; small pictures wait for 11, the tie to a drawer for the kernel]** Bags as it was meant: folders on the desktop like on a phone - a small icon that shows what is inside, a click opens it; a home for clutter in the bottom right corner | M | Bags has a source; today it only faults |
 | 10 | **[written: the key D in Files; in the context menu after 22]** `data dump` in the context menu: the DATA out of an object, kept as a thing of its own | S-M | the context menu is a page |
-| 11 | **[explained to the owner; waits for a yes]** The last functions for py2asm: images, a sound object, the network -> Paint, Nest, PyNamp, Ask compile | M | 16 of 20 programs compile today |
-| 12 | **[explained to the owner; waits for a yes]** The 20 programs compiled by the new py2asm, each beside the old one on the screen | M | proves py2asm in the system |
+| 11 | **[written, v3.0.13: all 20 compile and assemble; none has run]** The last functions for py2asm: images, a sound object, the network -> Paint, Nest, PyNamp, Ask compile | M | 16 of 20 programs compile today |
+| 12 | **[ready: `build_disk.py --compare` puts them in a drawer `compare` as pyNAME; the owner compares]** The 20 programs compiled by the new py2asm, each beside the old one on the screen | M | proves py2asm in the system |
 | 13 | **[written, v3.0.11]** At most 5 users | S | if it is a check in a program or a page; kernel if in `user` |
 
 **Step 3 - the kernel, once step 1 has passed**

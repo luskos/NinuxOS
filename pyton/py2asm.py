@@ -55,7 +55,7 @@ INTRINSICS = {
 REGS = ['rdi', 'rsi', 'rdx', 'rcx', 'r8', 'r9']
 
 # the functions of NinuxOS itself (pyton/platform_ninux.inc: sys_NAME).
-# name -> (what each value is, what comes back):  i a whole number, s a text, n nothing
+# name -> (what each value is, what comes back):  i a whole number, s a text, l a list, n nothing
 SYSTEM = {
     'fill': ('iiiii', 'n'), 'fill_round': ('iiiiii', 'n'), 'text': ('iisi', 'n'),
     'window': ('iiiis', 'n'), 'poll': ('', 'i'), 'key': ('', 'i'), 'key_mods': ('', 'i'),
@@ -69,6 +69,9 @@ SYSTEM = {
     # v3.0.11: what a folder and a file manager need
     'ob_size': ('i', 'i'), 'ob_data': ('i', 'i'), 'data_dump': ('ss', 'i'),
     'own_len': ('s', 'i'), 'own_code': ('si', 'i'), 'text_meta': ('iisi', 'n'),
+    # v3.0.13: the last ones the programs of v2.9.59 call (l: a list, given as it is)
+    'load_image': ('sl', 'i'), 'save_image': ('siil', 'i'), 'sound_play': ('si', 'i'),
+    'net_ask': ('sis', 'i'), 'net_state': ('', 'i'), 'net_answer': ('', 's'),
 }
 
 # a built-in function of Python -> the function of prelude.py that does it
@@ -343,7 +346,8 @@ class Compiler:
         for i in reversed(range(len(kinds))):
             self.emit('pop %s' % REGS[i])
         for i, kind in enumerate(kinds):
-            self.emit('sar %s, 1' % REGS[i] if kind == 'i' else 'add %s, 16' % REGS[i])
+            if kind != 'l':
+                self.emit('sar %s, 1' % REGS[i] if kind == 'i' else 'add %s, 16' % REGS[i])
         self.emit('call sys_%s' % name)
         if back == 'i':
             self.emit('lea rax, [rax*2 + 1]')
@@ -1164,7 +1168,8 @@ def main():
     c = Compiler(a.target, a.encoding or ('cp1251' if a.target == 'ninux' else 'utf-8'))
     c.object_name = a.name or os.path.splitext(os.path.basename(a.source))[0].lower()
     try:
-        text = c.compile(open(a.source, encoding='utf-8-sig').read(), a.source)
+        # (the source objects of v2.9.59 end with a zero byte)
+        text = c.compile(open(a.source, encoding='utf-8-sig').read().rstrip('\0'), a.source)
     except CompileError as e:
         sys.exit('py2asm: %s: %s' % (a.source, e))
     except SyntaxError as e:

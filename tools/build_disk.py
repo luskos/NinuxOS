@@ -3,7 +3,7 @@
 #
 #   python tools/build_disk.py [--out disk.img] [--base build/base/disk_v2.9.59.img]
 #                              [--keep-version] [--no-seal] [--old-boot] [--plain-kernel]
-#                              [--nothing-inside] [--source-inside]
+#                              [--nothing-inside] [--source-inside] [--compare]
 #
 # What it does:
 #   1. assembles boot/Boot.kasm (the boot sector) and kernel/Kernel.kasm (core + extension) with nasm
@@ -361,21 +361,22 @@ INSIDE = [('changelog', 'CHANGELOG.md'), ('todo', 'TODO.md'), ('directive', 'DIR
           ('protocols', 'docs/PROTOCOLS.md'), ('tests', 'docs/TESTS.md')]
 
 
-def project_drawer(img, tables):
-    """a new, empty drawer `project`, made as the empty drawer `samples` is; returns its table"""
+def project_drawer(img, tables, called=b'project'):
+    """a new, empty drawer, made as the empty drawer `samples` is (so: a name of 7 letters);
+    returns its table"""
     for e, n, lba, sectors, ident in tables[0].entries(img):
         if n == 'samples' and type_at(img, lba) == 'cabinet':
             off = lba * SECTOR
             old = bytes(img[off:off + object_size(img, off)])
             if object_data(old)[:6] != b'DRWR\0\0' or old.count(b'samples') != 2:
                 break
-            new = bytearray(old.replace(b'samples', b'project'))
+            new = bytearray(old.replace(b'samples', called))
             struct.pack_into('<I', new, 0x4C, 0)
-            said, (line, place) = add_object(img, tables, bytes(new), 'project')
+            said, (line, place) = add_object(img, tables, bytes(new), called.decode())
             t = Table(img, struct.unpack_from('<I', img, place + 16)[0] * SECTOR + 0x68)
             tables.append(t)
             return t
-    sys.exit('build: the empty drawer `samples` is not as expected - the drawer `project` cannot be made from it')
+    sys.exit('build: the empty drawer `samples` is not as expected - a new drawer cannot be made from it')
 
 
 def project_inside(img, tables, drawer, changed, whole):
@@ -386,12 +387,8 @@ def project_inside(img, tables, drawer, changed, whole):
                           ['type:text', 'name:' + name, 'label:' + name, 'kind:text',
                            'data:%s of the project, as of this build' % path, 'desktop:no', 'made:build_disk.py'], level=0)
         add_object(img, tables, obj, name, drawer)
-    listing = os.path.join(ROOT, 'apps', 'py2asm.txt')
     sources = 0
-    for line in open(listing) if os.path.exists(listing) else []:
-        parts = line.split('#')[0].split()
-        if len(parts) != 2:
-            continue
+    for parts in listed_programs():
         have = any(n == parts[1] and type_at(img, lba) == 'source'
                    for t in tables for e, n, lba, sectors, ident in t.entries(img))
         if have:
@@ -451,26 +448,46 @@ def add_object(img, tables, data, name=None, into=None):
     return '%s (%s, %d bytes, sector %d)' % (name, what, len(data), lba), (line, place)
 
 
+def compile_program(nasm, source, name, out):
+    """a PyTon text of apps/ -> an ASMO object, by pyton/py2asm.py and nasm"""
+    asm = os.path.join(WORK, name + '.asm')
+    r = subprocess.run([sys.executable, os.path.join(ROOT, 'pyton', 'py2asm.py'), os.path.join(ROOT, 'apps', source),
+                        '--target', 'ninux', '--name', name, '-o', asm], capture_output=True, text=True)
+    if r.returncode != 0:
+        sys.exit('build: py2asm stopped on apps/%s\n%s' % (source, (r.stderr or r.stdout)[:4000]))
+    r = subprocess.run([nasm, '-f', 'bin', '-w-all', '-I', os.path.join(ROOT, 'pyton') + os.sep, '-o', out, asm],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        sys.exit('build: nasm stopped on the program %s\n%s' % (name, r.stderr[:4000]))
+    return open(out, 'rb').read()
+
+
+def listed_programs():
+    listing = os.path.join(ROOT, 'apps', 'py2asm.txt')
+    lines = open(listing).read().splitlines() if os.path.exists(listing) else []
+    return [p for p in (line.split('#')[0].split() for line in lines) if len(p) == 2]
+
+
 def programs(nasm):
     """apps/py2asm.txt: the programs compiled by the new py2asm into build/add/"""
-    listing = os.path.join(ROOT, 'apps', 'py2asm.txt')
-    if not os.path.exists(listing):
-        return
     os.makedirs(os.path.join(ROOT, 'build', 'add'), exist_ok=True)
-    for line in open(listing):
-        parts = line.split('#')[0].split()
-        if len(parts) != 2:
+    for source, name in listed_programs():
+        compile_program(nasm, source, name, os.path.join(ROOT, 'build', 'add', name + '.asmo'))
+
+
+def compare_programs(nasm, img, tables, drawer, changed):
+    """--compare: every program v2.9.59 came with, compiled by the new py2asm as pyNAME, in a
+    drawer of its own - to be tried beside the old one. The old ones stay as they are."""
+    mine = set(s.lower() for s, n in listed_programs())
+    names = []
+    for path in sorted(glob.glob(os.path.join(ROOT, 'apps', '*.asmo'))):
+        source = os.path.basename(path)
+        if source.lower() in mine or '@' in source:
             continue
-        asm = os.path.join(WORK, parts[1] + '.asm')
-        r = subprocess.run([sys.executable, os.path.join(ROOT, 'pyton', 'py2asm.py'), os.path.join(ROOT, 'apps', parts[0]),
-                            '--target', 'ninux', '--name', parts[1], '-o', asm], capture_output=True, text=True)
-        if r.returncode != 0:
-            sys.exit('build: py2asm stopped on apps/%s\n%s' % (parts[0], (r.stderr or r.stdout)[:4000]))
-        r = subprocess.run([nasm, '-f', 'bin', '-w-all', '-I', os.path.join(ROOT, 'pyton') + os.sep,
-                            '-o', os.path.join(ROOT, 'build', 'add', parts[1] + '.asmo'), asm],
-                           capture_output=True, text=True)
-        if r.returncode != 0:
-            sys.exit('build: nasm stopped on the program %s\n%s' % (parts[1], r.stderr[:4000]))
+        name = ('py' + os.path.splitext(source)[0].lower())[:15]
+        add_object(img, tables, compile_program(nasm, source, name, os.path.join(WORK, name + '.asmo')), name, drawer)
+        names.append(name)
+    changed.append('the drawer compare: %d programs of v2.9.59 compiled by the new py2asm (%s)' % (len(names), ', '.join(names)))
 
 
 SUITS = {'k_tools': 'Tools', 'k_usb12': 'USB12', 'k_net': 'Network', 'k_sound': 'Sound'}
@@ -588,6 +605,8 @@ def main():
     ap.add_argument('--no-seal', action='store_true', help='do not sign: the Sentinel will call what changed CHANGED')
     ap.add_argument('--plain-kernel', action='store_true',
                     help='the kernel without the code written after the recovery (Alt + *): the 220000 bytes of v2.9.59')
+    ap.add_argument('--compare', action='store_true',
+                    help='also a drawer `compare`: the programs of v2.9.59 compiled by the new py2asm, as pyNAME')
     ap.add_argument('--nothing-inside', action='store_true', help='without the drawer project (the texts and sources of the project)')
     ap.add_argument('--source-inside', action='store_true', help='also the whole source container as the object nxsource (19 MB)')
     ap.add_argument('--old-boot', action='store_true', help='the boot sector of v2.9.59 (a FAT12 diskette to Windows)')
@@ -694,6 +713,8 @@ def main():
     # and the hash of v2.9.59 - so they are found wherever a changed kernel has them
     if not a.nothing_inside:
         project_inside(img, tables, project_drawer(img, tables), changed, a.source_inside)
+    if a.compare:
+        compare_programs(nasm, img, tables, project_drawer(img, tables, b'compare'), changed)
 
     base_k = base[SECTOR:SECTOR + BASE_KERNEL]
     old_public = base_k[PUBLIC_KEY_AT:PUBLIC_KEY_AT + 32]

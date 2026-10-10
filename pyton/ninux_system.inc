@@ -21,8 +21,8 @@
 ;   meaning not known yet: +0x20 +0xA8
 ; v3.0.11, from the same places: ob_size, ob_data (+0x60), own_len, own_code (+0x70, +0x68),
 ;       text_meta (+0x70, +0x30), data_dump (+0x68, +0xE0).
-; Not connected yet: load_image, save_image (Paint, Nest), sound_play (PyNamp),
-;       net_ask, net_answer, net_state (Ask), time.
+; v3.0.13: load_image, save_image (Paint, Nest), sound_play (PyNamp), net_ask, net_answer,
+;       net_state (Ask) - written after the runtime of those four programs.
 
 %macro NINUX_SYSTEM_CODE 0
 sys_ticks:                              ; 100 a second
@@ -288,6 +288,193 @@ ninux_text_meta_out:
         pop rbx
         ret
 
+; ---- v3.0.13: pictures, a sound object, the network - as the runtime of v2.9.59 did them.
+; A picture object: DATA = width (4 bytes), height (4), then a dot 4 bytes (0x00RRGGBB).
+; A list here: [2][length][room][address of the items]; an item is a number as a value (n*2+1).
+sys_load_image:                         ; (name, list) -> how many dots were put into the list
+        push rbx
+        push r12
+        mov r12, rsi
+        mov rax, [rel ninux_api]
+        call [rax + 0x68]
+        test rax, rax
+        jz ninux_image_none
+        test r12b, 1
+        jnz ninux_image_none
+        mov rbx, [rax + 0x10]
+        add rbx, rax
+        mov eax, [rbx]
+        mov ecx, [rbx + 4]
+        imul rax, rcx
+        mov rcx, [r12 + 8]
+        cmp rax, rcx
+        cmovb rcx, rax
+        mov rdi, [r12 + 24]
+        xor edx, edx
+ninux_image_dot:
+        cmp rdx, rcx
+        jae ninux_image_done
+        mov eax, [rbx + rdx*4 + 8]
+        and eax, 0xFFFFFF
+        lea rax, [rax*2 + 1]
+        mov [rdi + rdx*8], rax
+        inc rdx
+        jmp ninux_image_dot
+ninux_image_done:
+        mov rax, rcx
+        pop r12
+        pop rbx
+        ret
+ninux_image_none:
+        xor eax, eax
+        pop r12
+        pop rbx
+        ret
+
+sys_save_image:                         ; (name, width, height, list) -> what the system says; -1: not saved
+        push rbx
+        push r12
+        push r13
+        push r14
+        push r15
+        push rbp
+        mov r12, rdi
+        mov r13, rsi
+        mov r14, rdx
+        mov r15, rcx
+        test r15b, 1
+        jnz ninux_image_bad
+        mov rbx, r13
+        imul rbx, r14
+        test rbx, rbx
+        jle ninux_image_bad
+        cmp rbx, [r15 + 8]
+        ja ninux_image_bad
+        lea rbp, [rbx*4 + 8]            ; the length of the DATA
+        mov rdi, rbp
+        call rt_alloc
+        mov [rax], r13d
+        mov [rax + 4], r14d
+        mov rsi, [r15 + 24]
+        xor ecx, ecx
+ninux_image_pack:
+        mov rdx, [rsi + rcx*8]
+        sar rdx, 1
+        and edx, 0xFFFFFF
+        mov [rax + rcx*4 + 8], edx
+        inc rcx
+        cmp rcx, rbx
+        jb ninux_image_pack
+        mov rdi, r12
+        mov rsi, rax
+        mov rcx, rbp
+        lea r10, [rel ninux_meta_image]
+        mov r11d, ninux_meta_image_end - ninux_meta_image
+        call ninux_save_sized
+        jmp ninux_image_out
+ninux_image_bad:
+        mov rax, -1
+ninux_image_out:
+        pop rbp
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbx
+        ret
+
+sys_sound_play:                         ; (name of a sound object, from which byte) -> how many bytes the
+        push rbx                        ; device took (at most four seconds); 0: none, or busy, or the end
+        push r12
+        push r13
+        mov r12, rsi
+        mov rax, [rel ninux_api]
+        call [rax + 0x68]
+        test rax, rax
+        jz ninux_sound_none
+        mov rbx, rax
+        mov rcx, [rbx + 0x58]
+        mov rsi, rbx
+        add rsi, [rbx + 0x10]
+        cmp rcx, 0x2C
+        jb ninux_sound_from
+        cmp dword [rsi], 0x46464952     ; 'RIFF': a WAV - the samples are its part 'data'
+        jne ninux_sound_from
+        lea r8, [rsi + rcx]
+        lea rdx, [rsi + 0x0C]
+ninux_sound_part:
+        lea rax, [rdx + 8]
+        cmp rax, r8
+        ja ninux_sound_none
+        mov eax, [rdx + 4]
+        cmp dword [rdx], 0x61746164     ; 'data'
+        je ninux_sound_data
+        inc rax
+        and rax, -2
+        lea rdx, [rdx + rax + 8]
+        jmp ninux_sound_part
+ninux_sound_data:
+        lea rsi, [rdx + 8]
+        mov ecx, eax
+        lea rax, [rsi + rcx]
+        cmp rax, r8
+        jbe ninux_sound_from
+        mov rcx, r8
+        sub rcx, rsi
+ninux_sound_from:
+        cmp r12, rcx
+        jae ninux_sound_none
+        add rsi, r12
+        sub rcx, r12
+        cmp rcx, 0xBB800
+        jbe ninux_sound_whole
+        mov ecx, 0xBB800
+ninux_sound_whole:
+        and rcx, -4
+        jz ninux_sound_none
+        mov r13, rcx
+        mov edi, 1
+        mov rdx, rcx
+        mov rax, [rel ninux_api]
+        call [rax + 0x138]
+        test rax, rax
+        jz ninux_sound_none
+        mov rax, r13
+        jmp ninux_sound_out
+ninux_sound_none:
+        xor eax, eax
+ninux_sound_out:
+        pop r13
+        pop r12
+        pop rbx
+        ret
+
+sys_net_ask:                            ; (address, port, what is asked)
+        mov rcx, rdx
+        mov rdx, rsi
+        mov rsi, rdi
+        mov edi, 1
+        NINUX_API 0x150
+sys_net_state:
+        xor edi, edi
+        NINUX_API 0x150
+sys_net_answer:                         ; -> the answer so far, a text (64 KB of room, taken once)
+        mov rax, [rel ninux_net_room]
+        test rax, rax
+        jnz ninux_net_have
+        mov edi, 0x10000
+        call rt_alloc
+        mov [rel ninux_net_room], rax
+ninux_net_have:
+        mov byte [rax], 0
+        mov edi, 2
+        mov rsi, rax
+        mov edx, 0x10000
+        mov rax, [rel ninux_api]
+        call [rax + 0x150]
+        mov rax, [rel ninux_net_room]
+        ret
+
 sys_data_dump:                          ; (name of an object, a new name): its DATA out, as an object of
         push rsi                        ; its own; the object keeps them. -> 0 no such object or no DATA
         mov rax, [rel ninux_api]
@@ -394,6 +581,9 @@ ninux_meta_page_end:
 ninux_meta_data:
         db 'type:data', 0, 'kind:data', 0, 'data:the DATA of an object, taken out by data dump', 0, 0
 ninux_meta_data_end:
+ninux_meta_image:
+        db 'type:image', 0, 'kind:image', 0, 'data:a picture saved by a PyTon program', 0, 0
+ninux_meta_image_end:
 ninux_key_name: db 'name', 0
 ninux_own_name: times 16 db 0
 ninux_open:     db 'open', 0
@@ -402,4 +592,5 @@ ninux_system_names:                     ; system(name): the number of the name i
         db 'year', 0, 'month', 0, 'day', 0, 'hour', 0, 'minute', 0, 'second', 0, 'time', 0, 0
         align 8
 ninux_rating:   dq 0
+ninux_net_room: dq 0
 %endmacro

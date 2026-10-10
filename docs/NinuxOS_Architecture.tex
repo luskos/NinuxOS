@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.12.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.13.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.12 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.13 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -729,6 +729,10 @@ Windows has.
       \texttt{protocols}, \texttt{tests} as text objects in Windows-1251, and the sources of the
       programs compiled by py2asm as source objects. \texttt{-{}-source-inside} adds the whole
       source container as the object \texttt{nxsource}.
+\item \textbf{All 20 programs compile} with the new py2asm from v3.0.13 (pictures: an image
+      object is width, height, then four bytes a dot; a sound object; the network).
+      \cmd{python tools/build\_disk.py -{}-compare} puts them into a drawer \texttt{compare} as
+      \texttt{pyNAME}, beside the old ones.
 \item \textbf{Other dialects} (an idea, \file{TODO.md} part 2a): C, C++, C\#, Java and
       JavaScript as ways of writing over the one back end of py2asm --- plain code only.
 \end{itemize}
