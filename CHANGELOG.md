@@ -3,6 +3,11 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.29** (11 October 2026) - seen in QEMU
+  - **Desk2 does what a desktop is expected to do**: the card of an object when the mouse rests
+    on its icon; the right button's menu (Open, View, Edit, **Data dump**, About it - and on the
+    desk itself Settings, Files, Tidy the icons, The shell); the start menu (N) with Restart and
+    Shut down; icons can be moved and stay where they are put. 470 lines of PyTon.
 - **v3.0.28** (11 October 2026) - seen in QEMU
   - **Desk2: the desktop written anew, in PyTon** (`apps/Desk2.asmo`, 230 lines - the source is
     there to be read and changed). `desk desk2` in the shell runs it; `desktop` still runs the

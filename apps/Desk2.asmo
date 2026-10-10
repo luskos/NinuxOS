@@ -1,13 +1,19 @@
-# desk2.py - the desktop written anew (NinuxOS v3.0.28). Second step of docs/DESKTOP.md: the desk.
+# desk2.py - the desktop written anew (NinuxOS v3.0.29). Steps 2 - 4 of docs/DESKTOP.md.
 #
 # In the shell:  desk desk2      (the usual `desktop` still runs the old one)
 #
-# What is there: the wallpaper, an icon for every object of the cabinet that is on the desk,
-# drawers that open, programs and pages that start with a click, a taskbar with a button for
-# every program that runs and the clock, ESC or the button "shell" to leave.
-# What the old one does and this one does not yet: places the user gives the icons (they stand
-# in the order of the cabinet), the card of an object, the context menu, the start menu, the
-# taskbar as a page, messages of the system.
+#   a click on an icon         open it: a program in a window, a drawer, a page in NET
+#   hold and move an icon      put it somewhere else (kept in the object desk2_places)
+#   the mouse resting on one   its card: what the object says about itself
+#   the right button on one    a menu: open, view, edit, data dump, about it
+#   the right button elsewhere a menu: settings, files, tidy the icons, the shell
+#   the button N               the start menu: settings, files, the shell, restart, shut down
+#   a button of the taskbar    that program to the front
+#   ESC                        back to the shell
+#
+# What the old desktop does and this one does not yet: the taskbar and the menus as pages, the
+# system's own actions on an object (clone, rename, hide, lock, inject, erase, share ...),
+# messages of the system on the taskbar.
 #
 # Everything here is plain PyTon over the system's functions - this file is the source.
 
@@ -18,14 +24,62 @@ CW = 96         # an icon's cell
 CH = 92
 ITEMS = []      # the numbers of the objects that have icons, in the order they are drawn
 KIND = []       # for each: 0 a program, 1 a script, 2 a page, 3 a drawer, 4 "back" out of a drawer
+PX = []         # where each icon stands
+PY = []
+PN = []         # the places the user gave: the name of an object, its x, its y
+PXS = []
+PYS = []
 TASKS = []      # the places of the multiplexer that have buttons on the taskbar
+MENU = []       # the lines of the menu that is open
+ACTS = []       # what each line does
 drawer = -1     # the number of the drawer that is open, -1: the cabinet itself
 sw = 0
 sh = 0
 rows = 1
-msg = "Desk2: the new desktop. ESC or 'shell': leave."
+msg = "Desk2: the new desktop. Right button: a menu."
 seen_cabinet = -1
 seen_tasks = -1
+over = 0        # what lies over the desk: 0 nothing, 1 a menu, 2 a card
+over_keep = 0   # what was under it (rect_save)
+over_x = 0
+over_y = 0
+over_w = 0
+over_h = 0
+menu_for = -1   # the icon the menu is for, -1: the desk itself
+
+
+# ---------------------------------------------------------------- what is on the desk
+
+def _places_load():
+    while len(PN) > 0:
+        PN.pop()
+        PXS.pop()
+        PYS.pop()
+    d = load_text("desk2_places")
+    for line in d.split("\n"):
+        f = line.split(",")
+        if len(f) == 3:
+            PN.append(f[0])
+            PXS.append(int(f[1]))
+            PYS.append(int(f[2]))
+
+
+def _places_save():
+    s = ""
+    i = 0
+    while i < len(PN):
+        s = s + PN[i] + "," + str(PXS[i]) + "," + str(PYS[i]) + "\n"
+        i = i + 1
+    save_text("desk2_places", s)
+
+
+def _place_of(name):
+    i = 0
+    while i < len(PN):
+        if PN[i] == name:
+            return i
+        i = i + 1
+    return -1
 
 
 def _collect():
@@ -33,6 +87,9 @@ def _collect():
     while len(ITEMS) > 0:
         ITEMS.pop()
         KIND.pop()
+    while len(PX) > 0:
+        PX.pop()
+        PY.pop()
     first = 0
     n = cabinet_top()
     if drawer >= 0:
@@ -61,7 +118,31 @@ def _collect():
                 ITEMS.append(i)
                 KIND.append(k)
         i = i + 1
+    n = 0
+    while n < len(ITEMS):                       # in rows and columns, unless the user put it elsewhere
+        x = 16 + (n // rows) * CW
+        y = 18 + (n % rows) * CH
+        if drawer < 0:
+            p = _place_of(ob_meta(ITEMS[n], "name"))
+            if p >= 0:
+                x = PXS[p]
+                y = PYS[p]
+        PX.append(x)
+        PY.append(y)
+        n = n + 1
 
+
+def _at(mx, my):
+    # which icon is there; -1: none
+    n = len(ITEMS) - 1
+    while n >= 0:
+        if mx >= PX[n] + 16 and mx < PX[n] + 80 and my >= PY[n] and my < PY[n] + 76:
+            return n
+        n = n - 1
+    return -1
+
+
+# ---------------------------------------------------------------- drawing
 
 def _label(x, y, s):
     if len(s) > 11:
@@ -76,8 +157,8 @@ def _tile(x, y, colour, letter):
 
 
 def _icon(n):
-    x = 16 + (n // rows) * CW
-    y = 18 + (n % rows) * CH
+    x = PX[n]
+    y = PY[n]
     i = ITEMS[n]
     k = KIND[n]
     if k == 4:
@@ -112,14 +193,16 @@ def _icon(n):
 
 def _clock():
     t = system("time")
-    fill_round(sw - 152, sh - TB + 5, 144, 24, 0x33305A, 8)
-    text(sw - 80 - len(t) * 4, sh - TB + 9, t, 0xFFFFFF)
+    fill_round(sw - 176, sh - TB + 5, 168, 24, 0x33305A, 8)
+    text(sw - 92 - len(t) * 4, sh - TB + 9, t, 0xFFFFFF)
 
 
 def _taskbar():
     fill(0, sh - TB, sw, TB, 0x1C1A32)
-    fill_round(8, sh - TB + 5, 60, 24, 0x7B5CFF, 8)
-    text(18, sh - TB + 9, "shell", 0xFFFFFF)
+    fill_round(8, sh - TB + 5, 28, 24, 0x7B5CFF, 8)
+    text(18, sh - TB + 9, "N", 0xFFFFFF)
+    fill_round(42, sh - TB + 5, 28, 24, 0x2A2840, 8)
+    text(48, sh - TB + 9, ">_", 0x00D6B4)
     while len(TASKS) > 0:
         TASKS.pop()
     now = task_focused()
@@ -139,7 +222,7 @@ def _taskbar():
             x = x + 112
         slot = slot + 1
     m = msg
-    room = (sw - 170 - x) // 8
+    room = (sw - 194 - x) // 8
     if room < 0:
         room = 0
     if len(m) > room:
@@ -149,8 +232,10 @@ def _taskbar():
 
 
 def _all():
-    global seen_cabinet, seen_tasks
+    global seen_cabinet, seen_tasks, over, over_keep
     cursor_hide()
+    over = 0                                    # whatever lay over the desk is drawn over
+    over_keep = 0
     image_fit(0, 0, sw, sh, "desktop")          # the wallpaper is the DATA of the old desktop object
     n = 0
     while n < len(ITEMS):
@@ -167,6 +252,111 @@ def _say(s):
     cursor_hide()
     _taskbar()
 
+
+# ---------------------------------------------------------------- what lies over the desk: a menu, a card
+
+def _over_close():
+    global over, over_keep
+    if over == 0:
+        return 0
+    cursor_hide()
+    over = 0
+    if over_keep != 0:
+        rect_restore(over_keep)
+        over_keep = 0
+    else:
+        _all()                                  # there was no memory to keep what was under it
+    return 1
+
+
+def _over_open(x, y, w, h, what):
+    global over, over_keep, over_x, over_y, over_w, over_h
+    _over_close()
+    if x + w > sw - 4:
+        x = sw - 4 - w
+    if y + h > sh - TB - 4:
+        y = sh - TB - 4 - h
+    if x < 4:
+        x = 4
+    if y < 4:
+        y = 4
+    cursor_hide()
+    over_keep = rect_save(x, y, w, h)
+    over = what
+    over_x = x
+    over_y = y
+    over_w = w
+    over_h = h
+    fill_round(x, y, w, h, 0x7B5CFF, 10)
+    fill_round(x + 1, y + 1, w - 2, h - 2, 0x1E1C30, 9)
+
+
+def _menu(x, y, lines, acts, target):
+    global menu_for
+    while len(MENU) > 0:
+        MENU.pop()
+        ACTS.pop()
+    w = 0
+    i = 0
+    while i < len(lines):
+        MENU.append(lines[i])
+        ACTS.append(acts[i])
+        if len(lines[i]) > w:
+            w = len(lines[i])
+        i = i + 1
+    _over_open(x, y, w * 8 + 28, len(MENU) * 24 + 12, 1)
+    menu_for = target
+    i = 0
+    while i < len(MENU):
+        text(over_x + 14, over_y + 10 + i * 24, MENU[i], 0xECECF5)
+        i = i + 1
+
+
+def _card(n):
+    i = ITEMS[n]
+    if KIND[n] == 4:
+        return 0
+    name = ob_meta(i, "name")
+    lab = ob_meta(i, "label")
+    if len(lab) == 0:
+        lab = name
+    kind = ob_meta(i, "type")
+    k = ob_meta(i, "kind")
+    if len(k) > 0:
+        kind = kind + ", " + k
+    lang = ob_meta(i, "lang")
+    if len(lang) > 0:
+        kind = kind + ", written in " + lang
+    lines = [lab, "name      " + name, "it is     " + kind]
+    d = ob_meta(i, "data")
+    if len(d) > 0:
+        lines.append("DATA      " + d)
+    s = ob_meta(i, "sockets")
+    if len(s) > 0:
+        lines.append("sockets   " + s)
+    lines.append("size      " + str(ob_size(i)) + " bytes, " + str(ob_data(i)) + " of them DATA")
+    if ob_state(i) == 3:
+        lines.append("locked")
+    w = 0
+    j = 0
+    while j < len(lines):
+        if len(lines[j]) > 56:
+            lines[j] = lines[j][:56]
+        if len(lines[j]) > w:
+            w = len(lines[j])
+        j = j + 1
+    _over_open(PX[n] + 84, PY[n] + 8, w * 8 + 28, len(lines) * 20 + 16, 2)
+    j = 0
+    while j < len(lines):
+        c = 0xC9CEDE
+        if j == 0:
+            c = 0xFFFFFF
+        text(over_x + 14, over_y + 10 + j * 20, lines[j], c)
+        j = j + 1
+    return 1
+
+
+# ---------------------------------------------------------------- doing things
 
 def _open(n):
     global drawer
@@ -201,24 +391,122 @@ def _open(n):
     return 1
 
 
+def _do(act):
+    # what a line of a menu does; 1: leave the desktop
+    global drawer
+    n = menu_for
+    name = ""
+    if n >= 0 and n < len(ITEMS):
+        name = ob_meta(ITEMS[n], "name")
+    if act == "open":
+        _open(n)
+    elif act == "view" or act == "edit":
+        if open_with("studio", act, name) < 0:
+            _say("Studio is not in the cabinet.")
+    elif act == "dump":
+        out = name
+        if len(out) > 10:
+            out = out[:10]
+        out = out + "_data"
+        got = data_dump(name, out)
+        if got == 0:
+            _say("'" + name + "' has no DATA to take out.")
+        else:
+            _say("data dump: " + str(got) + " bytes are now the object '" + out + "'.")
+    elif act == "about":
+        _card(n)
+    elif act == "settings":
+        if open_with("net", "show", "curtain") < 0:
+            _say("The page of the settings (curtain) is not in the cabinet.")
+    elif act == "files":
+        if spawn("files") < 0:
+            _say("Files is not in the cabinet.")
+    elif act == "tidy":
+        while len(PN) > 0:
+            PN.pop()
+            PXS.pop()
+            PYS.pop()
+        _places_save()
+        _collect()
+        _all()
+    elif act == "root":
+        drawer = -1
+        _collect()
+        _all()
+    elif act == "shell":
+        return 1
+    elif act == "restart":
+        power(1)
+    elif act == "off":
+        power(0)
+    return 0
+
+
+def _move(n, mx, my):
+    # the icon n was let go at mx, my: it stands there from now on
+    x = mx - 48
+    y = my - 30
+    if x < 0:
+        x = 0
+    if y < 0:
+        y = 0
+    if x > sw - CW:
+        x = sw - CW
+    if y > sh - TB - CH:
+        y = sh - TB - CH
+    name = ob_meta(ITEMS[n], "name")
+    p = _place_of(name)
+    if p < 0:
+        PN.append(name)
+        PXS.append(x)
+        PYS.append(y)
+    else:
+        PXS[p] = x
+        PYS[p] = y
+    _places_save()
+    _collect()
+    _all()
+
+
 def _click(mx, my):
-    # 1: leave the desktop
+    # the left button on something that is not an icon; 1: leave the desktop
+    if over == 1:
+        hit = -1
+        if mx >= over_x and mx < over_x + over_w and my >= over_y + 6:
+            hit = (my - over_y - 6) // 24
+        _over_close()
+        if hit >= 0 and hit < len(ACTS):
+            return _do(ACTS[hit])
+        return 0
+    if _over_close() == 1:
+        return 0
     if my >= sh - TB:
+        if mx < 40:
+            _menu(8, sh - TB - 140, ["Settings", "Files", "The shell", "Restart", "Shut down"],
+                  ["settings", "files", "shell", "restart", "off"], -1)
+            return 0
         if mx < 72:
             return 1
         j = (mx - 80) // 112
         if mx >= 80 and j < len(TASKS):
             task_focus(TASKS[j])
         return 0
-    if mx < 16 or my < 18:
+    return 0
+
+
+def _right(mx, my):
+    if my >= sh - TB:
         return 0
-    col = (mx - 16) // CW
-    row = (my - 18) // CH
-    if row >= rows:
-        return 0
-    n = col * rows + row
-    if n < len(ITEMS):
-        _open(n)
+    n = _at(mx, my)
+    if n >= 0 and KIND[n] != 4:
+        _menu(mx, my, ["Open", "View in Studio", "Edit in Studio", "Data dump", "About it"],
+              ["open", "view", "edit", "dump", "about"], n)
+    elif drawer >= 0:
+        _menu(mx, my, ["Back to the cabinet", "Settings", "Files", "The shell"],
+              ["root", "settings", "files", "shell"], -1)
+    else:
+        _menu(mx, my, ["Settings", "Files", "Tidy the icons", "The shell"],
+              ["settings", "files", "tidy", "shell"], -1)
     return 0
 
 
@@ -229,36 +517,83 @@ def run(a, b):
     rows = (sh - TB - 18) // CH
     if rows < 1:
         rows = 1
+    _places_load()
     _collect()
     _all()
     log("[desk2] started")
     old_b = 0
     last = ticks()
+    held = -1           # the icon the left button went down on
+    held_x = 0
+    held_y = 0
+    rest_x = 0          # where the mouse rests, and since when
+    rest_y = 0
+    rest_t = ticks()
+    rest_done = 1
+    mx = 0
+    my = 0
     while True:
         e = poll()
         if e == 1:
             if key() == 27:
-                break
+                if _over_close() == 0:
+                    break
         elif e == 2:
             mx = mouse_x()
             my = mouse_y()
             b2 = mouse_buttons()
+            if abs(mx - rest_x) > 6 or abs(my - rest_y) > 6:
+                rest_x = mx
+                rest_y = my
+                rest_t = ticks()
+                rest_done = 0
+                if over == 2:
+                    _over_close()
             if b2 == 1 and old_b == 0:
-                cursor_hide()
-                if _click(mx, my) == 1:
-                    break
+                held = -1
+                if over == 0 and my < sh - TB:
+                    held = _at(mx, my)
+                    held_x = mx
+                    held_y = my
+                if held < 0:
+                    if _click(mx, my) == 1:
+                        break
+                rest_done = 1
+            elif b2 == 0 and old_b == 1 and held >= 0:
+                if abs(mx - held_x) > 8 or abs(my - held_y) > 8:
+                    if drawer < 0 and held < len(ITEMS):
+                        _move(held, mx, my)
+                elif held < len(ITEMS):
+                    _open(held)
+                held = -1
+                rest_done = 1
+            elif b2 >= 2 and old_b == 0:           # the right button (or the middle one)
+                _over_close()
+                _right(mx, my)
+                rest_done = 1
             old_b = b2
             cursor_show(mx, my)
         else:
             if cabinet_changes() != seen_cabinet:
                 _collect()
                 _all()
+                cursor_show(mx, my)
             elif tasks_changes() != seen_tasks:
                 cursor_hide()
                 _taskbar()
                 seen_tasks = tasks_changes()
+                cursor_show(mx, my)
             elif ticks() - last >= 100:
                 last = ticks()
-                _clock()
+                if over == 0:
+                    cursor_hide()
+                    _clock()
+                    cursor_show(mx, my)
+            elif rest_done == 0 and over == 0 and old_b == 0 and ticks() - rest_t >= 70:
+                rest_done = 1
+                n = _at(mx, my)
+                if n >= 0 and my < sh - TB:
+                    _card(n)
+                    cursor_show(mx, my)
     log("[desk2] closed")
     return 0

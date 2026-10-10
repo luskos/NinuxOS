@@ -1,0 +1,41 @@
+# q_v3_desk2b.txt - v3.0.29: Desk2 - the card, the menus, moving an icon
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type desk desk2
+wait 8
+# the mouse rests on Calc: its card
+moveto 64 410
+wait 3
+snap e01_card
+# the right button on it: the menu; "Data dump"
+rclick
+wait 2
+snap e02_menu
+moveto 100 495
+click
+wait 3
+snap e03_dump
+# the right button on the empty desk
+moveto 700 300
+rclick
+wait 2
+snap e04_deskmenu
+esc
+wait 1
+# move Readme to the right
+moveto 64 45
+drag 800 200
+wait 3
+snap e05_moved
+# the start menu
+moveto 20 750
+click
+wait 2
+snap e06_start
+esc
+wait 1
+esc
+wait 3
+type backup
+snap e07_shell

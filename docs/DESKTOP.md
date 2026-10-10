@@ -90,6 +90,18 @@ desktop that can be started and tried beside the old one:
    the taskbar as a page, the card, the context menu, dragging and kept places, the system's
    messages. The old desktop is untouched and is still what `desktop` runs.
 
+   **Steps 3 and 4 are done in v3.0.29** (`apps/Desk2.asmo`, 470 lines; seen in QEMU,
+   `test/qemu/q_v3_desk2b.txt`): the mouse resting on an icon brings its card (label, name,
+   what it is, its DATA, sockets, size); the right button a menu - on an icon: Open, View in
+   Studio, Edit in Studio, Data dump, About it; on the desk: Settings, Files, Tidy the icons,
+   The shell; the button N the start menu (Settings, Files, The shell, Restart, Shut down);
+   an icon held and moved stays where it is let go (kept in the object `desk2_places`, by
+   name). What lies over the desk keeps what was under it (`rect_save`) and puts it back.
+   Still not there: the taskbar and the menus as pages; the system's own actions on an
+   object (clone, rename, hide, lock, inject, erase, share - they are the extension's
+   services, +108, not read yet); the system's messages on the taskbar. In QEMU the right
+   button arrives as 4, not 2 - Desk2 takes both.
+
 1. **py2asm gets the functions above** that it does not have (pictures, the rectangle kept and
    put back, clip, power, the cabinet's counter, the page drawing, the multiplexer's numbers,
    calling a socket). Each has to be read whole in the kernel first - guessing a function that
