@@ -1,6 +1,23 @@
 # NinuxOS - what each version brought
 
-Taken from the text the v2.9.59 kernel carries. Newest first.
+Newest first. v2.9.60 is written by hand; everything from v2.9.50 down is the text the v2.9.59
+kernel carries in itself.
+
+- **v2.9.60** (10 October 2026) - the project is back after the disk was lost. The system itself is
+  still the v2.9.59 that came off the stick (its kernel says v2.9.59: other bytes in the kernel would
+  fail its SHA-256 check, and nothing signs a new one yet - TODO.md). New in the project:
+  - the whole system taken from a bootable stick: `disk.img`, the 165 objects of the cabinet,
+    the PyTon sources of 20 programs, the pages, themes and scripts
+  - `boot/Boot.kasm` and `kernel/Kernel.kasm`: the boot sector and the kernel as NASM source again,
+    made from the compiled kernel by `tools/kdis/kdis.py`; they assemble to the same bytes
+  - `tools/build_disk.py`: the build - assembles the boot sector and the kernel, puts them and the
+    objects into the base image, writes `disk.img`
+  - `Puffus.exe` (`tools/puffus`): builds, writes `disk.img` onto a USB stick, reads it back, ejects it
+  - `tools/qemu/qrun.py` and `test/qemu/q_v2959_*.txt`: the system in QEMU, driven by scripts
+  - `docs/NinuxOS_Architecture.tex`: the system and the files of the project, described anew
+  - `TODO.md`, and `docs/chat`: the conversation in which all this was done
+- **v2.9.51 - v2.9.59** - the kernel carries no line about these. What is known: Keys is
+  "NinuxOS v2.9.59", Ask is "v2.9.56" (the dates in their sources).
 
 NinuxOS v2.9.59 with ASMO v4 objects
 

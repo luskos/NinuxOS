@@ -1,0 +1,375 @@
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v2.9.60.
+% Written anew on 10 October 2026 from the running system and its disk image; the old
+% document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.4cm]{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\file}[1]{\texttt{#1}}
+\newcommand{\cmd}[1]{\texttt{#1}}
+\setlist{itemsep=2pt,topsep=4pt}
+
+\title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
+\normalsize version 2.9.60}
+\author{}
+\date{10 October 2026}
+
+\begin{document}
+\maketitle
+
+\noindent\textbf{How to read this.} Everything here was read from the system itself: from the disk
+image of v2.9.59, from the objects in its cabinet, from the text of the kernel and from the system
+running in QEMU. Where something is not known yet, it says so; section~\ref{sec:open} lists those
+places. Nothing is taken from memory of the old documents.
+
+\tableofcontents
+\newpage
+
+% ------------------------------------------------------------------------------------------
+\section{The idea}
+
+NinuxOS is an operating system of \emph{functional objects}. Its own start line says it:
+\begin{quote}\ttfamily NinuxOS v2.9.59 - Functional Objects (DATA + META + SOCKETS)\end{quote}
+
+\begin{itemize}
+\item \textbf{Everything is an object.} A program, a picture, a page, a theme, a text, a drawer,
+      the machine's identity, the log: each is one ASMO object. An object carries its \emph{data},
+      its \emph{meta data} (facts as \texttt{key:value}) and its \emph{sockets} (its own functions).
+      A picture can carry the code that shows it; a program is an object whose sockets do the work.
+      This is programming \emph{with} objects, not object-oriented programming: there are no classes.
+\item \textbf{No file system.} Objects lie in the \emph{cabinet}, one after another on the disk;
+      \emph{drawers} hold more objects. Formats such as FAT or NTFS are only read from foreign
+      sticks (\cmd{files}).
+\item \textbf{Two kinds of object files.} \file{.asmo} is an object of the system or of the user;
+      \file{.kasm} is a part of the kernel (the kernel itself and the \emph{kernel suits} it puts
+      on when needed).
+\item \textbf{One language for programs.} Programs are written in PyTon, a dialect with the syntax
+      of Python. It is translated to x86-64 assembly and stored as the code of an ASMO object. The
+      compiler is inside the kernel: the system builds its own programs (\cmd{build}, Studio).
+\item \textbf{Pages.} Interfaces that are not programs are HTML with CSS and PyTon scripts, shown
+      by NET (the browser of the system): the start menu, the taskbar, the desktop menu, Setup.
+\end{itemize}
+
+% ------------------------------------------------------------------------------------------
+\section{The ASMO v4 object}\label{sec:asmo}
+
+An object is one run of bytes. All numbers are little-endian; 8 bytes wide unless said otherwise.
+
+\subsection{The header (0x68 bytes)}
+
+\begin{longtable}{@{}l p{11.5cm}@{}}
+\toprule
+offset & meaning \\ \midrule
+\texttt{0x00} & the signature, 4 bytes: \texttt{4F 4D 53 41} (the text \texttt{OMSA}) \\
+\texttt{0x04} & the version of the format, 4 bytes: 4 \\
+\texttt{0x08} & the size of the whole object \\
+\texttt{0x10} & where DATA starts (always \texttt{0x68}) \\
+\texttt{0x18} & where META starts \\
+\texttt{0x20} & where the table of the system sockets starts \\
+\texttt{0x28} & where the table of the named sockets starts \\
+\texttt{0x30} & where the table of the prockets starts \\
+\texttt{0x38} & 1: the object has code; 0: it has none (a source, a drawer) \\
+\texttt{0x40} & 0 in every object seen \\
+\texttt{0x48} & 4 bytes: 1 or 2 (not understood; a generation or a state) \\
+\texttt{0x4C} & 4 bytes: the identity of the object; \cmd{id NAME} prints it as \texttt{\#RRGGBBAA} \\
+\texttt{0x50} & 0 in user objects, 5 in system objects, 4 in the log and one data object \\
+\texttt{0x58} & the length of DATA \\
+\texttt{0x60} & where the table of relocations starts (0: none) \\
+\bottomrule
+\end{longtable}
+
+\subsection{The parts, in their order}
+
+\begin{enumerate}
+\item \textbf{DATA}: the content as it is. A text, HTML, pixels, the PyTon text of a program.
+      Empty in a compiled program.
+\item \textbf{META}: texts \texttt{key:value}, each ended by a zero byte; an empty text ends the
+      list. Keys seen: \texttt{type}, \texttt{name}, \texttt{label}, \texttt{kind}, \texttt{icon},
+      \texttt{data}, \texttt{sockets}, \texttt{version}, \texttt{lang}, \texttt{source},
+      \texttt{source\_hash}, \texttt{target}, \texttt{hash}, \texttt{author}, \texttt{screen},
+      \texttt{buttons}, \texttt{rating}, \texttt{made}, \texttt{qr}.
+\item \textbf{System sockets}: nine addresses and a zero. A socket the object does not have points
+      at one byte \texttt{C3} (a bare \texttt{ret}) that follows the table. Which socket each of
+      the nine places is, is not known yet.
+\item \textbf{Named sockets}: one address for every name in META \texttt{sockets:}, in that order,
+      then a zero. \cmd{run NAME [SOCKET]} calls one; the first is the default.
+\item \textbf{Prockets}: sockets that fire by chance. An entry is an address, a percentage and one
+      more number. Hello has one that fires half of the time.
+\item \textbf{Code}: x86-64 machine code. A socket gets a pointer to the table of the system's
+      functions and calls them through it (\texttt{call [r15+N]}).
+\item \textbf{Relocations} (only in bigger programs): a count, then the places in the code the
+      kernel corrects when it loads the object (the log: \texttt{relocated calc: 32 places}).
+      A place with the top bit set is 32 bits wide, otherwise 64.
+\item \textbf{The end}, 16 bytes: the size once more, then \texttt{ASMO} and four zero bytes.
+      Gaps are filled with \texttt{0x90}.
+\end{enumerate}
+
+\subsection{Types of objects}
+
+\begin{longtable}{@{}l p{11.5cm}@{}}
+\toprule
+\texttt{type:} & what it is \\ \midrule
+\texttt{icon} & a program with an icon on the desktop (\texttt{kind:app}), or a launcher of
+                something in the kernel (Photon, Puffer, Tuner, META: 560 bytes each) \\
+\texttt{source} & the PyTon text of a program; \texttt{target} names the compiled object and
+                \texttt{hash} ties the two together (\texttt{source\_hash} in the program) \\
+\texttt{page} & HTML shown by NET \\
+\texttt{style} & CSS: \texttt{theme} and the themes it is copied from (day, night, ocean) \\
+\texttt{script} & a PyTon script a page runs \\
+\texttt{image} & pixels, 32 bits each: icons 48$\times$48, pictures, the QR code \\
+\texttt{font} & the letters of the system (Latin and Cyrillic) \\
+\texttt{cabinet} & a drawer: room for 63 more objects (\texttt{archive}, \texttt{samples},
+                \texttt{system}) \\
+\texttt{kernel} & a kernel suit: \texttt{k\_tools}, \texttt{k\_usb12}, \texttt{k\_net},
+                \texttt{k\_sound} \\
+\texttt{desktop} & the desktop itself; its DATA is the wallpaper \\
+\texttt{sentinel}, \texttt{machine}, \texttt{key}, \texttt{log}, \texttt{settings} &
+                the list the Sentinel checks against, this machine's identity, the network key,
+                the chained log, the settings \\
+\texttt{demo}, \texttt{test}, \texttt{text}, \texttt{data}, \texttt{list} & small objects for
+                showing and testing, and plain content \\
+\bottomrule
+\end{longtable}
+
+% ------------------------------------------------------------------------------------------
+\section{The disk}
+
+The image of v2.9.59 is 46136 sectors of 512 bytes (22.5 MB).
+
+\begin{longtable}{@{}l l p{9cm}@{}}
+\toprule
+sectors & bytes & what \\ \midrule
+0 & \texttt{0x000000} & the boot sector \\
+1 -- 480 & \texttt{0x000200} & the kernel: the core (61968 bytes), then the extension
+                               (158032 bytes), then free room \\
+from 490 & \texttt{0x03D400} & the cabinet: objects, each starting on a sector \\
+\bottomrule
+\end{longtable}
+
+\noindent The first 0x3E bytes of the boot sector are the header of a FAT12 diskette (1.44 MB),
+so that every BIOS takes the stick for a disk it can start. \textbf{Windows believes this header}:
+it mounts a NinuxOS stick as FAT12 and writes \file{System Volume Information} into what it takes
+for the directory and the first clusters, which are sectors 19, 44 and 45 of the kernel. A stick
+that has been in Windows no longer starts properly. Until the header is changed: write sticks with
+Puffus (it ejects them) and read them only with USB write protection on.
+
+At the end of the boot sector the build (or \cmd{install}) leaves three numbers: at \texttt{0x1AC}
+and \texttt{0x1B0} where the system starts on the disk (LBA, high and low half), at \texttt{0x1B4}
+how many sectors the kernel takes (480).
+
+The cabinet holds 165 objects: 105 that \cmd{ls} lists and 60 inside the drawers. \cmd{ls} prints
+other addresses than the offsets in the image (they differ by \texttt{0xC4000}); how the system
+keeps the list of objects, slots and gaps is not known yet.
+
+% ------------------------------------------------------------------------------------------
+\section{The start}
+
+\begin{enumerate}
+\item \textbf{The boot sector} (16-bit, at \texttt{0x7C00}) asks the BIOS whether it reads by LBA,
+      takes the geometry for the other case, reads 480 sectors to \texttt{0x7E00} and jumps there.
+      It leaves the drive number, the geometry and the start of the system at \texttt{0x500}.
+\item \textbf{The loader} is the beginning of the core (16-bit, at \texttt{0x7E00}). It reads the
+      memory map, picks the screen mode, finds the cabinet (``loading cabinet''), loads the GDT and
+      switches to protected mode at \texttt{0x8360}.
+\item \textbf{32-bit, shortly:} page tables at \texttt{0x18000} (2 MB pages), PAE, long mode, a jump
+      to 64-bit code at \texttt{0x840B}. A second entry at \texttt{0x8423} is already 64-bit (the
+      start from UEFI, v2.9.42).
+\item \textbf{The core} runs where it was read, at \texttt{0x7E00}. It copies the extension to
+      \texttt{0x50000} and checks it with SHA-256; if the hash is wrong the system starts with
+      ``system operations off''.
+\item Then, in the order of the log: PCI, ACPI, the boot disk, the font, the shield (GDT with user
+      segments, the gates \texttt{0x80} and \texttt{0x81}, page tables that keep the kernel for the
+      supervisor, a self-test in ring 3), the other processor cores, the screen, the memory, the
+      interrupts (timer 100 Hz), the Sentinel, the suit \texttt{k\_tools}, the chained log.
+\item The shell. After the desktop has run for ten seconds once, it starts by itself next time.
+\end{enumerate}
+
+% ------------------------------------------------------------------------------------------
+\section{The kernel}
+
+\subsection{The parts}
+
+\begin{longtable}{@{}l l p{8.5cm}@{}}
+\toprule
+part & in memory & what it holds \\ \midrule
+core & \texttt{0x7E00} & the loader, the start, memory, the gates, the shield, the cabinet, the
+                         disk through the BIOS and ATA, the shell with its help text \\
+extension & \texttt{0x50000} & begins with \texttt{NXEXT1} and its size; the drivers and the
+                         bigger machinery: PCI, AHCI, NVMe, xHCI, virtio-gpu, the crypto, the
+                         PyTon compiler, the Sentinel's work, the tuner, the SUB-GPU and Photon \\
+suits & loaded when needed & objects of \texttt{type:kernel} in the cabinet: \texttt{k\_tools}
+                         (the tools of the shell), \texttt{k\_usb12} (UHCI, OHCI),
+                         \texttt{k\_net} (the network), \texttt{k\_sound} \\
+\bottomrule
+\end{longtable}
+
+\noindent The core and the extension are linked as one: the extension calls functions of the core
+directly, and the core calls the extension. The names of the old source files (Core, Memory, Gates,
+Shield, Cart, ATA; ACPI, AHCI, Bench, Chain, Crypto, Files, Lock, NVMe, PCI, PhotonTables,
+PyTonCompiler, Shot, SuitLoader, SysInfo, Tuner, USBStick, VirtioGPU, XHCI; the suits EHCI, OHCI,
+UHCI, Sound) are known; which bytes belonged to which file is not.
+
+\subsection{Protection}
+
+\begin{itemize}
+\item \textbf{The shield.} Objects run in ring 3 with their own memory and page tables (a new
+      program gets its room at \texttt{0x1400000}); they reach the system only through the API
+      (\texttt{int 0x80}) and the table of functions. A fault in an object is caught and reported
+      (\texttt{[shield] object fault}); the system goes on. \cmd{shield on|off|test}.
+\item \textbf{The Sentinel.} Every system object and the kernel (\texttt{@kernel}) are checked
+      against the build's signed list (the object \texttt{sentinel}); \cmd{sentinel} prints
+      \emph{genuine} or \emph{CHANGED}. A changed system object is refused until the administrator
+      accepts it (\cmd{sentinel trust NAME}). Code the Sentinel has not verified runs only as a
+      program in a window, never from the shell.
+\item \textbf{Maintenance mode.} The cabinet can be changed only after \cmd{maint} and the
+      administrator's password (\cmd{copy}, \cmd{rename}, \cmd{delete}, \cmd{build},
+      \cmd{inject}, \cmd{install} \ldots).
+\item \textbf{Identity.} A machine has an ID, a role, a generation, a parent and a key
+      (\cmd{whoami}); a stick made by \cmd{puffer} is a child of the machine that made it.
+      Objects can be locked with a passphrase, hidden, and rated by age (\cmd{level}, \cmd{rate}).
+\item \textbf{The chained log} (\texttt{chainlog}) records what was done to the system.
+\end{itemize}
+
+\subsection{Programs side by side}
+
+The \emph{multiplexer} runs the programs of the desktop in windows, each with its own memory and
+time slices; the desktop is task 0. By default the programs take turns on the first processor core
+(\cmd{cores all} lets them run on every core). Shared work --- drawing windows, the SUB-GPU,
+Photon --- is spread over all cores.
+
+\subsection{Devices}
+
+Disks: the BIOS at the start, ATA, AHCI (SATA), NVMe; USB sticks on xHCI and EHCI. Input: PS/2,
+USB keyboards and mice on xHCI, UHCI and OHCI. Screen: the framebuffer of the BIOS or of UEFI,
+virtio-gpu. Sound: HD Audio and AC97. Network: e1000 and Realtek, with DHCP, and Meta Net on top
+of it (\cmd{serve}, \cmd{get}, \cmd{share}, \cmd{send}, \cmd{subscribe}, \cmd{broadcast}).
+Power: ACPI.
+
+% ------------------------------------------------------------------------------------------
+\section{PyTon}
+
+A program is a text in the DATA of an object of \texttt{type:source}. It begins with a line of
+META and defines sockets as functions:
+
+\begin{verbatim}
+META = {"type": "icon", "label": "Keys", "kind": "app", "icon": "icon_keys"}
+
+def draw(x, y):         # the socket that draws the icon
+    ...
+def open(sw, sh):       # the socket that runs the program in its window
+    ...
+\end{verbatim}
+
+\noindent The language has numbers, texts, lists, dicts, floats, functions, \texttt{global},
+\texttt{if / elif / else}, \texttt{while}, \texttt{for}. The system gives functions such as
+\texttt{fill}, \texttt{fill\_round}, \texttt{text}, \texttt{window}, \texttt{poll}, \texttt{key},
+\texttt{mouse\_x}, \texttt{mouse\_y}, \texttt{mouse\_buttons}, \texttt{load\_text},
+\texttt{save\_text}, \texttt{field}, \texttt{log}, \texttt{ob\_meta}. A program is an event loop:
+\texttt{poll()} returns 1 for a key and 2 for the mouse.
+
+\cmd{build} (maintenance mode) and F5 in Studio compile a source to a native object with
+\texttt{lang:pyton}; \cmd{sources} lists each source, its target and whether the compiled program
+is up to date. A new program comes in from a FAT32 stick with \cmd{files get NAME}.
+
+Outside the system the same work was done by \file{pyton/py2asm.py}. That file is lost; its
+ancestor (\file{py2asmx64v3.21.py}) is in the repository PypyOS.
+
+% ------------------------------------------------------------------------------------------
+\section{What the user sees}
+
+\begin{itemize}
+\item \textbf{The shell} (\texttt{ninux>}): about ninety commands; \cmd{help} lists them a page
+      at a time. The name of an object alone runs it.
+\item \textbf{The desktop} (\cmd{desktop}): icons of the objects, a taskbar, the start menu, a menu
+      on the right button; a drawer opens as a desktop of its own. Esc closes the program on top;
+      Esc on the bare desktop goes back to the shell.
+\item \textbf{The programs} of v2.9.59: Ask, ASMONCRAFT, Bags, Calc, Chronos, Console, Copycat,
+      Device, Greet, Interfacer, Keys, Mail, Nest, NET, Notepad, Paint, Phone, Projector, PyNamp,
+      Search, Studio, Widgets; full screen: Photon, Tuner, the META launcher; and Puffer.
+\end{itemize}
+
+% ------------------------------------------------------------------------------------------
+\section{The files of the project}
+
+\begin{longtable}{@{}p{4.6cm} p{10.4cm}@{}}
+\toprule
+path & what it is \\ \midrule
+\file{disk.img} & the system, ready to start: what the build writes and Puffus puts on a stick \\
+\file{Puffus.exe} & Puffus for Windows (made from \file{tools/puffus}) \\
+\file{CHANGELOG.md}, \file{TODO.md} & what each version brought; what is left to do \\
+\midrule
+\file{boot/Boot.kasm} & the boot sector, NASM source with names and comments \\
+\file{kernel/Kernel.kasm} & the kernel (core and extension) as NASM source, made by
+      \file{tools/kdis}. Labels are addresses: \texttt{fn\_} a function, \texttt{L\_} a place
+      jumped to, \texttt{d\_} data. About half is recognised as code; the rest is \texttt{db}.
+      \textbf{Lines must not be added or removed yet}: addresses in data are still numbers \\
+\file{apps/*.asmo} & the PyTon text of the programs (plain text, despite the name) \\
+\file{pages/*.asmo} & the pages (HTML) and the themes (CSS) \\
+\file{scripts/*.asmo} & the PyTon scripts of the pages \\
+\file{texts/} & objects of plain text without a name, and the log of the system \\
+\midrule
+\file{build/objects/*.asmo} & every object as it lies in the cabinet (header, DATA, META, sockets,
+      code); \file{X.Source.asmo} is the source object of program X \\
+\file{build/objects/Kernel.kasm} & the compiled kernel, 220000 bytes; \file{Boot.bin} the compiled
+      boot sector \\
+\file{build/kernel/*.kasm} & the compiled kernel suits: Tools, USB12, Network (\texttt{k\_net}),
+      Sound \\
+\file{build/base/disk\_v2.9.59.img} & the system exactly as it came off the stick; the build
+      starts from it \\
+\midrule
+\file{tools/build\_disk.py} & the build: assembles boot and kernel, puts them and the objects
+      into the base image, writes \file{disk.img} \\
+\file{tools/puffus/} & \file{Puffus.cs}, its manifest and \file{make\_puffus.cmd} \\
+\file{tools/kdis/kdis.py} & makes \file{kernel/Kernel.kasm} from the compiled kernel and proves
+      the result assembles to the same bytes; \file{trace\_addrs.txt} are addresses seen running
+      in QEMU; optional \file{names.txt} and \file{seeds.txt} give names and more code starts \\
+\file{tools/qemu/qrun.py} & starts the system in QEMU and drives it from a script \\
+\file{tools/dump\_usb.ps1} & reads a stick into an image, sector by sector (Administrator) \\
+\file{test/qemu/q\_*.txt} & the test runs: the shell, the desktop, the programs \\
+\midrule
+\file{docs/NinuxOS\_Architecture.tex} & this document \\
+\file{docs/cabinet\_objects.csv} & every object: its offset in the image, size, type, name, its
+      file in \file{build}, its readable source \\
+\file{docs/chat/} & the conversation in which the project was brought back \\
+\bottomrule
+\end{longtable}
+
+\subsection{From source to a stick}
+
+\begin{enumerate}
+\item \cmd{python tools/build\_disk.py} runs NASM on \file{boot/Boot.kasm} and
+      \file{kernel/Kernel.kasm}, checks their sizes, puts them and every object of \file{build}
+      into a copy of the base image and writes \file{disk.img}. It says what differs from v2.9.59.
+\item \file{Puffus.exe} (as Administrator) runs the build, lists the USB disks, locks and
+      dismounts the chosen stick, writes \file{disk.img} from its first sector, reads it back,
+      compares, ejects.
+\item To try without a stick: \cmd{python tools/qemu/qrun.py SCRIPT.txt --show}; the image is
+      opened so that nothing is written into it.
+\end{enumerate}
+
+\noindent Needed on the PC: Python 3, NASM, QEMU; for Puffus only the .NET Framework that
+Windows has.
+
+% ------------------------------------------------------------------------------------------
+\section{What is not known yet}\label{sec:open}
+
+\begin{itemize}
+\item How the identity of an object (header \texttt{0x4C}) is computed.
+\item Where the expected SHA-256 of the extension lies, and the format and the key of the Sentinel's
+      list. Until then a kernel or a system object with other bytes is refused, so the system in
+      v2.9.60 is still the v2.9.59 kernel.
+\item The table of the cabinet: slots, drawers, gaps; and 580 KB between the objects of the image
+      that belong to none of them.
+\item The nine system sockets and the third number of a procket; the fields \texttt{0x48} and
+      \texttt{0x50} of the header.
+\item The numbers of the functions in the API table.
+\item Which part of the kernel was which source file.
+\end{itemize}
+
+\end{document}
