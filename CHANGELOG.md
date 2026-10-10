@@ -3,6 +3,16 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.18** (11 October 2026) - the image is the same but for the version
+  - **The extension of the kernel can be moved.** The compiled kernel was read again with the
+    22 pointers and 77 code starts found since (the graphics drawing, a driver, the interrupt
+    stubs had stayed rows of bytes): 58.8% of it is code now, was 55.6%. The source gives the
+    same bytes. With one `nop` put at the start of the extension the system starts and runs
+    the shell, the desktop and programs (QEMU, one run) - before, it drew garbage.
+    New kernel code is no longer tied to the end of the extension. The core still is fixed.
+  - `tools/kdis/kdis.py` takes `pointers.txt` and `names.txt`; `tools/kdis/handwork.py` carries
+    the code written by hand (Alt + *, programs live on) into a freshly read source and checks
+    the bytes; `seeds.txt`, `pointers.txt`, `names.txt` hold what was learned.
 - **v3.0.17** (11 October 2026) - the image is the same but for the version
   - Tried in QEMU whether the kernel can be moved (one `nop`): not yet. Found and named on the
     way, the kernel staying the same bytes: 23 instructions that used addresses of the kernel

@@ -8,6 +8,7 @@
 #         tools/kdis/trace_addrs.txt     addresses QEMU saw running (one hex address a line)
 #         tools/kdis/seeds.txt           optional: more code starts,  "ADDR BITS"
 #         tools/kdis/names.txt           optional: names for addresses, "ADDR NAME"
+#         tools/kdis/pointers.txt        optional: where pointers to code lie in the data, "ADDR"
 # writes  kernel/Kernel.kasm             the source
 #         tools/kdis/work/report.txt     what was found, what stayed as bytes
 #
@@ -731,9 +732,33 @@ def main():
             if len(f) == 2:
                 k.follow(int(f[0], 16), int(f[1]))
 
+    # pointers.txt: addresses where 8 bytes of a pointer to code lie that the search below does not
+    # find by itself (tables whose pointers stand 24 or 48 bytes apart): what they point at is code
+    told = {}
+    path = os.path.join(HERE, 'pointers.txt')
+    if os.path.exists(path):
+        for line in open(path):
+            f = line.split('#')[0].split()
+            if f:
+                a = int(f[0], 16)
+                told[a] = struct.unpack_from('<Q', image, offset(a))[0]
+                k.follow(told[a], 64)
+
     global POINTERS, GIVEN, VARIABLES, SIZES
     POINTERS = find_pointers(k)
+    for a, v in told.items():
+        if a not in POINTERS and not any(k.owner[offset(a):offset(a) + 8]) \
+                and not any((a + i) in POINTERS for i in range(-7, 8)):
+            POINTERS[a] = (8, v, 0)
     GIVEN = table_names(POINTERS)
+    # names.txt: the names the source already uses (the suits and the code written by hand call
+    # the kernel by them), so that reading the kernel again does not rename anything
+    path = os.path.join(HERE, 'names.txt')
+    if os.path.exists(path):
+        for line in open(path):
+            f = line.split('#')[0].split()
+            if len(f) == 2 and section_of(int(f[0], 16)):
+                GIVEN.setdefault(int(f[0], 16), f[1])
     VARIABLES = True
     # the size of the extension stands in its own header and, as a number, in the core that checks it
     ext = SECTIONS[1]

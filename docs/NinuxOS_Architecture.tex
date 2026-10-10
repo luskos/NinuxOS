@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.17.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.18.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.17 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.18 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -749,12 +749,16 @@ Windows has.
 
 \subsection{Where new kernel code may go}
 
-The source of the kernel assembles to the same bytes, but a kernel in which something moved
-does not run yet (tried in QEMU, v3.0.17): the core's size is a number the loader uses, and
-part of the extension's code was never read as code, so its jumps are plain bytes. Until that
-is finished, new code is put at the end of the extension --- the kernel takes
-\texttt{0x50000}--\texttt{0x78000} for it --- and reached from the old code by a call exactly
-as long as the instructions it stands for. \file{tools/kdis/numbers.py} and
+The \emph{core} must stay as it is: its size is a number the loader uses, and the 16-bit loader
+is part of it. The \emph{extension} can be moved from v3.0.18: the compiled kernel was read
+again with the pointers and code starts that had been missed (\file{tools/kdis/pointers.txt},
+\file{seeds.txt}; \file{names.txt} keeps every name), 58.8\% of it is code now, and with one
+\texttt{nop} at the start of the extension the system starts and runs the desktop and programs
+(QEMU). \file{tools/kdis/handwork.py} carries the code written by hand into a freshly read
+source and checks that the kernel is the same bytes. The kernel takes
+\texttt{0x50000}--\texttt{0x78000} for the extension. The code written so far lies at its end
+and is reached by calls exactly as long as the instructions they stand for; that is no longer
+the only way, but what moves code must be tried on what it moves. \file{tools/kdis/numbers.py} and
 \file{tools/kdis/pointers.py} find and name addresses that are still numbers.
 
 \subsection{Versions}

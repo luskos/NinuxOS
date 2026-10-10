@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.17 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.18 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -166,9 +166,23 @@ exactly as long as what it stands for (Alt + *, "programs live on" were done so,
      What is left: **code that was never read as code** (44% of the kernel is still rows of
      bytes, and part of that is code: the functions the two tables above point at, for one).
      Its jumps and calls are bytes, so they do not follow when something moves.
-- [ ] To do: read those rows as code, from the entry points now known (the h_ names), in place
-      in kernel/Kernel.kasm - a small kdis that works on the source. Then the `nop` test again,
-      until a moved extension runs everything.
+- [x] v3.0.18: done for the extension. The kernel was read again by `tools/kdis/kdis.py` with
+      what was learned: `tools/kdis/pointers.txt` (22 pointers to code in the data),
+      `tools/kdis/seeds.txt` (77 places where code starts that nothing visible calls - the drawing
+      of the graphics adapter, a driver, the stubs of the interrupts, the small PyTon's helpers),
+      `tools/kdis/names.txt` (every name already in use, so nothing was renamed). 58.8% of the
+      kernel is code now (was 55.6%), 33326 instructions. `tools/kdis/handwork.py` then puts the
+      code written by hand back and checks that the kernel is the very same bytes.
+      **Tried in QEMU: with one `nop` at the start of the extension (4117 names moved) the system
+      starts, the shell works, the desktop draws, Bags, NET, Calc, Socials open and close.**
+      So code may now be written anywhere in the extension, not only at its end.
+- [ ] Still true: the **core** must not change size (61968 is a number the loader uses, and the
+      16-bit loader is in it). And "moved runs" was seen for the start, the shell, the desktop
+      and four programs - not for Photon, META, the network, sound, USB, `update`. A function
+      that nothing has reached yet may still hold a jump as bytes: after a change that moves
+      code, what was not tried has to be tried.
+- [ ] A test that says it without a machine: every row of bytes in the extension judged by
+      reading it as code (done by hand this time: 4 runs were left, now 0) - as a tool.
 - All three steps left the kernel the same bytes; nothing of this changed the image.
 
 ### 14, read from the kernel (v3.0.14): how programs run side by side today

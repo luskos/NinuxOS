@@ -24,7 +24,7 @@ esc
 wait 3
 snap a04_desktop_after_bags
 # Files
-moveto 447 140
+moveto 447 232
 click
 wait 4
 snap a05_files
@@ -46,7 +46,7 @@ snap a07_files_dump
 esc
 wait 3
 # Socials
-moveto 447 325
+moveto 447 418
 click
 wait 4
 snap a08_socials
@@ -62,7 +62,7 @@ wait 1
 esc
 wait 3
 # the drawer project
-moveto 447 418
+moveto 447 510
 click
 wait 4
 snap a10_project

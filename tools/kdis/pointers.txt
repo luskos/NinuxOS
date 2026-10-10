@@ -1,0 +1,25 @@
+# where pointers to code lie in the data of the kernel (found with the nop test, v3.0.17)
+# 565E0..56778: the table of the system functions the multiplexer takes over (24 bytes a row)
+# 5A40C..: the table of the small PyTon of the kernel
+565E0
+565F8
+56610
+56628
+56640
+56658
+56670
+56688
+566A0
+566B8
+566D0
+566E8
+56700
+56718
+56730
+56748
+56760
+56778
+5A40C
+5A4CC
+5A4FC
+5A5EC
