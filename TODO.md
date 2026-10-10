@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.22 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.23 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -58,7 +58,7 @@ comes first, so that most gets done in one go. S = hours, M = days, L = weeks, X
 | 14 | **[done: v3.0.16 and `tasks` in v3.0.19, seen in QEMU]** Programs live on: leaving the desktop closes nothing; `tasks`; then `kill` means something | L |
 | 15 | A second copy of the table of the cabinet and of the kernel; writes whole or not at all | M |
 | 16 | The silent backup of the user and its pool, with a manager of the pool's space | M-L |
-| 17 | A desktop program is handed only what it needs; relays for the rest (the keyboard on the screen for the shell is one) | L |
+| 17 | **[the keyboard on the screen of the shell is there, v3.0.23, seen in QEMU; the smaller table of functions and relays between programs are not]** A desktop program is handed only what it needs; relays for the rest (the keyboard on the screen for the shell is one) | L |
 | 18 | **[`cores solo` / `bench` explained and changed, v3.0.21; "all cores for programs" is `cores all`, to be tried on the real machine]** `cores solo`, `bench`, all cores for programs | M |
 | 19 | **[done, v3.0.20: tried on Windows and once in QEMU]** Memory given back by PyTon programs | M |
 | 20 | Photon, Puffer, Tuner, META out of the kernel: programs of their own | L each |
@@ -646,6 +646,15 @@ DIRECTIVE.md. Three rows of the table in 4c were written against these and are w
       through before building: who decides when two instances both claim to lead; what is synced
       (the system only, or the users' objects too); what happens to changes made on an instance
       that was not the governor.
+- [x] v3.0.23: **the keyboard on the screen of the shell** - `keyboard` puts five rows of keys on
+      the bottom 11 lines (the text keeps to the lines above), a click types the key, Shift
+      holds for one key; `keyboard` again takes it away. It is part of the system, switched on
+      by the shell itself - not a program of the desktop that was given the way to the shell.
+      Seen in QEMU with the PS/2 mouse (`test/qemu/q_v3_keyboard.txt`).
+      Not there: Cyrillic on it; Ctrl and Alt keys; a USB mouse and a touch screen were not
+      tried (their clicks come the same way out of api_poll, so they should work); a machine
+      with no keys at all cannot type `keyboard` - it needs a way to come on by itself (a
+      setting, or a click in a corner of the screen).
 - [ ] **Nothing on the desktop may reach the kernel or the shell.** Today `NAME` in the shell
       starts a program of the desktop (calc ...) and a program can send keys (Keys does). The one
       exception wanted: a keyboard on the screen that can type into the shell - decide how far

@@ -3140,12 +3140,20 @@ L_0a476:
 L_0a49f:
         call fn_0a6d3
         jc short L_0a4ad
+%ifdef PLAIN_KERNEL
         call fn_0a62f
+%else
+        call near kb_packet             ; v3.0.23: a button that went down in a packet taken along is not lost
+%endif
         jmp short L_0a49f
 
 L_0a4ad:
+%ifdef PLAIN_KERNEL
         mov eax,ebx
         mov r8,rax
+%else
+        call near kb_mouse              ; v3.0.23: the keyboard on the screen of the shell (the same 5 bytes)
+%endif
         mov rdx,[rel d_11870]
         mov rcx,[rel d_11878]
         mov eax,0x2
@@ -50181,6 +50189,12 @@ L_76930:
 ; adapter does not obey them keeps its picture; the lamp behind a laptop's screen stays on
 ; (that needs the graphics driver or ACPI: TODO.md, "sleep, the lid, brightness").
 display_key:                            ; al = the key that went down (its scan code)
+        cmp byte [rel kb_on],0x0        ; (v3.0.23: with the keyboard on the screen, a key that is typed
+        jz display_key_look             ; takes the mouse arrow away - the text may scroll under it)
+        cmp byte [rel mux_on],0x0
+        jnz display_key_look
+        call kb_arrow_off
+display_key_look:
         cmp al,0x37                     ; the star of the number keys
         jz short display_key_alt
         cmp al,0x09                     ; the 8 of the top row: a star with Shift
@@ -50311,6 +50325,11 @@ shell_more:                             ; rbx = the word, r12 = what follows it
         call same_word_any_case                   ; the same word?
         test eax,eax
         jnz near tasks_command
+        lea rsi,[rel kb_word]
+        mov rdi,rbx
+        call same_word_any_case
+        test eax,eax
+        jnz near kb_command
         mov rdi,rbx                     ; not ours: on with what the shell did here
         jmp near ob_find
 tasks_command:
@@ -50389,6 +50408,310 @@ tasks_nothing:
         lea rdi,[rel tasks_says_nothing]
         call api_print
         jmp near L_0b044
+; ---- v3.0.23: `keyboard` - a keyboard on the screen of the shell --------------------------------
+; For a machine without keys that work (a tablet, a broken keyboard): the mouse or a finger types.
+;       keyboard          on / off
+; The bottom 11 lines of the screen become five rows of keys; the text keeps to the lines above.
+; A click on a key comes out of api_poll as that key, so everything that reads keys in the shell
+; takes it. Shift holds for one key. It is the first relay: what types is not a program that was
+; given the way to the shell, but a part of the system the shell itself switched on.
+KB_LINES equ 11                         ; 176 dots: 8, five rows of 32, 8
+kb_command:
+        add rsp,0x8
+        xor byte [rel kb_on],0x1
+        jz kb_command_off
+kb_command_room:                        ; the line being written must be above the keys
+        mov rax,[rel d_11838]
+        sub rax,KB_LINES
+        cmp [rel d_11848],rax
+        jb kb_command_on
+        call fn_08d8d                   ; the text goes up a line
+        dec qword [rel d_11848]
+        jmp kb_command_room
+kb_command_on:
+        mov [rel d_11838],rax
+        mov byte [rel kb_shift],0x0
+        call kb_draw
+        lea rdi,[rel kb_says_on]
+        call api_print
+        jmp near L_0b044
+kb_command_off:
+        call kb_arrow_off
+        mov rsi,[rel d_11838]           ; the keys are wiped, the lines are the text's again
+        shl rsi,0x4
+        add qword [rel d_11838],KB_LINES
+        xor edi,edi
+        mov rdx,[rel d_11818]
+        mov ecx,KB_LINES * 16
+        mov r8d,[rel d_11854]
+        call api_fill
+        lea rdi,[rel kb_says_off]
+        call api_print
+        jmp near L_0b044
+
+kb_arrow_off:                           ; the mouse arrow off the screen; keeps every register
+        push rax
+        push rcx
+        push rdx
+        push rsi
+        push rdi
+        push r8
+        push r9
+        push r10
+        push r11
+        call api_cursor_hide
+        pop r11
+        pop r10
+        pop r9
+        pop r8
+        pop rdi
+        pop rsi
+        pop rdx
+        pop rcx
+        pop rax
+        retq
+
+kb_draw:                                ; the five rows of keys
+        push rbx
+        push rbp
+        push r12
+        push r13
+        push r14
+        push r15
+        mov r14,[rel d_11838]           ; the first dot line of the keys
+        shl r14,0x4
+        xor edi,edi
+        mov rsi,r14
+        mov rdx,[rel d_11818]
+        mov ecx,KB_LINES * 16
+        mov r8d,0x16151F
+        call api_fill
+        mov rax,[rel d_11818]           ; a key is a fourteenth of the screen wide
+        xor edx,edx
+        mov ecx,14
+        div rcx
+        mov r15,rax
+        lea rbp,[rel kb_keys]
+        cmp byte [rel kb_shift],0x0
+        jz kb_draw_rows
+        lea rbp,[rel kb_keys_shift]
+kb_draw_rows:
+        xor r12d,r12d                   ; the row
+kb_draw_row:
+        xor r13d,r13d                   ; the column
+kb_draw_key:
+        imul eax,r12d,14
+        add eax,r13d
+        movzx ebx,byte [rbp+rax]        ; what this key types
+        mov ecx,0x1                     ; how many places the same key takes
+kb_draw_wide:
+        lea edx,[r13+rcx]
+        cmp edx,14
+        jae kb_draw_one
+        lea edx,[rax+rcx]
+        cmp bl,[rbp+rdx]
+        jne kb_draw_one
+        inc ecx
+        jmp kb_draw_wide
+kb_draw_one:
+        push rcx
+        test ebx,ebx
+        jz kb_draw_next
+        mov rdi,r13                     ; x, y, width, height, colour
+        imul rdi,r15
+        add rdi,2
+        mov rsi,r12
+        shl rsi,0x5
+        lea rsi,[rsi+r14+10]
+        mov rdx,rcx
+        imul rdx,r15
+        sub rdx,4
+        mov ecx,28
+        mov r8d,0x2A2840
+        cmp ebx,0x1
+        jne kb_draw_fill
+        cmp byte [rel kb_shift],0x0
+        jz kb_draw_fill
+        mov r8d,0x7B5CFF                ; Shift is held
+kb_draw_fill:
+        push rdi
+        push rsi
+        push rdx
+        call api_fill
+        pop rdx
+        pop rsi
+        pop rdi
+        lea rax,[rel kb_one]            ; its name: the letter itself, or a word
+        mov [rax],bl
+        mov ecx,0x1
+        lea r8,[rel kb_names]
+kb_draw_name:
+        cmp byte [r8],0x0
+        jz kb_draw_text
+        cmp bl,[r8]
+        jne kb_draw_name_next
+        lea rax,[r8+2]
+        movzx ecx,byte [r8+1]
+        jmp kb_draw_text
+kb_draw_name_next:
+        movzx r9d,byte [r8+1]
+        lea r8,[r8+r9+3]
+        jmp kb_draw_name
+kb_draw_text:
+        shl ecx,0x2                     ; in the middle of the key
+        shr rdx,0x1
+        add rdi,rdx
+        sub rdi,rcx
+        add rsi,6
+        mov rdx,rax
+        mov ecx,0xF5F4FF
+        mov r8,-1
+        call api_text
+kb_draw_next:
+        pop rcx
+        add r13d,ecx
+        cmp r13d,14
+        jb kb_draw_key
+        inc r12d
+        cmp r12d,5
+        jb kb_draw_row
+        pop r15
+        pop r14
+        pop r13
+        pop r12
+        pop rbp
+        pop rbx
+        retq
+
+kb_mouse:                               ; the mouse moved or a button changed: ebx = the buttons
+        mov eax,ebx                     ; stands for: mov eax,ebx / mov r8,rax
+        mov r8,rax
+        cmp byte [rel kb_on],0x0
+        jz kb_mouse_no
+        cmp byte [rel mux_on],0x0       ; the desktop has its own
+        jnz kb_mouse_no
+        push rax
+        push r8
+        push r12
+        push r13
+        mov rdi,[rel d_11870]           ; the arrow, where the mouse is
+        mov rsi,[rel d_11878]
+        call api_cursor_show
+        mov eax,ebx                     ; api_poll takes every packet of the mouse that waits at once and
+        or al,[rel kb_any]              ; tells only the buttons of the first: a quick click is down and up
+        and eax,0x1                     ; in one go. kb_packet has kept whether the button was down in any
+        mov byte [rel kb_any],0x0
+        mov cl,[rel kb_button]
+        movzx edx,byte [rel d_119fc]    ; the buttons of the last packet: how it is now
+        and dl,0x1
+        mov [rel kb_button],dl
+        test eax,eax
+        jz kb_mouse_out
+        test cl,cl
+        jnz kb_mouse_out                ; the button went down just now: which key?
+        mov rax,[rel d_11838]
+        shl rax,0x4
+        add rax,8
+        mov r12,[rel d_11878]
+        sub r12,rax
+        js kb_mouse_out
+        shr r12,0x5                     ; the row
+        cmp r12,5
+        jae kb_mouse_out
+        mov rax,[rel d_11818]
+        xor edx,edx
+        mov ecx,14
+        div rcx
+        mov rcx,rax
+        mov rax,[rel d_11870]
+        xor edx,edx
+        div rcx                         ; the column
+        cmp rax,14
+        jae kb_mouse_out
+        imul r12,r12,14
+        add r12,rax
+        lea rax,[rel kb_keys]
+        cmp byte [rel kb_shift],0x0
+        jz kb_mouse_key
+        lea rax,[rel kb_keys_shift]
+kb_mouse_key:
+        movzx r13d,byte [rax+r12]
+        test r13d,r13d
+        jz kb_mouse_out
+        cmp r13d,0x1
+        jne kb_mouse_types
+        xor byte [rel kb_shift],0x1     ; Shift: for the next key
+        call api_cursor_hide
+        call kb_draw
+        jmp kb_mouse_out
+kb_mouse_types:
+        call api_cursor_hide            ; the text may scroll under the arrow
+        cmp byte [rel kb_shift],0x0
+        jz kb_mouse_typed
+        mov byte [rel kb_shift],0x0
+        call kb_draw
+kb_mouse_typed:
+        mov edx,r13d                    ; it leaves api_poll as a key that was typed
+        pop r13
+        pop r12
+        add rsp,0x18                    ; (the two kept registers, and the way back into api_poll)
+        xor r8d,r8d
+        xor ecx,ecx
+        mov eax,0x1
+        pop rbx
+        retq
+kb_mouse_out:
+        pop r13
+        pop r12
+        pop r8
+        pop rax
+kb_mouse_no:
+        retq
+
+kb_packet:                              ; stands for: call fn_0a62f (one more packet of the mouse is taken)
+        mov al,[rel d_119fc]
+        and al,0x1
+        or [rel kb_any],al
+        jmp near fn_0a62f
+kb_any:
+        db 0x00
+kb_on:
+        db 0x00
+kb_shift:
+        db 0x00
+kb_button:
+        db 0x00
+kb_one:
+        db 0x00, 0x00
+kb_word:
+        db 'keyboard', 0
+kb_says_on:
+        db 'The keyboard is on the screen: click the keys. ', 39, 'keyboard', 39, ' again takes it away.', 10, 0
+kb_says_off:
+        db 'The keyboard is off the screen.', 10, 0
+; what a key types: 1 = Shift, 8 = back, 10 = Enter (what the shell takes for it), 27 = Esc, 0x80 / 0x81 = up / down, 0 = no key.
+; A key that is wider stands in every place it covers.
+kb_keys:
+        db '1234567890-=', 8, 8
+        db 'qwertyuiop[]\`'
+        db 'asdfghjkl;', 39, 10, 10, 10
+        db 1, 1, 'zxcvbnm,./', 1, 1
+        db 27, 27, '        ', 0x80, 0x80, 0x81, 0x81
+kb_keys_shift:
+        db '!@#$%^&*()_+', 8, 8
+        db 'QWERTYUIOP{}|~'
+        db 'ASDFGHJKL:"', 10, 10, 10
+        db 1, 1, 'ZXCVBNM<>?', 1, 1
+        db 27, 27, '        ', 0x80, 0x80, 0x81, 0x81
+kb_names:                               ; the key, the length of its name, the name, 0
+        db 1, 5, 'Shift', 0
+        db 8, 4, 'Back', 0
+        db 10, 5, 'Enter', 0
+        db 27, 3, 'Esc', 0
+        db ' ', 5, 'Space', 0
+        db 0x80, 2, 'Up', 0
+        db 0x81, 4, 'Down', 0
+        db 0
 ; ---- v3.0.21: `cores solo`, `cores one`, `cores all` outside maintenance mode ----------------
 ; They were refused ("enter maintenance mode first") because the setting is kept in the table
 ; of the cabinet - so `bench` gave the same numbers whatever was typed. Now the setting is made

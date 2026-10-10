@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.22.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.23.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.22 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.23 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -769,6 +769,15 @@ the first kernel suit at \texttt{0x80000}; the boot sector reads 480 sectors of 
 and is reached by calls exactly as long as the instructions they stand for; that is no longer
 the only way, but what moves code must be tried on what it moves. \file{tools/kdis/numbers.py} and
 \file{tools/kdis/pointers.py} find and name addresses that are still numbers.
+
+\subsection{The keyboard on the screen (v3.0.23)}
+
+\cmd{keyboard} in the shell puts five rows of keys on the bottom 11 text lines; the console's
+number of lines is made smaller by as many, so the text keeps above them. Every mouse event of
+\texttt{api\_poll} passes \texttt{kb\_mouse}: a click on a key leaves \texttt{api\_poll} as that
+key (Enter is 10, as the shell takes it). \texttt{api\_poll} reads every waiting packet of the
+mouse at once and reports the buttons of the first only, so \texttt{kb\_packet} keeps whether
+the button was down in any of them.
 
 \subsection{Names in the kernel}
 

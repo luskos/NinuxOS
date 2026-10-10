@@ -3,6 +3,12 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.23** (11 October 2026) - seen in QEMU
+  - **`keyboard`: a keyboard on the screen of the shell.** Five rows of keys on the bottom of
+    the screen, typed with the mouse (or a finger, where the screen is a mouse to the system);
+    the text keeps to the lines above; Shift holds for one key; `keyboard` again takes it away.
+    In the kernel: a mouse event of api_poll passes `kb_mouse`, which turns a click on a key
+    into that key - so everything that reads keys in the shell takes it.
 - **v3.0.22** (11 October 2026) - the image is the same but for the version
   - **The first real names in the kernel**: 41 functions and variables of the multiplexer
     (`mux_run`, `mux_task`, `mux_turn`, `mux_free_task`, `mux_focus` ...), the shell
