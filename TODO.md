@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.42 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.43 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -39,6 +39,15 @@ From the owner's account of 11 October 2026, not in the list before:
       (baking photon maps), not a frame of a game across the internet. 10 petaflops is about a
       million machines at 5%. Answering with a model spread over nodes can be done; training a
       large one on processors over home links is the weak place.
+- [ ] **pow-spc and the cache** (the owner, 11 October 2026): a least share everyone gives; above
+      it a trade - space given earns processor time, processor time earns space - the pair
+      power-space as the measure. Content lives in caches: a page visited is kept, what many
+      see many have; a SEED machine for each content; the holders indexed; under a threshold
+      the system seeds it elsewhere by itself, as torrents do. Claude's notes (OPISANIE 3a):
+      what is given must be checkable (ask for a piece; compute twice); pin = bookmark = keeping
+      a copy; "left on one machine" must not mean "cut off" (everything new begins on one);
+      receipts between two machines may do instead of a chain all carry; the list of holders
+      must not tell who read what.
 - [ ] **Every architecture**: a version for whatever metal it is to run on; py2asm with a back
       end a machine. And more dialects (ruby2asm ...).
 

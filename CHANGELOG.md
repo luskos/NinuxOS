@@ -3,6 +3,10 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.43** (11 October 2026) - papers only
+  - The owner on the supercluster: the pair pow-spc (power for space) as the measure of what
+    each gives; content kept alive by caches, seeds and a threshold. With Claude's notes.
+    `docs/OPISANIE.md` part 3a, TODO.md.
 - **v3.0.42** (11 October 2026) - papers only
   - The supercluster: every machine a node that gives processor and disk to a common pool;
     how the shared disk, the shared computing and the finding may be made, what fits and what
