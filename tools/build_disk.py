@@ -392,7 +392,7 @@ def put(img, tables, e, data):
 
 
 INSIDE = [('changelog', 'CHANGELOG.md'), ('todo', 'TODO.md'), ('directive', 'DIRECTIVE.md'),
-          ('protocols', 'docs/PROTOCOLS.md'), ('tests', 'docs/TESTS.md')]
+          ('protocols', 'docs/PROTOCOLS.md'), ('tests', 'docs/TESTS.md'), ('opisanie', 'docs/OPISANIE.md')]
 
 
 def project_drawer(img, tables, called=b'project'):

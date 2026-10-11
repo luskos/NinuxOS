@@ -1,9 +1,27 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.39 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.40 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
+
+## What the system is for - read this first
+
+`docs/OPISANIE.md` (in Bulgarian, v3.0.40): the aim, the five ideas it stands on, META, how it
+differs from other systems, its strengths and weaknesses said plainly, what is new in it, the
+open questions and the order towards a finished system. Everything below serves that.
+
+From the owner's account of 11 October 2026, not in the list before:
+- [ ] **Dock** and **pin**: what a machine shares stands in its Dock, one socket open to it and
+      nothing else of the machine seen or listed; found by a pin, not an address or a domain.
+- [ ] **The health of the cabinet** watched by algorithms (the owner: on Fibonacci) - what they
+      watch is to be decided.
+- [ ] **META's worlds**: photon maps - blocks worked out beforehand, loaded like video
+      ("3D-avi"); colour with more dimensions than ARGB (time, variation, volume ...); cheap
+      pixel shaders over them; collision as a UV map, detailed only in the sphere of a moving
+      thing; players joined peer to peer sharing the rendering.
+- [ ] **Every architecture**: a version for whatever metal it is to run on; py2asm with a back
+      end a machine. And more dialects (ruby2asm ...).
 
 ## THE FULL TEST of 11 October 2026 (v3.0.37 -> v3.0.38): what works, what does not, how to mend it
 

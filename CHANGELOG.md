@@ -3,6 +3,11 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.40** (11 October 2026) - papers only
+  - `docs/OPISANIE.md`: the description of the system the owner asked for - what it is for,
+    how it works and why it is built so, how it differs, strengths and weaknesses, what is
+    new, the open questions. TODO.md points to it first and takes in Dock and pin, the health
+    of the cabinet, META's photon maps, every architecture.
 - **v3.0.39** (11 October 2026) - papers only; the image is the same but for the version
   - `docs/NinuxOS_Architecture.tex`: a new section, "The decisions" - what the conversations
     settled: what the system is, how the work is done, how the recovered system may be
