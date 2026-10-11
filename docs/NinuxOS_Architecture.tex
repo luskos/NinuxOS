@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.40.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.41.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.40 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.41 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -888,6 +888,13 @@ brought back and carried on (October 2026). The conversations themselves are kep
 \item \textbf{No web and no browser.} Programs are different, protocols are one. NET and META
       lie in immutable blocks on the machines of the people; every machine registers when it
       is installed, cloned or copied, and the machines form a chain.
+\item \textbf{META is local or global} (11 October 2026): a world on one's own machine, or
+      worlds with servers and gates between them. Games are not installed: a game starts
+      META, and the server streams its objects --- the game manager, the scene manager, the
+      login screen, then the assets of each scene, the laws of physics, the lights --- when
+      they are needed. Its interface may be HTML and CSS. An object in META works as a
+      program of the desktop does, with sockets that run when something happens; META is the
+      same system, accelerated for 3D. Not begun.
 \item \textbf{Everything stands by itself.} Photon, Puffer, Tuner and META are to be objects
       of their own. Decided on 11 October 2026: what needs the kernel's own functions (Tuner:
       the processor's clock; Puffer: sectors of a stick) becomes a \emph{kernel suit} of its

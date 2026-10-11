@@ -3,6 +3,10 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.41** (11 October 2026) - papers only
+  - META as the owner made it clear: local or global with servers and gates; games streamed as
+    objects, not installed; objects in META work as programs of the desktop do. In
+    `docs/OPISANIE.md` (part 3), TODO.md and the architecture document.
 - **v3.0.40** (11 October 2026) - papers only
   - `docs/OPISANIE.md`: the description of the system the owner asked for - what it is for,
     how it works and why it is built so, how it differs, strengths and weaknesses, what is

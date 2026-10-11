@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.40 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.41 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -20,6 +20,15 @@ From the owner's account of 11 October 2026, not in the list before:
       ("3D-avi"); colour with more dimensions than ARGB (time, variation, volume ...); cheap
       pixel shaders over them; collision as a UV map, detailed only in the sphere of a moving
       thing; players joined peer to peer sharing the rendering.
+- [ ] **META, local or global** (the owner, 11 October 2026): a world on one's own machine,
+      or worlds with servers and gates between them. **Games are not installed - their objects
+      are streamed**: a game made or ported for Ninux starts META, its icon stands there, and
+      when chosen the server streams GameManager, SceneManager, LoginScreen, then the assets
+      of each scene as objects when they are needed; the laws of physics one object, the
+      lights another; the game's interface may be HTML + CSS. An object in META works as a
+      program of the desktop does - sockets run when something happens - so a game is made the
+      way a program is. To decide: servers beside peer-to-peer rendering; what stays on the
+      machine after play; how a gate leads from world to world.
 - [ ] **Every architecture**: a version for whatever metal it is to run on; py2asm with a back
       end a machine. And more dialects (ruby2asm ...).
 
