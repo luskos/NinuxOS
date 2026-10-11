@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.43 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.44 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -48,6 +48,13 @@ From the owner's account of 11 October 2026, not in the list before:
       a copy; "left on one machine" must not mean "cut off" (everything new begins on one);
       receipts between two machines may do instead of a chain all carry; the list of holders
       must not tell who read what.
+- [ ] **The fair trade** (the owner, 11 October 2026): cheating is stopped as a blockchain does
+      it - blocks of information are verified; people offer information for processor time;
+      time is spent, information is not, but it loses worth as it loses relevance or leaves
+      the disks. The point: everyone is paid for what they give, where today corporations
+      take it for nothing. Claude: a chain proves what a block is and who gave what, not that
+      it is still kept or rightly computed - the checks stay and the chain records them; what
+      is truly scarce is making a thing first and keeping it at hand.
 - [ ] **Every architecture**: a version for whatever metal it is to run on; py2asm with a back
       end a machine. And more dialects (ruby2asm ...).
 

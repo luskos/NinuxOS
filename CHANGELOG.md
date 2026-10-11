@@ -3,6 +3,9 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.44** (11 October 2026) - papers only
+  - The fair trade: information for processor time, verified as a blockchain does it; why -
+    everyone paid for what they give. `docs/OPISANIE.md` part 3a, TODO.md.
 - **v3.0.43** (11 October 2026) - papers only
   - The owner on the supercluster: the pair pow-spc (power for space) as the measure of what
     each gives; content kept alive by caches, seeds and a threshold. With Claude's notes.
