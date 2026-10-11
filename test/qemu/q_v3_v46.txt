@@ -1,0 +1,64 @@
+# q_v3_v46.txt - v3.0.46: the pool on a small disk says no error; five people; `desk2` typed alone
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type backup
+wait 2
+type maint
+wait 2
+text ninux1
+enter
+wait 2
+text ninux1
+enter
+wait 2
+type user add ana 18
+wait 2
+text pw1
+enter
+wait 1
+text pw1
+enter
+wait 2
+type user add bob 16
+wait 2
+text pw1
+enter
+wait 1
+text pw1
+enter
+wait 2
+type user add cid 12
+wait 2
+text pw1
+enter
+wait 1
+text pw1
+enter
+wait 2
+type user add dan 7
+wait 2
+text pw1
+enter
+wait 1
+text pw1
+enter
+wait 2
+type user add eva 0
+wait 2
+text pw1
+enter
+wait 1
+text pw1
+enter
+wait 2
+type users
+wait 2
+snap v01_users
+type desk2
+wait 8
+snap v02_desk2
+moveto 64 500
+click
+wait 5
+snap v03_calc

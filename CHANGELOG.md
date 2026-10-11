@@ -3,6 +3,12 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.46** (11 October 2026) - the kernel (New.kasm); seen in QEMU
+  - A word that begins with `desk` is run as a desk: `desk2` alone now does what `desk desk2`
+    does (programs in windows, the taskbar).
+  - The backup pool is not looked for on an ATA disk too small for it: no `[ata] read error`.
+  - Five people tried with right levels: the limit holds; the image carries one already
+    (`petya`). Scripts: test/qemu/q_v3_v46.txt, q_v3_people.txt.
 - **v3.0.45** (11 October 2026) - papers only
   - TODO.md: the system in unallocated space (what is possible on a disk of its own, beside
     MBR, beside GPT; what must change in the kernel); winlolz and linlolz cut into parts

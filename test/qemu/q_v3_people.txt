@@ -1,0 +1,9 @@
+# q_v3_people.txt - v3.0.46: who the machine knows before anyone is added
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type user
+wait 2
+type user list
+wait 2
+snap p01_people

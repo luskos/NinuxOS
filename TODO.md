@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.45 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.46 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -62,8 +62,27 @@ From the owner's account of 11 October 2026, not in the list before:
 
 Desk2 works on the real machine when started as `desk desk2`. Typed alone (`desk2`) it runs
 outside the multiplexer and next to nothing works.
-- [ ] **A desk typed by its name must run as a desk.** An object whose META says `desk:yes`
-      is started the way `desk NAME` starts it, whatever was typed (shell_more, New.kasm).
+- [x] **A desk typed by its name runs as a desk** (v3.0.46, seen in QEMU): a word that begins
+      with `desk` (desk2 ...) is run the way `desktop` is. By the name, not by META.
+
+The owner's order of 11 October 2026 for the kernel - 1, 2, 3, 4, 5, 9, 10, 13:
+- [x] 1. the desk by its name (above).
+- [x] 2. `[ata] read error` on a disk with no room for the backup pool: an ATA disk is asked
+      its size first (v3.0.46; `backup` on the 16 MB image says "No backup pool here", the
+      log is clean). A USB disk is still asked for the sector.
+- [ ] 3. The first click on the desk after a window only gives the desk the keys back and is
+      lost (mux_input, fn_55604). Not begun.
+- [x] 4. Five people: tried with levels 18, 16, 12, 7, 0 (test/qemu/q_v3_v46.txt). Four are
+      added, the fifth is refused with "Five people are known by now" - rightly: **the image
+      carries one person already, `petya` (opens up to 12), come with the stick of v2.9.59.**
+      For the owner: should the built image carry her, or begin with nobody?
+- [ ] 5. The refusal of api_guard: wants a program the Sentinel does not know, made inside the
+      system (Studio) and asked to switch the machine off. Not tried.
+- [ ] 9. Tuner and Puffer as suits of their own. Not begun.
+- [ ] 10. Names for the kernel's functions (91 of about 940). Not carried on.
+- [ ] 13. Drivers: NVMe, AHCI, Wi-Fi, touchpad, battery. Not begun.
+- Seen on the way: the first line of the screen still says **NinuxOS v2.9.59** - the
+  kernel's own text, not taken from VERSION.
 
 - [ ] **The system in unallocated space** - no partition, no volume, nothing another system
       can list. Today the boot sector carries one partition of kind 0x7F over the whole disk

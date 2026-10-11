@@ -1,9 +1,9 @@
 # The conversation
 
-`2026-10-11_recovery_to_v3.0.45.zip` is the export of the Claude Code session in which NinuxOS
+`2026-10-11_recovery_to_v3.0.46.zip` is the export of the Claude Code session in which NinuxOS
 v2.9.59 was brought back and v3 was started: the whole transcript with every command that was
 run and its output. It is the record of how each file of this project was made. It ends shortly
-before v3.0.45 was committed. One file holds the whole conversation; a later export replaces it
+before v3.0.46 was committed. One file holds the whole conversation; a later export replaces it
 (the older ones stay in the history of git).
 
 In short, in the order it happened:
@@ -77,6 +77,7 @@ In short, in the order it happened:
 50. v3.0.43: pow-spc and content kept by caches - written down.
 51. v3.0.44: the fair trade - information for processor time, verified by a chain.
 52. v3.0.45: unallocated space, winlolz and linlolz planned; Desk2 works on the machine as `desk desk2`.
+53. v3.0.46: a desk by its name, no read error on a small disk, five people tried.
 
 The transcript holds what was on the screen of this PC during the work (paths, the account name,
 the identity of the test machine). Keep the repository private.

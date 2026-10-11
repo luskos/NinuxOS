@@ -168,6 +168,13 @@ shell_more:                             ; rbx = the word, r12 = what follows it
         call same_word_any_case
         test eax,eax
         jnz near desk_command
+        mov byte [rel desk_any],0x0     ; v3.0.46: a word that begins with "desk" (desk2 ...) names a
+        mov eax,[rbx]                   ; desk: it is run the way `desktop` is, under the multiplexer
+        or eax,0x20202020
+        cmp eax,0x6B736564              ; 'desk'
+        jnz shell_more_on
+        mov byte [rel desk_any],0x1
+shell_more_on:
         mov rdi,rbx                     ; not ours: on with what the shell did here
         jmp near ob_find
 tasks_command:
@@ -1127,6 +1134,18 @@ backup_head:                            ; the pool's first sector into backup_se
         jnz backup_head_no
         cmp byte [rel disk_writable],0x0      ; no disk that can be written
         jz backup_head_no
+        cmp byte [rel d_154a9],0x0      ; v3.0.46: an ATA disk whose size is known and too small is
+        jnz backup_head_ask             ; not asked for a sector it has not (it said "[ata] read error")
+        cmp byte [rel d_154aa],0x0
+        jnz backup_head_ask
+        cmp byte [rel d_15498],0x0
+        jz backup_head_ask
+        mov rax,[rel table_sector]
+        add rax,POOL_AT - 481 + 1
+        add rax,[rel d_15499]
+        cmp rax,[rel d_154b0]           ; (the disk's sectors, as it said itself)
+        jnc backup_head_none
+backup_head_ask:
         xor edi,edi
         lea rsi,[rel backup_sector]
         mov edx,0x1
