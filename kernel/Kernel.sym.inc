@@ -6048,3 +6048,5 @@ v_4e5f8 equ 0x4E5F8
 v_4eaf8 equ 0x4EAF8
 v_4eb50 equ 0x4EB50
 v_4ec38 equ 0x4EC38
+lolz_io equ 0x78C21
+lolz_first equ 0x78C19

@@ -1,0 +1,27 @@
+# q_v3_lolz.txt - v3.0.49: `files` reads a FAT32 partition of a SATA disk (made by the test)
+qemu -smp 2 -m 512M -device ahci,id=ahci -drive id=d1,file=test/qemu/out_all/fat.img,if=none,format=raw -device ide-hd,drive=d1,bus=ahci.0
+waitlog [chain] the system started 90
+wait 1
+type parts
+wait 3
+type lolz 1
+wait 2
+type files
+wait 4
+type files cd DOCS
+wait 3
+type files
+wait 3
+type maint
+wait 2
+text ninux1
+enter
+wait 2
+text ninux1
+enter
+wait 2
+type files get NOTES.TXT
+wait 4
+type view notes.txt
+wait 3
+snap l01_lolz

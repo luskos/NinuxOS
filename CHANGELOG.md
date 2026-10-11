@@ -3,6 +3,10 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.49** (11 October 2026) - the kernel (New.kasm, suits/Tools.kasm); seen in QEMU
+  - `lolz P`: `files` (list, cd, get - FAT32) reads partition P of a SATA disk instead of the
+    USB stick; `parts` numbers the partitions; `lolz off` goes back. Reading only.
+  - Kernel.sym.inc: two new names (lolz_io, lolz_first) - a suit calls code of New.kasm.
 - **v3.0.48** (11 October 2026) - the kernel (New.kasm); seen in QEMU
   - `parts [N]`: the partitions of a SATA disk - MBR or GPT, the kind, the name, where each
     begins and how big it is. Reading only. The first step of winlolz / linlolz.

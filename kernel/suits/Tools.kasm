@@ -2153,7 +2153,7 @@ L_32d4b:
         mov rsi,rbx
         mov rdx,[rel d_33610]
         xor ecx,ecx
-        call fn_6af0a
+        call lolz_io                    ; v3.0.49: the stick, or a partition of a SATA disk (`lolz P`)
         test eax,eax
         jz near L_32f32
         add rbx,[rel d_33658]
@@ -2289,10 +2289,14 @@ fn_32f6b:
 fn_32f7a:
         push rbx
         push r12
+        call lolz_first                 ; v3.0.49: a partition of a SATA disk was chosen: no stick is asked for
+        test rax,rax
+        jnz short lolz_t1
         call fn_30e9e
         lea rdx,[rel d_338c3]
         test eax,eax
         jz near L_33173
+lolz_t1:
         cmp qword [rel d_33608],0x0
         jnz short L_32ff0
         lea rdx,[rel d_33921]
@@ -2315,6 +2319,12 @@ L_32ff0:
         mov qword [rel d_33600],0xffffffffffffffff
         mov rbx,[rel d_335f0]
         xor r12d,r12d
+        call lolz_first                 ; v3.0.49: the chosen partition begins there
+        test rax,rax
+        jz short lolz_t2
+        mov r12,rax
+        jmp near L_3309b
+lolz_t2:
         xor edi,edi
         call fn_33179
         jz near L_3316c
@@ -2407,7 +2417,7 @@ fn_33179:
         mov rsi,rbx
         mov edx,0x1
         xor ecx,ecx
-        call fn_6af0a
+        call lolz_io                    ; v3.0.49: the stick, or a partition of a SATA disk (`lolz P`)
         test eax,eax
         retq
 
@@ -2424,7 +2434,7 @@ fn_3318b:
         mov rsi,[rel d_335f8]
         mov edx,0x1
         xor ecx,ecx
-        call fn_6af0a
+        call lolz_io                    ; v3.0.49: the stick, or a partition of a SATA disk (`lolz P`)
         test eax,eax
         jnz short L_331d4
         mov qword [rel d_33600],0xffffffffffffffff
@@ -2459,7 +2469,7 @@ fn_33224:
         mov rsi,[rel d_33608]
         mov rdx,[rel d_33610]
         xor ecx,ecx
-        jmp near fn_6af0a
+        jmp near lolz_io                ; v3.0.49
 
 fn_3324c:
         push rbx

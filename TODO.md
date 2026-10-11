@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.48 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.49 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -140,7 +140,18 @@ The owner's order of 11 October 2026 for the kernel - 1, 2, 3, 4, 5, 9, 10, 13:
         shows disk 0, 953869 MB, ST1000LM035 - the inner disk is read.
       - Found on the way: **`install N BESIDE` is there since v2.0.5** - a partition after the
         others, which stay. The start of "beside another system"; not yet "unallocated".
-      - Next: the reader of FAT32 / exFAT, then NTFS, as a suit (`k_lolz`).
+      - [x] **FAT32 of an inner disk, v3.0.49.** The reader was there already: `files` (suit
+        k_tools, v2.9.18) reads FAT32 from a USB stick - list, cd, get. Now `parts` numbers
+        the partitions and **`lolz P`** makes partition P what `files` reads (`lolz off`: the
+        stick again). Seen in QEMU on a SATA disk made by the test: the folder listed, a
+        folder entered, a file brought into the cabinet (test/qemu/q_v3_lolz.txt). Reading
+        only - a write to such a disk is refused in lolz_io. The owner's parts on the real
+        disk worked (v3.0.48).
+        Left as it was: the heading still says "On the USB stick"; a file over 8 MB is not
+        brought in; long names as `files` shows them; no folder brought in whole.
+      - Next: exFAT, then NTFS (both new readers - `files` says so itself when it meets
+        them), ext4; bigger files; a whole folder; then a suit of their own (`k_lolz`) and
+        the two kinds of place in the program Files.
 
 ## THE FULL TEST of 11 October 2026 (v3.0.37 -> v3.0.38): what works, what does not, how to mend it
 

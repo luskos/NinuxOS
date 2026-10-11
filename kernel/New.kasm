@@ -173,6 +173,11 @@ shell_more:                             ; rbx = the word, r12 = what follows it
         call same_word_any_case
         test eax,eax
         jnz near parts_command
+        lea rsi,[rel lolz_word]
+        mov rdi,rbx
+        call same_word_any_case
+        test eax,eax
+        jnz near lolz_command
         mov byte [rel desk_any],0x0     ; v3.0.46: a word that begins with "desk" (desk2 ...) names a
         mov eax,[rbx]                   ; desk: it is run the way `desktop` is, under the multiplexer
         or eax,0x20202020
@@ -1595,6 +1600,7 @@ parts_command:                          ; r12 = what follows the word
         movzx eax,cl
 parts_disk:
         mov [rel parts_n],rax
+        mov qword [rel parts_count],0x0
         lea rcx,[rel d_648c0]
         cmp qword [rcx+rax*8],0x0
         jz near parts_none
@@ -1625,6 +1631,10 @@ parts_mbr_line:
         movzx edi,byte [rax+0x4]
         test edi,edi
         jz parts_mbr_next
+        mov edi,[rax+0x8]
+        call parts_note
+        mov rax,[rel parts_e]
+        movzx edi,byte [rax+0x4]
         lea rsi,[rel parts_kinds]
 parts_kind_look:
         mov al,[rsi]
@@ -1680,6 +1690,9 @@ parts_gpt_line:
         mov rcx,[rax]
         or rcx,[rax+0x8]
         jz near parts_gpt_next
+        mov rdi,[rax+32]
+        call parts_note
+        mov rax,[rel parts_e]
         mov edi,[rax]                   ; the first four bytes of the kind are enough to tell them apart
         lea rsi,[rel parts_guids]
 parts_guid_look:
@@ -1834,3 +1847,103 @@ parts_guids:
         dd 0xE6D6D379
         db '  Linux LVM      ', 0
         dd 0
+
+; ---- v3.0.49: `lolz P` - `files` reads a partition of a SATA disk ---------------------------------
+; `files` (the suit k_tools) reads FAT32 from a USB stick: list, cd, get. Its three readings of
+; sectors now come through lolz_io, and its look for the volume asks lolz_first, so the same
+; command reads a partition of an inner disk. Reading only: a write is refused here.
+;       parts [N]         numbers the partitions of SATA disk N and remembers where they begin
+;       lolz P            partition P of that list is what `files` reads from now on
+;       lolz off          `files` reads the USB stick again
+parts_note:                             ; rdi = where a partition begins: remembered, its number said
+        mov rax,[rel parts_count]
+        cmp rax,32
+        jnc parts_note_end
+        lea rcx,[rel parts_starts]
+        mov [rcx+rax*8],rdi
+        inc qword [rel parts_count]
+        lea rdi,[rel parts_says_gap]
+        call api_print
+        mov rdi,[rel parts_count]
+        jmp near print_number
+parts_note_end:
+        retq
+
+lolz_command:                           ; r12 = what follows the word
+        add rsp,0x8
+        cmp byte [r12],'o'
+        jz lolz_off
+        movzx eax,byte [r12]
+        sub eax,'0'
+        cmp eax,0x9
+        ja lolz_usage
+        movzx ecx,byte [r12+0x1]
+        sub ecx,'0'
+        cmp ecx,0x9
+        ja lolz_one
+        imul eax,eax,10
+        add eax,ecx
+lolz_one:
+        test eax,eax
+        jz lolz_usage
+        cmp rax,[rel parts_count]
+        ja lolz_usage
+        lea rcx,[rel parts_starts]
+        mov rax,[rcx+rax*8-8]
+        mov [rel lolz_start],rax
+        mov rax,[rel parts_n]
+        mov [rel lolz_disk],rax
+        lea rdi,[rel lolz_says_on]
+        call api_print
+        jmp near L_0b044
+lolz_off:
+        mov qword [rel lolz_start],0x0
+        lea rdi,[rel lolz_says_off]
+        call api_print
+        jmp near L_0b044
+lolz_usage:
+        lea rdi,[rel lolz_says_usage]
+        call api_print
+        jmp near L_0b044
+
+lolz_first:                             ; rax = the first sector of the chosen partition, 0: the stick is read
+        mov rax,[rel lolz_start]
+        retq
+
+lolz_io:                                ; as the stick's reader: rdi = sector, rsi = memory, rdx = sectors, rcx = 0
+        cmp qword [rel lolz_start],0x0
+        jz near fn_6af0a
+        test rcx,rcx
+        jnz lolz_io_no                  ; nothing is written to another system's disk
+        push qword [rel d_648b8]        ; (the disk the AHCI reader reads: the boot disk, if that is SATA)
+        mov rax,[rel lolz_disk]
+        mov [rel d_648b8],rax
+        call L_646c2
+        pop qword [rel d_648b8]
+        test eax,eax
+        retq
+lolz_io_no:
+        xor eax,eax
+        retq
+
+        align 8, db 0
+parts_count:
+        dq 0
+parts_starts:
+        times 32 dq 0
+lolz_start:
+        dq 0
+lolz_disk:
+        dq 0
+lolz_word:
+        db 'lolz', 0
+parts_says_gap:
+        db ' ', 0
+lolz_says_on:
+        db '`files` reads that partition now (FAT32): files, files cd NAME, files get NAME.', 10
+        db '`lolz off` gives it the USB stick back.', 10, 0
+lolz_says_off:
+        db '`files` reads the USB stick again.', 10, 0
+lolz_says_usage:
+        db 'lolz P     partition P of the list `parts` showed last is what `files` reads', 10
+        db 'lolz off   the USB stick again', 10, 0
