@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.41.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.42.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.41 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.42 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -895,6 +895,14 @@ brought back and carried on (October 2026). The conversations themselves are kep
       they are needed. Its interface may be HTML and CSS. An object in META works as a
       program of the desktop does, with sockets that run when something happens; META is the
       same system, accelerated for 3D. Not begun.
+\item \textbf{The supercluster} (11 October 2026): the ecosystem is one cluster of local
+      clusters and every machine is a node that gives some per cent of its processor and a
+      share of its disk to a common pool, on which NET and META live and one intelligence may
+      serve everyone. Proposed: a pin is the print of a machine's key, found through a table
+      spread over the machines; data lie in blocks named by their SHA-256, kept several
+      times in a reserved part of each disk; work is cut into pieces sent as parcels, each
+      done by two machines and compared. It fits work that can wait (baking the photon maps),
+      not a frame of a game across the internet. Not begun.
 \item \textbf{Everything stands by itself.} Photon, Puffer, Tuner and META are to be objects
       of their own. Decided on 11 October 2026: what needs the kernel's own functions (Tuner:
       the processor's clock; Puffer: sectors of a stick) becomes a \emph{kernel suit} of its

@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.41 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.42 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -29,6 +29,16 @@ From the owner's account of 11 October 2026, not in the list before:
       program of the desktop does - sockets run when something happens - so a game is made the
       way a program is. To decide: servers beside peer-to-peer rendering; what stays on the
       machine after play; how a gate leads from world to world.
+- [ ] **The supercluster** (the owner, 11 October 2026): the whole ecosystem one cluster made of
+      local clusters, every machine a node; each gives some per cent of its processor and a
+      share of its disk to a common pool that NET and META live on; one intelligence may run
+      on it and serve everyone. How (Claude, `docs/OPISANIE.md` part 3a): pin = the print of a
+      machine's key and a spread table to find machines and blocks; blocks named by their
+      SHA-256, kept several times, in a reserved part of the disk like the backup pool; work
+      cut into pieces sent as parcels, each done twice and compared. Fits what can wait
+      (baking photon maps), not a frame of a game across the internet. 10 petaflops is about a
+      million machines at 5%. Answering with a model spread over nodes can be done; training a
+      large one on processors over home links is the weak place.
 - [ ] **Every architecture**: a version for whatever metal it is to run on; py2asm with a back
       end a machine. And more dialects (ruby2asm ...).
 

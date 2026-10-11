@@ -3,6 +3,11 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.42** (11 October 2026) - papers only
+  - The supercluster: every machine a node that gives processor and disk to a common pool;
+    how the shared disk, the shared computing and the finding may be made, what fits and what
+    does not, the sum of the power without hype. `docs/OPISANIE.md` part 3a, TODO.md, the
+    architecture document.
 - **v3.0.41** (11 October 2026) - papers only
   - META as the owner made it clear: local or global with servers and gates; games streamed as
     objects, not installed; objects in META work as programs of the desktop do. In
