@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.46 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.47 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -75,12 +75,16 @@ The owner's order of 11 October 2026 for the kernel - 1, 2, 3, 4, 5, 9, 10, 13:
 - [x] 4. Five people: tried with levels 18, 16, 12, 7, 0 (test/qemu/q_v3_v46.txt). Four are
       added, the fifth is refused with "Five people are known by now" - rightly: **the image
       carries one person already, `petya` (opens up to 12), come with the stick of v2.9.59.**
-      For the owner: should the built image carry her, or begin with nobody?
+      **v3.0.47: taken out by the build (the owner's word) - the image begins with nobody.**
 - [ ] 5. The refusal of api_guard: wants a program the Sentinel does not know, made inside the
       system (Studio) and asked to switch the machine off. Not tried.
 - [ ] 9. Tuner and Puffer as suits of their own. Not begun.
 - [ ] 10. Names for the kernel's functions (91 of about 940). Not carried on.
-- [ ] 13. Drivers: NVMe, AHCI, Wi-Fi, touchpad, battery. Not begun.
+- [ ] 13. Drivers. **AHCI and NVMe are in the kernel already** (v2.x: SATA and NVMe disks, an
+      installer onto them) - Claude said they were missing, wrongly. What the machine has is
+      shown by `pci` (the controllers), `disk` (the boot disk), `install` alone (the SATA
+      disks it could go onto). Missing: Wi-Fi, touchpad, battery. For winlolz / linlolz this
+      means the readers can begin from the disks as they are.
 - Seen on the way: the first line of the screen still says **NinuxOS v2.9.59** - the
   kernel's own text, not taken from VERSION.
 

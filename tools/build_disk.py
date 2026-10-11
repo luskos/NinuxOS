@@ -737,6 +737,15 @@ def main():
     suit_sources(nasm, img, tables, changed)
     programs(nasm)
     added = []                                  # what the build puts in: lines for the Sentinel's list
+    # v3.0.47: the image begins with nobody. The stick of v2.9.59 came with a person in the
+    # object `accounts` (slots of 0x40 bytes from 0x70 of the object); they are emptied.
+    for t in tables:
+        for e, n, lba, sectors, ident in t.entries(img):
+            if n == 'accounts' and sectors * SECTOR >= 0x1F0:
+                at = lba * SECTOR
+                if any(img[at + 0x70:at + 0x1F0]):
+                    img[at + 0x70:at + 0x1F0] = bytes(0x180)
+                    print('build:   the object accounts: the people that came with the stick are taken out')
     for path in sorted(glob.glob(os.path.join(ROOT, 'pages', '*.asmo'))):
         if os.path.normcase(os.path.abspath(path)) in have:
             continue                            # a page the cabinet does not have: a new object

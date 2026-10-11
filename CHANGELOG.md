@@ -3,6 +3,10 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.47** (11 October 2026) - the build
+  - The image begins with nobody: the person that came with the stick (`petya`, in the object
+    `accounts`) is taken out by tools/build_disk.py. Seen in QEMU.
+  - TODO.md set right: AHCI and NVMe drivers are in the kernel already.
 - **v3.0.46** (11 October 2026) - the kernel (New.kasm); seen in QEMU
   - A word that begins with `desk` is run as a desk: `desk2` alone now does what `desk desk2`
     does (programs in windows, the taskbar).
