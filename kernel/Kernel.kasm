@@ -3778,7 +3778,7 @@ cmd_level:
 
 L_0ab31:
         push rcx
-        call fn_108a1
+        call admin_ask_gate
         pop rcx
         test eax,eax
         jnz near L_0abf7
@@ -3807,7 +3807,7 @@ L_0ab67:
 
 L_0ab7f:
         push rcx
-        call fn_108a1
+        call admin_ask_gate
         pop rcx
         test eax,eax
         jnz short L_0abf7
@@ -6759,7 +6759,7 @@ disk_read:
         cmp byte [rel d_154a9],0x0
         jz short L_0cd2c
         xor ecx,ecx
-        jmp near L_1101f
+        jmp near usb_disk_io_gate
 
 L_0cd2c:
         cmp byte [rel d_154aa],0x0
@@ -6771,7 +6771,7 @@ L_0cd3c:
         cmp byte [rel d_154ab],0x0
         jz short L_0cd4c
         xor ecx,ecx
-        jmp near L_1106d
+        jmp near ahci_io_gate
 
 L_0cd4c:
         push rbx
@@ -6824,7 +6824,7 @@ disk_write:
         cmp byte [rel d_154a9],0x0
         jz short L_0cdc2
         mov ecx,0x1
-        jmp near L_1101f
+        jmp near usb_disk_io_gate
 
 L_0cdc2:
         cmp byte [rel d_154aa],0x0
@@ -6836,7 +6836,7 @@ L_0cdd5:
         cmp byte [rel d_154ab],0x0
         jz short L_0cde8
         mov ecx,0x1
-        jmp near L_1106d
+        jmp near ahci_io_gate
 
 L_0cde8:
         push rbx
@@ -7460,7 +7460,7 @@ L_0d41a:
         jz short L_0d473
         cmp dword [rdx+0x48],0x1
         jnz short L_0d45c
-        call fn_108a1
+        call admin_ask_gate
         test eax,eax
         jnz short L_0d473
         mov dword [r12+0x48],0x1
@@ -7605,7 +7605,7 @@ L_0d573:
 cmd_maint:
         cmp byte [rel maint_on],0x0
         jnz short L_0d5b2
-        call fn_108a1
+        call admin_ask_gate
         test eax,eax
         jz short L_0d595
         lea rdi,[rel d_1559b]
@@ -12046,11 +12046,11 @@ ext_log:
         lea rdi,[rel ext_sha256]
         mov ecx,0x20
         repe cmpsb
-        setz byte [rel d_16e45]
+        setz byte [rel ext_ok]
         jmp short L_106e6
 
 L_106df:
-        mov byte [rel d_16e45],0x0
+        mov byte [rel ext_ok],0x0
 
 L_106e6:
         lea rdi,[rel d_16faa]
@@ -12063,7 +12063,7 @@ L_106e6:
         mov edi,(ext_end - ext_start)
         call fn_0be89
         lea rdi,[rel d_16fc9]
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz short L_10730
         lea rdi,[rel d_16fdd]
 
@@ -12086,7 +12086,7 @@ say_kernel:
         mov edi,(ext_end - ext_start)
         call print_number
         lea rdi,[rel d_16f41]
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz short L_1077f
         lea rdi,[rel d_16f5d]
 
@@ -12136,8 +12136,8 @@ L_107f7:
 
 ; the services of the kernel's extension (a number in rsi says which); 0 if the extension is not trusted
 api_extension:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_50010
+        cmp byte [rel ext_ok],0x0
+        jnz near api_extension_ext
         test rcx,rcx
         jz short L_10825
         push rcx
@@ -12154,14 +12154,14 @@ L_10825:
         retq
 
 api_programs:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_55a96
+        cmp byte [rel ext_ok],0x0
+        jnz near api_programs_ext
         mov rax,0xffffffffffffffff
         retq
 
 ; rdi = the desktop object: under the multiplexer if the extension is trusted, else alone
 desktop_run:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near mux_run
         xor esi,esi
         xor edx,edx
@@ -12191,79 +12191,80 @@ L_10874:
         and rax,0xfffffffffffff000
         cmp rax,0x18000
         jnz short L_1089b
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_5e16a
 
 L_1089b:
         mov eax,0x1
         retq
 
-fn_108a1:
-        cmp byte [rel d_16e45],0x0
+; in the core: on to admin_ask if the extension passed its check
+admin_ask_gate:
+        cmp byte [rel ext_ok],0x0
         jnz near admin_ask
         mov eax,0x2
         retq
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_erase:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_51d3f
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_erase_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_dropdata:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_51d49
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_dropdata_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_cleandata:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_51d53
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_cleandata_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_cleansockets:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_51d5d
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_cleansockets_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_inject:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_51d67
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_inject_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_passwd:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_51f08
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_passwd_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_lock:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_51d7b
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_lock_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_unlock:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_51d85
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_unlock_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_show:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_51d71
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_show_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
         db 0x80, 0x3D, 0xA9, 0x64, 0x00, 0x00, 0x00, 0x0F, 0x85, 0xC7, 0x8F, 0x04, 0x00, 0x48, 0x8D, 0x3D
@@ -12271,149 +12272,149 @@ cmd_show:
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_build:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6df6a
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_build_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_cores:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_61edb
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_cores_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_kill:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_56168
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_kill_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_sentinel:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_5e597
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_sentinel_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_whoami:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_60191
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_whoami_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 fn_10a2b:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_5fcf8
         retq
 
 fn_10a39:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_5e4b5
         retq
 
 fn_10a47:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_5e57f
         retq
 
 p_10a55:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_639f9
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 p_10a6e:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_6934e
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 p_10a87:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_68cdc
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_shot:
-        cmp byte [rel d_16e45],0x0
-        jnz near fn_6dd4f
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_shot_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_away:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near screen_lock
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_login:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_51d8f
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_login_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_user:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6deca
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_user_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 p_10b04:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_6def2
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_tune:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6dd77
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_tune_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_chain:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6de2a
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_chain_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_uproot:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6de52
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_uproot_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_root:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6de7a
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_root_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 fn_10b81:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jz short L_10ba8
         cmp byte [rel d_10ca3],0x0
         jnz short L_10ba8
         mov byte [rel d_10ca3],0x1
         xor edi,edi
-        call fn_6dd4f
+        call cmd_shot_ext
         mov byte [rel d_10ca3],0x0
 
 L_10ba8:
         retq
 
 fn_10ba9:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jz short L_10ba8
         cmp byte [rel d_10ca3],0x0
         jnz short L_10ba8
@@ -12423,12 +12424,12 @@ fn_10ba9:
         retq
 
 fn_10bcf:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_5b40d
         retq
 
 fn_10bdd:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jz short L_10c5c
         cmp byte [rel d_10c5d],0x0
         jnz near L_6ddc7
@@ -12467,7 +12468,7 @@ d_10c5e:
         db 0x00
 
 fn_10c5f:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near fn_6de02
         retq
 
@@ -12478,320 +12479,322 @@ d_10ca3:
         db 0x00
 
 p_10ca4:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_6ec49
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_machine:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_5b6f4
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_machine_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_install:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_658d5
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_install_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_update:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6dc37
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_update_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_puffer:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6dc5f
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_puffer_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_files:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6dcaf
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_files_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_spaces:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6dcd7
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_spaces_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_bench:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6dd27
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_bench_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_sound:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6d8b8
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_sound_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_play:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6d8e0
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_play_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_screen:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_5da50
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_screen_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 p_10db7:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_6d9df
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_ping:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6da07
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_ping_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_serve:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6da2f
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_serve_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 p_10e02:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_6da57
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_share:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6da7f
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_share_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_unshare:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6daa7
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_unshare_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_look:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6dacf
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_look_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_send:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6daf7
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_send_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_subscribe:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6db1f
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_subscribe_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_unsubscribe:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6db47
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_unsubscribe_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_broadcast:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6db6f
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_broadcast_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_kasm:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6dfa2
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_kasm_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_sgpu:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_70a71
+        cmp byte [rel ext_ok],0x0
+        jnz near cmd_sgpu_ext
         lea rdi,[rel d_16e98]
         jmp near api_print
 
 fn_10efc:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near fn_6d9cc
         retq
 
 p_10f0a:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_737de
         xor eax,eax
         retq
 
 fn_10f1a:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_73872
         xor eax,eax
         retq
 
 api_network:
-        cmp byte [rel d_16e45],0x0
-        jnz near L_6dc0f
+        cmp byte [rel ext_ok],0x0
+        jnz near api_network_ext
         mov rax,0xffffffffffffffff
         retq
 
 api_sound:
-        cmp byte [rel d_16e45],0x0
-        jnz near fn_6d908
+        cmp byte [rel ext_ok],0x0
+        jnz near api_sound_ext
         xor eax,eax
         retq
 
 api_system_text:
-        cmp byte [rel d_16e45],0x0
-        jnz near fn_5b1ae
+        cmp byte [rel ext_ok],0x0
+        jnz near api_system_text_ext
         mov rax,0xffffffffffffffff
         retq
 
 fn_10f64:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_6e9b1
         retq
 
 L_10f72:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_6ec2d
         xor eax,eax
         retq
 
 fn_10f82:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_69320
         retq
 
 fn_10f90:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_68a44
         retq
 
 fn_10f9e:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_6884d
         retq
 
 fn_10fac:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_6d8a5
         retq
 
 fn_10fba:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_56f3b
         retq
 
 fn_10fc8:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_5b0d4
         retq
 
 fn_10fd6:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_5e216
         retq
 
 fn_10fe4:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_56d21
         mov rax,rdi
         retq
 
 fn_10ff5:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_61bfc
         retq
 
 fn_11003:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_76930
         retq
 
 fn_11011:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_60aa0
         retq
 
-L_1101f:
-        cmp byte [rel d_16e45],0x0
+; in the core: on to usb_disk_io if the extension passed its check
+usb_disk_io_gate:
+        cmp byte [rel ext_ok],0x0
         jnz near usb_disk_io
         xor eax,eax
         retq
 
 fn_1102f:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_6b052
         retq
 
 fn_1103d:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_6553c
         xor eax,eax
         retq
 
 L_1104d:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near fn_653ea
         xor eax,eax
         retq
 
 fn_1105d:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_647d6
         xor eax,eax
         retq
 
-L_1106d:
-        cmp byte [rel d_16e45],0x0
+; in the core: on to ahci_io if the extension passed its check
+ahci_io_gate:
+        cmp byte [rel ext_ok],0x0
         jnz near ahci_io
         xor eax,eax
         retq
 
 fn_1107d:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_60d18
         retq
 
 fn_1108b:
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near L_61e6e
         retq
 
 p_11099:
         mov eax,0x1
-        cmp byte [rel d_16e45],0x0
+        cmp byte [rel ext_ok],0x0
         jnz near say_cores
         retq
         db 0x00, 0x00, 0x00, 0x00
@@ -15023,7 +15026,8 @@ d_16dea:
 d_16e44:
         db 0x00
 
-d_16e45:
+; 1: the extension passed its SHA-256 check
+ext_ok:
         db 0x00, 0x90, 0x90
         db 'NINUX-EXT-HASH::'
 
@@ -15075,7 +15079,8 @@ ext_start:
         dq ext_end - ext_start
 [bits 64]
 
-L_50010:
+; in the extension: what api_extension does
+api_extension_ext:
         mov byte [rel d_16e44],0x0
         jmp short L_50020
 
@@ -17395,39 +17400,48 @@ L_51d0a:
 L_51d3e:
         retq
 
-L_51d3f:
+; in the extension: what cmd_erase does
+cmd_erase_ext:
         mov esi,0x6
         jmp near L_51f13
 
-L_51d49:
+; in the extension: what cmd_dropdata does
+cmd_dropdata_ext:
         mov esi,0x7
         jmp near L_51f13
 
-L_51d53:
+; in the extension: what cmd_cleandata does
+cmd_cleandata_ext:
         mov esi,0x8
         jmp near L_51f13
 
-L_51d5d:
+; in the extension: what cmd_cleansockets does
+cmd_cleansockets_ext:
         mov esi,0x9
         jmp near L_51f13
 
-L_51d67:
+; in the extension: what cmd_inject does
+cmd_inject_ext:
         mov esi,0xa
         jmp near L_51f13
 
-L_51d71:
+; in the extension: what cmd_show does
+cmd_show_ext:
         mov esi,0x4
         jmp near L_51f13
 
-L_51d7b:
+; in the extension: what cmd_lock does
+cmd_lock_ext:
         mov esi,0x15
         jmp near L_51f13
 
-L_51d85:
+; in the extension: what cmd_unlock does
+cmd_unlock_ext:
         mov esi,0x16
         jmp near L_51f13
 
-L_51d8f:
+; in the extension: what cmd_login does
+cmd_login_ext:
         push rbx
         mov rbx,rdi
         lea rsi,[rel d_5255d]
@@ -17539,7 +17553,8 @@ L_51f06:
         pop rbx
         retq
 
-L_51f08:
+; in the extension: what cmd_passwd does
+cmd_passwd_ext:
         xor edi,edi
         mov esi,0xc
         xor edx,edx
@@ -21227,7 +21242,8 @@ fn_55a20:
         pop rbx
         retq
 
-L_55a96:
+; in the extension: what api_programs does
+api_programs_ext:
         cmp byte [rel mux_on],0x0
         jz near L_55b31
         cmp rdi,0x0
@@ -21813,7 +21829,8 @@ L_56165:
         xor eax,eax
         retq
 
-L_56168:
+; in the extension: what cmd_kill does
+cmd_kill_ext:
         cmp byte [rdi],0x0
         jz short L_56198
         cmp byte [rel mux_on],0x0
@@ -27742,7 +27759,8 @@ L_5b1a5:
         pop rbx
         retq
 
-fn_5b1ae:
+; in the extension: what api_system_text does
+api_system_text_ext:
         push rbx
         push r12
         push r13
@@ -27993,7 +28011,7 @@ L_5b456:
         mov edi,0x2
         mov esi,0x370
         mov edx,0x9c4
-        call fn_6d908
+        call api_sound_ext
         cmp qword [rel screen_on],0x0
         jz short L_5b50a
         mov rdi,[rel screen_width]
@@ -28179,7 +28197,8 @@ L_5b6f2:
         pop rbx
         retq
 
-L_5b6f4:
+; in the extension: what cmd_machine does
+cmd_machine_ext:
         push rbx
         push r12
         xor ebx,ebx
@@ -28191,7 +28210,7 @@ L_5b6f9:
         mov rdi,rbx
         lea rsi,[rel d_5b804]
         mov byte [rel d_16e44],0x1
-        call fn_5b1ae
+        call api_system_text_ext
         mov byte [rel d_16e44],0x0
         lea rdi,[rel d_5b804]
         call api_print
@@ -28358,7 +28377,8 @@ d_5da3b:
 d_5da40:
         db 'NinuxOS v2.9.59', 0
 
-L_5da50:
+; in the extension: what cmd_screen does
+cmd_screen_ext:
         push rbx
         push r12
         push r13
@@ -29196,7 +29216,8 @@ L_5e57f:
         call api_log
         jmp near L_5e4d7
 
-L_5e597:
+; in the extension: what cmd_sentinel does
+cmd_sentinel_ext:
         push rbx
         mov rbx,rdi
         cmp byte [rbx],0x0
@@ -29771,7 +29792,8 @@ L_6018d:
         pop rbx
         retq
 
-L_60191:
+; in the extension: what cmd_whoami does
+cmd_whoami_ext:
         push rbx
         lea rdi,[rel d_60519]
         call ob_find
@@ -32065,7 +32087,8 @@ L_61ed0:
         inc rax
         retq
 
-L_61edb:
+; in the extension: what cmd_cores does
+cmd_cores_ext:
         push rbx
         push r12
         push r13
@@ -34532,7 +34555,8 @@ L_658d0:
 d_658d4:
         db 0x00
 
-L_658d5:
+; in the extension: what cmd_install does
+cmd_install_ext:
         push rbx
         push r12
         push r13
@@ -41695,7 +41719,8 @@ L_6d8b5:
         xor eax,eax
         retq
 
-L_6d8b8:
+; in the extension: what cmd_sound does
+cmd_sound_ext:
         push rdi
         push rsi
         push rdx
@@ -41718,7 +41743,8 @@ L_6d8dd:
         xor eax,eax
         retq
 
-L_6d8e0:
+; in the extension: what cmd_play does
+cmd_play_ext:
         push rdi
         push rsi
         push rdx
@@ -41741,7 +41767,8 @@ L_6d905:
         xor eax,eax
         retq
 
-fn_6d908:
+; in the extension: what api_sound does
+api_sound_ext:
         push rdi
         push rsi
         push rdx
@@ -41878,7 +41905,8 @@ L_6da04:
         xor eax,eax
         retq
 
-L_6da07:
+; in the extension: what cmd_ping does
+cmd_ping_ext:
         push rdi
         push rsi
         push rdx
@@ -41901,7 +41929,8 @@ L_6da2c:
         xor eax,eax
         retq
 
-L_6da2f:
+; in the extension: what cmd_serve does
+cmd_serve_ext:
         push rdi
         push rsi
         push rdx
@@ -41947,7 +41976,8 @@ L_6da7c:
         xor eax,eax
         retq
 
-L_6da7f:
+; in the extension: what cmd_share does
+cmd_share_ext:
         push rdi
         push rsi
         push rdx
@@ -41970,7 +42000,8 @@ L_6daa4:
         xor eax,eax
         retq
 
-L_6daa7:
+; in the extension: what cmd_unshare does
+cmd_unshare_ext:
         push rdi
         push rsi
         push rdx
@@ -41993,7 +42024,8 @@ L_6dacc:
         xor eax,eax
         retq
 
-L_6dacf:
+; in the extension: what cmd_look does
+cmd_look_ext:
         push rdi
         push rsi
         push rdx
@@ -42016,7 +42048,8 @@ L_6daf4:
         xor eax,eax
         retq
 
-L_6daf7:
+; in the extension: what cmd_send does
+cmd_send_ext:
         push rdi
         push rsi
         push rdx
@@ -42039,7 +42072,8 @@ L_6db1c:
         xor eax,eax
         retq
 
-L_6db1f:
+; in the extension: what cmd_subscribe does
+cmd_subscribe_ext:
         push rdi
         push rsi
         push rdx
@@ -42062,7 +42096,8 @@ L_6db44:
         xor eax,eax
         retq
 
-L_6db47:
+; in the extension: what cmd_unsubscribe does
+cmd_unsubscribe_ext:
         push rdi
         push rsi
         push rdx
@@ -42085,7 +42120,8 @@ L_6db6c:
         xor eax,eax
         retq
 
-L_6db6f:
+; in the extension: what cmd_broadcast does
+cmd_broadcast_ext:
         push rdi
         push rsi
         push rdx
@@ -42177,7 +42213,8 @@ L_6dc0c:
         xor eax,eax
         retq
 
-L_6dc0f:
+; in the extension: what api_network does
+api_network_ext:
         push rdi
         push rsi
         push rdx
@@ -42200,7 +42237,8 @@ L_6dc34:
         xor eax,eax
         retq
 
-L_6dc37:
+; in the extension: what cmd_update does
+cmd_update_ext:
         push rdi
         push rsi
         push rdx
@@ -42223,7 +42261,8 @@ L_6dc5c:
         xor eax,eax
         retq
 
-L_6dc5f:
+; in the extension: what cmd_puffer does
+cmd_puffer_ext:
         push rdi
         push rsi
         push rdx
@@ -42269,7 +42308,8 @@ L_6dcac:
         xor eax,eax
         retq
 
-L_6dcaf:
+; in the extension: what cmd_files does
+cmd_files_ext:
         push rdi
         push rsi
         push rdx
@@ -42292,7 +42332,8 @@ L_6dcd4:
         xor eax,eax
         retq
 
-L_6dcd7:
+; in the extension: what cmd_spaces does
+cmd_spaces_ext:
         push rdi
         push rsi
         push rdx
@@ -42338,7 +42379,8 @@ L_6dd24:
         xor eax,eax
         retq
 
-L_6dd27:
+; in the extension: what cmd_bench does
+cmd_bench_ext:
         push rdi
         push rsi
         push rdx
@@ -42361,7 +42403,8 @@ L_6dd4c:
         xor eax,eax
         retq
 
-fn_6dd4f:
+; in the extension: what cmd_shot does
+cmd_shot_ext:
         push rdi
         push rsi
         push rdx
@@ -42384,7 +42427,8 @@ L_6dd74:
         xor eax,eax
         retq
 
-L_6dd77:
+; in the extension: what cmd_tune does
+cmd_tune_ext:
         push rdi
         push rsi
         push rdx
@@ -42485,7 +42529,8 @@ L_6de27:
         xor eax,eax
         retq
 
-L_6de2a:
+; in the extension: what cmd_chain does
+cmd_chain_ext:
         push rdi
         push rsi
         push rdx
@@ -42508,7 +42553,8 @@ L_6de4f:
         xor eax,eax
         retq
 
-L_6de52:
+; in the extension: what cmd_uproot does
+cmd_uproot_ext:
         push rdi
         push rsi
         push rdx
@@ -42531,7 +42577,8 @@ L_6de77:
         xor eax,eax
         retq
 
-L_6de7a:
+; in the extension: what cmd_root does
+cmd_root_ext:
         push rdi
         push rsi
         push rdx
@@ -42577,7 +42624,8 @@ L_6dec7:
         xor eax,eax
         retq
 
-L_6deca:
+; in the extension: what cmd_user does
+cmd_user_ext:
         push rdi
         push rsi
         push rdx
@@ -42673,7 +42721,8 @@ L_6df67:
         xor eax,eax
         retq
 
-L_6df6a:
+; in the extension: what cmd_build does
+cmd_build_ext:
         cmp dword [rdi],0x72666572
         jnz near L_59969
         cmp word [rdi+0x4],0x7365
@@ -42689,7 +42738,8 @@ L_6df9c:
         add rdi,0x7
         jmp short L_6df42
 
-L_6dfa2:
+; in the extension: what cmd_kasm does
+cmd_kasm_ext:
         push rbx
         lea rdi,[rel d_6e123]
         call api_print
@@ -45239,7 +45289,8 @@ fn_70a66:
         mov [rax+0x1c],edi
         retq
 
-L_70a71:
+; in the extension: what cmd_sgpu does
+cmd_sgpu_ext:
         push rbx
         push r12
         push r13

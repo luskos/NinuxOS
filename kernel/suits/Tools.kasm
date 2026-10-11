@@ -5851,14 +5851,14 @@ L_38ad7:
         lea rdi,[rel d_396a2]
         call api_print
         mov rdi,rbx
-        call L_658d5
+        call cmd_install_ext
         jmp short L_38b20
 L_38af2:
         lea rdi,[rel d_39117]
         call entry_12
         mov byte [rel suit_start + (d_605cb - 0x30000)],0x1
         mov rdi,rbx
-        call L_658d5
+        call cmd_install_ext
         mov byte [rel suit_start + (d_605cb - 0x30000)],0x0
         lea rdi,[rel d_39755]
         call api_print

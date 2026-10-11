@@ -197,3 +197,57 @@ fn_73e97   photon_bar         ; Photon's line with the frames per second
 d_154b0    ata_sectors        ; how many sectors the ATA disk said it has
 d_15498    ata_there          ; 1: an ATA disk answered
 d_15499    disk_base          ; added to every sector of the boot disk
+
+# ---- v3.0.52: the gates of the core (a few bytes that go on into the extension if it passed
+# ---- its SHA-256 check) and what stands behind them, named one from the other
+d_16e45    ext_ok                     ; 1: the extension passed its SHA-256 check
+L_50010    api_extension_ext          ; in the extension: what api_extension does
+L_55a96    api_programs_ext           ; in the extension: what api_programs does
+fn_108a1   admin_ask_gate             ; in the core: on to admin_ask if the extension passed its check
+L_51d3f    cmd_erase_ext              ; in the extension: what cmd_erase does
+L_51d49    cmd_dropdata_ext           ; in the extension: what cmd_dropdata does
+L_51d53    cmd_cleandata_ext          ; in the extension: what cmd_cleandata does
+L_51d5d    cmd_cleansockets_ext       ; in the extension: what cmd_cleansockets does
+L_51d67    cmd_inject_ext             ; in the extension: what cmd_inject does
+L_51f08    cmd_passwd_ext             ; in the extension: what cmd_passwd does
+L_51d7b    cmd_lock_ext               ; in the extension: what cmd_lock does
+L_51d85    cmd_unlock_ext             ; in the extension: what cmd_unlock does
+L_51d71    cmd_show_ext               ; in the extension: what cmd_show does
+L_6df6a    cmd_build_ext              ; in the extension: what cmd_build does
+L_61edb    cmd_cores_ext              ; in the extension: what cmd_cores does
+L_56168    cmd_kill_ext               ; in the extension: what cmd_kill does
+L_5e597    cmd_sentinel_ext           ; in the extension: what cmd_sentinel does
+L_60191    cmd_whoami_ext             ; in the extension: what cmd_whoami does
+fn_6dd4f   cmd_shot_ext               ; in the extension: what cmd_shot does
+L_51d8f    cmd_login_ext              ; in the extension: what cmd_login does
+L_6deca    cmd_user_ext               ; in the extension: what cmd_user does
+L_6dd77    cmd_tune_ext               ; in the extension: what cmd_tune does
+L_6de2a    cmd_chain_ext              ; in the extension: what cmd_chain does
+L_6de52    cmd_uproot_ext             ; in the extension: what cmd_uproot does
+L_6de7a    cmd_root_ext               ; in the extension: what cmd_root does
+L_5b6f4    cmd_machine_ext            ; in the extension: what cmd_machine does
+L_658d5    cmd_install_ext            ; in the extension: what cmd_install does
+L_6dc37    cmd_update_ext             ; in the extension: what cmd_update does
+L_6dc5f    cmd_puffer_ext             ; in the extension: what cmd_puffer does
+L_6dcaf    cmd_files_ext              ; in the extension: what cmd_files does
+L_6dcd7    cmd_spaces_ext             ; in the extension: what cmd_spaces does
+L_6dd27    cmd_bench_ext              ; in the extension: what cmd_bench does
+L_6d8b8    cmd_sound_ext              ; in the extension: what cmd_sound does
+L_6d8e0    cmd_play_ext               ; in the extension: what cmd_play does
+L_5da50    cmd_screen_ext             ; in the extension: what cmd_screen does
+L_6da07    cmd_ping_ext               ; in the extension: what cmd_ping does
+L_6da2f    cmd_serve_ext              ; in the extension: what cmd_serve does
+L_6da7f    cmd_share_ext              ; in the extension: what cmd_share does
+L_6daa7    cmd_unshare_ext            ; in the extension: what cmd_unshare does
+L_6dacf    cmd_look_ext               ; in the extension: what cmd_look does
+L_6daf7    cmd_send_ext               ; in the extension: what cmd_send does
+L_6db1f    cmd_subscribe_ext          ; in the extension: what cmd_subscribe does
+L_6db47    cmd_unsubscribe_ext        ; in the extension: what cmd_unsubscribe does
+L_6db6f    cmd_broadcast_ext          ; in the extension: what cmd_broadcast does
+L_6dfa2    cmd_kasm_ext               ; in the extension: what cmd_kasm does
+L_70a71    cmd_sgpu_ext               ; in the extension: what cmd_sgpu does
+L_6dc0f    api_network_ext            ; in the extension: what api_network does
+fn_6d908   api_sound_ext              ; in the extension: what api_sound does
+fn_5b1ae   api_system_text_ext        ; in the extension: what api_system_text does
+L_1101f    usb_disk_io_gate           ; in the core: on to usb_disk_io if the extension passed its check
+L_1106d    ahci_io_gate               ; in the core: on to ahci_io if the extension passed its check

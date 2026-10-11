@@ -1,0 +1,7 @@
+# q_v3_acpi.txt - v3.0.52: `acpi` - the devices the DSDT names
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type acpi
+wait 3
+snap a01_acpi

@@ -3,6 +3,11 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.52** (11 October 2026) - the kernel (New.kasm), names, TODO
+  - `acpi`: which devices the machine's DSDT names - battery, embedded controller, lid,
+    touchpad on I2C, PS/2 mouse, PS/2 keyboard. The first step to their drivers. Seen in QEMU.
+  - 51 more names: the gates of the core and what stands behind them (the same bytes).
+  - TODO: a grey mode of the display, layers of the desktop, a dragged icon on the mouse.
 - **v3.0.51** (11 October 2026) - a hole closed (the build, New.kasm); seen in QEMU
   - A program the Sentinel did not know could switch the machine off. Objects the build added
     all carried identity 0, and 0 passed for genuine: each has its own identity now, and the

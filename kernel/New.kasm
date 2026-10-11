@@ -178,6 +178,11 @@ shell_more:                             ; rbx = the word, r12 = what follows it
         call same_word_any_case
         test eax,eax
         jnz near lolz_command
+        lea rsi,[rel acpi_word]
+        mov rdi,rbx
+        call same_word_any_case
+        test eax,eax
+        jnz near acpi_command
         mov byte [rel desk_any],0x0     ; v3.0.46: a word that begins with "desk" (desk2 ...) names a
         mov eax,[rbx]                   ; desk: it is run the way `desktop` is, under the multiplexer
         or eax,0x20202020
@@ -1980,3 +1985,115 @@ lolz_says_off:
 lolz_says_usage:
         db 'lolz P     partition P of the list `parts` showed last is what `files` reads', 10
         db 'lolz off   the USB stick again', 10, 0
+
+; ---- v3.0.52: `acpi` - what the machine says it has (the first step to battery and touchpad) ----
+; The devices a laptop has beside the PCI bus are named in the DSDT, a table of ACPI. This looks
+; through it for the names of the ones NinuxOS has no driver for yet and says which are there.
+; (A name is four bytes there: 0x41 0xD0 for "PNP", then the number.) It reads; it runs nothing
+; of the table - to ask the battery how full it is, the table's own code (AML) has to be run.
+acpi_command:
+        add rsp,0x8
+        mov edi,0x50434146              ; 'FACP'
+        call fn_60860                   ; rax = that table of ACPI, 0: none
+        test rax,rax
+        jz near acpi_none
+        mov r8d,[rax+0x28]
+        cmp dword [rax+0x4],0x94
+        jc acpi_have
+        mov rdx,[rax+0x8c]
+        test rdx,rdx
+        jz acpi_have
+        mov r9,0x100000000
+        cmp rdx,r9
+        jnc acpi_have
+        mov r8,rdx
+acpi_have:
+        test r8,r8
+        jz near acpi_none
+        cmp dword [r8],0x54445344       ; 'DSDT'
+        jnz near acpi_none
+        mov [rel acpi_dsdt],r8
+        mov eax,[r8+0x4]
+        mov [rel acpi_len],rax
+        lea rdi,[rel acpi_says_1]
+        call api_print
+        mov rdi,[rel acpi_len]
+        call print_number
+        lea rdi,[rel acpi_says_2]
+        call api_print
+        lea rax,[rel acpi_ids]
+        mov [rel acpi_p],rax
+acpi_line:
+        mov rax,[rel acpi_p]
+        cmp dword [rax],0x0
+        jz near acpi_done
+        lea rdi,[rax+0x4]
+        call api_print
+        mov rax,[rel acpi_p]
+        mov edx,[rax]
+        mov rsi,[rel acpi_dsdt]
+        mov rcx,[rel acpi_len]
+        sub rcx,0x4
+        jbe acpi_no
+acpi_scan:
+        cmp [rsi],edx
+        je acpi_yes
+        inc rsi
+        dec rcx
+        jnz acpi_scan
+acpi_no:
+        lea rdi,[rel acpi_says_no]
+        jmp acpi_say
+acpi_yes:
+        lea rdi,[rel acpi_says_yes]
+acpi_say:
+        call api_print
+        mov rax,[rel acpi_p]
+        add rax,0x4
+acpi_skip:
+        cmp byte [rax],0x0
+        lea rax,[rax+0x1]
+        jnz acpi_skip
+        mov [rel acpi_p],rax
+        jmp near acpi_line
+acpi_none:
+        lea rdi,[rel acpi_says_none]
+        call api_print
+acpi_done:
+        jmp near L_0b044
+
+        align 8, db 0
+acpi_dsdt:
+        dq 0
+acpi_len:
+        dq 0
+acpi_p:
+        dq 0
+acpi_word:
+        db 'acpi', 0
+acpi_says_1:
+        db 'What this machine says it has (ACPI, the DSDT of ', 0
+acpi_says_2:
+        db ' bytes):', 10, 0
+acpi_says_yes:
+        db 'there', 10, 0
+acpi_says_no:
+        db 'not named', 10, 0
+acpi_says_none:
+        db 'No ACPI tables were found on this machine.', 10, 0
+acpi_ids:
+        dd 0x0A0CD041
+        db '  a battery (PNP0C0A)                      ', 0
+        dd 0x090CD041
+        db '  an embedded controller (PNP0C09)         ', 0
+        dd 0x0D0CD041
+        db '  a lid (PNP0C0D)                          ', 0
+        dd 0x500CD041
+        db '  a touchpad or screen on I2C (PNP0C50)    ', 0
+        dd 0x130FD041
+        db '  a PS/2 mouse or touchpad (PNP0F13)       ', 0
+        dd 0x030FD041
+        db '  a PS/2 mouse, the older name (PNP0F03)   ', 0
+        dd 0x0303D041
+        db '  a PS/2 keyboard (PNP0303)                ', 0
+        dd 0

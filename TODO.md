@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.51 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.52 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -97,7 +97,7 @@ The owner's order of 11 October 2026 for the kernel - 1, 2, 3, 4, 5, 9, 10, 13:
       **Not seen yet: the refusal itself inside a window** - the stranger has no icon on the
       desk (why: to find), so it was not started there. Until that is seen, 5 is open.
 - [ ] 9. Tuner and Puffer as suits of their own. Not begun.
-- [ ] 10. Names for the kernel's functions. **v3.0.50: 92 more** (about 186 named now), by the
+- [ ] 10. Names for the kernel's functions. **v3.0.50: 92 more, v3.0.52: 51 more** (about 237 named now; the 51 are the gates of the core and what stands behind them in the extension, named one from the other), by the
       texts each function prints - the start of the machine (video, memory, keyboard, mouse,
       font, shield, crash screen), the old PyTon in the kernel, Sentinel, ACPI, the cores, PCI,
       AHCI, NVMe, USB, the GPU, SUB-GPU, Photon. Same bytes. Left: about 500 functions that
@@ -108,6 +108,19 @@ The owner's order of 11 October 2026 for the kernel - 1, 2, 3, 4, 5, 9, 10, 13:
       shown by `pci` (the controllers), `disk` (the boot disk), `install` alone (the SATA
       disks it could go onto). Missing: Wi-Fi, touchpad, battery. For winlolz / linlolz this
       means the readers can begin from the disks as they are.
+      **v3.0.52: `acpi`** - looks through the machine's DSDT and says which of these it names:
+      a battery, an embedded controller, a lid, a touchpad or screen on I2C, a PS/2 mouse or
+      touchpad, a PS/2 keyboard. Seen in QEMU (PS/2 mouse and keyboard there, the rest not).
+      **For the owner to run on the laptop** - the answer says what is to be written:
+      - PS/2 touchpad "there": it should move the pointer already; if it does not, the PS/2
+        mouse driver is to be looked at.
+      - touchpad on I2C "there": an I2C controller driver and HID over I2C - and the place of
+        the device is told by code in the table (AML), which nothing here runs yet.
+      - battery "there": its state is asked through AML too. So **an AML interpreter is the
+        first big piece** for both battery and I2C touchpad; none is in the kernel
+        (acpi_start finds \_S5_ by its bytes).
+      - Wi-Fi: the card is on PCI (`pci`); a driver needs the maker's firmware, 802.11 and
+        WPA2 - the biggest of all, after the rest.
 - Seen on the way: the first line of the screen still says **NinuxOS v2.9.59** - the
   kernel's own text, not taken from VERSION.
 
@@ -175,6 +188,20 @@ The owner's order of 11 October 2026 for the kernel - 1, 2, 3, 4, 5, 9, 10, 13:
       - Next: exFAT, then NTFS (both new readers - `files` says so itself when it meets
         them), ext4; bigger files; a whole folder; then a suit of their own (`k_lolz`) and
         the two kinds of place in the program Files.
+
+## Asked by the owner on 11 October 2026 - for later, not begun
+
+- [ ] **A grey mode of the display**: 256 greys, black and white - the whole screen, switched
+      on and off (a setting; perhaps a key beside Alt+*). One place does it: where the picture
+      goes to the screen, each dot made grey = (r*77 + g*150 + b*29) / 256.
+- [ ] **Layers of the desktop**, as in a picture editor: the wallpaper behind, effects behind
+      the icons, the icons, effects before them - some layers see-through. Used well it makes
+      the desk a cosy place. Needs: dots with an alpha, a layer a picture of its own, the desk
+      put together from them when something changes (Desk2 draws straight to the screen today).
+- [ ] **An icon that is dragged hangs on the mouse** - the picture of the object follows the
+      pointer while the button is held. Today Desk2 moves it only when the button is let go.
+      (rect_save / rect_restore under the icon as it moves, or a layer of its own once there
+      are layers.)
 
 ## THE FULL TEST of 11 October 2026 (v3.0.37 -> v3.0.38): what works, what does not, how to mend it
 
