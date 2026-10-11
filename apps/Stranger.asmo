@@ -1,0 +1,11 @@
+# stranger.py - a program the Sentinel does not know, for the test of the guard (v3.0.51).
+# It is put into an image only by  tools/build_disk.py --unknown-program , and left out of the
+# Sentinel's list there. It asks for what such a program is refused: to switch the machine off.
+# If the guard works the machine stays on and the log says so.
+
+
+def main():
+    log("[stranger] asking the system to switch the machine off")
+    power(0)
+    log("[stranger] still here: it was refused")
+    return 0

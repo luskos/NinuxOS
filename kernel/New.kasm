@@ -632,7 +632,33 @@ api_guard_ask:
         xor eax,eax
         test rdi,rdi
         jz api_guard_known              ; none: the kernel itself
+        ; v3.0.51: ob_known answers "known" to everything when it is asked under a program's own
+        ; page tables (it reads the list only under the kernel's, at 0x18000) - and the gate is
+        ; passed under the program's. So the guard refused nobody. Now the kernel's tables are
+        ; put on for the question, and the answer is kept for the object that asked.
+        mov rax,[rdi+0x8]               ; (the same object: the same place, size and identity)
+        xor rax,[rdi+0x48]
+        cmp rdi,[rel api_guard_object]
+        jnz api_guard_look
+        cmp rax,[rel api_guard_marks]
+        jnz api_guard_look
+        mov eax,[rel api_guard_answer]
+        jmp api_guard_have
+api_guard_look:
+        mov [rel api_guard_object],rdi
+        mov [rel api_guard_marks],rax
+        pushfq
+        cli
+        mov rax,cr3
+        push rax
+        mov eax,0x18000
+        mov cr3,rax
         call ob_known                   ; is its code in the Sentinel's list?
+        pop rcx
+        mov cr3,rcx
+        popfq
+        mov [rel api_guard_answer],eax
+api_guard_have:
         test eax,eax
         jnz api_guard_known
         lea rdi,[rel api_guard_says]
@@ -659,6 +685,13 @@ api_guard_known:
 api_guard_yes:
         lea r10,[rel api_table]
         retq
+        align 8, db 0
+api_guard_object:
+        dq 0
+api_guard_marks:
+        dq 0
+api_guard_answer:
+        dd 0
 api_guard_says:
         db '[shield] a program the Sentinel does not know asked for power, a service of the extension or another program: refused', 10, 0
 

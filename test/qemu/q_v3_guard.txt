@@ -1,0 +1,16 @@
+# q_v3_guard.txt - v3.0.51: a program the Sentinel does not know asks to switch the machine off
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type stranger
+wait 5
+type log
+wait 3
+snap g01_guard
+type desk2
+wait 8
+snap g02_desk
+moveto 448 330
+click
+wait 6
+snap g03_after

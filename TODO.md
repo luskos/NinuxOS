@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.50 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.51 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -71,7 +71,9 @@ The owner's order of 11 October 2026 for the kernel - 1, 2, 3, 4, 5, 9, 10, 13:
       its size first (v3.0.46; `backup` on the 16 MB image says "No backup pool here", the
       log is clean). A USB disk is still asked for the sector.
 - [ ] 3. The first click on the desk after a window only gives the desk the keys back and is
-      lost. Read in v3.0.50, not mended: mux_input does send it - to the task under the mouse
+      lost. **v3.0.51: not so for icons** - with a window holding the keys, one click on an
+      icon of Desk2 opens it at once (test/qemu/q_v3_click.txt). What was seen in v3.0.32 is
+      left only for the choice in "All at once: 9"; to try there. Read in v3.0.50: mux_input does send it - to the task under the mouse
       first the place with no button, then the place with the button (L_558e4) - so the click
       is lost later, in mux_focus or in how the desk takes two mouse events in one turn.
       Next: log what task 0 gets from api_poll after such a click.
@@ -79,8 +81,21 @@ The owner's order of 11 October 2026 for the kernel - 1, 2, 3, 4, 5, 9, 10, 13:
       added, the fifth is refused with "Five people are known by now" - rightly: **the image
       carries one person already, `petya` (opens up to 12), come with the stick of v2.9.59.**
       **v3.0.47: taken out by the build (the owner's word) - the image begins with nobody.**
-- [ ] 5. The refusal of api_guard: wants a program the Sentinel does not know, made inside the
-      system (Studio) and asked to switch the machine off. Not tried.
+- [ ] 5. The refusal of api_guard. **Tried in v3.0.51 and it found a hole.** A program the
+      Sentinel's list does not hold (apps/Stranger.asmo, put in by `build_disk.py
+      --unknown-program`, test/qemu/q_v3_guard.txt) was run from the shell, asked for power -
+      and **the machine switched off**. Two causes, both mended:
+      1. *Every object the build added carried identity 0* (Bags, Files, Socials, Desk2, the new
+         pages). The kernel knows a genuine object by its identity, so 0 was "genuine" and
+         whatever else carried 0 passed. The build now gives each a number of its own.
+         After that the system's own rule works again, seen in QEMU: "This object's code is
+         not verified by the Sentinel: it runs only as a program in a window, never from the
+         shell."
+      2. *ob_known says "known" to everything when asked under a program's page tables* - and
+         the gate is passed under them. api_guard now puts the kernel's tables on for the
+         question and keeps the answer for the object. Seen: a known program passes as before.
+      **Not seen yet: the refusal itself inside a window** - the stranger has no icon on the
+      desk (why: to find), so it was not started there. Until that is seen, 5 is open.
 - [ ] 9. Tuner and Puffer as suits of their own. Not begun.
 - [ ] 10. Names for the kernel's functions. **v3.0.50: 92 more** (about 186 named now), by the
       texts each function prints - the start of the machine (video, memory, keyboard, mouse,

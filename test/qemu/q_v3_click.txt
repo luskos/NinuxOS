@@ -1,0 +1,14 @@
+# q_v3_click.txt - v3.0.51: a click on the desk while a window has the keys: does it open the icon at once?
+qemu -smp 2 -m 512M
+waitlog [chain] the system started 90
+wait 1
+type desk2
+wait 8
+moveto 64 500
+click
+wait 5
+snap c01_window
+moveto 160 505
+click
+wait 5
+snap c02_one_click

@@ -1,9 +1,9 @@
 # The conversation
 
-`2026-10-11_recovery_to_v3.0.50.zip` is the export of the Claude Code session in which NinuxOS
+`2026-10-11_recovery_to_v3.0.51.zip` is the export of the Claude Code session in which NinuxOS
 v2.9.59 was brought back and v3 was started: the whole transcript with every command that was
 run and its output. It is the record of how each file of this project was made. It ends shortly
-before v3.0.50 was committed. One file holds the whole conversation; a later export replaces it
+before v3.0.51 was committed. One file holds the whole conversation; a later export replaces it
 (the older ones stay in the history of git).
 
 In short, in the order it happened:
@@ -82,6 +82,7 @@ In short, in the order it happened:
 55. v3.0.48: `parts` - the partitions of a SATA disk (the first step of winlolz).
 56. v3.0.49: `lolz P` - `files` reads a FAT32 partition of an inner disk.
 57. v3.0.50: 92 more names in the kernel.
+58. v3.0.51: the test of the guard found a hole (identity 0) - closed.
 
 The transcript holds what was on the screen of this PC during the work (paths, the account name,
 the identity of the test machine). Keep the repository private.

@@ -3,6 +3,13 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.51** (11 October 2026) - a hole closed (the build, New.kasm); seen in QEMU
+  - A program the Sentinel did not know could switch the machine off. Objects the build added
+    all carried identity 0, and 0 passed for genuine: each has its own identity now, and the
+    shell again refuses to run code the Sentinel has not verified.
+  - api_guard asks its question under the kernel's page tables (under a program's the answer
+    was always "known").
+  - `build_disk.py --unknown-program`, apps/Stranger.asmo, test/qemu/q_v3_guard.txt, q_v3_click.txt.
 - **v3.0.50** (11 October 2026) - names only; the kernel's bytes are the same
   - 92 functions and data of the kernel named (tools/kdis/renames.txt), among them the disk
     readers used by `parts` and `lolz`: ahci_command, ahci_io, usb_disk_io, ahci_ports.

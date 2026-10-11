@@ -20,7 +20,7 @@ ROOT = os.path.normpath(os.path.join(HERE, '..', '..'))
 OUT = os.path.join(HERE, 'out_all')
 BAD = ('fault', 'NinuxOS stopped', 'refused', 'MISMATCH', 'is WRONG', 'not verified', 'read error', 'REFUSED',
        'could not', 'no memory', 'out of memory')
-QUIET = {'q_v3_backup_small': ('read error',), 'q_v3_tablecopy': (), 'q_v2959_checks': ('refused',)}
+QUIET = {'q_v3_guard': ('refused',), 'q_v3_backup_small': ('read error',), 'q_v3_tablecopy': (), 'q_v2959_checks': ('refused',)}
 
 
 def image(kind):
@@ -35,6 +35,10 @@ def image(kind):
         data[481 * 512:482 * 512] = bytes(512)
     elif kind == 'write':
         pass
+    elif kind == 'unknown':
+        subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'build_disk.py'), '--keep-version',
+                        '--unknown-program', '--out', path], capture_output=True, text=True)
+        return path
     elif kind == 'compare':
         subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'build_disk.py'), '--compare', '--out', path],
                        capture_output=True, text=True)
@@ -44,7 +48,7 @@ def image(kind):
 
 
 SPECIAL = {'q_v3_backup': ('big', True), 'q_v3_tablecopy': ('notable', False), 'q_v3_table': ('write', True),
-           'q_v3_compare': ('compare', False)}
+           'q_v3_compare': ('compare', False), 'q_v3_guard': ('unknown', False)}
 
 
 def main():

@@ -475,6 +475,12 @@ def add_object(img, tables, data, name=None, into=None):
     # system has none (0, which is not checked); one that takes the place of another takes its
     # identity too, so that everything that knew the old one finds the new one the same
     ident = struct.unpack_from('<I', data, 0x4C)[0] or struct.unpack_from('<I', img, place + 24)[0]
+    if ident == 0:
+        # v3.0.51: never 0. The kernel knows a genuine object by its identity, and every object
+        # the build added carried 0 - so whatever else carried 0 passed for genuine (the guard
+        # of what programs are handed refused nobody). An identity of its own, from the name.
+        import hashlib
+        ident = int.from_bytes(hashlib.sha256(b'ninux-build:' + str(name).encode('latin-1', 'replace')).digest()[:4], 'little') | 0x80000001
     data = data[:0x4C] + struct.pack('<I', ident) + data[0x50:]
     lba = put(img, tables, place, data)
     struct.pack_into('<I', img, place + 24, ident)
@@ -652,6 +658,8 @@ def main():
                     help='the kernel without the code written after the recovery (Alt + *): the 220000 bytes of v2.9.59')
     ap.add_argument('--compare', action='store_true',
                     help='also a drawer `compare`: the programs of v2.9.59 compiled by the new py2asm, as pyNAME')
+    ap.add_argument('--unknown-program', action='store_true',
+                    help='for the test of the guard: apps/Stranger.asmo as the object `stranger`, NOT in the Sentinel list')
     ap.add_argument('--nothing-inside', action='store_true', help='without the drawer project (the texts and sources of the project)')
     ap.add_argument('--source-inside', action='store_true', help='also the whole source container as the object nxsource (19 MB)')
     ap.add_argument('--old-boot', action='store_true', help='the boot sector of v2.9.59 (a FAT12 diskette to Windows)')
@@ -765,6 +773,10 @@ def main():
         said, line = add_object(img, tables, open(path, 'rb').read(), os.path.splitext(os.path.basename(path))[0])
         changed.append('added: ' + said)
         added.append(line)
+    if a.unknown_program:                       # a program the Sentinel does not know (test/qemu/q_v3_guard.txt)
+        code = compile_program(nasm, 'Stranger.asmo', 'stranger', os.path.join(WORK, 'stranger.asmo'))
+        said, line = add_object(img, tables, code, 'stranger')
+        changed.append('added, and left out of the Sentinel list: ' + said)
 
 
     # the two places the build fills in are found by what the source still holds there - the key
