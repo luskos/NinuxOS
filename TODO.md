@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.38 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.39 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -446,6 +446,9 @@ What "each a program of its own, independent of everything" then asks for, in or
       are opened to programs - which the owner's rule "nothing on the desktop reaches the
       kernel" speaks against. META and Photon draw and take keys: they could be programs.
 - Not done in v3.0.37: none of the cutting. It was measured, not moved.
+- **Decided by the owner, 11 October 2026:** what needs the kernel's own functions (Tuner,
+  Puffer) becomes a kernel suit of its own - that keeps "nothing on the desktop reaches the
+  kernel"; META and Photon may become ordinary programs. Left in the list for later.
 
 ## If the disk is lost again - where everything is
 

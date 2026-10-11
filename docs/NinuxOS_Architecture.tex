@@ -1,4 +1,4 @@
-% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.38.
+% NinuxOS_Architecture.tex - the system and the files of the project, as of v3.0.39.
 % Written anew on 10 October 2026 from the running system and its disk image; the old
 % document was lost with the disk.   pdflatex NinuxOS_Architecture.tex  (twice, for the contents)
 \documentclass[11pt,a4paper]{article}
@@ -16,7 +16,7 @@
 \setlist{itemsep=2pt,topsep=4pt}
 
 \title{NinuxOS\\[4pt]\large Architecture of the system and of the project\\[2pt]
-\normalsize project version 3.0.38 \quad (the system on the disk: the v2.9.59 kernel)}
+\normalsize project version 3.0.39 \quad (the system on the disk: the v2.9.59 kernel)}
 \author{}
 \date{10 October 2026}
 
@@ -862,6 +862,104 @@ the texts of the kernel's core --- the line of the loader, the line at the top o
 \cmd{info}, the first line of the log --- in place, so nothing in the kernel moves. The same is done in the extension (\cmd{machine}, Setup), and the build seals the kernel again
 (section~3). \texttt{python tools/build\_disk.py -{}-keep-version} builds without the
 new number.
+
+% ------------------------------------------------------------------------------------------
+\section{The decisions}\label{sec:decisions}
+
+What was decided in the conversations between the owner and Claude while the project was
+brought back and carried on (October 2026). The conversations themselves are kept whole in
+\file{docs/chat}; this is what they settled. Where a decision is the owner's it says so.
+
+\subsection{What the system is (the owner)}
+\begin{itemize}
+\item \textbf{Object programming, not object-oriented programming.} An object is DATA, META
+      and sockets. PyTon has no \texttt{class} and never will; the other dialects refuse
+      classes, structs, interfaces and inheritance the same way.
+\item \textbf{No installing.} A program is one object that carries all it needs; sent, it
+      runs; \cmd{erase} removes it.
+\item \textbf{No permissions and no prompts.} A program does its own work and is given no way
+      to anything else. Between two programs stands a relay, never a question to the user.
+\item \textbf{Four places.} The shell is the system; the desktop is programs; NET is the
+      internet --- the machines that run NinuxOS, not the web; META is games, 3D and later
+      intelligences. Nothing on the desktop reaches the kernel or the shell.
+\item \textbf{Open by presumption.} \cmd{view} is to show the whole object. The closed,
+      commercial form is vDNA: chains a universal constructor builds into an object, checked
+      by an AI because people cannot read them.
+\item \textbf{No web and no browser.} Programs are different, protocols are one. NET and META
+      lie in immutable blocks on the machines of the people; every machine registers when it
+      is installed, cloned or copied, and the machines form a chain.
+\item \textbf{Everything stands by itself.} Photon, Puffer, Tuner and META are to be objects
+      of their own. Decided on 11 October 2026: what needs the kernel's own functions (Tuner:
+      the processor's clock; Puffer: sectors of a stick) becomes a \emph{kernel suit} of its
+      own, since an ordinary program must not reach the kernel; META and Photon, which only
+      draw and take keys, may become ordinary programs. Not done yet.
+\end{itemize}
+
+\subsection{How the work is done (the owner)}
+\begin{itemize}
+\item Claude writes the code; the owner builds and tries it. Tests in QEMU only with the
+      owner's leave (given on 11 October 2026 for the work of that day, and for the full test).
+\item After every piece of work: \file{TODO.md}, \file{CHANGELOG.md}, this document, a copy of
+      the conversation in \file{docs/chat}, a new version (\texttt{v3.x.xx}), the image built,
+      everything committed, tagged and pushed. The papers and the sources of what is written
+      also go into the image itself (the drawer \texttt{project}).
+\item What other systems do is not a measure of what NinuxOS lacks.
+\end{itemize}
+
+\subsection{How the recovered system is changed (found by trying)}
+\begin{itemize}
+\item The compiled kernel was read back into source that assembles to the same bytes; that
+      remains the test of every tool: \emph{the same bytes, or nothing is kept}.
+\item The core of the kernel must not change size (the loader keeps the place of the
+      extension as a number, and is itself 16-bit code in the first 64 KB). Room there is
+      made only by making something shorter.
+\item The extension may be moved since v3.0.18, after 23 address numbers, 22 pointers and 77
+      code starts were found; still, new code is put into \file{kernel/New.kasm} at its end
+      and reached by a call exactly as long as the instructions it stands for, so that
+      nothing old moves. Every such place is written as
+      \texttt{\%ifdef PLAIN\_KERNEL} \emph{old} \texttt{\%else} \emph{new} \texttt{\%endif},
+      and \cmd{-{}-plain-kernel} builds the kernel of v2.9.59 again.
+\item The tables of the shell's commands and of the functions programs are handed lie in the
+      core. New commands are therefore asked of \texttt{shell\_more} (in the extension) when a
+      word is not in the table; new services are new numbers of existing functions.
+\item A name is given to a function when it is understood, one line in
+      \file{tools/kdis/renames.txt}; the bytes must stay the same.
+\end{itemize}
+
+\subsection{Decisions of design made on the way}
+\begin{itemize}
+\item \textbf{The key.} The private key of v2.9.59 was lost; the build makes its own and puts
+      its public half into the kernel. Sticks built with another key are not taken by
+      \cmd{update}.
+\item \textbf{The boot sector} says ``no FAT'' and carries one partition of a kind no other
+      system opens, because Windows wrote over the kernel of a stick it took for a diskette.
+\item \textbf{py2asm} was written anew over Python's own reader (\texttt{ast}); its runtime
+      is small assembly and the rest is PyTon (\file{prelude.py}). Memory is given back by
+      looking for what is still pointed at, without knowing what is a pointer. The other
+      languages are dialects turned into PyTon first.
+\item \textbf{Programs live on} when the desktop is left: kept, not run, while the shell has
+      the screen (v3.0.16).
+\item \textbf{Not losing things}: the table of the cabinet twice, the copy written first
+      (v3.0.24, v3.0.35); every save of a program a second time into a pool outside the
+      cabinet (v3.0.25). A second copy of the kernel is not there.
+\item \textbf{What a program is handed}: one table for all, with power, the extension's
+      services and other programs closed to code the Sentinel does not know (v3.0.35).
+\item \textbf{The keyboard on the screen of the shell} is part of the system, switched on by
+      the shell or by a click in a corner --- not a program of the desktop given the way to
+      the shell (v3.0.23).
+\item \textbf{The desktop} was written anew as \file{apps/Desk2.asmo} and runs beside the old
+      one (\cmd{desk desk2}); which of the two \cmd{desktop} runs is left to the owner.
+\item \textbf{A parcel is an object}: what travels between people is an ordinary object whose
+      META is the envelope (\file{docs/PROTOCOLS.md}); Socials makes and lists them (v3.0.36).
+\end{itemize}
+
+\subsection{Asked for and not begun}
+The owner's list, each with what is known about it, is in \file{TODO.md}: Zipper (everything
+kept packed, unpacked when asked for --- the objects pack to 31\%), the screen saver whose
+falling threads are the real processes, two laptops joined by a USB-C cable taking turns
+(``check-mate''), NET Express, Fast Reels, the governor and an instance on every disk, the
+chain of machines, the vDNA constructor, winlolz and linlolz, touchpads, the battery, Wi-Fi.
+\file{TODO.md} begins with the full test of 11 October 2026: what works and what does not.
 
 % ------------------------------------------------------------------------------------------
 \section{What is not known yet}\label{sec:open}

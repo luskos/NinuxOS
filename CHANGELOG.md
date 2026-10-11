@@ -3,6 +3,12 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.39** (11 October 2026) - papers only; the image is the same but for the version
+  - `docs/NinuxOS_Architecture.tex`: a new section, "The decisions" - what the conversations
+    settled: what the system is, how the work is done, how the recovered system may be
+    changed, the decisions of design made on the way, what was asked for and not begun.
+  - The owner's decision on Photon, Puffer, Tuner, META: suits for what needs the kernel,
+    programs for what only draws - in TODO.md, for later.
 - **v3.0.38** (11 October 2026) - the full test
   - **Everything was run**: `python test/qemu/run_all.py` drives all 30 test scripts through
     QEMU and writes `test/qemu/RESULTS.md`; `tools/qemu/sheet.py` puts many pictures of the
