@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.47 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.48 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -131,6 +131,16 @@ The owner's order of 11 October 2026 for the kernel - 1, 2, 3, 4, 5, 9, 10, 13:
          kernel suit (`k_lolz`), and the program that shows folders and copies is an ordinary
          one that asks the suit - Files with two more kinds of place.
       Order: 2, FAT32/exFAT, the program, NVMe/AHCI, NTFS, ext4.
+      - [x] **Part 2, v3.0.48: `parts [N]`** in the shell - the table of SATA disk N (MBR or
+        GPT) and each partition: kind, name, first sector, size. Seen in QEMU on a GPT disk
+        made by the test (test/qemu/q_v3_parts.txt). For the owner to try on the machine with
+        the 1 TB disk. N counts SATA disks only (`install` counts all kinds together); NVMe
+        and IDE disks are not read by it yet; extended partitions of MBR are named, not opened.
+      - The owner's machine (11 October 2026): `pci` shows the SATA controller, `install`
+        shows disk 0, 953869 MB, ST1000LM035 - the inner disk is read.
+      - Found on the way: **`install N BESIDE` is there since v2.0.5** - a partition after the
+        others, which stay. The start of "beside another system"; not yet "unallocated".
+      - Next: the reader of FAT32 / exFAT, then NTFS, as a suit (`k_lolz`).
 
 ## THE FULL TEST of 11 October 2026 (v3.0.37 -> v3.0.38): what works, what does not, how to mend it
 

@@ -1,0 +1,11 @@
+# q_v3_parts.txt - v3.0.48: `parts` on a SATA disk with a GPT table (made by the test)
+qemu -smp 2 -m 512M -device ahci,id=ahci -drive id=d1,file=test/qemu/out_all/gpt.img,if=none,format=raw -device ide-hd,drive=d1,bus=ahci.0
+waitlog [chain] the system started 90
+wait 1
+type install
+wait 3
+type parts
+wait 3
+type parts 3
+wait 2
+snap p01_parts

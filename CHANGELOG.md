@@ -3,6 +3,9 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.48** (11 October 2026) - the kernel (New.kasm); seen in QEMU
+  - `parts [N]`: the partitions of a SATA disk - MBR or GPT, the kind, the name, where each
+    begins and how big it is. Reading only. The first step of winlolz / linlolz.
 - **v3.0.47** (11 October 2026) - the build
   - The image begins with nobody: the person that came with the stick (`petya`, in the object
     `accounts`) is taken out by tools/build_disk.py. Seen in QEMU.

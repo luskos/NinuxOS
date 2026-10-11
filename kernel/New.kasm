@@ -168,6 +168,11 @@ shell_more:                             ; rbx = the word, r12 = what follows it
         call same_word_any_case
         test eax,eax
         jnz near desk_command
+        lea rsi,[rel parts_word]
+        mov rdi,rbx
+        call same_word_any_case
+        test eax,eax
+        jnz near parts_command
         mov byte [rel desk_any],0x0     ; v3.0.46: a word that begins with "desk" (desk2 ...) names a
         mov eax,[rbx]                   ; desk: it is run the way `desktop` is, under the multiplexer
         or eax,0x20202020
@@ -1574,3 +1579,258 @@ mux_says_kept:
 mux_says_again:
         db '[mux] the kept programs are taken up again', 10, 0
         align 16, db 0x90
+
+; ---- v3.0.48: `parts` - the partitions of a SATA disk (the first step of winlolz / linlolz) ------
+;       parts [N]         what lies on SATA disk N (0 if not said): the table (MBR or GPT), and
+;                         for each partition its kind, its name, where it begins, how big it is
+; Reading only. The disk is read by the AHCI driver the installer uses (fn_64590: rdi = the
+; disk, esi = the ATA command, rdx = the sector, rcx = memory, r8 = 1 to write, r9 = sectors).
+parts_command:                          ; r12 = what follows the word
+        add rsp,0x8
+        xor eax,eax
+        mov cl,[r12]
+        sub cl,'0'
+        cmp cl,0x7
+        ja parts_disk
+        movzx eax,cl
+parts_disk:
+        mov [rel parts_n],rax
+        lea rcx,[rel d_648c0]
+        cmp qword [rcx+rax*8],0x0
+        jz near parts_none
+        mov edi,4096
+        call api_memory
+        test rax,rax
+        jz near parts_none
+        mov [rel parts_buf],rax
+        xor edx,edx
+        mov r9d,0x1
+        call parts_read
+        test eax,eax
+        jz near parts_fail
+        mov rax,[rel parts_buf]
+        cmp word [rax+510],0xAA55
+        jnz near parts_empty
+        cmp byte [rax+0x1C2],0xEE
+        jz near parts_gpt
+        lea rdi,[rel parts_says_mbr]
+        call api_print
+        mov qword [rel parts_i],0x0
+parts_mbr_line:
+        mov rax,[rel parts_i]
+        shl rax,0x4
+        add rax,[rel parts_buf]
+        add rax,0x1BE
+        mov [rel parts_e],rax
+        movzx edi,byte [rax+0x4]
+        test edi,edi
+        jz parts_mbr_next
+        lea rsi,[rel parts_kinds]
+parts_kind_look:
+        mov al,[rsi]
+        test al,al
+        jz parts_kind_other
+        inc rsi
+        cmp al,dil
+        jz parts_kind_hit
+parts_kind_skip:
+        mov al,[rsi]
+        inc rsi
+        test al,al
+        jnz parts_kind_skip
+        jmp parts_kind_look
+parts_kind_other:
+        lea rsi,[rel parts_says_other]
+parts_kind_hit:
+        mov rdi,rsi
+        call api_print
+        mov rax,[rel parts_e]
+        mov edi,[rax+0x8]
+        mov esi,[rax+0xC]
+        call parts_place
+parts_mbr_next:
+        inc qword [rel parts_i]
+        cmp qword [rel parts_i],0x4
+        jc near parts_mbr_line
+        jmp near parts_done
+
+parts_gpt:
+        lea rdi,[rel parts_says_gpt]
+        call api_print
+        mov edx,0x1
+        mov r9d,0x1
+        call parts_read
+        test eax,eax
+        jz near parts_fail
+        mov rax,[rel parts_buf]
+        mov rcx,0x5452415020494645      ; 'EFI PART'
+        cmp [rax],rcx
+        jnz near parts_empty
+        mov rdx,[rax+72]                ; where the lines of the table begin
+        mov r9d,0x8                     ; 32 of them
+        call parts_read
+        test eax,eax
+        jz near parts_fail
+        mov qword [rel parts_i],0x0
+parts_gpt_line:
+        mov rax,[rel parts_i]
+        shl rax,0x7
+        add rax,[rel parts_buf]
+        mov [rel parts_e],rax
+        mov rcx,[rax]
+        or rcx,[rax+0x8]
+        jz near parts_gpt_next
+        mov edi,[rax]                   ; the first four bytes of the kind are enough to tell them apart
+        lea rsi,[rel parts_guids]
+parts_guid_look:
+        mov eax,[rsi]
+        test eax,eax
+        jz parts_guid_other
+        add rsi,0x4
+        cmp eax,edi
+        jz parts_guid_hit
+parts_guid_skip:
+        mov al,[rsi]
+        inc rsi
+        test al,al
+        jnz parts_guid_skip
+        jmp parts_guid_look
+parts_guid_other:
+        lea rsi,[rel parts_says_other]
+parts_guid_hit:
+        mov rdi,rsi
+        call api_print
+        lea rdi,[rel parts_says_quote]
+        call api_print
+        mov qword [rel parts_j],0x0
+parts_name:
+        mov rax,[rel parts_j]
+        mov rcx,[rel parts_e]
+        movzx edi,word [rcx+rax*2+56]
+        test edi,edi
+        jz parts_name_end
+        cmp edi,0x7F
+        jc parts_name_put
+        mov edi,'?'
+parts_name_put:
+        call api_put_letter
+        inc qword [rel parts_j]
+        cmp qword [rel parts_j],36
+        jc parts_name
+parts_name_end:
+        lea rdi,[rel parts_says_quote]
+        call api_print
+        mov rax,[rel parts_e]
+        mov rdi,[rax+32]
+        mov rsi,[rax+40]
+        sub rsi,rdi
+        inc rsi
+        call parts_place
+parts_gpt_next:
+        inc qword [rel parts_i]
+        cmp qword [rel parts_i],32
+        jc near parts_gpt_line
+        jmp near parts_done
+
+parts_place:                            ; rdi = the first sector, rsi = how many: said, with the size in MB
+        mov [rel parts_j],rsi
+        push rdi
+        lea rdi,[rel parts_says_from]
+        call api_print
+        pop rdi
+        call print_number
+        lea rdi,[rel parts_says_size]
+        call api_print
+        mov rdi,[rel parts_j]
+        shr rdi,11
+        call print_number
+        lea rdi,[rel parts_says_mb]
+        jmp near api_print
+
+parts_read:                             ; rdx = a sector of the disk, r9 = how many: into the memory
+        mov rdi,[rel parts_n]
+        mov esi,0x25
+        mov rcx,[rel parts_buf]
+        xor r8d,r8d
+        jmp near fn_64590
+
+parts_fail:
+        lea rdi,[rel parts_says_fail]
+        call api_print
+        jmp parts_done
+parts_empty:
+        lea rdi,[rel parts_says_empty]
+        call api_print
+parts_done:
+        mov rdi,[rel parts_buf]
+        call mem_free
+        jmp near L_0b044
+parts_none:
+        lea rdi,[rel parts_says_none]
+        call api_print
+        jmp near L_0b044
+
+        align 8, db 0
+parts_n:
+        dq 0
+parts_buf:
+        dq 0
+parts_i:
+        dq 0
+parts_j:
+        dq 0
+parts_e:
+        dq 0
+parts_word:
+        db 'parts', 0
+parts_says_mbr:
+        db 'The table of this disk is MBR:', 10, 0
+parts_says_gpt:
+        db 'The table of this disk is GPT:', 10, 0
+parts_says_none:
+        db 'parts [N]: no SATA disk N here (`install` alone says which there are; NVMe is not read yet).', 10, 0
+parts_says_fail:
+        db 'The disk could not be read.', 10, 0
+parts_says_empty:
+        db 'This disk has no table of partitions.', 10, 0
+parts_says_other:
+        db '  another kind        ', 0
+parts_says_quote:
+        db '"', 0
+parts_says_from:
+        db '  from sector ', 0
+parts_says_size:
+        db ', ', 0
+parts_says_mb:
+        db ' MB', 10, 0
+parts_kinds:
+        db 0x07, '  Windows (NTFS/exFAT)', 0
+        db 0x0B, '  FAT32               ', 0
+        db 0x0C, '  FAT32               ', 0
+        db 0x0E, '  FAT16               ', 0
+        db 0x05, '  extended            ', 0
+        db 0x0F, '  extended            ', 0
+        db 0x27, '  Windows recovery    ', 0
+        db 0x82, '  Linux swap          ', 0
+        db 0x83, '  Linux               ', 0
+        db 0x8E, '  Linux LVM           ', 0
+        db 0xEF, '  EFI system          ', 0
+        db 0x7F, '  NinuxOS             ', 0
+        db 0
+        align 4, db 0
+parts_guids:
+        dd 0xEBD0A0A2
+        db '  Windows data   ', 0
+        dd 0xC12A7328
+        db '  EFI system     ', 0
+        dd 0xE3C9E316
+        db '  Microsoft kept ', 0
+        dd 0xDE94BBA4
+        db '  Windows rescue ', 0
+        dd 0x0FC63DAF
+        db '  Linux          ', 0
+        dd 0x0657FD6D
+        db '  Linux swap     ', 0
+        dd 0xE6D6D379
+        db '  Linux LVM      ', 0
+        dd 0
