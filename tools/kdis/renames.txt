@@ -251,3 +251,67 @@ fn_6d908   api_sound_ext              ; in the extension: what api_sound does
 fn_5b1ae   api_system_text_ext        ; in the extension: what api_system_text does
 L_1101f    usb_disk_io_gate           ; in the core: on to usb_disk_io if the extension passed its check
 L_1106d    ahci_io_gate               ; in the core: on to ahci_io if the extension passed its check
+
+# ---- v3.0.52: the gates of the core (a few bytes that go on into the extension if it passed
+# ---- its SHA-256 check) and what stands behind them, named one from the other
+d_16e45    ext_ok                     ; 1: the extension passed its SHA-256 check
+
+
+# ---- v3.0.53: the suits (by their texts and by what was read for `lolz`), and more of the kernel
+fn_30121   kbd_settings_say   ; `keyboard test`: the settings of the keyboard's controller said
+fn_30a99   update_backup_say  ; update: is a backup of an earlier system kept on this disk
+fn_30ad5   update_backup_make ; update: the backup made before the update starts
+fn_30cbb   update_backup_back ; update: the earlier system brought back from the backup
+fn_30e4b   update_wrote_say   ; update: "written" / "NOT written" for a part
+fn_30e9e   stick_answers      ; eax = 1 if a USB stick answers
+fn_30ecb   update_read        ; update: the image read from the stick
+fn_3113e   update_check       ; update: the image on the stick checked (its Sentinel list, its key)
+fn_32f6b   copy_text_on       ; the text at rsi copied to rbx, the 0 too; both moved on
+fn_32f7a   files_mount        ; files: the FAT32 volume found (on the stick, or the partition `lolz` chose); eax = 0: rdx = what to say
+fn_33179   files_sector       ; files: sector rdi into the memory at rbx; ZF = it failed
+fn_3318b   fat_next           ; rdi = a cluster: eax = the next one of its chain, 0: the last
+fn_33224   files_cluster      ; files: cluster rdi read into fat_cluster_memory
+fn_33439   files_list         ; files: the folder listed
+fn_334ec   files_kind         ; files: the place that says what kind a file is (file, sound ...)
+fn_35615   tune_graph         ; Tuner: the graphs of temperature and frequency
+fn_3861e   burn_command       ; `burn`
+fn_3982a   accounts_open      ; the object `accounts` found, or made
+d_335f0    fat_sector_memory  ; files: memory for one sector
+d_335f8    fat_table_memory   ; files: memory for one sector of the FAT
+d_33600    fat_table_have     ; files: which sector of the FAT is in fat_table_memory (-1: none)
+d_33608    fat_cluster_memory ; files: memory for one cluster
+d_33610    fat_cluster_sectors ; files: sectors in a cluster
+d_33618    fat_at             ; files: the first sector of the FAT
+d_33620    fat_data_at        ; files: the sector of cluster 2
+d_33628    fat_top            ; files: the cluster of the top folder
+d_33630    fat_folder         ; files: the cluster of the folder we are in
+d_33638    fat_serial         ; files: the serial number of the volume last read
+fn_867f7   net_phone_say      ; "Network: through the phone (USB tethering)."
+fn_86b09   net_phone_start    ; the phone that shares its network started
+fn_87dba   mnet_asked         ; Meta Net: something was asked of this machine
+fn_88293   mnet_connect       ; Meta Net: the other machine reached (ARP, the connection)
+fn_88526   mnet_keep          ; Meta Net: what came is kept as an object
+fn_88a64   netkey_make        ; the key of the network made (object netkey)
+fn_800f4   hda_start          ; Intel HD Audio found and started
+fn_8208d   ehci_start         ; USB 2 (EHCI): the controller started
+fn_82531   ehci_stick_ready   ; USB 2: a stick made ready
+fn_82ba3   uhci_start         ; USB 1 (UHCI): the controller started
+fn_82fec   usb1_hid_ready     ; USB 1: a keyboard or a mouse made ready
+fn_83c21   ohci_start         ; USB 1 (OHCI): the controller started
+fn_5dce7   sentinel_check     ; the Sentinel: every object of the list hashed and compared; the identities of the genuine ones kept
+L_5e16a    sentinel_knows     ; rdi = the address of an object: eax = 1 if its identity is among the genuine ones
+fn_5e145   sentinel_note      ; the identity of the place at rbx added to the genuine ones
+d_5ee90    sentinel_genuine   ; the identities of the objects found genuine
+d_5ee80    sentinel_genuine_count ; how many
+d_5e660    sentinel_state     ; 0: the list is signed and was read, 1: no list, 2: its signature is wrong
+fn_0fa2f   cabinet_entry      ; rdi = a number: rax = that object's line in the table of the cabinet, 0: none
+fn_60860   acpi_table         ; edi = the four letters of a table of ACPI: rax = where it is, 0: none
+fn_60948   acpi_rsdp_scan     ; rdi = memory, ecx = bytes: rax = where "RSD PTR " with a right sum is, 0: none
+fn_64f8c   nvme_say           ; the place that says "NVMe disk controllers on this PC"
+fn_65dc1   install_disks_say  ; `install` alone: the place that names the disks (NVMe SSD, IDE disk)
+fn_678ce   usb_port_say       ; the place that says "  port N"
+fn_68ca0   usb_stick_say      ; the place that says "A USB stick answers"
+fn_692f8   usb_boot_command   ; `usb boot on|off`
+fn_6edc4   display_say        ; the place that says "Display ..." (the maker of the graphics card)
+fn_73d07   photon_log         ; Photon's lines in the log
+fn_51c7e   lock_setting       ; the place that says whether a password is asked at the start

@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.52 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.53 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -97,7 +97,7 @@ The owner's order of 11 October 2026 for the kernel - 1, 2, 3, 4, 5, 9, 10, 13:
       **Not seen yet: the refusal itself inside a window** - the stranger has no icon on the
       desk (why: to find), so it was not started there. Until that is seen, 5 is open.
 - [ ] 9. Tuner and Puffer as suits of their own. Not begun.
-- [ ] 10. Names for the kernel's functions. **v3.0.50: 92 more, v3.0.52: 51 more** (about 237 named now; the 51 are the gates of the core and what stands behind them in the extension, named one from the other), by the
+- [ ] 10. Names for the kernel's functions. **v3.0.50: 92 more, v3.0.52: 51 more** (v3.0.53: 57 more - the suits, the Sentinel, ACPI, FAT32 of `files`; about 290 named now, 617 functions of kernel and suits still carry an address for a name; the 51 are the gates of the core and what stands behind them in the extension, named one from the other), by the
       texts each function prints - the start of the machine (video, memory, keyboard, mouse,
       font, shield, crash screen), the old PyTon in the kernel, Sentinel, ACPI, the cores, PCI,
       AHCI, NVMe, USB, the GPU, SUB-GPU, Photon. Same bytes. Left: about 500 functions that

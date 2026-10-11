@@ -3531,7 +3531,7 @@ L_0a842:
         cmp rbx,r13
         jnc short L_0a8aa
         mov rdi,rbx
-        call fn_0fa2f
+        call cabinet_entry
         mov rdi,rax
         lea rsi,[rel d_11bef]
         call fn_0a7c6
@@ -4398,7 +4398,7 @@ L_0b1bf:
         lea rdi,[rel d_14a7a]
         call api_print
         mov rdi,rbx
-        call fn_0fa2f
+        call cabinet_entry
         mov r13,rax
         mov rdi,r13
         mov esi,0xc
@@ -5080,7 +5080,7 @@ L_0ba28:
         lea rdi,[rel d_14cab]
         call api_log
         mov rdi,rbx
-        call fn_0fa2f
+        call cabinet_entry
         mov rdi,rax
         lea rsi,[rel d_14f24]
         mov ecx,0x10
@@ -6122,7 +6122,7 @@ L_0c60f:
         cmp rbx,r12
         jnc near L_0c6b8
         mov rdi,rbx
-        call fn_0fa2f
+        call cabinet_entry
         mov r13,rax
         mov eax,[r13+0x1c]
         test eax,eax
@@ -7320,7 +7320,7 @@ L_0d29c:
 
 L_0d2da:
         mov rdi,rbx
-        call fn_0fa2f
+        call cabinet_entry
         mov rdi,rax
         xor ecx,ecx
 
@@ -7372,7 +7372,7 @@ fn_0d348:
         cmp rbx,0xffffffffffffffff
         jz short L_0d35d
         mov rdi,rbx
-        call fn_0fa2f
+        call cabinet_entry
         mov eax,[rax+0x18]
         test eax,eax
         jnz short L_0d379
@@ -7663,7 +7663,7 @@ cmd_copy:
         cmp rax,0xffffffffffffffff
         jz near L_0d6d1
         mov rdi,rax
-        call fn_0fa2f
+        call cabinet_entry
         mov r13d,[rax+0x14]
         mov r14d,[rax+0x10]
         mov rdi,r13
@@ -7752,7 +7752,7 @@ L_0d72c:
         cmp rax,0xffffffffffffffff
         jz short L_0d7a3
         mov rdi,rax
-        call fn_0fa2f
+        call cabinet_entry
         xor ecx,ecx
 
 L_0d744:
@@ -8295,7 +8295,7 @@ fn_0dc8a:
 
 fn_0dca0:
         push rbx
-        call fn_0fa2f
+        call cabinet_entry
         mov rbx,rax
         mov edi,[rbx+0x14]
         call fn_0dc6e
@@ -8904,7 +8904,7 @@ L_0e3e0:
         jz short L_0e3fd
         dec r12
         mov rdi,r12
-        call fn_0fa2f
+        call cabinet_entry
         cmp [rax+0x10],ebx
         jnz short L_0e3e0
         mov eax,0x1
@@ -8936,7 +8936,7 @@ L_0e421:
         jz near L_0e510
         mov r12,rax
         mov rdi,rax
-        call fn_0fa2f
+        call cabinet_entry
         mov rdi,rax
         xor eax,eax
         mov ecx,0x4
@@ -9071,7 +9071,7 @@ L_0e5c1:
         jz short L_0e5f3
         dec rbp
         mov rdi,rbp
-        call fn_0fa2f
+        call cabinet_entry
         mov edx,[rax+0x10]
         cmp rdx,rbx
         jnz short L_0e5c1
@@ -9280,7 +9280,7 @@ L_0e80f:
         cmp rbx,r13
         jnc short L_0e834
         mov rdi,rbx
-        call fn_0fa2f
+        call cabinet_entry
         mov eax,[rax+0x10]
         cmp rax,r12
         jc short L_0e82f
@@ -9307,7 +9307,7 @@ L_0e834:
 
 L_0e851:
         mov rdi,r14
-        call fn_0fa2f
+        call cabinet_entry
         mov edi,[rax+0x14]
         call fn_0dc6e
         add r12,rax
@@ -9345,7 +9345,7 @@ fn_0e8a9:
         push r15
         mov r15,rdi
         mov r12,rsi
-        call fn_0fa2f
+        call cabinet_entry
         mov rbx,rax
         mov r13d,[rbx+0x14]
         mov eax,[rbx+0x10]
@@ -9364,7 +9364,7 @@ fn_0e8a9:
         test eax,eax
         jz near L_0e98a
         mov rdi,r15
-        call fn_0fa2f
+        call cabinet_entry
         mov rbx,rax
 
 L_0e905:
@@ -9439,7 +9439,7 @@ L_0e9ad:
         cmp rbx,r13
         jnc short L_0e9d7
         mov rdi,rbx
-        call fn_0fa2f
+        call cabinet_entry
         push rax
         mov edi,[rax+0x14]
         call fn_0dc6e
@@ -9490,7 +9490,7 @@ L_0e9e7:
         jz short L_0ea9c
         push rax
         mov rdi,r13
-        call fn_0fa2f
+        call cabinet_entry
         mov r13d,[rax+0x10]
         mov rdi,r13
         lea rsi,[rel core_start + (v_42990 - 0x7E00)]
@@ -9932,7 +9932,7 @@ L_0ef5b:
         cmp rbx,r12
         jnc short L_0efac
         mov rdi,rbx
-        call fn_0fa2f
+        call cabinet_entry
         mov ecx,[rax+0x1c]
         test ecx,ecx
         jz short L_0efa7
@@ -10823,7 +10823,8 @@ L_0fa28:
         pop rbx
         retq
 
-fn_0fa2f:
+; rdi = a number: rax = that object's line in the table of the cabinet, 0: none
+cabinet_entry:
         push rcx
         push rdx
         call fn_0f9b0
@@ -10832,7 +10833,7 @@ fn_0fa2f:
         retq
 
 fn_0fa39:
-        call fn_0fa2f
+        call cabinet_entry
         test rax,rax
         jz short L_0fa53
         mov eax,[rax+0x1c]
@@ -10856,7 +10857,7 @@ fn_0fa56:
         push r9
         push r10
         push r11
-        call fn_0fa2f
+        call cabinet_entry
         test rax,rax
         jz short L_0fa8b
         mov rbx,rax
@@ -11215,7 +11216,7 @@ L_0fd88:
         cmp rbx,r12
         jnc short L_0fda7
         mov rdi,rbx
-        call fn_0fa2f
+        call cabinet_entry
         mov eax,[rax+0x1c]
         cmp rax,r13
         jz short L_0fda2
@@ -11248,7 +11249,7 @@ L_0fdc6:
         cmp rbx,r12
         jnc short L_0fde3
         mov rdi,rbx
-        call fn_0fa2f
+        call cabinet_entry
         inc rbx
         cmp [rax+0x18],r13d
         jnz short L_0fdc6
@@ -11305,7 +11306,7 @@ L_0fe3a:
         cmp rbx,r12
         jnc short L_0fe5c
         mov rdi,rbx
-        call fn_0fa2f
+        call cabinet_entry
         cmp [rax+0x18],r13d
         jz short L_0fe52
         inc rbx
@@ -11468,7 +11469,7 @@ L_0ffb5:
         cmp rax,0xffffffffffffffff
         jz near L_10070
         mov rdi,rax
-        call fn_0fa2f
+        call cabinet_entry
         lea rdi,[rel d_16a64]
         xor ecx,ecx
 
@@ -11562,7 +11563,7 @@ L_100ac:
         cmp rbx,r12
         jnc short L_100f7
         mov rdi,rbx
-        call fn_0fa2f
+        call cabinet_entry
         inc rbx
         mov edi,[rax+0x1c]
         test edi,edi
@@ -11707,7 +11708,7 @@ L_10294:
         cmp rbx,r12
         jnc short L_102af
         mov rdi,rbx
-        call fn_0fa2f
+        call cabinet_entry
         inc rbx
         cmp dword [rax+0x1c],0x0
         jz short L_10294
@@ -11830,7 +11831,7 @@ cmd_stow:
         cmp ax,[r14+0x6]
         jnc near L_104ea
         mov rdi,r13
-        call fn_0fa2f
+        call cabinet_entry
         mov rsi,rax
         lea rdi,[rel d_16a44]
         mov ecx,0x20
@@ -11919,7 +11920,7 @@ cmd_unstow:
         cmp rdx,rax
         jnc near L_105f7
         mov rdi,r13
-        call fn_0fa2f
+        call cabinet_entry
         mov rsi,rax
         lea rdi,[rel d_16a44]
         mov ecx,0x20
@@ -11977,7 +11978,7 @@ p_10605:
         cmp rax,0xffffffffffffffff
         jz short L_10661
         mov rdi,rax
-        call fn_0fa2f
+        call cabinet_entry
         mov ebx,[rax+0x18]
         lea rdi,[rel d_16db3]
         call api_print
@@ -12192,7 +12193,7 @@ L_10874:
         cmp rax,0x18000
         jnz short L_1089b
         cmp byte [rel ext_ok],0x0
-        jnz near L_5e16a
+        jnz near sentinel_knows
 
 L_1089b:
         mov eax,0x1
@@ -15167,7 +15168,7 @@ L_500f1:
 
 L_50107:
         mov rdi,rbx
-        call fn_0fa2f
+        call cabinet_entry
         lea rdi,[rel d_521a0]
         xor ecx,ecx
 
@@ -15270,7 +15271,7 @@ L_50224:
 ; says: 'desktop'
 fn_5022f:
         push rbx
-        call fn_0fa2f
+        call cabinet_entry
         mov rbx,rax
         mov rdi,rbx
         lea rsi,[rel d_11c1e]
@@ -15485,7 +15486,7 @@ p_50476:
         test eax,eax
         jnz short L_50507
         mov rdi,[rel d_52128]
-        call fn_0fa2f
+        call cabinet_entry
         mov rdi,rax
         lea rsi,[rel d_521d0]
         xor ecx,ecx
@@ -15559,7 +15560,7 @@ L_50552:
         cmp qword [r12+0x38],0x0
         jz short L_505c1
         mov rdi,[rel d_52128]
-        call fn_0fa2f
+        call cabinet_entry
         mov edi,[rax+0x10]
         push rdi
         lea rsi,[rel core_start + (v_42990 - 0x7E00)]
@@ -15626,7 +15627,7 @@ p_5062f:
         test eax,eax
         jnz near L_506d2
         mov rdi,[rel d_52128]
-        call fn_0fa2f
+        call cabinet_entry
         mov ecx,[rax+0x10]
         mov [rel d_52130],rcx
         mov ecx,[rax+0x14]
@@ -15861,7 +15862,7 @@ L_508ec:
         cmp rax,rbx
         jnz short L_508ec
         mov rdi,rbp
-        call fn_0fa2f
+        call cabinet_entry
         lea rdi,[rel d_521b8]
         mov rsi,rax
         mov ecx,0x10
@@ -16092,7 +16093,7 @@ L_50bae:
 
 fn_50baf:
         mov rdi,[rel d_52128]
-        call fn_0fa2f
+        call cabinet_entry
         test rax,rax
         jz short L_50c37
         mov ecx,[rax+0x10]
@@ -16152,7 +16153,7 @@ fn_50c57:
         mov rdi,[rel d_52140]
         call fn_0d135
         mov rdi,[rel d_52128]
-        call fn_0fa2f
+        call cabinet_entry
         mov rdx,[rel d_52140]
         mov [rax+0x1c],edx
         mov qword [rel d_52140],0x0
@@ -16511,7 +16512,7 @@ L_510fd:
         cmp rbx,rbp
         jnc short L_51127
         mov rdi,rbx
-        call fn_0fa2f
+        call cabinet_entry
         inc rbx
         mov ecx,[rax+0x10]
         mov edx,[rax+0x14]
@@ -16781,7 +16782,7 @@ L_51444:
         lea rdi,[rel d_521d0]
         call fn_0a805
         mov rdi,rax
-        call fn_0fa2f
+        call cabinet_entry
         mov edx,[rax+0x10]
         cmp rdx,r14
         jz short L_514ca
@@ -17193,7 +17194,7 @@ L_519cb:
         mov ecx,0xffffff
         mov r8,0xffffffffffffffff
         call api_text
-        call fn_51c7e
+        call lock_setting
         mov r12,[rel mouse_at_x]
         mov r13,[rel mouse_at_y]
         mov rdi,r12
@@ -17278,7 +17279,7 @@ L_51b61:
 
 L_51b84:
         call api_cursor_hide
-        call fn_51c7e
+        call lock_setting
         mov rdi,r12
         mov rsi,r13
         call api_cursor_show
@@ -17350,7 +17351,8 @@ L_51c42:
 ; says: 'The screen can'
 ; says: 'No password is asked at the start.'
 ; says: 'From the next start the password is asked before anything else (`login off` ends it).'
-fn_51c7e:
+; the place that says whether a password is asked at the start
+lock_setting:
         cmp byte [rel d_52123],0x0
         jz near L_51d3e
         mov rdi,[rel d_52188]
@@ -18499,7 +18501,7 @@ p_5335c:
         rep movsb
         call fn_5334b
         mov rdi,[rel d_52128]
-        call fn_0fa2f
+        call cabinet_entry
         mov ecx,[rax+0x10]
         mov [rel d_539b0],rcx
         mov ecx,[rax+0x14]
@@ -18515,7 +18517,7 @@ p_5335c:
         lea rdi,[rel d_521a0]
         call fn_0a805
         mov rdi,rax
-        call fn_0fa2f
+        call cabinet_entry
         mov ecx,[rax+0x10]
         cmp rcx,[rel d_539b0]
         jz short L_53546
@@ -21983,7 +21985,7 @@ fn_56374:
         push r13
         push r14
         mov r12,rsi
-        call fn_0fa2f
+        call cabinet_entry
         mov r13,rax
         mov edi,[r13+0x14]
         shl rdi,byte 0x9
@@ -26746,7 +26748,7 @@ L_599cc:
         add rdi,rax
         push rdi
         lea rdi,[r13-0x1]
-        call fn_0fa2f
+        call cabinet_entry
         pop rdi
         mov rsi,rax
         mov ecx,0x10
@@ -28524,7 +28526,8 @@ d_5dcaa:
 ; says: '  genuine  '
 ; says: '  CHANGED  '
 ; says: ... and 2 more texts
-fn_5dce7:
+; the Sentinel: every object of the list hashed and compared; the identities of the genuine ones kept
+sentinel_check:
         push rbx
         push r12
         push r13
@@ -28533,8 +28536,8 @@ fn_5dce7:
         mov r15,rdi
         mov qword [rel d_5e650],0x0
         mov qword [rel d_5e658],0x0
-        mov qword [rel d_5e660],0x1
-        mov qword [rel d_5ee80],0x0
+        mov qword [rel sentinel_state],0x1
+        mov qword [rel sentinel_genuine_count],0x0
         mov rax,[rel cabinet_changes]
         mov [rel d_5ee88],rax
         call fn_5e054
@@ -28544,7 +28547,7 @@ fn_5dce7:
         jz near L_5df74
         mov r12,[rax+0x10]
         add r12,rax
-        mov qword [rel d_5e660],0x2
+        mov qword [rel sentinel_state],0x2
         cmp dword [r12+0x40],0x4e53584e
         jnz near L_5df74
         mov eax,[r12+0x44]
@@ -28559,7 +28562,7 @@ fn_5dce7:
         call fn_6c6b6
         test eax,eax
         jz near L_5df74
-        mov qword [rel d_5e660],0x0
+        mov qword [rel sentinel_state],0x0
         mov r13d,[r12+0x44]
         lea r14,[r12+0x4c]
 
@@ -28587,7 +28590,7 @@ L_5ddf3:
         jz near L_5df1c
         mov [rel d_5e670],rax
         mov rdi,rax
-        call fn_0fa2f
+        call cabinet_entry
         mov rbx,rax
         cmp byte [rel ata_there],0x0
         jz near L_5df1c
@@ -28627,7 +28630,7 @@ L_5ddf3:
         jnz short L_5decb
         mov rdi,[rel d_5e668]
         call mem_free
-        call fn_5e145
+        call sentinel_note
         lea rdi,[rel d_5f2d1]
         jmp short L_5df2a
 
@@ -28638,7 +28641,7 @@ L_5decb:
         jz short L_5def1
         mov rdi,[rel d_5e668]
         call mem_free
-        call fn_5e145
+        call sentinel_note
         lea rdi,[rel d_5f4ac]
         jmp short L_5df2a
 
@@ -28840,19 +28843,21 @@ L_5e142:
         xor eax,eax
         retq
 
-fn_5e145:
-        mov rcx,[rel d_5ee80]
+; the identity of the place at rbx added to the genuine ones
+sentinel_note:
+        mov rcx,[rel sentinel_genuine_count]
         cmp rcx,0x100
         jnc short L_5e169
         mov eax,[rbx+0x18]
-        lea rdx,[rel d_5ee90]
+        lea rdx,[rel sentinel_genuine]
         mov [rdx+rcx*4],eax
-        inc qword [rel d_5ee80]
+        inc qword [rel sentinel_genuine_count]
 
 L_5e169:
         retq
 
-L_5e16a:
+; rdi = the address of an object: eax = 1 if its identity is among the genuine ones
+sentinel_knows:
         push rbx
         push r12
         push r13
@@ -28866,13 +28871,13 @@ L_5e16a:
         jnz short L_5e1ad
         mov byte [rel d_5f5ac],0x1
         xor edi,edi
-        call fn_5dce7
+        call sentinel_check
         mov byte [rel d_5f5ac],0x0
 
 L_5e1ad:
-        cmp qword [rel d_5e660],0x1
+        cmp qword [rel sentinel_state],0x1
         jz short L_5e207
-        cmp qword [rel d_5e660],0x0
+        cmp qword [rel sentinel_state],0x0
         jnz short L_5e20e
         call api_ob_count
         mov r13,rax
@@ -28882,7 +28887,7 @@ L_5e1cb:
         cmp rbx,r13
         jnc short L_5e20e
         mov rdi,rbx
-        call fn_0fa2f
+        call cabinet_entry
         test rax,rax
         jz short L_5e1e3
         cmp [rax+0x1c],r12d
@@ -28894,11 +28899,11 @@ L_5e1e3:
 
 L_5e1e8:
         mov eax,[rax+0x18]
-        lea rdx,[rel d_5ee90]
+        lea rdx,[rel sentinel_genuine]
         xor ecx,ecx
 
 L_5e1f4:
-        cmp rcx,[rel d_5ee80]
+        cmp rcx,[rel sentinel_genuine_count]
         jnc short L_5e20e
         cmp [rdx+rcx*4],eax
         jz short L_5e207
@@ -28925,7 +28930,7 @@ L_5e216:
         jnz short L_5e23a
         mov byte [rel d_5f5ac],0x1
         xor edi,edi
-        call fn_5dce7
+        call sentinel_check
         mov byte [rel d_5f5ac],0x0
 
 L_5e23a:
@@ -28942,7 +28947,7 @@ fn_5e23b:
         jz near L_5e41d
         mov [rel d_5e670],rax
         mov rdi,rax
-        call fn_0fa2f
+        call cabinet_entry
         mov r12,rax
         mov edi,[r12+0x14]
         shl rdi,byte 0x9
@@ -29174,9 +29179,9 @@ L_5e4d6:
         retq
 
 L_5e4d7:
-        cmp qword [rel d_5e660],0x1
+        cmp qword [rel sentinel_state],0x1
         jz short L_5e552
-        cmp qword [rel d_5e660],0x2
+        cmp qword [rel sentinel_state],0x2
         jz short L_5e55e
         lea rdi,[rel d_5f2f7]
         call api_print
@@ -29211,7 +29216,7 @@ L_5e55e:
 
 L_5e57f:
         xor edi,edi
-        call fn_5dce7
+        call sentinel_check
         lea rdi,[rel d_5f489]
         call api_log
         jmp near L_5e4d7
@@ -29260,7 +29265,7 @@ L_5e5fd:
 L_5e60b:
         pop rbx
         mov edi,0x1
-        call fn_5dce7
+        call sentinel_check
         jmp near L_5e4d7
 
 L_5e61b:
@@ -29289,7 +29294,8 @@ d_5e650:
 d_5e658:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_5e660:
+; 0: the list is signed and was read, 1: no list, 2: its signature is wrong
+sentinel_state:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 d_5e668:
@@ -29304,13 +29310,15 @@ d_5e678:
 d_5e680:
         times 2048 db 0x00
 
-d_5ee80:
+; how many
+sentinel_genuine_count:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 d_5ee88:
         db 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
 
-d_5ee90:
+; the identities of the objects found genuine
+sentinel_genuine:
         times 1024 db 0x00
 
 d_5f290:
@@ -29649,7 +29657,7 @@ L_5ffab:
         cmp rax,0xffffffffffffffff
         jz near L_600a9
         mov rdi,rax
-        call fn_0fa2f
+        call cabinet_entry
         mov eax,[rax+0x10]
         inc rax
         cmp rax,r12
@@ -29680,7 +29688,7 @@ L_5ffab:
         cmp rax,0xffffffffffffffff
         jz short L_600a9
         mov rdi,rax
-        call fn_0fa2f
+        call cabinet_entry
         mov eax,[rax+0x10]
         inc rax
         cmp rax,r12
@@ -29993,7 +30001,8 @@ d_607c0:
         db 0x00, 0x00, 0x00, 0x00, 0x08, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x41, 0x53, 0x4D, 0x4F
         db 0x00, 0x00, 0x00, 0x00
 
-fn_60860:
+; edi = the four letters of a table of ACPI: rax = where it is, 0: none
+acpi_table:
         push rbx
         push r12
         mov r12d,edi
@@ -30013,12 +30022,12 @@ L_6088b:
         shl eax,byte 0x4
         mov rdi,rax
         mov ecx,0x400
-        call fn_60948
+        call acpi_rsdp_scan
         test rax,rax
         jnz short L_608c0
         mov edi,0xe0000
         mov ecx,0x20000
-        call fn_60948
+        call acpi_rsdp_scan
         test rax,rax
         jz near L_60944
 
@@ -30083,7 +30092,8 @@ L_60944:
         pop rbx
         retq
 
-fn_60948:
+; rdi = memory, ecx = bytes: rax = where "RSD PTR " with a right sum is, 0: none
+acpi_rsdp_scan:
         mov rsi,0x2052545020445352
 
 L_60952:
@@ -30120,7 +30130,7 @@ acpi_start:
         push rbx
         push r12
         mov edi,0x50434146
-        call fn_60860
+        call acpi_table
         test rax,rax
         jz near L_60a71
         mov rbx,rax
@@ -30323,7 +30333,7 @@ L_60d18:
         mov qword [rel d_623d0],0x1
         mov qword [rel d_623d8],0x1
         mov edi,0x43495041
-        call fn_60860
+        call acpi_table
         test rax,rax
         jz near L_60ec2
         call fn_637bd
@@ -34020,7 +34030,8 @@ L_64f86:
 
 ; says: 'NVMe disk controllers on this PC: '
 ; says: '  A RAID controller is there (Intel VMD / RST): the disks are BEHIND it and can'
-fn_64f8c:
+; the place that says "NVMe disk controllers on this PC"
+nvme_say:
         push rbx
         lea rdi,[rel d_65032]
         call api_print
@@ -34459,7 +34470,7 @@ L_657af:
         jnc short L_657d3
         mov rdi,rbx
         push r8
-        call fn_0fa2f
+        call cabinet_entry
         pop r8
         mov ecx,[rax+0x10]
         add ecx,[rax+0x14]
@@ -34809,7 +34820,7 @@ L_65c23:
         lea rdi,[rel d_6688a]
         call api_print
         mov rdi,r15
-        call fn_65dc1
+        call install_disks_say
         call api_print
         mov rdi,r15
         call fn_65dfa
@@ -34837,7 +34848,7 @@ L_65cb1:
 L_65cbf:
         lea rdi,[rel d_66add]
         call api_print
-        call fn_64f8c
+        call nvme_say
         jmp short L_65d1b
 
 L_65cd2:
@@ -34936,7 +34947,8 @@ L_65db9:
 
 ; says: 'NVMe SSD '
 ; says: 'IDE disk'
-fn_65dc1:
+; `install` alone: the place that names the disks (NVMe SSD, IDE disk)
+install_disks_say:
         push rdi
         call fn_65d41
         pop rdi
@@ -36318,7 +36330,7 @@ L_673d2:
         mov r15d,eax
         mov edi,r12d
         mov esi,r15d
-        call fn_678ce
+        call usb_port_say
         mov edi,r12d
         mov esi,r15d
         xor edx,edx
@@ -36603,7 +36615,7 @@ L_677ae:
         call fn_678b8
         mov edi,r15d
         mov esi,r14d
-        call fn_678ce
+        call usb_port_say
         mov rdx,[rbx+0x100]
         xor ecx,ecx
         mov rax,rdx
@@ -36705,7 +36717,8 @@ L_678cd:
         retq
 
 ; says: '  port '
-fn_678ce:
+; the place that says "  port N"
+usb_port_say:
         push rbx
         push r12
         mov ebx,edi
@@ -38087,7 +38100,7 @@ L_68b3a:
         mov byte [rel d_69590],0x0
 
 L_68b63:
-        call fn_68ca0
+        call usb_stick_say
         call usb_unplugged
 
 L_68b6d:
@@ -38194,7 +38207,8 @@ L_68c9a:
 ; says: 'A USB stick answers: '
 ; says: ' MB. '
 ; says: ... and 1 more texts
-fn_68ca0:
+; the place that says "A USB stick answers"
+usb_stick_say:
         cmp byte [rel d_6b130],0x0
         jz short L_68cdb
         cmp byte [rel d_6b131],0x2
@@ -38291,7 +38305,7 @@ L_68de5:
         mov [rax],edx
         test ecx,0x1
         jnz short L_68e09
-        call fn_68ca0
+        call usb_stick_say
         call usb_unplugged
         jmp short L_68e19
 
@@ -38589,13 +38603,13 @@ L_6916e:
         push rdx
         push rcx
         mov ah,0x20
-        call fn_692f8
+        call usb_boot_command
         pop rax
         mov ah,0x20
-        call fn_692f8
+        call usb_boot_command
         pop rax
         mov ah,0x20
-        jmp near fn_692f8
+        jmp near usb_boot_command
 
 L_69187:
         retq
@@ -38747,7 +38761,7 @@ fn_692ca:
         jz short L_692e4
         mov eax,0xe0
         xor ah,ah
-        call fn_692f8
+        call usb_boot_command
 
 L_692e4:
         pop rax
@@ -38759,7 +38773,7 @@ L_692e4:
 
 L_692f3:
         xor ah,ah
-        jmp short fn_692f8
+        jmp short usb_boot_command
 
 L_692f7:
         retq
@@ -38768,7 +38782,8 @@ L_692f7:
 ; says: 'USB starts at every boot now ('
 ; says: 'USB starts only with '
 ; says: ... and 2 more texts
-fn_692f8:
+; `usb boot on|off`
+usb_boot_command:
         mov ecx,[rel d_14ef4]
         lea rdx,[rel core_start + (v_42390 - 0x7E00)]
         mov [rdx+rcx*2],ax
@@ -43614,7 +43629,7 @@ L_6ec90:
         call shell_same_word
         test eax,eax
         jz short L_6ecad
-        call fn_6edc4
+        call display_say
         jmp near L_6edc2
 
 L_6ecad:
@@ -43693,7 +43708,8 @@ L_6edc2:
 ; says: 'NVIDIA'
 ; says: 'Intel graphics (its map: next in the lab)'
 ; says: ... and 11 more texts
-fn_6edc4:
+; the place that says "Display ..." (the maker of the graphics card)
+display_say:
         push rbx
         push r12
         push r13
@@ -48359,7 +48375,7 @@ L_73aa8:
         lea rsi,[rel d_74611]
         call fn_73932
         lea rsi,[rel d_744c8]
-        call fn_73d07
+        call photon_log
         lea rdi,[rel d_744c8]
         lea rsi,[rel d_74617]
         call fn_73932
@@ -48375,7 +48391,7 @@ L_73aa8:
 L_73bab:
         call fn_73932
         lea rsi,[rel d_744c8]
-        call fn_73d07
+        call photon_log
         lea rdi,[rel d_744c8]
         lea rsi,[rel d_74657]
         call fn_73932
@@ -48408,7 +48424,7 @@ L_73bab:
         lea rsi,[rel d_74696]
         call fn_73932
         lea rsi,[rel d_744c8]
-        call fn_73d07
+        call photon_log
         and dword [rel d_742cc],0xffffffffffffffef
         mov r12,[rel clock_ticks]
         xor ebx,ebx
@@ -48436,7 +48452,7 @@ L_73c74:
         lea rsi,[rel d_746d9]
         call fn_73932
         lea rsi,[rel d_744c8]
-        call fn_73d07
+        call photon_log
         lea rdi,[rel d_7477f]
         call api_log
         jmp short L_73cfd
@@ -48456,7 +48472,8 @@ L_73cfd:
         retq
 
 ; says: '[photon] '
-fn_73d07:
+; Photon's lines in the log
+photon_log:
         push rsi
         mov rdi,rsi
         call api_print

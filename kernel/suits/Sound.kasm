@@ -41,7 +41,7 @@ suit_table_end:
         test rax,rax
         jz short L_800a3
         mov rdi,rax
-        call fn_800f4
+        call hda_start
         test eax,eax
         jnz short L_800c0
 L_800a3:
@@ -71,7 +71,8 @@ L_800e7:
         retq
 
 ; says: 'Intel HD Audio'
-fn_800f4:
+; Intel HD Audio found and started
+hda_start:
         push rbx
         push r12
         push r13

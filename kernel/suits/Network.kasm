@@ -34,7 +34,7 @@ suit_start:
 suit_table_end:
         cmp byte [rel suit_start + (d_69590 - 0x86000)],0x0
         jz short L_860b3
-        call fn_867f7
+        call net_phone_say
         test eax,eax
         jz short L_860b3
         retq
@@ -501,7 +501,8 @@ L_867f6:
         retq
 
 ; says: 'Network: through the phone (USB tethering).'
-fn_867f7:
+; "Network: through the phone (USB tethering)."
+net_phone_say:
         push rbx
         push r12
         push r13
@@ -578,12 +579,12 @@ L_8693f:
         db 0x48, 0x8B, 0x35, 0x58, 0x2C, 0xFE, 0xFF    ; mov rsi,[rel 0x695b8]
         mov edx,0x6
         mov rcx,[rel d_893b0]
-        call fn_86b09
+        call net_phone_start
         mov rdi,[rel suit_start + (d_695a0 - 0x86000)]
         db 0x48, 0x8B, 0x35, 0x31, 0x2C, 0xFE, 0xFF    ; mov rsi,[rel 0x695b0]
         mov edx,0x2
         mov rcx,[rel d_893a8]
-        call fn_86b09
+        call net_phone_start
         mov ecx,r12d
         mov r8,r12
         shr r8,byte 0x20
@@ -656,7 +657,8 @@ L_86b02:
 
 ; says: 'The phone is there but did not start (step '
 ; says: '). Is '
-fn_86b09:
+; the phone that shares its network started
+net_phone_start:
         lea rax,[rdi+0x1]
         imul rax,r15
         lea rax,[r12+rax]
@@ -1720,7 +1722,7 @@ L_8786e:
         cmp qword [rbx+0x48],0x44
         jc short L_878b1
         or qword [rbx+0x68],0x10
-        call fn_87dba
+        call mnet_asked
         jmp short L_878b1
 L_878a0:
         mov rax,[rbx+0x68]
@@ -2126,7 +2128,8 @@ fn_87d5b:
         jmp near fn_6c2df
 
 ; says: '[mnet] asked: '
-fn_87dba:
+; Meta Net: something was asked of this machine
+mnet_asked:
         push r12
         push r13
         push r14
@@ -2440,7 +2443,8 @@ L_8828e:
 ; says: 'No connection (is '
 ; says: 'No answer in time.'
 ; says: ... and 4 more texts
-fn_88293:
+; Meta Net: the other machine reached (ARP, the connection)
+mnet_connect:
         push r12
         push r13
         push r14
@@ -2608,14 +2612,15 @@ L_8851c:
         retq
 
 ; says: 'Not kept: the disk could not be written.'
-fn_88526:
+; Meta Net: what came is kept as an object
+mnet_keep:
         push rbx
         push r14
         push r15
         mov r14,rdx
         mov rdx,rsi
         mov esi,0x47
-        call fn_88293
+        call mnet_connect
         test rax,rax
         jnz short L_88597
         lea rdi,[r15+0x8c]
@@ -2675,7 +2680,7 @@ fn_8859d:
         mov edi,r15d
         mov rdx,r13
         mov esi,0x50
-        call fn_88293
+        call mnet_connect
         test rax,rax
         jnz near L_886ff
         mov rdi,[rbx+0x50]
@@ -3040,7 +3045,8 @@ L_88a2b:
 
 ; says: 'netkey'
 ; says: 'type:key'
-fn_88a64:
+; the key of the network made (object netkey)
+netkey_make:
         push rbx
         lea rdi,[rel d_89509]
         call ob_find
@@ -3161,7 +3167,7 @@ fn_88ba4:
         test eax,eax
         jz short L_88bd6
         mov byte [rel d_89489],0x1
-        call fn_88a64
+        call netkey_make
         call entry_12
         mov dword [rel d_89394],0xffffff
 L_88bd1:
@@ -3475,7 +3481,7 @@ entry_07:
         mov edi,eax
         mov esi,0x4c
         lea rdx,[rel d_89510]
-        call fn_88293
+        call mnet_connect
         test rax,rax
         jnz short L_89052
         lea rdi,[rel d_89580]
@@ -3562,7 +3568,7 @@ L_890e8:
         mov edi,eax
         movzx esi,byte [rel d_8952c]
         lea rdx,[rel d_89510]
-        call fn_88293
+        call mnet_connect
         test rax,rax
         jnz short L_89155
         call fn_884ef
@@ -3727,7 +3733,7 @@ L_892db:
         mov edi,eax
         mov rsi,r12
         mov rdx,r13
-        call fn_88526
+        call mnet_keep
         test rax,rax
         jz short L_89303
         mov rdi,rax

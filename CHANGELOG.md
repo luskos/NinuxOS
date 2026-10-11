@@ -3,6 +3,10 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.53** (11 October 2026) - names only; the same bytes
+  - 57 more names: functions and data of the suits (update, files and its FAT32, Tuner, Meta
+    Net, HD Audio, EHCI / UHCI / OHCI), the Sentinel's check and its list of genuine
+    identities, ACPI's table finder. tools/kdis/rename.py now names what lives only in a suit.
 - **v3.0.52** (11 October 2026) - the kernel (New.kasm), names, TODO
   - `acpi`: which devices the machine's DSDT names - battery, embedded controller, lid,
     touchpad on I2C, PS/2 mouse, PS/2 keyboard. The first step to their drivers. Seen in QEMU.

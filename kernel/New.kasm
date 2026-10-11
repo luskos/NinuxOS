@@ -1994,7 +1994,7 @@ lolz_says_usage:
 acpi_command:
         add rsp,0x8
         mov edi,0x50434146              ; 'FACP'
-        call fn_60860                   ; rax = that table of ACPI, 0: none
+        call acpi_table                   ; rax = that table of ACPI, 0: none
         test rax,rax
         jz near acpi_none
         mov r8d,[rax+0x28]

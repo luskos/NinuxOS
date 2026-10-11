@@ -1058,7 +1058,7 @@ L_0f9e8 equ 0xF9E8
 L_0fa0b equ 0xFA0B
 L_0fa1d equ 0xFA1D
 L_0fa28 equ 0xFA28
-fn_0fa2f equ 0xFA2F
+cabinet_entry equ 0xFA2F
 fn_0fa39 equ 0xFA39
 L_0fa53 equ 0xFA53
 fn_0fa56 equ 0xFA56
@@ -2101,7 +2101,7 @@ L_51bcc equ 0x51BCC
 L_51bce equ 0x51BCE
 L_51bd9 equ 0x51BD9
 L_51c42 equ 0x51C42
-fn_51c7e equ 0x51C7E
+lock_setting equ 0x51C7E
 L_51cf1 equ 0x51CF1
 L_51d03 equ 0x51D03
 L_51d0a equ 0x51D0A
@@ -3627,7 +3627,7 @@ d_5dc2a equ 0x5DC2A
 d_5dc35 equ 0x5DC35
 d_5dc57 equ 0x5DC57
 d_5dcaa equ 0x5DCAA
-fn_5dce7 equ 0x5DCE7
+sentinel_check equ 0x5DCE7
 L_5ddb5 equ 0x5DDB5
 L_5dde0 equ 0x5DDE0
 L_5ddf3 equ 0x5DDF3
@@ -3649,9 +3649,9 @@ L_5e104 equ 0x5E104
 L_5e134 equ 0x5E134
 L_5e13c equ 0x5E13C
 L_5e142 equ 0x5E142
-fn_5e145 equ 0x5E145
+sentinel_note equ 0x5E145
 L_5e169 equ 0x5E169
-L_5e16a equ 0x5E16A
+sentinel_knows equ 0x5E16A
 L_5e1ad equ 0x5E1AD
 L_5e1cb equ 0x5E1CB
 L_5e1e3 equ 0x5E1E3
@@ -3702,14 +3702,14 @@ L_5e61b equ 0x5E61B
 L_5e63c equ 0x5E63C
 d_5e650 equ 0x5E650
 d_5e658 equ 0x5E658
-d_5e660 equ 0x5E660
+sentinel_state equ 0x5E660
 d_5e668 equ 0x5E668
 d_5e670 equ 0x5E670
 d_5e678 equ 0x5E678
 d_5e680 equ 0x5E680
-d_5ee80 equ 0x5EE80
+sentinel_genuine_count equ 0x5EE80
 d_5ee88 equ 0x5EE88
-d_5ee90 equ 0x5EE90
+sentinel_genuine equ 0x5EE90
 d_5f290 equ 0x5F290
 d_5f2b0 equ 0x5F2B0
 d_5f2b8 equ 0x5F2B8
@@ -3814,7 +3814,7 @@ d_60749 equ 0x60749
 d_60751 equ 0x60751
 d_60758 equ 0x60758
 d_607c0 equ 0x607C0
-fn_60860 equ 0x60860
+acpi_table equ 0x60860
 L_6088b equ 0x6088B
 L_608c0 equ 0x608C0
 L_608c7 equ 0x608C7
@@ -3826,7 +3826,7 @@ L_60924 equ 0x60924
 L_6093d equ 0x6093D
 L_60942 equ 0x60942
 L_60944 equ 0x60944
-fn_60948 equ 0x60948
+acpi_rsdp_scan equ 0x60948
 L_60952 equ 0x60952
 L_60960 equ 0x60960
 L_60972 equ 0x60972
@@ -4194,7 +4194,7 @@ L_64f56 equ 0x64F56
 L_64f64 equ 0x64F64
 L_64f75 equ 0x64F75
 L_64f86 equ 0x64F86
-fn_64f8c equ 0x64F8C
+nvme_say equ 0x64F8C
 L_64fd6 equ 0x64FD6
 L_64ff3 equ 0x64FF3
 d_64ff8 equ 0x64FF8
@@ -4320,7 +4320,7 @@ fn_65d8a equ 0x65D8A
 L_65da4 equ 0x65DA4
 L_65db8 equ 0x65DB8
 L_65db9 equ 0x65DB9
-fn_65dc1 equ 0x65DC1
+install_disks_say equ 0x65DC1
 L_65dde equ 0x65DDE
 L_65df1 equ 0x65DF1
 L_65df2 equ 0x65DF2
@@ -4517,7 +4517,7 @@ fn_67874 equ 0x67874
 L_678b7 equ 0x678B7
 fn_678b8 equ 0x678B8
 L_678cd equ 0x678CD
-fn_678ce equ 0x678CE
+usb_port_say equ 0x678CE
 L_678f2 equ 0x678F2
 L_67902 equ 0x67902
 fn_67916 equ 0x67916
@@ -4653,7 +4653,7 @@ L_68c2c equ 0x68C2C
 L_68c72 equ 0x68C72
 L_68c92 equ 0x68C92
 L_68c9a equ 0x68C9A
-fn_68ca0 equ 0x68CA0
+usb_stick_say equ 0x68CA0
 L_68cdb equ 0x68CDB
 L_68cdc equ 0x68CDC
 L_68cf9 equ 0x68CF9
@@ -4722,7 +4722,7 @@ fn_692ca equ 0x692CA
 L_692e4 equ 0x692E4
 L_692f3 equ 0x692F3
 L_692f7 equ 0x692F7
-fn_692f8 equ 0x692F8
+usb_boot_command equ 0x692F8
 L_6931f equ 0x6931F
 L_69320 equ 0x69320
 L_6934d equ 0x6934D
@@ -5268,7 +5268,7 @@ L_6ed59 equ 0x6ED59
 L_6ed60 equ 0x6ED60
 L_6ed83 equ 0x6ED83
 L_6edc2 equ 0x6EDC2
-fn_6edc4 equ 0x6EDC4
+display_say equ 0x6EDC4
 L_6edd0 equ 0x6EDD0
 L_6ee6a equ 0x6EE6A
 L_6ee95 equ 0x6EE95
@@ -5778,7 +5778,7 @@ L_73bab equ 0x73BAB
 L_73c74 equ 0x73C74
 L_73ce5 equ 0x73CE5
 L_73cfd equ 0x73CFD
-fn_73d07 equ 0x73D07
+photon_log equ 0x73D07
 photon_run equ 0x73D22
 L_73d7b equ 0x73D7B
 L_73db5 equ 0x73DB5

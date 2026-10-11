@@ -36,7 +36,7 @@ L_82061:
         jz short L_82087
         inc r12d
         mov rdi,rax
-        call fn_8208d
+        call ehci_start
         cmp byte [rel suit_start + (d_6b130 - 0x82000)],0x0
         jz short L_82061
 L_82087:
@@ -47,7 +47,8 @@ L_82087:
 
 ; says: '[ehci] controller at '
 ; says: '[ehci] high-speed device on port '
-fn_8208d:
+; USB 2 (EHCI): the controller started
+ehci_start:
         push rbx
         push r12
         push r13
@@ -208,7 +209,7 @@ L_822dd:
         call fn_0be89
         lea rdi,[rel suit_start + (d_153bf - 0x82000)]
         call api_log
-        call fn_82531
+        call ehci_stick_ready
         cmp byte [rel suit_start + (d_6b130 - 0x82000)],0x0
         jnz short L_82336
         jmp short L_8232e
@@ -375,7 +376,8 @@ L_824f2:
         retq
 
 ; says: '[ehci] USB stick ready, sectors: '
-fn_82531:
+; USB 2: a stick made ready
+ehci_stick_ready:
         push rbx
         push r12
         push r13
@@ -644,7 +646,7 @@ L_82b68:
         jz short L_82b91
         inc r13d
         mov rdi,rax
-        call fn_82ba3
+        call uhci_start
         jmp short L_82b68
 L_82b91:
         call fn_83bf0
@@ -655,7 +657,8 @@ L_82b91:
         retq
 
 ; says: '[uhci] controller at I/O '
-fn_82ba3:
+; USB 1 (UHCI): the controller started
+uhci_start:
         push rbx
         push r12
         push r13
@@ -801,7 +804,7 @@ L_82d6e:
         setnz cl
         mov [rel d_83634],ecx
         mov rdi,r15
-        call fn_82fec
+        call usb1_hid_ready
 L_82e01:
         inc ebx
         jmp near L_82d6e
@@ -966,7 +969,8 @@ fn_82fb7:
 
 ; says: '[usb1] keyboard ready'
 ; says: '[usb1] mouse ready'
-fn_82fec:
+; USB 1: a keyboard or a mouse made ready
+usb1_hid_ready:
         push rbx
         push r12
         push r13
@@ -1365,14 +1369,15 @@ L_83bf5:
         jz short L_83c1e
         inc r13d
         mov rdi,rax
-        call fn_83c21
+        call ohci_start
         jmp short L_83bf5
 L_83c1e:
         pop r13
         retq
 
 ; says: '[ohci] controller at '
-fn_83c21:
+; USB 1 (OHCI): the controller started
+ohci_start:
         push rbx
         push r12
         push r13
@@ -1513,7 +1518,7 @@ L_83e3f:
         mov [rel d_83634],eax
         mov [rel d_84180],rbx
         mov rdi,r15
-        call fn_82fec
+        call usb1_hid_ready
 L_83e7d:
         inc r12d
         jmp near L_83dec

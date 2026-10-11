@@ -63,12 +63,13 @@ def main():
             if len(f) == 2:
                 pairs.append((f[0], f[1], what.strip()))
     texts = {p: open(p, encoding='utf-8').read() for p in FILES}
-    todo = [(a, b, w) for a, b, w in pairs if re.search(r'\b%s\b' % re.escape(a), texts[KERNEL])]
+    # v3.0.53: a name may live in a suit only (the suits have functions of their own)
+    todo = [(a, b, w) for a, b, w in pairs if any(re.search(r'\b%s\b' % re.escape(a), texts[q]) for q in SOURCES)]
     if not todo:
         print('rename: nothing to do (%d names are in place already)' % len(pairs))
         return 0
     for a, b, w in todo:
-        if re.search(r'\b%s\b' % re.escape(b), texts[KERNEL]):
+        if any(re.search(r'\b%s\b' % re.escape(b), texts[q]) for q in SOURCES):
             sys.exit('rename: the name %s is already used' % b)
     before, err = assemble_all()
     if before is None:
@@ -77,7 +78,7 @@ def main():
         shutil.copyfile(p, p + '.keep')
         s = texts[p]
         for a, b, w in todo:
-            if p == KERNEL and w:
+            if p in SOURCES and w:
                 s = re.sub(r'(?m)^%s:' % re.escape(a), '; %s\n%s:' % (w, a), s, count=1)
             s = re.sub(r'\b%s\b' % re.escape(a), b, s)
         with open(p, 'w', encoding='utf-8', newline='\n') as f:
