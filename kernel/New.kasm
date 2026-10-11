@@ -1148,12 +1148,12 @@ backup_head:                            ; the pool's first sector into backup_se
         jnz backup_head_ask             ; not asked for a sector it has not (it said "[ata] read error")
         cmp byte [rel d_154aa],0x0
         jnz backup_head_ask
-        cmp byte [rel d_15498],0x0
+        cmp byte [rel ata_there],0x0
         jz backup_head_ask
         mov rax,[rel table_sector]
         add rax,POOL_AT - 481 + 1
-        add rax,[rel d_15499]
-        cmp rax,[rel d_154b0]           ; (the disk's sectors, as it said itself)
+        add rax,[rel disk_base]
+        cmp rax,[rel ata_sectors]           ; (the disk's sectors, as it said itself)
         jnc backup_head_none
 backup_head_ask:
         xor edi,edi
@@ -1588,7 +1588,7 @@ mux_says_again:
 ; ---- v3.0.48: `parts` - the partitions of a SATA disk (the first step of winlolz / linlolz) ------
 ;       parts [N]         what lies on SATA disk N (0 if not said): the table (MBR or GPT), and
 ;                         for each partition its kind, its name, where it begins, how big it is
-; Reading only. The disk is read by the AHCI driver the installer uses (fn_64590: rdi = the
+; Reading only. The disk is read by the AHCI driver the installer uses (ahci_command: rdi = the
 ; disk, esi = the ATA command, rdx = the sector, rcx = memory, r8 = 1 to write, r9 = sectors).
 parts_command:                          ; r12 = what follows the word
         add rsp,0x8
@@ -1601,7 +1601,7 @@ parts_command:                          ; r12 = what follows the word
 parts_disk:
         mov [rel parts_n],rax
         mov qword [rel parts_count],0x0
-        lea rcx,[rel d_648c0]
+        lea rcx,[rel ahci_ports]
         cmp qword [rcx+rax*8],0x0
         jz near parts_none
         mov edi,4096
@@ -1765,7 +1765,7 @@ parts_read:                             ; rdx = a sector of the disk, r9 = how m
         mov esi,0x25
         mov rcx,[rel parts_buf]
         xor r8d,r8d
-        jmp near fn_64590
+        jmp near ahci_command
 
 parts_fail:
         lea rdi,[rel parts_says_fail]
@@ -1912,14 +1912,14 @@ lolz_first:                             ; rax = the first sector of the chosen p
 
 lolz_io:                                ; as the stick's reader: rdi = sector, rsi = memory, rdx = sectors, rcx = 0
         cmp qword [rel lolz_start],0x0
-        jz near fn_6af0a
+        jz near usb_disk_io
         test rcx,rcx
         jnz lolz_io_no                  ; nothing is written to another system's disk
-        push qword [rel d_648b8]        ; (the disk the AHCI reader reads: the boot disk, if that is SATA)
+        push qword [rel ahci_boot_disk]        ; (the disk the AHCI reader reads: the boot disk, if that is SATA)
         mov rax,[rel lolz_disk]
-        mov [rel d_648b8],rax
-        call L_646c2
-        pop qword [rel d_648b8]
+        mov [rel ahci_boot_disk],rax
+        call ahci_io
+        pop qword [rel ahci_boot_disk]
         test eax,eax
         retq
 lolz_io_no:

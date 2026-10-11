@@ -589,7 +589,7 @@ fn_30a1d:
 L_30a3d:
         cmp byte [rel suit_start + (disk_writable - 0x30000)],0x0
         jz short L_30a96
-        mov rdi,[rel suit_start + (d_154b0 - 0x30000)]
+        mov rdi,[rel suit_start + (ata_sectors - 0x30000)]
         cmp rdi,0x20000
         jc short L_30a96
         dec rdi
@@ -660,7 +660,7 @@ L_30b14:
         cmp r12,0x10000
         ja near L_30cae
         lea rdi,[rel d_31794]
-        mov rax,[rel suit_start + (d_154b0 - 0x30000)]
+        mov rax,[rel suit_start + (ata_sectors - 0x30000)]
         cmp rax,0x20000
         jc near L_30cae
         lea r13,[rax-0x1]
@@ -782,7 +782,7 @@ fn_30cbb:
         mov rsi,[rel d_31600]
         mov r12,[rsi+0x8]
         mov r13,[rsi+0x10]
-        mov rax,[rel suit_start + (d_154b0 - 0x30000)]
+        mov rax,[rel suit_start + (ata_sectors - 0x30000)]
         dec rax
         sub rax,r12
         lea rdi,[rel d_3187a]
@@ -907,7 +907,7 @@ fn_30e9e:
         jnz short L_30ec3
         cmp byte [rel suit_start + (d_69588 - 0x30000)],0x0
         jnz short L_30eb5
-        call fn_66bb7
+        call usb_on
 L_30eb5:
         cmp byte [rel suit_start + (d_6b130 - 0x30000)],0x0
         jnz short L_30ec3
@@ -933,7 +933,7 @@ fn_30ecb:
         mov rsi,rbx
         mov edx,0x1
         xor ecx,ecx
-        call fn_6af0a
+        call usb_disk_io
         test eax,eax
         jz near L_3100e
         lea r12,[rel d_31ab0]
@@ -950,7 +950,7 @@ fn_30ecb:
         mov rsi,rbx
         mov edx,0x1
         xor ecx,ecx
-        call fn_6af0a
+        call usb_disk_io
         test eax,eax
         jz near L_3100e
         lea r12,[rel d_31ab0]
@@ -974,7 +974,7 @@ fn_30ecb:
         mov rsi,rax
         mov rdx,[rel d_31558]
         xor ecx,ecx
-        call fn_6af0a
+        call usb_disk_io
         test eax,eax
         jz short L_3100e
         lea r12,[rel d_31ba8]
@@ -1030,7 +1030,7 @@ L_31051:
         mov rsi,rbx
         mov edx,0x5
         xor ecx,ecx
-        call fn_6af0a
+        call usb_disk_io
         test eax,eax
         jz short L_310b8
         cmp dword [rbx],0x41534d4f
@@ -1134,7 +1134,7 @@ fn_3113e:
         mov rsi,rax
         mov rdx,[rel d_31588]
         xor ecx,ecx
-        call fn_6af0a
+        call usb_disk_io
         lea rdx,[rel d_31a8a]
         test eax,eax
         jz near L_3124d
@@ -1252,7 +1252,7 @@ L_312d0:
         mov rsi,r13
         mov rdx,r12
         xor ecx,ecx
-        call fn_6af0a
+        call usb_disk_io
         test eax,eax
         jz near L_313b7
         cmp dword [r13+0x0],0x41534d4f
@@ -1342,7 +1342,7 @@ L_31446:
         shl rsi,byte 0x9
         add rsi,rbx
         xor ecx,ecx
-        call fn_6af0a
+        call usb_disk_io
         pop rdx
         test eax,eax
         jnz short L_3146e
@@ -1694,7 +1694,7 @@ L_32330:
         shl rsi,byte 0x9
         add rsi,r13
         mov ecx,0x1
-        call fn_6af0a
+        call usb_disk_io
         pop rdx
         test eax,eax
         jz near L_3248f
@@ -1732,7 +1732,7 @@ L_323bc:
         mov rdi,r15
         mov rsi,rbx
         mov ecx,0x1
-        call fn_6af0a
+        call usb_disk_io
         pop rdx
         test eax,eax
         jz near L_32485
@@ -1763,7 +1763,7 @@ L_32403:
         mov rsi,rbx
         mov edx,0x80
         mov ecx,0x1
-        call fn_6af0a
+        call usb_disk_io
         test eax,eax
         jz short L_32485
         add r15,0x80
@@ -1773,7 +1773,7 @@ L_32444:
         mov rsi,rbx
         mov edx,0x1
         xor ecx,ecx
-        call fn_6af0a
+        call usb_disk_io
         test eax,eax
         jz short L_32485
         mov rsi,rbx
@@ -5622,7 +5622,7 @@ L_38787:
         mov rdi,[rsi+0x10]
         mov rsi,[rsi+0x8]
         call fn_385b8
-        mov rdi,[rel suit_start + (d_154b0 - 0x30000)]
+        mov rdi,[rel suit_start + (ata_sectors - 0x30000)]
         dec rdi
         mov esi,0x1
         call fn_385b8
@@ -6190,7 +6190,7 @@ L_39abe:
         lea rsi,[rel d_39ee5]
         mov edx,0x2
         xor ecx,ecx
-        call fn_51773
+        call sysop_ask
         test eax,eax
         jz near L_39cc6
         cmp byte [rel suit_start + (d_521d0 - 0x30000)],0x0
@@ -6204,7 +6204,7 @@ L_39abe:
         lea rsi,[rel d_39f03]
         mov edx,0x2
         xor ecx,ecx
-        call fn_51773
+        call sysop_ask
         test eax,eax
         jz near L_39cc6
         lea rsi,[rel suit_start + (d_521d0 - 0x30000)]
@@ -6339,7 +6339,7 @@ L_39d15:
         lea rsi,[rel d_39f2f]
         mov edx,0x1
         xor ecx,ecx
-        call fn_51773
+        call sysop_ask
         test eax,eax
         jz short L_39d15
         lea rdi,[rel suit_start + (d_521d0 - 0x30000)]
@@ -6352,7 +6352,7 @@ L_39d15:
         lea rsi,[rel d_39f3a]
         mov edx,0x2
         xor ecx,ecx
-        call fn_51773
+        call sysop_ask
         test eax,eax
         jz short L_39d15
         lea rdi,[rel suit_start + (d_521d0 - 0x30000)]

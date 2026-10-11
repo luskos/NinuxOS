@@ -53,7 +53,7 @@ L_860b9:
         jnz short L_860b9
         mov rbx,rax
         mov rdi,rbx
-        call fn_639cc
+        call pci_command
         mov rdi,rbx
         xor esi,esi
         call fn_6396b
@@ -181,7 +181,7 @@ L_862ee:
         jnz short L_862ee
         mov rbx,rax
         mov rdi,rbx
-        call fn_639cc
+        call pci_command
         mov rdi,rbx
         mov esi,0x2
         call fn_6396b
@@ -2276,7 +2276,7 @@ fn_88069:
         mov r12,rsi
         lea rdx,[rel d_8aaa0]
         lea rcx,[rel d_894b0]
-        call fn_52e50
+        call chacha_setup
         lea rdi,[rel d_8aac0]
         mov rsi,rbx
         mov rdx,r12
@@ -2307,7 +2307,7 @@ fn_880ad:
         mov rsi,r12
         lea rdx,[rel d_8aaa0]
         lea rcx,[rel d_894b0]
-        call fn_52e50
+        call chacha_setup
         mov eax,0x1
         jmp short L_880fe
 L_880fc:
@@ -2984,7 +2984,7 @@ L_88954:
         mov dword [rax+0x8ab84],0x4f4d5341
         mov r13,rax
         mov eax,0x6
-        cmp byte [rel suit_start + (d_15498 - 0x86000)],0x0
+        cmp byte [rel suit_start + (ata_there - 0x86000)],0x0
         jz short L_889eb
         mov byte [rel suit_start + (d_1553e - 0x86000)],0x1
         mov rdi,r12

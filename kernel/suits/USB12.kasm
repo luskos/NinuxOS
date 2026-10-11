@@ -54,7 +54,7 @@ fn_8208d:
         push r14
         push r15
         mov r12,rdi
-        call fn_639cc
+        call pci_command
         mov rdi,r12
         xor esi,esi
         call fn_6396b
@@ -1379,7 +1379,7 @@ fn_83c21:
         push r14
         push r15
         mov r12,rdi
-        call fn_639cc
+        call pci_command
         mov rdi,r12
         xor esi,esi
         call fn_6396b

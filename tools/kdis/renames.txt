@@ -102,3 +102,98 @@ d_085be    load_table_sector  ; the loader: the sector of the table (the kernel'
 fn_6d795   suit_load          ; rdi = the number of a kernel suit (0 k_sound, 1 k_usb12, 2 k_net, 3 k_tools): if it is not on yet, find its object, check its signature, copy its code to its place; eax = 1 when it is on
 fn_73d22   photon_run         ; Photon, the game, on the whole screen - asked for by the desktop (it draws through the SUB-GPU: fn_7189b)
 d_7477e    desk_asks          ; what the desktop asked the kernel to run when it has left the screen: 1 Photon, 2 Puffer, 3 META, 4 Tuner
+
+# ---- v3.0.50: named by what they say (the texts each function prints) and by what was read
+# ---- while `parts` and `lolz` were written. "the place that says" = named by its text only.
+fn_08682   guard_tables       ; the guard: says when a table of the kernel changed
+fn_089ec   say_video          ; the line "Video: W x H x 32 bit framebuffer"
+fn_0a059   kbd_start          ; the built-in keyboard asked whether it answers
+fn_0a116   ps2_mouse_start    ; the PS/2 mouse asked whether it answers
+fn_0a563   kbd_layout_log     ; the log line of the keyboard's layout (EN / BG phonetic)
+fn_0a5c8   font_load          ; the letters taken from the object `font`
+fn_0b642   say_no_object      ; "No object NAME in the cabinet"
+fn_0b6b0   boot_desktop_mark  ; the desktop ran 10 s: it starts by itself next time
+fn_0b7ce   boot_desktop_ask   ; last time on the desktop: start it, or stay in the shell
+fn_0b9b6   relocate           ; the kernel's own addresses set right after it was loaded
+fn_0bc2e   video_start        ; the screen: a framebuffer or VGA text
+fn_0bceb   say_memory         ; the line "Memory: N MB of RAM available to objects."
+fn_0c3df   crash_screen       ; "NinuxOS stopped": the exception shown
+fn_0c500   crash_cores        ; the crash screen: what each core was doing
+fn_0c600   crash_where        ; the crash screen: in which object, or in the kernel
+fn_0cfda   store_start        ; the boot disk looked for: can the cabinet be written
+fn_0ddff   view_header        ; "ASMO vN, B bytes, STATE ...": the facts of an object said
+fn_0ee0a   shield_fault       ; a fault in an object: written to the log
+fn_0efb0   shield_stopped     ; "Object NAME ... was stopped - NinuxOS keeps running."
+fn_0f06b   shield_start       ; the shield, steps 1-4: GDT, IDT gates, trampolines, the user stack
+fn_0f21f   shield_selftest    ; the shield, step 5: a test in ring 3
+fn_0fa9b   room_load          ; an object of the storage room loaded on first use
+fn_1069d   ext_log            ; the log line with the sizes of core and extension
+fn_10735   say_kernel         ; the line "Kernel: core N bytes + extension N bytes"
+fn_50d2a   admin_ask          ; the administrator's password asked
+fn_50e46   admin_choose       ; no administrator's password yet: one is chosen
+fn_51773   sysop_ask          ; a question of the system on the screen (Enter = OK, ESC = cancel)
+fn_51dfa   screen_lock        ; the screen locked
+fn_52e50   chacha_setup       ; ChaCha20: the state made from a key ("expand 32-byte k")
+fn_56087   mux_kill           ; a program closed by kill
+fn_569e7   mux_memory         ; own memory and page tables for a new program
+fn_56e7f   mux_cores_say      ; says whether programs take turns on one core or run on every core
+fn_572cf   pt_run_divide      ; the old PyTon in the kernel: the place that says "division by zero"
+fn_57364   pt_run_index       ; the old PyTon: the place that says "index out of range"
+fn_57786   pt_too_big         ; the old PyTon: the place that says "the program is too big"
+fn_579e2   pt_line_end        ; the old PyTon: "unexpected text at the end of the line"
+fn_57a10   pt_name            ; the old PyTon: "a name is longer than 23 letters"
+fn_57abe   pt_expect          ; the old PyTon: "expected ..."
+fn_57aea   pt_indent          ; the old PyTon: "unexpected indent"
+fn_57b2a   pt_block           ; the old PyTon: "expected an indented block after ..."
+fn_57b5b   pt_statement       ; the old PyTon: a statement (while, return ...)
+fn_58027   pt_break_continue  ; the old PyTon: "break / continue outside a loop"
+fn_584ae   pt_range           ; the old PyTon: "range() needs numbers"
+fn_586b8   pt_function_new    ; the old PyTon: "too many functions"
+fn_58737   pt_functions_check ; the old PyTon: "a function is called but never defined"
+fn_58925   pt_variable_use    ; the old PyTon: "a name is used before it gets a value"
+fn_58977   pt_variable_kind   ; the old PyTon: "a variable changes its kind"
+fn_59233   pt_true_false      ; the old PyTon: True / False
+fn_5947f   pt_number          ; the old PyTon: a number ("fractions are not compiled yet")
+fn_59504   pt_text            ; the old PyTon: a text ("a text is missing its closing quote")
+fn_59935   pt_builtin         ; the old PyTon: "a built-in function got the wrong kind of value"
+fn_59dd3   pt_object_meta     ; the old PyTon: the META of the object made (type:app, name:)
+fn_5e470   sentinel_say       ; the line "Sentinel: N system objects checked - all genuine."
+fn_5fd0c   machine_identity   ; the machine's identity made or read
+fn_6097e   acpi_start         ; ACPI: power-off made ready (FADT, \_S5_)
+fn_60ed4   smp_wake_core      ; a core asked to start
+fn_61a23   cores_speed        ; `cores`: the speed of each core
+fn_61e1b   smp_wait           ; the other cores waited for
+fn_61eaa   say_cores          ; the line "CPU cores: N found, N running."
+fn_6384f   pci_scan           ; the PCI bus read
+fn_639cc   pci_command        ; `pci`: the devices listed
+fn_64590   ahci_command       ; rdi = SATA disk, esi = the ATA command, rdx = sector, rcx = memory, r8 = 1: write, r9 = sectors; eax = 0: it failed
+L_646c2    ahci_io            ; the SATA disk ahci_boot_disk: rdi = sector, rsi = memory, rdx = sectors, rcx = 0 read, else write
+d_648c0    ahci_ports         ; for each SATA disk the registers of its port (0: no such disk)
+d_648b8    ahci_boot_disk     ; which SATA disk ahci_io reads and writes
+fn_64c44   nvme_start         ; the NVMe controller started
+fn_652ea   nvme_command       ; a command to the NVMe disk
+fn_66bb7   usb_on             ; `usb on`
+fn_66d73   xhci_start         ; the xHCI controller started
+fn_66f3a   xhci_intel_ports   ; Intel: USB 2 / 3 ports switched to xHCI
+fn_66fe6   xhci_take_over     ; the controller taken over from the BIOS
+fn_67589   usb_hub            ; a hub and its ports
+fn_6794c   usb_address        ; a device given its address
+fn_67bc3   usb_hid_ready      ; a keyboard or a mouse made ready
+fn_6869d   usb_setup          ; a device set up
+fn_68a9f   usb_plugged        ; a device plugged in
+fn_68b75   usb_errors         ; too many errors: the device left alone, or the endpoint started again
+fn_68f45   usb_unplugged      ; a device unplugged
+fn_69464   usb_say            ; `usb`: what is on
+fn_6ab0b   usb_stick_ready    ; a USB stick made ready (mass storage)
+fn_6af0a   usb_disk_io        ; the USB stick: rdi = sector, rsi = memory, rdx = sectors, rcx = 0 read, else write; eax = 0: it failed
+fn_6df1a   suits_command      ; `suits`: the kernel suits listed
+fn_6e555   gpu_start          ; virtio-gpu switched on
+fn_6ea40   gpu_cursor         ; the hardware cursor
+fn_70f01   subgpu_demo        ; the SUB-GPU demo
+fn_71060   subgpu_bar         ; its line with the frames per second
+fn_736a7   photon_desk_start  ; Photon started from the desktop
+fn_739d5   photon_say         ; the line "Photon: N emitters ..."
+fn_73e97   photon_bar         ; Photon's line with the frames per second
+d_154b0    ata_sectors        ; how many sectors the ATA disk said it has
+d_15498    ata_there          ; 1: an ATA disk answered
+d_15499    disk_base          ; added to every sector of the boot disk

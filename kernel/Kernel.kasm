@@ -841,7 +841,8 @@ fn_0866c:
 ; says: ': at '
 ; says: ' was '
 ; says: ... and 19 more texts
-fn_08682:
+; the guard: says when a table of the kernel changed
+guard_tables:
         push rbx
         push r12
         push r13
@@ -908,55 +909,55 @@ L_08754:
         call api_log
         call fn_0893b
         lea rdi,[rel d_11f0b]
-        call fn_08682
+        call guard_tables
         call fn_0c714
         lea rdi,[rel d_11f11]
-        call fn_08682
+        call guard_tables
         call fn_0fb7f
-        call fn_0b9b6
+        call relocate
         lea rdi,[rel d_11f18]
-        call fn_08682
+        call guard_tables
         call fn_0a4d1
-        call fn_1069d
+        call ext_log
         call fn_11003
         lea rdi,[rel d_11f23]
-        call fn_08682
-        call fn_0cfda
+        call guard_tables
+        call store_start
         lea rdi,[rel d_11f44]
-        call fn_08682
-        call fn_0a5c8
+        call guard_tables
+        call font_load
         call fn_0a76c
         call fn_09fac
         lea rdi,[rel d_11f5d]
-        call fn_08682
+        call guard_tables
         call fn_0beee
         lea rdi,[rel d_11f68]
-        call fn_08682
-        call fn_0f21f
+        call guard_tables
+        call shield_selftest
         lea rdi,[rel d_11f73]
-        call fn_08682
+        call guard_tables
         call fn_1107d
         lea rdi,[rel d_11f7a]
-        call fn_08682
-        call fn_0bc2e
+        call guard_tables
+        call video_start
         call fn_08c44
         mov dword [rel d_11850],0x6fc3ff
         lea rdi,[rel d_11fb6]
         call api_print
         mov dword [rel d_11850],0xececf5
-        call fn_089ec
-        call fn_0bceb
-        call fn_10735
+        call say_video
+        call say_memory
+        call say_kernel
         call fn_1108b
         call fn_10f82
         lea rdi,[rel d_11f80]
-        call fn_08682
+        call guard_tables
         call fn_1102f
         lea rdi,[rel d_11f89]
-        call fn_08682
-        call fn_0a5c8
-        call fn_0a116
-        call fn_0a059
+        call guard_tables
+        call font_load
+        call ps2_mouse_start
+        call kbd_start
         call fn_10a47
         call fn_10a2b
         lea rdi,[rel d_1203e]
@@ -973,7 +974,7 @@ L_08754:
 
 L_088df:
         call api_print
-        call fn_0b7ce
+        call boot_desktop_ask
 
 L_088e9:
         mov dword [rel d_11850],0x6fc3ff
@@ -1032,7 +1033,8 @@ L_089ca:
 ; says: 'Video: '
 ; says: ' x 32 bit framebuffer'
 ; says: 'Video: VGA text mode (no 32-bit VESA mode)'
-fn_089ec:
+; the line "Video: W x H x 32 bit framebuffer"
+say_video:
         cmp qword [rel screen_on],0x0
         jz short L_08a31
         lea rdi,[rel d_11ff3]
@@ -2877,7 +2879,8 @@ L_0a03a:
 
 ; says: 'Built-in keyboard: it answered (the old kind, PS/2).'
 ; says: 'Built-in keyboard: NO ANSWER - this PC'
-fn_0a059:
+; the built-in keyboard asked whether it answers
+kbd_start:
         mov rax,[rel d_110b0]
         cmp byte [rax+0x48],0x1
         jnz short L_0a082
@@ -2902,7 +2905,8 @@ d_0a0ba:
         db 'Built-in keyboard: NO ANSWER - this PC', 39, 's keyboard is not the old kind. Try a USB keyboard.', 10, 0
 
 ; says: 'No PS/2 mouse answered. A USB mouse: type  usb on  (maint + '
-fn_0a116:
+; the PS/2 mouse asked whether it answers
+ps2_mouse_start:
         cmp byte [rel d_119d5],0x0
         jnz short L_0a142
         mov rax,[rel cabinet_table]
@@ -3125,7 +3129,7 @@ L_0a3cb:
         mov byte [rel key_shift],0x1
         cmp byte [rel key_alt],0x0
         jz near L_0a4cd
-        call fn_0a563
+        call kbd_layout_log
         jmp near L_0a4cd
 
 L_0a3f6:
@@ -3139,7 +3143,7 @@ L_0a402:
         mov byte [rel key_alt],0x1
         cmp byte [rel key_shift],0x0
         jz near L_0a4cd
-        call fn_0a563
+        call kbd_layout_log
         jmp near L_0a4cd
 
 L_0a434:
@@ -3259,7 +3263,8 @@ key_modifiers:
 ; says: '[kbd] layout: BG phonetic'
 ; says: ' EN '
 ; says: ... and 1 more texts
-fn_0a563:
+; the log line of the keyboard's layout (EN / BG phonetic)
+kbd_layout_log:
         xor byte [rel d_118db],0x1
         lea rdi,[rel d_118ec]
         cmp byte [rel d_118db],0x0
@@ -3288,7 +3293,8 @@ L_0a5c7:
 
 ; says: 'font'
 ; says: '[font] letters from the object '
-fn_0a5c8:
+; the letters taken from the object `font`
+font_load:
         cmp byte [rel d_118dc],0x0
         jnz short L_0a62e
         lea rdi,[rel d_118dd]
@@ -4215,7 +4221,7 @@ L_0afd5:
 L_0afe8:
         push rdi
         lea rdi,[rel d_11f93]
-        call fn_08682
+        call guard_tables
         pop rdi
         lea r13,[rel shell_commands]
 
@@ -4322,7 +4328,7 @@ cmd_version:
 
 ; says: 'Cabinet objects: '
 cmd_info:
-        call fn_089ec
+        call say_video
         lea rdi,[rel d_14996]
         call api_print
         call api_ob_count
@@ -4508,7 +4514,7 @@ L_0b33f:
 L_0b34d:
         mov rdi,rbx
         pop rbx
-        jmp near fn_0b642
+        jmp near say_no_object
 
 ; says: '[ninux] run '
 ; says: 'That object is raw data (STATE 0): it has nothing to run. Try '
@@ -4714,7 +4720,7 @@ L_0b60a:
 
 L_0b618:
         mov rdi,rbx
-        call fn_0b642
+        call say_no_object
 
 L_0b620:
         mov rdi,[rel d_11db9]
@@ -4730,7 +4736,8 @@ L_0b63c:
         retq
 
 ; says: 'No object '
-fn_0b642:
+; "No object NAME in the cabinet"
+say_no_object:
         push rdi
         lea rdi,[rel d_14b7d]
         call api_print
@@ -4770,7 +4777,8 @@ L_0b6af:
         retq
 
 ; says: '[boot] the desktop ran 10 s: it starts by itself next time'
-fn_0b6b0:
+; the desktop ran 10 s: it starts by itself next time
+boot_desktop_mark:
         inc qword [rel d_12448]
         mov edi,0x1
         mov rsi,[rel d_12448]
@@ -4847,7 +4855,8 @@ fn_0b7b5:
 ; says: 'Last time you were on the desktop - starting it (ESC: stay in the shell) ...'
 ; says: 'Staying in the shell.'
 ; says: 'The desktop did not get through its first 10 seconds last time - staying in the shell.'
-fn_0b7ce:
+; last time on the desktop: start it, or stay in the shell
+boot_desktop_ask:
         mov rcx,[rel cabinet_table]
         cmp dword [rcx],0x4e424143
         jnz short L_0b833
@@ -5022,7 +5031,8 @@ api_cabinet_changes:
 
 ; says: '[ninux] relocated '
 ; says: ' places'
-fn_0b9b6:
+; the kernel's own addresses set right after it was loaded
+relocate:
         push rbx
         push r12
         push r13
@@ -5241,7 +5251,8 @@ L_0bc2d:
 ; says: '[ninux] video: VGA text mode'
 ; says: '[ninux] memory: '
 ; says: ... and 4 more texts
-fn_0bc2e:
+; the screen: a framebuffer or VGA text
+video_start:
         cmp qword [rel screen_on],0x0
         jz short L_0bc76
         lea rdi,[rel d_14e10]
@@ -5285,7 +5296,8 @@ L_0bce6:
 
 ; says: 'Memory: '
 ; says: ' MB of RAM available to objects.'
-fn_0bceb:
+; the line "Memory: N MB of RAM available to objects."
+say_memory:
         cmp byte [rel d_15383],0x0
         jz short L_0bd1c
         lea rdi,[rel d_153f7]
@@ -5932,7 +5944,7 @@ L_0c366:
         jnz near L_0eeb2
 
 L_0c3d6:
-        call fn_0c3df
+        call crash_screen
 
 L_0c3db:
         cli
@@ -5943,7 +5955,8 @@ L_0c3db:
 ; says: '  (exception '
 ; says: '  RIP '
 ; says: ... and 5 more texts
-fn_0c3df:
+; "NinuxOS stopped": the exception shown
+crash_screen:
         mov dword [rel console_ground],0x5a0f14
         mov dword [rel d_11850],0xffffff
         mov byte [rel d_11888],0x0
@@ -5972,7 +5985,7 @@ L_0c41a:
         lea rdi,[rel d_14ffd]
         mov rsi,[rel d_14f0c]
         call fn_0c6fa
-        call fn_0c600
+        call crash_where
         lea rdi,[rel d_15004]
         mov rsi,[rel d_14f04]
         call fn_0c6fa
@@ -5998,7 +6011,7 @@ L_0c4b6:
         cmp r12,0xf
         jc short L_0c4b6
         pop r12
-        call fn_0c500
+        call crash_cores
         mov edi,0xa
         call fn_0c6ca
         lea rdi,[rel d_14f57]
@@ -6008,7 +6021,8 @@ L_0c4b6:
 ; says: '  core '
 ; says: '   calls: '
 ; says: '   stack: '
-fn_0c500:
+; the crash screen: what each core was doing
+crash_cores:
         push rbx
         push r12
         push r13
@@ -6095,7 +6109,8 @@ L_0c5fa:
 
 ; says: '      in object '
 ; says: '      in the kernel'
-fn_0c600:
+; the crash screen: in which object, or in the kernel
+crash_where:
         push rbx
         push r12
         push r13
@@ -6740,7 +6755,7 @@ L_0cd14:
 ; says: '[ata] read error'
 ; rdi = sector, rsi = memory, rdx = sectors (at most 0x80)
 disk_read:
-        add rdi,[rel d_15499]
+        add rdi,[rel disk_base]
         cmp byte [rel d_154a9],0x0
         jz short L_0cd2c
         xor ecx,ecx
@@ -6805,7 +6820,7 @@ L_0cda2:
 ; says: '[ata] write error'
 ; rdi = sector, rsi = memory, rdx = sectors (at most 0x80)
 disk_write:
-        add rdi,[rel d_15499]
+        add rdi,[rel disk_base]
         cmp byte [rel d_154a9],0x0
         jz short L_0cdc2
         mov ecx,0x1
@@ -7009,7 +7024,7 @@ L_0cf54:
         dec ebx
         jnz short L_0cf54
         mov eax,[rel core_start + (v_42808 - 0x7E00)]
-        mov [rel d_154b0],rax
+        mov [rel ata_sectors],rax
         lea rsi,[rel core_start + (v_427c6 - 0x7E00)]
         lea rdi,[rel d_154b8]
         mov ecx,0x14
@@ -7035,14 +7050,14 @@ L_0cfa7:
         jmp short L_0cfa7
 
 L_0cfbd:
-        mov byte [rel d_15498],0x1
+        mov byte [rel ata_there],0x1
         mov eax,0x1
         pop r12
         pop rbx
         retq
 
 L_0cfcd:
-        mov byte [rel d_15498],0x0
+        mov byte [rel ata_there],0x0
         xor eax,eax
         pop r12
         pop rbx
@@ -7051,11 +7066,12 @@ L_0cfcd:
 ; says: '[store] boot disk found: cabinet is writable in maintenance mode'
 ; says: '[store] the ATA disk is not the boot disk: read-only'
 ; says: '[store] no ATA disk: read-only'
-fn_0cfda:
+; the boot disk looked for: can the cabinet be written
+store_start:
         mov byte [rel disk_writable],0x0
         mov rax,[rel d_110b0]
         mov eax,[rax+0x34]
-        mov [rel d_15499],rax
+        mov [rel disk_base],rax
         mov rax,[rel d_110b0]
         movzx eax,word [rax+0x6]
         inc eax
@@ -7063,7 +7079,7 @@ fn_0cfda:
         call fn_0ceba
         test eax,eax
         jz short L_0d07c
-        mov rax,[rel d_154b0]
+        mov rax,[rel ata_sectors]
         mov [rel d_154a1],rax
         mov rdi,[rel table_sector]
         lea rsi,[rel core_start + (v_42990 - 0x7E00)]
@@ -7100,13 +7116,13 @@ L_0d08f:
 
 fn_0d098:
         mov rdi,[rel table_sector]
-        add rdi,[rel d_15499]
+        add rdi,[rel disk_base]
         mov rsi,[rel cabinet_table]
         call fn_1105d
         test eax,eax
         jnz short L_0d0d2
         mov rdi,[rel table_sector]
-        add rdi,[rel d_15499]
+        add rdi,[rel disk_base]
         mov rsi,[rel cabinet_table]
         call fn_1103d
         test eax,eax
@@ -7119,7 +7135,7 @@ fn_0d0d3:
         mov eax,[rax+0x38]
         test eax,eax
         jz short L_0d0e8
-        mov [rel d_154b0],rax
+        mov [rel ata_sectors],rax
 
 L_0d0e8:
         retq
@@ -7695,7 +7711,7 @@ L_0d6c3:
 
 L_0d6d1:
         mov rdi,rbx
-        call fn_0b642
+        call say_no_object
 
 L_0d6d9:
         pop r14
@@ -7783,7 +7799,7 @@ L_0d795:
 
 L_0d7a3:
         mov rdi,rbx
-        call fn_0b642
+        call say_no_object
 
 L_0d7ab:
         pop r12
@@ -7847,7 +7863,7 @@ L_0d838:
 
 L_0d846:
         mov rdi,rbx
-        call fn_0b642
+        call say_no_object
 
 L_0d84e:
         pop r13
@@ -7883,7 +7899,7 @@ cmd_view:
         jz near L_0da37
         mov r12,rax
         mov rdi,r12
-        call fn_0ddff
+        call view_header
         lea rdi,[rel d_15a5f]
         call api_print
         mov rdi,r12
@@ -8027,7 +8043,7 @@ L_0da29:
 
 L_0da37:
         mov rdi,rbx
-        call fn_0b642
+        call say_no_object
 
 L_0da3f:
         pop r14
@@ -8323,7 +8339,7 @@ L_0dcfa:
 
 L_0dd04:
         lea rax,[r14+r12]
-        cmp rax,[rel d_154b0]
+        cmp rax,[rel ata_sectors]
         ja short L_0dd39
         push rbx
         xor ebx,ebx
@@ -8441,7 +8457,8 @@ L_0ddfa:
 ; says: ' bytes, STATE '
 ; says: 'no footer '
 ; says: ... and 3 more texts
-fn_0ddff:
+; "ASMO vN, B bytes, STATE ...": the facts of an object said
+view_header:
         push rbx
         mov rbx,rdi
         lea rdi,[rel d_15d25]
@@ -8506,7 +8523,7 @@ cmd_disk:
         push rbx
         push r12
         push r13
-        cmp byte [rel d_15498],0x0
+        cmp byte [rel ata_there],0x0
         jnz short L_0dee2
         lea rdi,[rel d_158a2]
         call api_print
@@ -8519,7 +8536,7 @@ L_0dee2:
         call api_print
         lea rdi,[rel d_158ea]
         call api_print
-        mov rdi,[rel d_154b0]
+        mov rdi,[rel ata_sectors]
         shr rdi,byte 0xb
         call print_number
         lea rdi,[rel d_158ed]
@@ -8571,7 +8588,7 @@ L_0dfca:
         lea rdi,[rel d_15da7]
         call api_print
         call fn_0dd4b
-        mov rdi,[rel d_154b0]
+        mov rdi,[rel ata_sectors]
         sub rdi,rdx
         shr rdi,1
         call print_number
@@ -8616,7 +8633,7 @@ fn_0e054:
 L_0e075:
         push rbx
         mov rbx,rdi
-        mov rdx,[rel d_154b0]
+        mov rdx,[rel ata_sectors]
         sub rdx,rbx
         cmp rdx,0x40
         jna short L_0e08e
@@ -8661,7 +8678,7 @@ L_0e0ee:
         push r13
         push r14
         push r15
-        cmp byte [rel d_15498],0x0
+        cmp byte [rel ata_there],0x0
         jnz short L_0e111
         lea rdi,[rel d_158a2]
         call api_print
@@ -8681,7 +8698,7 @@ L_0e111:
         xor r15d,r15d
 
 L_0e14d:
-        cmp rbx,[rel d_154b0]
+        cmp rbx,[rel ata_sectors]
         jnc near L_0e1eb
         mov rdi,rbx
         call fn_0e054
@@ -8775,7 +8792,7 @@ L_0e274:
         mov rbx,rax
 
 L_0e287:
-        cmp rbx,[rel d_154b0]
+        cmp rbx,[rel ata_sectors]
         jnc near L_0e341
         mov rdi,rbx
         call fn_0e054
@@ -9153,7 +9170,7 @@ cmd_recover:
         call fn_0d130
         cmp rax,0xffffffffffffffff
         jnz near L_0e7b5
-        cmp rbx,[rel d_154b0]
+        cmp rbx,[rel ata_sectors]
         jnc near L_0e787
         mov rdi,rbx
         lea rsi,[rel core_start + (v_42990 - 0x7E00)]
@@ -9339,7 +9356,7 @@ fn_0e8a9:
         jna short L_0e905
         call fn_0e996
         lea rcx,[rax+r13]
-        cmp rcx,[rel d_154b0]
+        cmp rcx,[rel ata_sectors]
         ja short L_0e905
         mov rdi,r15
         mov rsi,rax
@@ -9513,7 +9530,7 @@ L_0eaaa:
 
 L_0eab8:
         mov rdi,rbx
-        call fn_0b642
+        call say_no_object
 
 L_0eac0:
         pop r13
@@ -9535,7 +9552,7 @@ fn_0eade:
         push rdx
         push rcx
         mov rdi,rsi
-        call fn_0ee0a
+        call shield_fault
         mov [rel d_167a0],rax
         pop rcx
         pop rdx
@@ -9789,7 +9806,8 @@ L_0ee05:
 ; says: '[shield] object fault: '
 ; says: ' at '
 ; says: ... and 1 more texts
-fn_0ee0a:
+; a fault in an object: written to the log
+shield_fault:
         push rbx
         push r12
         push r13
@@ -9895,7 +9913,7 @@ L_0eed2:
         call api_log
         lea rdi,[rel d_153bf]
         call api_log
-        call fn_0efb0
+        call shield_stopped
         mov rax,0xffffffffffffffff
         jmp near L_0eba6
 
@@ -9949,7 +9967,8 @@ L_0efac:
 
 ; says: 'Object '
 ; says: ') and was stopped - NinuxOS keeps running.'
-fn_0efb0:
+; "Object NAME ... was stopped - NinuxOS keeps running."
+shield_stopped:
         lea rdi,[rel core_start + (v_42d90 - 0x7E00)]
         lea rsi,[rel d_16517]
         call fn_0f05a
@@ -10000,7 +10019,8 @@ L_0f06a:
 ; says: '[shield] 2/5 IDT gates 0x80 (API) and 0x81 (return)'
 ; says: '[shield] 3/5 trampolines and user stack'
 ; says: ... and 2 more texts
-fn_0f06b:
+; the shield, steps 1-4: GDT, IDT gates, trampolines, the user stack
+shield_start:
         push rbx
         push r12
         lea rdi,[rel d_16557]
@@ -10108,10 +10128,11 @@ L_0f21b:
 ; says: '[shield] 5/5 self-test in ring 3'
 ; says: '[shield] ON'
 ; says: '[shield] self-test failed - the shield stays off'
-fn_0f21f:
+; the shield, step 5: a test in ring 3
+shield_selftest:
         cmp byte [rel d_16251],0x0
         jnz short L_0f238
-        call fn_0f06b
+        call shield_start
         test eax,eax
         jz short L_0f27c
         mov byte [rel d_16251],0x1
@@ -10439,7 +10460,7 @@ L_0f665:
         jmp short L_0f6fd
 
 L_0f686:
-        call fn_0f21f
+        call shield_selftest
         test eax,eax
         jz short L_0f69d
         lea rdi,[rel d_16428]
@@ -10842,7 +10863,7 @@ fn_0fa56:
         mov eax,[rbx+0x1c]
         test eax,eax
         jnz short L_0fa81
-        call fn_0fa9b
+        call room_load
         test rax,rax
         jz short L_0fa8b
 
@@ -10868,8 +10889,9 @@ L_0fa8d:
 
 ; says: '[room] loaded on first use: '
 ; says: '[room] REFUSED (identity does not match the table): '
-fn_0fa9b:
-        cmp byte [rel d_15498],0x0
+; an object of the storage room loaded on first use
+room_load:
+        cmp byte [rel ata_there],0x0
         jz near L_0fb4d
         mov edi,[rbx+0x14]
         test edi,edi
@@ -11831,7 +11853,7 @@ L_104a8:
 
 L_104b6:
         mov rdi,rbx
-        call fn_0b642
+        call say_no_object
         jmp short L_10510
 
 L_104c0:
@@ -11929,7 +11951,7 @@ L_105d1:
 
 L_105df:
         mov rdi,rbx
-        call fn_0b642
+        call say_no_object
         jmp short L_10601
 
 L_105e9:
@@ -11978,7 +12000,7 @@ L_10653:
 
 L_10661:
         mov rdi,rbx
-        call fn_0b642
+        call say_no_object
 
 L_10669:
         pop rbx
@@ -12010,7 +12032,8 @@ L_1067d:
 ; says: ' bytes, extension '
 ; says: ' bytes: SHA-256 ok'
 ; says: ... and 1 more texts
-fn_1069d:
+; the log line with the sizes of core and extension
+ext_log:
         mov edi,0x50000
         cmp dword [rdi],0x5845584e
         jnz short L_106df
@@ -12051,7 +12074,8 @@ L_10730:
 ; says: ' bytes + extension '
 ; says: ' bytes (SHA-256 verified).'
 ; says: ... and 1 more texts
-fn_10735:
+; the line "Kernel: core N bytes + extension N bytes"
+say_kernel:
         lea rdi,[rel d_16f1f]
         call api_print
         mov edi,[rel d_085dc]
@@ -12176,7 +12200,7 @@ L_1089b:
 
 fn_108a1:
         cmp byte [rel d_16e45],0x0
-        jnz near fn_50d2a
+        jnz near admin_ask
         mov eax,0x2
         retq
 
@@ -12323,7 +12347,7 @@ cmd_shot:
 ; says: 'This command lives in the kernel extension, which failed its SHA-256 check.'
 cmd_away:
         cmp byte [rel d_16e45],0x0
-        jnz near fn_51dfa
+        jnz near screen_lock
         lea rdi,[rel d_16e98]
         jmp near api_print
 
@@ -12394,7 +12418,7 @@ fn_10ba9:
         cmp byte [rel d_10ca3],0x0
         jnz short L_10ba8
         mov byte [rel d_10ca3],0x1
-        call fn_51dfa
+        call screen_lock
         mov byte [rel d_10ca3],0x0
         retq
 
@@ -12415,7 +12439,7 @@ fn_10bdd:
         jnz short L_10c24
         test word [rax+0xa],0x40
         jz short L_10c24
-        call fn_6df1a
+        call suits_command
         test eax,eax
         jnz short L_10c24
         call fn_10ba9
@@ -12722,7 +12746,7 @@ fn_11011:
 
 L_1101f:
         cmp byte [rel d_16e45],0x0
-        jnz near fn_6af0a
+        jnz near usb_disk_io
         xor eax,eax
         retq
 
@@ -12751,7 +12775,7 @@ fn_1105d:
 
 L_1106d:
         cmp byte [rel d_16e45],0x0
-        jnz near L_646c2
+        jnz near ahci_io
         xor eax,eax
         retq
 
@@ -12768,7 +12792,7 @@ fn_1108b:
 p_11099:
         mov eax,0x1
         cmp byte [rel d_16e45],0x0
-        jnz near fn_61eaa
+        jnz near say_cores
         retq
         db 0x00, 0x00, 0x00, 0x00
 
@@ -14276,10 +14300,12 @@ d_1544e:
 d_15487:
         db 'memtest: FAILED', 10, 0
 
-d_15498:
+; 1: an ATA disk answered
+ata_there:
         db 0x00
 
-d_15499:
+; added to every sector of the boot disk
+disk_base:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 d_154a1:
@@ -14294,7 +14320,8 @@ d_154aa:
 d_154ab:
         db 0x00, 0x90, 0x90, 0x90, 0x90
 
-d_154b0:
+; how many sectors the ATA disk said it has
+ata_sectors:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
 d_154b8:
@@ -15167,7 +15194,7 @@ L_5012d:
 L_5016a:
         cmp dword [r12+0x48],0x1
         jnz short L_5017d
-        call fn_50d2a
+        call admin_ask
         test eax,eax
         jz short L_5017d
         jmp short L_501d3
@@ -15396,7 +15423,7 @@ L_503ec:
         lea rdi,[rel d_526c5]
         mov edx,0x1
         xor ecx,ecx
-        call fn_51773
+        call sysop_ask
         test eax,eax
         jnz short L_50418
         lea rdi,[rel d_52536]
@@ -15509,7 +15536,7 @@ L_5052c:
         jmp short L_50552
 
 p_5053a:
-        call fn_50d2a
+        call admin_ask
         test eax,eax
         jnz short L_50551
         mov esi,0x1
@@ -15779,7 +15806,7 @@ L_50869:
         lea rsi,[rel d_52ac1]
         mov edx,0x1
         xor ecx,ecx
-        call fn_51773
+        call sysop_ask
         test eax,eax
         jnz short L_508a0
         lea rdi,[rel d_52536]
@@ -16164,7 +16191,7 @@ L_50cf7:
         retq
 
 p_50cf8:
-        call fn_50d2a
+        call admin_ask
         test eax,eax
         jnz short L_50d0f
         lea rdi,[rel d_52c75]
@@ -16178,12 +16205,12 @@ p_50d10:
         call fn_510c6
         cmp dword [rax+0x1c],0x0
         jz short L_50d24
-        call fn_50d2a
+        call admin_ask
         test eax,eax
         jnz short L_50d29
 
 L_50d24:
-        call fn_50e46
+        call admin_choose
 
 L_50d29:
         retq
@@ -16192,16 +16219,17 @@ L_50d29:
 ; says: 'Administrator password:'
 ; says: '[sysop] wrong admin password'
 ; says: ... and 3 more texts
-fn_50d2a:
+; the administrator's password asked
+admin_ask:
         call fn_510c6
         cmp dword [rax+0x1c],0x0
-        jz near fn_50e46
+        jz near admin_choose
         mov byte [rel d_521d0],0x0
         lea rdi,[rel d_52b8a]
         lea rsi,[rel d_52b98]
         mov edx,0x2
         xor ecx,ecx
-        call fn_51773
+        call sysop_ask
         test eax,eax
         jz near L_50e34
         lea rsi,[rel d_521d0]
@@ -16262,13 +16290,14 @@ L_50e34:
 ; says: 'No administrator password yet. Choose one:'
 ; says: 'Type the new password again:'
 ; says: ... and 4 more texts
-fn_50e46:
+; no administrator's password yet: one is chosen
+admin_choose:
         mov byte [rel d_521d0],0x0
         lea rdi,[rel d_52b8a]
         lea rsi,[rel d_52bb0]
         mov edx,0x2
         xor ecx,ecx
-        call fn_51773
+        call sysop_ask
         test eax,eax
         jz near L_50f20
         cmp byte [rel d_521d0],0x0
@@ -16282,7 +16311,7 @@ fn_50e46:
         lea rsi,[rel d_52bdb]
         mov edx,0x2
         xor ecx,ecx
-        call fn_51773
+        call sysop_ask
         test eax,eax
         jz short L_50f20
         lea rsi,[rel d_521d0]
@@ -16506,7 +16535,7 @@ fn_51130:
         call fn_0dc8a
         cmp rbx,rax
         jc near L_51209
-        cmp rbx,[rel d_154b0]
+        cmp rbx,[rel ata_sectors]
         jnc near L_51209
         mov rdi,rbx
         lea rsi,[rel core_start + (v_42990 - 0x7E00)]
@@ -16602,7 +16631,7 @@ p_5125c:
         call memory_ok
         test eax,eax
         jz near L_513a1
-        cmp byte [rel d_15498],0x0
+        cmp byte [rel ata_there],0x0
         jz near L_513a1
         mov edi,0x8000
         call api_memory
@@ -16616,7 +16645,7 @@ p_5125c:
         mov rbx,rax
 
 L_512bd:
-        cmp rbx,[rel d_154b0]
+        cmp rbx,[rel ata_sectors]
         jnc near L_51360
         cmp r13,0x20
         jnc near L_51360
@@ -16996,7 +17025,7 @@ L_51747:
         lea rsi,[rel core_start + (v_43c90 - 0x7E00)]
         xor edx,edx
         mov rcx,rbx
-        call fn_51773
+        call sysop_ask
         pop rbx
         test eax,eax
         jz short L_51761
@@ -17013,7 +17042,8 @@ L_51761:
 ; says: 'Enter = OK    ESC = cancel'
 ; says: 'Cancel'
 ; says: ... and 1 more texts
-fn_51773:
+; a question of the system on the screen (Enter = OK, ESC = cancel)
+sysop_ask:
         push rbx
         push rbp
         push r12
@@ -17416,7 +17446,7 @@ L_51daa:
         jmp short L_51df8
 
 L_51dc3:
-        call fn_50d2a
+        call admin_ask
         test eax,eax
         jnz short L_51df8
         mov rax,[rel cabinet_table]
@@ -17439,7 +17469,8 @@ L_51df8:
 ; says: '[lock] the screen is locked'
 ; says: 'the screen was locked'
 ; says: ... and 3 more texts
-fn_51dfa:
+; the screen locked
+screen_lock:
         push rbx
         call fn_510c6
         cmp dword [rax+0x1c],0x0
@@ -17483,7 +17514,7 @@ L_51e31:
         call api_text
 
 L_51ebb:
-        call fn_50d2a
+        call admin_ask
         test eax,eax
         jnz short L_51ebb
         lea rdi,[rel d_5261a]
@@ -17548,7 +17579,7 @@ L_51f60:
 
 L_51f6e:
         mov rdi,rbx
-        call fn_0b642
+        call say_no_object
 
 L_51f76:
         pop r13
@@ -18003,7 +18034,8 @@ d_52e2c:
         db 'usage: COMMAND NAME [ARG]  (maint)', 10, 0
 
 ; says: 'expand 32-byte k'
-fn_52e50:
+; ChaCha20: the state made from a key ("expand 32-byte k")
+chacha_setup:
         push rbx
         push rbp
         push r12
@@ -18394,7 +18426,7 @@ p_5335c:
         lea rsi,[rel d_53b52]
         mov edx,0x2
         xor ecx,ecx
-        call fn_51773
+        call sysop_ask
         test eax,eax
         jz near L_5359b
         cmp byte [rel d_521d0],0x0
@@ -18408,7 +18440,7 @@ p_5335c:
         lea rsi,[rel d_52bdb]
         mov edx,0x2
         xor ecx,ecx
-        call fn_51773
+        call sysop_ask
         test eax,eax
         jz near L_5359b
         lea rsi,[rel d_521d0]
@@ -18440,7 +18472,7 @@ p_5335c:
         mov rsi,[r12+0x58]
         lea rdx,[rel d_53a48]
         lea rcx,[rel d_53a10]
-        call fn_52e50
+        call chacha_setup
         lea rdi,[rel d_53a68]
         lea rsi,[rbx+0x28]
         mov rdx,[r12+0x58]
@@ -18560,7 +18592,7 @@ p_535ea:
         lea rsi,[rel d_53ba7]
         mov edx,0x2
         xor ecx,ecx
-        call fn_51773
+        call sysop_ask
         test eax,eax
         jz near L_5374d
         lea rdi,[rel d_53a10]
@@ -18594,7 +18626,7 @@ p_535ea:
         sub rsi,0x38
         lea rdx,[rel d_53a48]
         lea rcx,[rel d_53a10]
-        call fn_52e50
+        call chacha_setup
         call fn_5334b
         mov rdi,rbx
         mov rsi,[r12+0x58]
@@ -18963,10 +18995,10 @@ mux_run:
 %endif
         call mux_hooks_on
         mov byte [rel mux_on],0x1
-        call fn_56e7f
+        call mux_cores_say
 
 L_53e23:
-        call fn_0b6b0
+        call boot_desktop_mark
         call fn_6d9cc
         xor ebx,ebx
 
@@ -21417,7 +21449,7 @@ L_55d60:
         pop rdi
         test eax,eax
         jz near L_55b31
-        jmp near fn_56087
+        jmp near mux_kill
 
 L_55d7c:
         cmp rsi,0x8
@@ -21677,7 +21709,8 @@ L_56062:
 
 ; says: 'name'
 ; says: '[mux] a program was closed by kill'
-fn_56087:
+; a program closed by kill
+mux_kill:
         push rbx
         push r12
         push r13
@@ -21785,7 +21818,7 @@ L_56168:
         jz short L_56198
         cmp byte [rel mux_on],0x0
         jz short L_5618c
-        call fn_56087
+        call mux_kill
         test rax,rax
         jz short L_5618c
         lea rdi,[rel d_567d9]
@@ -21839,7 +21872,7 @@ L_56206:
         mov ecx,0x200
         rep stosb
         mov rdi,[rel d_56490]
-        call fn_569e7
+        call mux_memory
         test eax,eax
         jz near L_5635a
         mov rdi,rbp
@@ -21956,7 +21989,7 @@ L_563bf:
         test rax,rax
         jz short L_56431
         mov rbx,rax
-        cmp byte [rel d_15498],0x0
+        cmp byte [rel ata_there],0x0
         jz short L_5640b
         cmp qword [r12+0x38],0x1
         jnz short L_5640b
@@ -22306,7 +22339,8 @@ L_569db:
         retq
 
 ; says: '[mux] own memory + page tables for the new program at '
-fn_569e7:
+; own memory and page tables for a new program
+mux_memory:
         push rbx
         push r12
         mov rbx,rdi
@@ -22671,7 +22705,8 @@ L_56e7e:
 ; says: '[mux] programs take turns on the first core only ('
 ; says: '[mux] programs run on every core: '
 ; says: ' more core(s) take turns too'
-fn_56e7f:
+; says whether programs take turns on one core or run on every core
+mux_cores_say:
         mov byte [rel d_564a8],0x0
         cmp byte [rel d_16250],0x0
         jz short L_56ede
@@ -23023,16 +23058,17 @@ L_572bf:
         retq
 
 d_572c0:
-        call fn_572cf
+        call pt_run_divide
         retq
 
 d_572c6:
-        call fn_572cf
+        call pt_run_divide
         mov rax,rdx
         retq
 
 ; says: 'division by zero'
-fn_572cf:
+; the old PyTon in the kernel: the place that says "division by zero"
+pt_run_divide:
         test rsi,rsi
         jz short L_572fc
         mov rax,rdi
@@ -23094,7 +23130,8 @@ L_57363:
 
 ; says: 'this list has no value yet'
 ; says: 'index out of range'
-fn_57364:
+; the old PyTon: the place that says "index out of range"
+pt_run_index:
         test rdi,rdi
         jz short L_57377
         test rsi,rsi
@@ -23115,7 +23152,7 @@ d_5738f:
         db 0xE8, 0xD0, 0xFF, 0xFF, 0xFF, 0x48, 0x8B, 0x44, 0xF7, 0x08, 0xC3
 
 d_5739a:
-        call fn_57364
+        call pt_run_index
         mov [rdi+rsi*8+0x8],rdx
         retq
 
@@ -23261,7 +23298,7 @@ L_57555:
         cmp dword [rax+0x8],0x0
         jnz short L_5762e
         xor edi,edi
-        call fn_57aea
+        call pt_indent
 
 L_5760c:
         jmp short L_57611
@@ -23273,7 +23310,7 @@ L_57611:
         lea rsi,[rel d_5760e]
         mov ecx,0x3
         call fn_577ea
-        call fn_58737
+        call pt_functions_check
         mov eax,0x1
         jmp short L_57647
 
@@ -23418,7 +23455,8 @@ L_57785:
         retq
 
 ; says: 'the program is too big'
-fn_57786:
+; the old PyTon: the place that says "the program is too big"
+pt_too_big:
         mov rdx,[rel d_5a000]
         cmp rdx,0x1fff0
         jnc short L_577a8
@@ -23433,16 +23471,16 @@ L_577a8:
 
 fn_577b4:
         push rax
-        call fn_57786
+        call pt_too_big
         mov eax,[rsp]
         shr eax,byte 0x8
-        call fn_57786
+        call pt_too_big
         mov eax,[rsp]
         shr eax,byte 0x10
-        call fn_57786
+        call pt_too_big
         mov eax,[rsp]
         shr eax,byte 0x18
-        call fn_57786
+        call pt_too_big
         pop rax
         retq
 
@@ -23459,7 +23497,7 @@ fn_577ea:
         push rsi
         push rcx
         mov al,[rsi]
-        call fn_57786
+        call pt_too_big
         pop rcx
         pop rsi
         inc rsi
@@ -23472,14 +23510,14 @@ L_57800:
 fn_57801:
         push rax
         mov al,0xf
-        call fn_57786
+        call pt_too_big
         pop rax
-        call fn_57786
+        call pt_too_big
         jmp short fn_57818
 
 fn_57811:
         mov al,0xe9
-        call fn_57786
+        call pt_too_big
 
 fn_57818:
         mov rax,[rel d_5a000]
@@ -23502,7 +23540,7 @@ fn_57830:
 fn_57842:
         push rdi
         mov al,0xe9
-        call fn_57786
+        call pt_too_big
         pop rax
         sub rax,[rel d_5a000]
         sub rax,0x4
@@ -23511,7 +23549,7 @@ fn_57842:
 fn_5785b:
         push rdi
         mov al,0xe8
-        call fn_57786
+        call pt_too_big
         pop rax
         lea rcx,[rel d_570c0]
         sub rax,rcx
@@ -23690,7 +23728,8 @@ L_579e1:
         retq
 
 ; says: 'unexpected text at the end of the line'
-fn_579e2:
+; the old PyTon: "unexpected text at the end of the line"
+pt_line_end:
         call fn_579d0
         jnz short L_579ea
         retq
@@ -23721,7 +23760,8 @@ L_57a0e:
         retq
 
 ; says: 'a name is longer than 23 letters'
-fn_57a10:
+; the old PyTon: "a name is longer than 23 letters"
+pt_name:
         call fn_579bc
         mov al,[r12]
         cmp al,0x30
@@ -23782,7 +23822,7 @@ L_57a7f:
 fn_57a82:
         push r12
         push rsi
-        call fn_57a10
+        call pt_name
         pop rsi
         test eax,eax
         jz short L_57aa2
@@ -23811,7 +23851,8 @@ L_57abb:
         retq
 
 ; says: 'expected '
-fn_57abe:
+; the old PyTon: "expected ..."
+pt_expect:
         call fn_57aa7
         test eax,eax
         jz short L_57ac8
@@ -23829,7 +23870,8 @@ fn_57adb:
         retq
 
 ; says: 'unexpected indent'
-fn_57aea:
+; the old PyTon: "unexpected indent"
+pt_indent:
         push rbx
         mov ebx,edi
 
@@ -23842,7 +23884,7 @@ L_57aed:
         cmp ecx,ebx
         jc short L_57b12
         ja short L_57b14
-        call fn_57b5b
+        call pt_statement
         jmp short L_57aed
 
 L_57b12:
@@ -23856,7 +23898,8 @@ L_57b14:
         jmp near L_57652
 
 ; says: 'expected an indented block after '
-fn_57b2a:
+; the old PyTon: "expected an indented block after ..."
+pt_block:
         mov rax,[rel d_59ff0]
         cmp rax,[rel d_59fe8]
         jnc short L_57b4f
@@ -23868,7 +23911,7 @@ fn_57b2a:
         cmp ecx,edi
         jna short L_57b4f
         mov edi,ecx
-        jmp short fn_57aea
+        jmp short pt_indent
 
 L_57b4f:
         lea rdi,[rel d_5ab64]
@@ -23878,7 +23921,8 @@ L_57b4f:
 ; says: 'return'
 ; says: 'break'
 ; says: ... and 10 more texts
-fn_57b5b:
+; the old PyTon: a statement (while, return ...)
+pt_statement:
         push rbx
         push rbp
         mov rdi,[rel d_59ff0]
@@ -23890,7 +23934,7 @@ fn_57b5b:
         inc qword [rel d_59ff0]
         mov qword [rel d_5a060],0x0
         push r12
-        call fn_57a10
+        call pt_name
         pop rcx
         test eax,eax
         jz near L_57c89
@@ -23954,7 +23998,7 @@ L_57c95:
         jmp near L_57652
 
 L_57ca1:
-        call fn_579e2
+        call pt_line_end
         jmp near L_57fb1
 
 L_57cab:
@@ -23965,10 +24009,10 @@ L_57cba:
         call fn_57fb4
         push rax
         mov edi,0x3a
-        call fn_57abe
-        call fn_579e2
+        call pt_expect
+        call pt_line_end
         mov edi,ebx
-        call fn_57b2a
+        call pt_block
         pop rbp
         mov rdi,[rel d_59ff0]
         cmp rdi,[rel d_59fe8]
@@ -23978,7 +24022,7 @@ L_57cba:
         jnz near L_57d79
         mov r12,[rax]
         push rax
-        call fn_57a10
+        call pt_name
         pop rdx
         test eax,eax
         jz short L_57d79
@@ -24003,10 +24047,10 @@ L_57cba:
         test r8d,r8d
         jnz near L_57cba
         mov edi,0x3a
-        call fn_57abe
-        call fn_579e2
+        call pt_expect
+        call pt_line_end
         mov edi,ebx
-        call fn_57b2a
+        call pt_block
         jmp short L_57d81
 
 L_57d79:
@@ -24040,10 +24084,10 @@ L_57db2:
         call fn_57fb4
         push rax
         mov edi,0x3a
-        call fn_57abe
-        call fn_579e2
+        call pt_expect
+        call pt_line_end
         mov edi,ebx
-        call fn_57b2a
+        call pt_block
         mov rdi,rbp
         call fn_58094
         mov rdi,rbp
@@ -24077,7 +24121,7 @@ L_57e27:
         call fn_58cb2
         cmp al,0x0
         jnz short L_57e85
-        call fn_579e2
+        call pt_line_end
         jmp short L_57e5c
 
 L_57e47:
@@ -24112,7 +24156,7 @@ L_57e85:
         jmp near L_57652
 
 L_57e91:
-        call fn_579e2
+        call pt_line_end
         call fn_57811
         mov rdi,rax
         xor esi,esi
@@ -24120,7 +24164,7 @@ L_57e91:
         jmp near L_57fb1
 
 L_57eaa:
-        call fn_579e2
+        call pt_line_end
         call fn_57811
         mov rdi,rax
         mov esi,0x1
@@ -24132,7 +24176,7 @@ L_57ec6:
         jz short L_57f18
 
 L_57ecf:
-        call fn_57a10
+        call pt_name
         test eax,eax
         jz near L_57c89
         mov rcx,[rel d_5a050]
@@ -24151,12 +24195,12 @@ L_57ecf:
         jnz short L_57ecf
 
 L_57f18:
-        call fn_579e2
+        call pt_line_end
         jmp near L_57fb1
 
 L_57f22:
         mov edi,0x28
-        call fn_57abe
+        call pt_expect
         lea rdi,[rel d_573e7]
         call fn_5785b
         mov dil,0x29
@@ -24191,10 +24235,10 @@ L_57f77:
         test eax,eax
         jnz short L_57f44
         mov edi,0x29
-        call fn_57abe
+        call pt_expect
 
 L_57f92:
-        call fn_579e2
+        call pt_line_end
         lea rdi,[rel d_5743f]
         call fn_5785b
         jmp short L_57fb1
@@ -24246,7 +24290,8 @@ L_5801b:
         jmp near L_57652
 
 ; says: 'break / continue outside a loop'
-fn_58027:
+; the old PyTon: "break / continue outside a loop"
+pt_break_continue:
         mov rax,[rel d_5a028]
         test rax,rax
         jz short L_58048
@@ -24263,7 +24308,7 @@ L_58048:
 ; says: 'blocks nested too deeply'
 fn_58054:
         push rdi
-        call fn_58027
+        call pt_break_continue
         pop rdi
         test esi,esi
         jnz short L_58071
@@ -24290,7 +24335,7 @@ fn_58094:
         push rbx
         push r13
         mov r13,rdi
-        call fn_58027
+        call pt_break_continue
         mov rbx,rax
         xor ecx,ecx
 
@@ -24312,7 +24357,7 @@ L_580c1:
 
 fn_580c5:
         push rbx
-        call fn_58027
+        call pt_break_continue
         mov rbx,rax
         xor ecx,ecx
 
@@ -24336,7 +24381,7 @@ fn_580ef:
         push r13
         push r14
         push r15
-        call fn_57a10
+        call pt_name
         test eax,eax
         jz near L_584bd
         lea rsi,[rel d_5a0b0]
@@ -24354,7 +24399,7 @@ fn_580ef:
         test eax,eax
         jz near L_58332
         mov edi,0x28
-        call fn_57abe
+        call pt_expect
         call fn_58cb2
         cmp al,0x0
         jnz near L_584c9
@@ -24422,7 +24467,7 @@ L_581f3:
         cmp eax,0x9
         ja near L_584d5
         push r8
-        call fn_5947f
+        call pt_number
         pop r8
         test r8d,r8d
         jz short L_58215
@@ -24435,10 +24480,10 @@ L_58215:
 
 L_58221:
         mov edi,0x29
-        call fn_57abe
+        call pt_expect
         lea rsi,[rel d_5a0f0]
         mov edx,0x0
-        call fn_58977
+        call pt_variable_kind
         mov r13,rax
         mov rdi,r13
         call fn_57915
@@ -24456,7 +24501,7 @@ L_58257:
         call fn_577ea
         mov rdi,r14
         call fn_57915
-        call fn_584ae
+        call pt_range
         call fn_57fe6
         mov rax,[rel d_5a000]
         mov [rel d_5a070],rax
@@ -24492,7 +24537,7 @@ L_582d3:
         call fn_57801
         push rax
         mov edi,ebx
-        call fn_57b2a
+        call pt_block
         mov rdi,[rel d_5a000]
         call fn_58094
         mov rdi,r13
@@ -24544,9 +24589,9 @@ L_58368:
         call fn_57915
         lea rsi,[rel d_5a0f0]
         mov edx,0x0
-        call fn_58977
+        call pt_variable_kind
         mov r13,rax
-        call fn_584ae
+        call pt_range
         call fn_57fe6
         push qword [rel d_5a000]
         mov rdi,r14
@@ -24612,7 +24657,7 @@ L_58435:
         mov rdi,r13
         call fn_57915
         mov edi,ebx
-        call fn_57b2a
+        call pt_block
         mov rdi,[rel d_5a000]
         call fn_58094
         mov rdi,r15
@@ -24645,10 +24690,11 @@ L_584a7:
 ; says: 'range() needs numbers'
 ; says: 'the range() step must be a number like 2 or -1'
 ; says: ... and 1 more texts
-fn_584ae:
+; the old PyTon: "range() needs numbers"
+pt_range:
         mov edi,0x3a
-        call fn_57abe
-        jmp near fn_579e2
+        call pt_expect
+        jmp near pt_line_end
 
 L_584bd:
         lea rdi,[rel d_5abde]
@@ -24669,10 +24715,10 @@ L_584e1:
 fn_584ed:
         push r13
         push r14
-        call fn_57a10
+        call pt_name
         test eax,eax
         jz near L_58694
-        call fn_586b8
+        call pt_function_new
         mov r13,rax
         cmp qword [r13+0x28],0x0
         jnz near L_586a0
@@ -24708,7 +24754,7 @@ L_58570:
         xor eax,eax
         call fn_577b4
         mov edi,0x28
-        call fn_57abe
+        call pt_expect
         xor ecx,ecx
         mov [rel d_5a058],rcx
         mov dil,0x29
@@ -24717,7 +24763,7 @@ L_58570:
         jnz short L_5861a
 
 L_585b5:
-        call fn_57a10
+        call pt_name
         test eax,eax
         jz near L_58694
         cmp qword [rel d_5a058],0x6
@@ -24738,16 +24784,16 @@ L_585b5:
         test eax,eax
         jnz short L_585b5
         mov edi,0x29
-        call fn_57abe
+        call pt_expect
 
 L_5861a:
         mov rax,[rel d_5a058]
         mov [r13+0x20],rax
         mov edi,0x3a
-        call fn_57abe
-        call fn_579e2
+        call pt_expect
+        call pt_line_end
         xor edi,edi
-        call fn_57b2a
+        call pt_block
         jmp short L_58644
 
 d_5863d:
@@ -24784,7 +24830,8 @@ L_586ac:
         jmp near L_57652
 
 ; says: 'too many functions'
-fn_586b8:
+; the old PyTon: "too many functions"
+pt_function_new:
         xor ecx,ecx
 
 L_586ba:
@@ -24828,7 +24875,8 @@ L_5872b:
 
 ; says: 'a function is called but never defined'
 ; says: 'a function is called with the wrong number of arguments'
-fn_58737:
+; the old PyTon: "a function is called but never defined"
+pt_functions_check:
         push rbx
         xor ebx,ebx
 
@@ -25022,7 +25070,8 @@ L_58919:
         jmp near L_57652
 
 ; says: 'a name is used before it gets a value'
-fn_58925:
+; the old PyTon: "a name is used before it gets a value"
+pt_variable_use:
         lea rsi,[rel d_5a0b0]
         cmp byte [rel d_5a088],0x0
         jz short L_5893f
@@ -25049,7 +25098,8 @@ L_5896b:
         jmp near L_57652
 
 ; says: 'a variable changes its kind (number / text / list) - not compiled'
-fn_58977:
+; the old PyTon: "a variable changes its kind"
+pt_variable_kind:
         push rsi
         push rdx
         cmp byte [rel d_5a088],0x0
@@ -25131,11 +25181,11 @@ fn_58a24:
         movzx edx,al
         lea rsi,[rel d_5a0d0]
         push rdx
-        call fn_58977
+        call pt_variable_kind
         pop rdx
         mov rdi,rax
         call fn_57915
-        call fn_579e2
+        call pt_line_end
         pop rbx
         retq
 
@@ -25156,7 +25206,7 @@ L_58aad:
         lea rdi,[rel d_5a0b0]
         mov ecx,0x18
         rep movsb
-        call fn_58925
+        call pt_variable_use
         push rax
         mov rdi,rax
         call fn_5789b
@@ -25227,7 +25277,7 @@ L_58b61:
 L_58b72:
         pop rdi
         call fn_57915
-        call fn_579e2
+        call pt_line_end
         pop rbx
         retq
 
@@ -25257,7 +25307,7 @@ L_58bb5:
         lea rdi,[rel d_5a0b0]
         mov ecx,0x18
         rep movsb
-        call fn_58925
+        call pt_variable_use
         cmp byte [rax+0x18],0x2
         jnz near L_58c8e
         mov rdi,rax
@@ -25284,9 +25334,9 @@ L_58c08:
         mov ecx,0x1
         call fn_577ea
         mov edi,0x5d
-        call fn_57abe
+        call pt_expect
         mov edi,0x3d
-        call fn_57abe
+        call pt_expect
         call fn_58cb2
         cmp al,0x0
         jnz short L_58ca6
@@ -25301,7 +25351,7 @@ L_58c3d:
         call fn_577ea
         lea rdi,[rel d_5739a]
         call fn_5785b
-        call fn_579e2
+        call pt_line_end
         pop rbx
         retq
 
@@ -25311,7 +25361,7 @@ L_58c61:
         mov ecx,0x18
         rep movsb
         call fn_5958b
-        call fn_579e2
+        call pt_line_end
         pop rbx
         retq
 
@@ -25545,11 +25595,11 @@ L_58eb4:
 
 L_58ec5:
         mov al,0xf
-        call fn_57786
+        call pt_too_big
         pop rax
-        call fn_57786
+        call pt_too_big
         mov al,0xc0
-        call fn_57786
+        call pt_too_big
         jmp short L_58ede
 
 d_58edb:
@@ -25837,7 +25887,7 @@ L_5918e:
 
 L_5919a:
         push rbx
-        call fn_59233
+        call pt_true_false
 
 L_591a0:
         movzx ebx,al
@@ -25866,7 +25916,7 @@ L_591c0:
         cmp al,0x0
         jnz short L_5921b
         mov edi,0x5d
-        call fn_57abe
+        call pt_expect
         jmp short L_591ea
 
 d_591e6:
@@ -25900,7 +25950,8 @@ L_59227:
 ; says: 'True'
 ; says: 'False'
 ; says: 'None'
-fn_59233:
+; the old PyTon: True / False
+pt_true_false:
         call fn_579bc
         mov al,[r12]
         cmp al,0x28
@@ -25909,7 +25960,7 @@ fn_59233:
         call fn_58cb2
         push rax
         mov edi,0x29
-        call fn_57abe
+        call pt_expect
         pop rax
         retq
 
@@ -25918,7 +25969,7 @@ L_59255:
         jc short L_5926a
         cmp al,0x39
         ja short L_5926a
-        call fn_5947f
+        call pt_number
         call fn_5943f
         mov al,0x0
         retq
@@ -25932,7 +25983,7 @@ L_5926a:
         jz near L_59326
         cmp al,0x7b
         jz near L_59427
-        call fn_57a10
+        call pt_name
         test eax,eax
         jz near L_59433
         call fn_579bc
@@ -25950,7 +26001,7 @@ L_5926a:
         call fn_57a60
         test eax,eax
         jnz short L_592f7
-        call fn_58925
+        call pt_variable_use
         push rax
         mov rdi,rax
         call fn_5789b
@@ -25971,7 +26022,7 @@ L_592f7:
         retq
 
 L_59301:
-        call fn_59504
+        call pt_text
         push rax
         jmp short L_5930c
 
@@ -26015,7 +26066,7 @@ L_5934c:
         test eax,eax
         jnz short L_5933c
         mov edi,0x5d
-        call fn_57abe
+        call pt_expect
         cmp rbx,0x1
         jnz short L_593bf
         call fn_579bc
@@ -26121,7 +26172,8 @@ L_59468:
         jmp near L_577dd
 
 ; says: 'fractions (floats, /) are not compiled yet - use //'
-fn_5947f:
+; the old PyTon: a number ("fractions are not compiled yet")
+pt_number:
         xor eax,eax
         cmp byte [r12],0x30
         jnz short L_594c9
@@ -26179,7 +26231,8 @@ L_59503:
 
 ; says: 'a text is missing its closing quote'
 ; says: 'too much text in the program'
-fn_59504:
+; the old PyTon: a text ("a text is missing its closing quote")
+pt_text:
         mov dl,[r12]
         inc r12
         mov rdi,[rel d_59fe0]
@@ -26274,10 +26327,10 @@ L_595e5:
         jmp qword near [rdx+rax*8]
 
 L_595f2:
-        call fn_586b8
+        call pt_function_new
         push rax
         mov edi,0x28
-        call fn_57abe
+        call pt_expect
         xor ebx,ebx
         mov dil,0x29
         call fn_57aa7
@@ -26303,7 +26356,7 @@ L_59620:
         test eax,eax
         jnz short L_59610
         mov edi,0x29
-        call fn_57abe
+        call pt_expect
 
 L_5964a:
         cmp rbx,0x6
@@ -26311,7 +26364,7 @@ L_5964a:
         mov rcx,rbx
         call fn_5973b
         mov al,0xe8
-        call fn_57786
+        call pt_too_big
         call fn_57818
         mov rcx,[rel d_5a020]
         cmp rcx,0x180
@@ -26342,7 +26395,7 @@ L_596b2:
 fn_596be:
         push rbx
         mov edi,0x28
-        call fn_57abe
+        call pt_expect
         xor ebx,ebx
         cmp byte [r13+0x0],0x0
         jz short L_59720
@@ -26378,12 +26431,12 @@ L_596f8:
         cmp byte [r13+rbx+0x0],0x0
         jz short L_59720
         mov edi,0x2c
-        call fn_57abe
+        call pt_expect
         jmp short L_596d2
 
 L_59720:
         mov edi,0x29
-        call fn_57abe
+        call pt_expect
         mov rax,rbx
         pop rbx
         retq
@@ -26436,9 +26489,9 @@ L_59777:
 
 fn_59794:
         mov edi,0x28
-        call fn_57abe
+        call pt_expect
         mov edi,0x29
-        jmp near fn_57abe
+        jmp near pt_expect
 
 p_597a8:
         mov eax,0x18
@@ -26471,7 +26524,7 @@ L_597d1:
         retq
 
 p_597e8:
-        call fn_59935
+        call pt_builtin
         lea rdi,[rel d_57244]
         cmp al,0x1
         jz short L_59807
@@ -26498,7 +26551,7 @@ L_5980d:
         retq
 
 p_5982a:
-        call fn_59935
+        call pt_builtin
         cmp al,0x1
         jz short L_5985d
         cmp al,0x0
@@ -26522,7 +26575,7 @@ L_5985d:
         retq
 
 p_59863:
-        call fn_59935
+        call pt_builtin
         cmp al,0x0
         jz short L_59896
         cmp al,0x1
@@ -26546,7 +26599,7 @@ L_59896:
         retq
 
 p_5989c:
-        call fn_59935
+        call pt_builtin
         cmp al,0x1
         jnz near L_59951
         jmp short L_598ae
@@ -26564,7 +26617,7 @@ L_598ae:
         retq
 
 p_598c5:
-        call fn_59935
+        call pt_builtin
         cmp al,0x0
         jnz near L_59951
         jmp short L_598de
@@ -26601,22 +26654,23 @@ L_59910:
         mov ecx,0x7
         call fn_577ea
         mov al,bl
-        call fn_57786
+        call pt_too_big
         mov al,0xc1
-        call fn_57786
+        call pt_too_big
         mov al,0x0
         pop r13
         pop rbx
         retq
 
 ; says: 'a built-in function got the wrong kind of value'
-fn_59935:
+; the old PyTon: "a built-in function got the wrong kind of value"
+pt_builtin:
         mov edi,0x28
-        call fn_57abe
+        call pt_expect
         call fn_58cb2
         push rax
         mov edi,0x29
-        call fn_57abe
+        call pt_expect
         pop rax
         retq
 
@@ -26720,7 +26774,7 @@ L_59a7b:
         call api_print
         jmp short L_59adb
         mov rdi,rbx
-        call fn_0b642
+        call say_no_object
         jmp short L_59adb
 
 L_59ac3:
@@ -26866,7 +26920,7 @@ L_59c58:
         call fn_57510
         test eax,eax
         jz near L_59d33
-        call fn_59dd3
+        call pt_object_meta
         test rax,rax
         jz near L_59d25
         mov r13,rax
@@ -26976,7 +27030,8 @@ L_59dd2:
 ; says: 'name:'
 ; says: 'label:'
 ; says: ... and 7 more texts
-fn_59dd3:
+; the old PyTon: the META of the object made (type:app, name:)
+pt_object_meta:
         push rbx
         push r12
         push r13
@@ -27827,12 +27882,12 @@ L_5b2fb:
 p_5b307:
         call fn_5b289
         xor edi,edi
-        call fn_61eaa
+        call say_cores
         call fn_5b25d
         lea rsi,[rel d_5da05]
         call fn_5b23b
         mov edi,0x1
-        call fn_61eaa
+        call say_cores
         jmp near fn_5b25d
 
 p_5b333:
@@ -28514,7 +28569,7 @@ L_5ddf3:
         mov rdi,rax
         call fn_0fa2f
         mov rbx,rax
-        cmp byte [rel d_15498],0x0
+        cmp byte [rel ata_there],0x0
         jz near L_5df1c
         mov edi,[rbx+0x14]
         test edi,edi
@@ -28573,7 +28628,7 @@ L_5def1:
         inc qword [rel d_5e650]
         mov rdi,rbx
         mov rsi,[rel d_5e670]
-        call fn_5e470
+        call sentinel_say
         lea rdi,[rel d_5f2dd]
         jmp short L_5df2a
 
@@ -28782,7 +28837,7 @@ L_5e16a:
         push r12
         push r13
         mov r12,rdi
-        cmp byte [rel d_15498],0x0
+        cmp byte [rel ata_there],0x0
         jz near L_5e207
         mov rax,[rel cabinet_changes]
         cmp rax,[rel d_5ee88]
@@ -29050,7 +29105,8 @@ L_5e46f:
 ; says: ' system objects checked - all genuine.'
 ; says: ' system objects checked - '
 ; says: ... and 10 more texts
-fn_5e470:
+; the line "Sentinel: N system objects checked - all genuine."
+sentinel_say:
         mov rax,[rel d_5e678]
         cmp rax,0x100
         jnc short L_5e4a3
@@ -29161,7 +29217,7 @@ L_5e597:
         pop rbx
         test eax,eax
         jz short L_5e60b
-        call fn_50d2a
+        call admin_ask
         test eax,eax
         jnz short L_5e5fd
         mov rdi,rbx
@@ -29188,7 +29244,7 @@ L_5e60b:
 
 L_5e61b:
         pop rbx
-        call fn_50d2a
+        call admin_ask
         test eax,eax
         jnz short L_5e63c
         call fn_5e23b
@@ -29359,7 +29415,7 @@ d_5f664:
 L_5fcf8:
         cmp byte [rel disk_writable],0x0
         jz short L_5fd0b
-        call fn_5fd0c
+        call machine_identity
         jmp near L_5fe02
 
 L_5fd0b:
@@ -29369,7 +29425,8 @@ L_5fd0b:
 ; says: 'This machine got its identity: '
 ; says: 'netkey'
 ; says: ... and 1 more texts
-fn_5fd0c:
+; the machine's identity made or read
+machine_identity:
         lea rdi,[rel d_60519]
         call ob_find
         test rax,rax
@@ -30036,7 +30093,8 @@ L_6097b:
 
 ; says: '[acpi] power-off ready (FADT + \_S5_)'
 ; says: '[acpi] no FADT / \_S5_: power-off falls back to emulator ports'
-fn_6097e:
+; ACPI: power-off made ready (FADT, \_S5_)
+acpi_start:
         push rbx
         push r12
         mov edi,0x50434146
@@ -30312,7 +30370,7 @@ L_60e2b:
 L_60e5c:
         mov edi,eax
         mov rsi,rbx
-        call fn_60ed4
+        call smp_wake_core
 
 L_60e66:
         inc rbx
@@ -30348,7 +30406,8 @@ L_60ece:
         retq
 
 ; says: '[smp] no answer from the core with APIC id '
-fn_60ed4:
+; a core asked to start
+smp_wake_core:
         push rbx
         push r12
         push r13
@@ -31653,7 +31712,8 @@ L_61a22:
 ; says: '  core '
 ; says: ' (APIC '
 ; says: ... and 13 more texts
-fn_61a23:
+; `cores`: the speed of each core
+cores_speed:
         push rbx
         lea rdi,[rel d_62fec]
         call api_print
@@ -31901,11 +31961,11 @@ L_61db8:
         call fn_61df9
         jnc short L_61db8
         mov byte [rel d_62feb],0x3
-        call fn_61e1b
+        call smp_wait
         jmp short L_61df1
 
 L_61dd7:
-        call fn_61e1b
+        call smp_wait
 
 L_61ddc:
         xor ebx,ebx
@@ -31948,7 +32008,8 @@ L_61e19:
 ; says: 'CPU cores: '
 ; says: ' found, '
 ; says: ... and 1 more texts
-fn_61e1b:
+; the other cores waited for
+smp_wait:
         cmp byte [rel d_62ee8],0x0
         jnz short L_61e6d
         mov byte [rel d_62ee8],0x1
@@ -31982,7 +32043,8 @@ L_61e6e:
 ; says: ' found, '
 ; says: ' running. APIC ids: '
 ; says: ... and 13 more texts
-fn_61eaa:
+; the line "CPU cores: N found, N running."
+say_cores:
         cmp rdi,0x2
         jz short L_61ecb
         cmp rdi,0x3
@@ -32075,7 +32137,7 @@ L_61fd3:
         call api_print
 
 L_61fe8:
-        call fn_61a23
+        call cores_speed
         cmp byte [rbx],0x0
         jz near L_62124
         lea rsi,[rel d_62cb0]
@@ -32706,7 +32768,8 @@ fn_63831:
 
 ; says: '[pci] '
 ; says: ' functions on the bus'
-fn_6384f:
+; the PCI bus read
+pci_scan:
         push rbx
         push r12
         mov qword [rel d_63d08],0x0
@@ -32850,7 +32913,8 @@ L_639c8:
 
 ; says: 'PCI  bus:dev.fn vendor:device class - what it is'
 ; says: 'The screen (the BIOS'
-fn_639cc:
+; `pci`: the devices listed
+pci_command:
         push rbx
         mov ebx,[rdi]
         mov edi,ebx
@@ -33184,7 +33248,7 @@ L_642f0:
         jz near L_6439e
         mov rbx,rax
         mov rdi,rbx
-        call fn_639cc
+        call pci_command
         mov rdi,rbx
         mov esi,0x5
         call fn_6396b
@@ -33267,7 +33331,7 @@ fn_643a4:
         mov dword [rbx+0x14],0x0
         call fn_644cb
         mov rcx,[rel d_648b0]
-        lea rax,[rel d_648c0]
+        lea rax,[rel ahci_ports]
         mov [rax+rcx*8],rbx
         lea rax,[rel d_64900]
         mov [rax+rcx*8],r13
@@ -33340,7 +33404,7 @@ fn_644e8:
         mov rcx,rbx
         xor r8d,r8d
         mov r9d,0x1
-        call fn_64590
+        call ahci_command
         test eax,eax
         jz short L_6457e
         mov rax,[rbx+0xc8]
@@ -33393,7 +33457,8 @@ L_6458c:
         retq
 
 ; says: '[ahci] command failed'
-fn_64590:
+; rdi = SATA disk, esi = the ATA command, rdx = sector, rcx = memory, r8 = 1: write, r9 = sectors; eax = 0: it failed
+ahci_command:
         push rbx
         push r12
         push r13
@@ -33401,7 +33466,7 @@ fn_64590:
         push r15
         mov r14,rcx
         mov r15,rdx
-        lea rax,[rel d_648c0]
+        lea rax,[rel ahci_ports]
         mov rbx,[rax+rdi*8]
         lea rax,[rel d_64900]
         mov r12,[rax+rdi*8]
@@ -33488,7 +33553,8 @@ L_646b8:
         pop rbx
         retq
 
-L_646c2:
+; the SATA disk ahci_boot_disk: rdi = sector, rsi = memory, rdx = sectors, rcx = 0 read, else write
+ahci_io:
         push rbx
         push r12
         push r13
@@ -33508,7 +33574,7 @@ L_646d5:
 
 L_646ec:
         push r9
-        mov rdi,[rel d_648b8]
+        mov rdi,[rel ahci_boot_disk]
         mov esi,0x25
         test rbx,rbx
         jz short L_64704
@@ -33518,7 +33584,7 @@ L_64704:
         mov rdx,r12
         mov rcx,r13
         mov r8,rbx
-        call fn_64590
+        call ahci_command
         pop r9
         test eax,eax
         jz short L_6474e
@@ -33531,7 +33597,7 @@ L_64704:
 L_64727:
         test rbx,rbx
         jz short L_64747
-        mov rdi,[rel d_648b8]
+        mov rdi,[rel ahci_boot_disk]
         mov esi,0xea
         xor edx,edx
         xor ecx,ecx
@@ -33558,7 +33624,7 @@ L_64750:
 fn_64758:
         push rbx
         push r12
-        lea rax,[rel d_648c0]
+        lea rax,[rel ahci_ports]
         mov rbx,[rax+rdi*8]
         lea rax,[rel d_64900]
         mov r12,[rax+rdi*8]
@@ -33612,7 +33678,7 @@ L_647fb:
         mov rcx,r14
         xor r8d,r8d
         mov r9d,0x1
-        call fn_64590
+        call ahci_command
         test eax,eax
         jz short L_64837
         mov rsi,r14
@@ -33626,12 +33692,12 @@ L_64837:
         jmp short L_647fb
 
 L_6483c:
-        mov [rel d_648b8],rbx
+        mov [rel ahci_boot_disk],rbx
         lea rax,[rel d_64980]
         mov rax,[rax+rbx*8]
-        mov [rel d_154b0],rax
+        mov [rel ata_sectors],rax
         mov byte [rel d_154ab],0x1
-        mov byte [rel d_15498],0x1
+        mov byte [rel ata_there],0x1
         lea rsi,[rel d_64b40]
         lea rdi,[rel d_154b8]
         mov ecx,0x11
@@ -33664,10 +33730,12 @@ d_648a8:
 d_648b0:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_648b8:
+; which SATA disk ahci_io reads and writes
+ahci_boot_disk:
         db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-d_648c0:
+; for each SATA disk the registers of its port (0: no such disk)
+ahci_ports:
         times 64 db 0x00
 
 d_64900:
@@ -33744,7 +33812,8 @@ L_64c3e:
 ; says: '[nvme] NVMe SSD ready'
 ; says: '[nvme] its registers are above 4 GB: not mapped'
 ; says: '[nvme] the controller did not start'
-fn_64c44:
+; the NVMe controller started
+nvme_start:
         push rbx
         push r12
         push r13
@@ -33765,7 +33834,7 @@ L_64c5a:
         mov r12,rax
         mov byte [rel d_65031],0x1
         mov rdi,r12
-        call fn_639cc
+        call pci_command
         mov rdi,r12
         xor esi,esi
         call fn_6396b
@@ -33824,7 +33893,7 @@ L_64c5a:
         mov [rel d_65658],rax
         mov dword [rel d_65668],0x1
         xor edi,edi
-        call fn_652ea
+        call nvme_command
         test eax,eax
         jz near L_64f75
         mov rsi,[rel d_655d0]
@@ -33851,7 +33920,7 @@ L_64e38:
         mov rax,[rel d_655d0]
         mov [rel d_65658],rax
         xor edi,edi
-        call fn_652ea
+        call nvme_command
         test eax,eax
         jz near L_64f75
         mov rsi,[rel d_655d0]
@@ -33886,7 +33955,7 @@ L_64ebf:
         mov dword [rel d_65668],0x3f0001
         mov dword [rel d_6566c],0x1
         xor edi,edi
-        call fn_652ea
+        call nvme_command
         test eax,eax
         jz short L_64f75
         call fn_652d8
@@ -33896,7 +33965,7 @@ L_64ebf:
         mov dword [rel d_65668],0x3f0001
         mov dword [rel d_6566c],0x10001
         xor edi,edi
-        call fn_652ea
+        call nvme_command
         test eax,eax
         jz short L_64f75
         mov byte [rel d_65031],0x0
@@ -34013,7 +34082,8 @@ fn_652d8:
         retq
 
 ; says: '[nvme] no answer'
-fn_652ea:
+; a command to the NVMe disk
+nvme_command:
         push rbx
         push r12
         mov r12d,edi
@@ -34139,7 +34209,7 @@ L_65477:
         mov [rel d_65670],eax
         push r9
         mov edi,0x1
-        call fn_652ea
+        call nvme_command
         pop r9
         test eax,eax
         jz short L_654d2
@@ -34155,7 +34225,7 @@ L_654ad:
         call fn_652d8
         mov dword [rel d_65644],0x1
         mov edi,0x1
-        call fn_652ea
+        call nvme_command
 
 L_654cb:
         mov eax,0x1
@@ -34183,11 +34253,11 @@ fn_654dc:
         mov [rel d_65668],eax
         mov dword [rel d_65686],0xffffffff
         xor edi,edi
-        call fn_652ea
+        call nvme_command
         mov dword [rel d_65686],0x17d78400
         test eax,eax
         jz short L_65539
-        call fn_64c44
+        call nvme_start
         xor eax,eax
         cmp byte [rel d_65682],0x1
         setz al
@@ -34215,9 +34285,9 @@ L_6553c:
         repe cmpsb
         jnz short L_655b9
         mov byte [rel d_154aa],0x1
-        mov byte [rel d_15498],0x1
+        mov byte [rel ata_there],0x1
         mov rax,[rel d_655d8]
-        mov [rel d_154b0],rax
+        mov [rel ata_sectors],rax
         lea rsi,[rel d_656bb]
         lea rdi,[rel d_154b8]
         mov ecx,0x9
@@ -34877,7 +34947,7 @@ fn_65dfa:
         xor eax,eax
         cmp byte [rel d_154ab],0x0
         jz short L_65e1e
-        cmp [rel d_648b8],rdi
+        cmp [rel ahci_boot_disk],rdi
         jnz short L_65e1e
         inc eax
 
@@ -34919,7 +34989,7 @@ fn_65e58:
         mov esi,0x35
         mov rdx,r15
         mov r8d,0x1
-        jmp near fn_64590
+        jmp near ahci_command
 
 L_65e82:
         mov rdi,r15
@@ -34968,7 +35038,7 @@ fn_65ec8:
         mov rdi,r14
         mov esi,0x25
         xor r8d,r8d
-        jmp near fn_64590
+        jmp near ahci_command
 
 L_65ef6:
         xor ecx,ecx
@@ -35281,7 +35351,7 @@ L_66332:
 fn_66338:
         push rbx
         push r12
-        cmp qword [rel d_15499],0x0
+        cmp qword [rel disk_base],0x0
         jz near L_6640b
         cmp byte [rel disk_writable],0x0
         jz near L_6640b
@@ -35291,7 +35361,7 @@ fn_66338:
         jz near L_66425
         mov rbx,rax
         xor edi,edi
-        sub rdi,[rel d_15499]
+        sub rdi,[rel disk_base]
         mov rsi,rbx
         mov edx,0x1
         call disk_read
@@ -35309,7 +35379,7 @@ L_6639c:
         cmp byte [rdx+0x4],0x0
         jz short L_663c8
         mov eax,[rdx+0x8]
-        cmp rax,[rel d_15499]
+        cmp rax,[rel disk_base]
         jz short L_663c8
         cmp r12,0xffffffffffffffff
         jnz short L_663c8
@@ -35323,7 +35393,7 @@ L_663c8:
         cmp r12,0xffffffffffffffff
         jz short L_66419
         xor edi,edi
-        sub rdi,[rel d_15499]
+        sub rdi,[rel disk_base]
         mov rsi,rbx
         mov edx,0x1
         call disk_write
@@ -35387,7 +35457,7 @@ L_6644d:
         mov rcx,rbx
         xor r8d,r8d
         mov r9d,0x1
-        jmp near fn_64590
+        jmp near ahci_command
 L_6647a:
         xor edi,edi
         mov rsi,rbx
@@ -35547,7 +35617,8 @@ L_66bb6:
 ; says: 'USB on: '
 ; says: ' keyboards / mice found ('
 ; says: ... and 2 more texts
-fn_66bb7:
+; `usb on`
+usb_on:
         push rbx
         push r12
         push r13
@@ -35580,7 +35651,7 @@ L_66c06:
         mov rdi,rax
         mov rax,[rel d_69759]
         mov [rel d_69761],rax
-        call fn_66d73
+        call xhci_start
         test eax,eax
         jz short L_66c06
         mov rdi,[rel d_69759]
@@ -35699,7 +35770,8 @@ fn_66d4f:
 ; says: '  xHCI '
 ; says: ' ports, '
 ; says: ... and 3 more texts
-fn_66d73:
+; the xHCI controller started
+xhci_start:
         push rbx
         push r12
         push r13
@@ -35712,7 +35784,7 @@ fn_66d73:
         mov qword [rel d_69810],0x1
         mov qword [rel d_69828],0x1
         mov rdi,rbx
-        call fn_639cc
+        call pci_command
         mov rdi,rbx
         xor esi,esi
         call fn_6396b
@@ -35745,11 +35817,11 @@ L_66e38:
         shr eax,byte 0x10
         jz short L_66e46
         lea rdi,[r12+rax*4]
-        call fn_66fe6
+        call xhci_take_over
 
 L_66e46:
         mov rdi,rbx
-        call fn_66f3a
+        call xhci_intel_ports
         call fn_67039
         test eax,eax
         jz near L_66f26
@@ -35811,7 +35883,8 @@ L_66f34:
         retq
 
 ; says: '[usb] Intel: USB 2 / 3 ports switched to xHCI'
-fn_66f3a:
+; Intel: USB 2 / 3 ports switched to xHCI
+xhci_intel_ports:
         cmp word [rdi+0x4],0x8086
         jnz short L_66fa2
         movzx eax,word [rdi+0x6]
@@ -35875,7 +35948,8 @@ L_66fdc:
         jmp near fn_60f95
 
 ; says: '[usb] taken over from the BIOS'
-fn_66fe6:
+; the controller taken over from the BIOS
+xhci_take_over:
         mov ecx,0x40
 
 L_66feb:
@@ -36284,7 +36358,7 @@ L_6749e:
         mov [r14+0x60],rax
         mov rdi,r14
         mov esi,r15d
-        call fn_6794c
+        call usb_address
         test eax,eax
         jz near L_6756a
         cmp r15d,0x1
@@ -36294,14 +36368,14 @@ L_6749e:
 
 L_674c3:
         mov rdi,r14
-        call fn_67bc3
+        call usb_hid_ready
         add [rel d_69840],rax
         test rax,rax
         jnz near L_67576
         cmp byte [rel d_69757],0x0
         jz short L_674f1
         mov rdi,r14
-        call fn_6ab0b
+        call usb_stick_ready
         jmp near L_67576
 
 L_674f1:
@@ -36326,7 +36400,7 @@ L_67549:
         cmp byte [rel d_6958c],0x0
         jz short L_67576
         mov rdi,r14
-        call fn_67589
+        call usb_hub
         jmp short L_67576
 
 L_6755c:
@@ -36354,7 +36428,8 @@ fn_67581:
 ; says: 'a USB hub - its ports:'
 ; says: '  hub'
 ; says: 'a USB 3 hub (its USB 2 half carries keyboards and mice)'
-fn_67589:
+; a hub and its ports
+usb_hub:
         push rbx
         push r12
         push r13
@@ -36652,7 +36727,8 @@ L_67932:
         retq
 
 ; says: '[usb] a device did not take an address'
-fn_6794c:
+; a device given its address
+usb_address:
         push rbx
         push r12
         push r13
@@ -36857,7 +36933,8 @@ L_67bbf:
 ; says: 'mouse ready (boot protocol)'
 ; says: 'mouse ready (report protocol)'
 ; says: ... and 2 more texts
-fn_67bc3:
+; a keyboard or a mouse made ready
+usb_hid_ready:
         push rbx
         push r12
         push r13
@@ -37194,7 +37271,7 @@ L_680f4:
         xor r8d,r8d
         call fn_67a3b
         mov rdi,r13
-        call fn_6869d
+        call usb_setup
         test eax,eax
         jz short L_6815d
         lea rdi,[rel d_6aa4b]
@@ -37592,7 +37669,8 @@ L_6869b:
         retq
 
 ; says: '[usb] could not set up the device'
-fn_6869d:
+; a device set up
+usb_setup:
         push rbx
         push r12
         push r13
@@ -37919,7 +37997,7 @@ L_68a6a:
         mov rdi,r12
         call fn_66d2b
         mov [rel d_69761],r12
-        call fn_68a9f
+        call usb_plugged
         mov rdi,r12
         call fn_66d4f
         inc r12
@@ -37934,11 +38012,12 @@ L_68a9e:
         retq
 
 ; says: '[usb] plugged in: set up'
-fn_68a9f:
+; a device plugged in
+usb_plugged:
         cmp byte [rel d_69868],0x0
         jz short L_68ab4
         mov byte [rel d_69868],0x0
-        call fn_68b75
+        call usb_errors
 
 L_68ab4:
         cmp byte [rel d_69860],0x0
@@ -37985,7 +38064,7 @@ L_68b3a:
 
 L_68b63:
         call fn_68ca0
-        call fn_68f45
+        call usb_unplugged
 
 L_68b6d:
         inc ebx
@@ -37996,7 +38075,8 @@ L_68b74:
 
 ; says: '[usb] too many errors: device left alone'
 ; says: '[usb] an endpoint stopped on an error: restarted'
-fn_68b75:
+; too many errors: the device left alone, or the endpoint started again
+usb_errors:
         push rbx
         push r12
         push r13
@@ -38119,7 +38199,7 @@ L_68cdc:
 L_68cf9:
         cmp byte [rel d_69588],0x0
         jnz short L_68d0c
-        call fn_66bb7
+        call usb_on
         jmp near L_68e66
 
 L_68d0c:
@@ -38134,7 +38214,7 @@ L_68d0c:
         mov rsi,rax
         mov edx,0x1
         xor ecx,ecx
-        call fn_6af0a
+        call usb_disk_io
         pop rdi
         push rax
         call mem_free
@@ -38188,7 +38268,7 @@ L_68de5:
         test ecx,0x1
         jnz short L_68e09
         call fn_68ca0
-        call fn_68f45
+        call usb_unplugged
         jmp short L_68e19
 
 L_68e09:
@@ -38308,7 +38388,8 @@ L_68f3f:
         retq
 
 ; says: '[usb] unplugged'
-fn_68f45:
+; a device unplugged
+usb_unplugged:
         xor ecx,ecx
 
 L_68f47:
@@ -38334,7 +38415,7 @@ L_68f6f:
         rep movsb
         lea rdi,[rel d_6a84a]
         call api_log
-        jmp short fn_68f45
+        jmp short usb_unplugged
 
 L_68fa6:
         retq
@@ -38679,13 +38760,13 @@ L_6931f:
 L_69320:
         mov rax,[rel d_110b0]
         cmp byte [rax+0x48],0x1
-        jz near fn_66bb7
+        jz near usb_on
         mov rax,[rel cabinet_table]
         cmp dword [rax],0x4e424143
         jnz short L_6934d
         test word [rax+0xa],0x1
         jz short L_6934d
-        jmp near fn_66bb7
+        jmp near usb_on
 
 L_6934d:
         retq
@@ -38700,7 +38781,7 @@ L_6934e:
         call shell_same_word
         test eax,eax
         jz short L_69378
-        call fn_66bb7
+        call usb_on
         jmp near L_69462
 
 L_69378:
@@ -38772,7 +38853,7 @@ L_69446:
         lea rdi,[rel d_6a538]
         cmp byte [rel d_69588],0x0
         jz short L_6945d
-        call fn_69464
+        call usb_say
         jmp short L_69462
 
 L_6945d:
@@ -38786,7 +38867,8 @@ L_69462:
 ; says: ' keyboards / mice:'
 ; says: '  xHCI '
 ; says: ... and 6 more texts
-fn_69464:
+; `usb`: what is on
+usb_say:
         push rbx
         push r12
         push r13
@@ -39275,7 +39357,8 @@ d_6aafe:
         db ' (given up)', 10, 0
 
 ; says: 'USB stick ready (mass storage)'
-fn_6ab0b:
+; a USB stick made ready (mass storage)
+usb_stick_ready:
         push rbx
         push r12
         push r13
@@ -39548,7 +39631,8 @@ L_6af09:
 
 ; says: 'USB stick'
 ; says: 'Booted from a USB stick: the cabinet is writable there (v2.0.6).'
-fn_6af0a:
+; the USB stick: rdi = sector, rsi = memory, rdx = sectors, rcx = 0 read, else write; eax = 0: it failed
+usb_disk_io:
         push rbx
         push r12
         push r13
@@ -39670,7 +39754,7 @@ L_6b052:
         jnz near L_6b12f
         cmp byte [rel d_69588],0x0
         jnz short L_6b06d
-        call fn_66bb7
+        call usb_on
 
 L_6b06d:
         cmp byte [rel d_6b130],0x0
@@ -39686,11 +39770,11 @@ L_6b07b:
         jz near L_6b12f
         push rax
         mov rdi,[rel table_sector]
-        add rdi,[rel d_15499]
+        add rdi,[rel disk_base]
         mov rsi,rax
         mov edx,0x1
         xor ecx,ecx
-        call fn_6af0a
+        call usb_disk_io
         pop rsi
         test eax,eax
         jz short L_6b127
@@ -39702,10 +39786,10 @@ L_6b07b:
         jnz short L_6b127
         push rsi
         mov byte [rel d_154a9],0x1
-        mov byte [rel d_15498],0x1
+        mov byte [rel ata_there],0x1
         mov byte [rel disk_writable],0x1
         mov rax,[rel d_6b1a1]
-        mov [rel d_154b0],rax
+        mov [rel ata_sectors],rax
         call fn_0d0d3
         lea rsi,[rel d_6b244]
         lea rdi,[rel d_154b8]
@@ -42542,7 +42626,8 @@ L_6df17:
 ; says: 'Kernel suits (KASM objects, put on when first needed):'
 ; says: '  - not on'
 ; says: '  - ON'
-fn_6df1a:
+; `suits`: the kernel suits listed
+suits_command:
         push rdi
         push rsi
         push rdx
@@ -43039,7 +43124,8 @@ L_6e54c:
 ; says: 'GPU: virtio-gpu on. Its display says '
 ; says: '; NinuxOS draws into RAM and the GPU shows it (30 times a second).'
 ; says: ... and 5 more texts
-fn_6e555:
+; virtio-gpu switched on
+gpu_start:
         push rbx
         push r12
         push r13
@@ -43064,7 +43150,7 @@ L_6e577:
 L_6e5a3:
         mov rbx,rax
         mov rdi,rbx
-        call fn_639cc
+        call pci_command
         mov rdi,rbx
         call fn_6e172
         test eax,eax
@@ -43312,7 +43398,8 @@ L_6ea3f:
 
 ; says: 'Hardware cursor on: the GPU draws the mouse pointer.'
 ; says: 'Switch the GPU on first ('
-fn_6ea40:
+; the hardware cursor
+gpu_cursor:
         push rbx
         cmp byte [rel d_6f650],0x0
         jz near L_6eba9
@@ -43459,7 +43546,7 @@ L_6ec49:
         call shell_same_word
         test eax,eax
         jz short L_6ec73
-        call fn_6e555
+        call gpu_start
         jmp near L_6edc2
 
 L_6ec73:
@@ -43468,7 +43555,7 @@ L_6ec73:
         call shell_same_word
         test eax,eax
         jz short L_6ec90
-        call fn_6ea40
+        call gpu_cursor
         jmp near L_6edc2
 
 L_6ec90:
@@ -45208,7 +45295,7 @@ L_70b35:
         jmp near L_71129
 
 L_70b3f:
-        call fn_739d5
+        call photon_say
         jmp near L_71129
 
 L_70b49:
@@ -45371,17 +45458,17 @@ L_70d76:
         lea rdi,[rel d_71771]
         call api_print
         mov rdi,r12
-        call fn_70f01
+        call subgpu_demo
         lea rdi,[rel d_717ab]
         call api_print
         mov rdi,r13
-        call fn_70f01
+        call subgpu_demo
         lea rdi,[rel d_717b9]
         call api_print
         lea rdi,[rel d_717be]
         call api_print
         mov rdi,rbx
-        call fn_70f01
+        call subgpu_demo
         lea rdi,[rel d_717da]
         call api_print
         mov rdi,[rel d_623d8]
@@ -45389,11 +45476,11 @@ L_70d76:
         lea rdi,[rel d_717e0]
         call api_print
         mov rdi,r15
-        call fn_70f01
+        call subgpu_demo
         lea rdi,[rel d_717e8]
         call api_print
         mov rdi,r14
-        call fn_70f01
+        call subgpu_demo
         lea rdi,[rel d_717fd]
         call api_print
         lea rdi,[rel d_71876]
@@ -45449,7 +45536,8 @@ L_70ec7:
 
 ; says: 'SUB-GPU demo ended (last second: '
 ; says: ' frames per second).'
-fn_70f01:
+; the SUB-GPU demo
+subgpu_demo:
         push rbx
         mov rax,rdi
         xor edx,edx
@@ -45509,7 +45597,7 @@ L_70f97:
         mov r13,[rel clock_ticks]
 
 L_70fde:
-        call fn_71060
+        call subgpu_bar
 
 L_70fe3:
         call api_poll
@@ -45550,7 +45638,8 @@ L_71027:
 ; says: ' fps  '
 ; says: 'quarter'
 ; says: ... and 3 more texts
-fn_71060:
+; its line with the frames per second
+subgpu_bar:
         push rbx
         lea rdi,[rel d_71548]
         lea rsi,[rel d_715d2]
@@ -47672,7 +47761,7 @@ L_7349e:
         mov rax,[rbx+rsi*8]
         test byte [rel d_742cc],0x10
         jz short L_734bb
-        call fn_736a7
+        call photon_desk_start
 
 L_734bb:
         bt rax,byte 0x30
@@ -47836,7 +47925,8 @@ L_7369f:
         jmp near L_733ee
 
 ; says: '[photon] started from the desktop'
-fn_736a7:
+; Photon started from the desktop
+photon_desk_start:
         mov rdx,r13
         shl rdx,byte 0x5
         add rdx,[rel d_74198]
@@ -48109,7 +48199,8 @@ L_739cf:
 ; says: ' emitters, '
 ; says: ' splats, '
 ; says: ... and 14 more texts
-fn_739d5:
+; the line "Photon: N emitters ..."
+photon_say:
         push rbx
         push r12
         push r13
@@ -48366,7 +48457,7 @@ L_73d7b:
         mov r13,[rel clock_ticks]
 
 L_73db5:
-        call fn_73e97
+        call photon_bar
 
 L_73dba:
         call api_poll
@@ -48449,7 +48540,8 @@ L_73e8d:
 ; says: ' fps   1 PPCI'
 ; says: '  2 MORT'
 ; says: ... and 4 more texts
-fn_73e97:
+; Photon's line with the frames per second
+photon_bar:
         lea rdi,[rel d_744c8]
         lea rsi,[rel d_74571]
         call fn_73932
@@ -50286,9 +50378,9 @@ d_76928:
         db 0x60, 0x09, 0xE1, 0x0A, 0x01, 0x0E, 0x00, 0x00
 
 L_76930:
-        call fn_6384f
-        call fn_6097e
-        call fn_64c44
+        call pci_scan
+        call acpi_start
+        call nvme_start
         jmp near L_642f0
         db 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90
 %ifndef PLAIN_KERNEL

@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.49 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.50 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -71,7 +71,10 @@ The owner's order of 11 October 2026 for the kernel - 1, 2, 3, 4, 5, 9, 10, 13:
       its size first (v3.0.46; `backup` on the 16 MB image says "No backup pool here", the
       log is clean). A USB disk is still asked for the sector.
 - [ ] 3. The first click on the desk after a window only gives the desk the keys back and is
-      lost (mux_input, fn_55604). Not begun.
+      lost. Read in v3.0.50, not mended: mux_input does send it - to the task under the mouse
+      first the place with no button, then the place with the button (L_558e4) - so the click
+      is lost later, in mux_focus or in how the desk takes two mouse events in one turn.
+      Next: log what task 0 gets from api_poll after such a click.
 - [x] 4. Five people: tried with levels 18, 16, 12, 7, 0 (test/qemu/q_v3_v46.txt). Four are
       added, the fifth is refused with "Five people are known by now" - rightly: **the image
       carries one person already, `petya` (opens up to 12), come with the stick of v2.9.59.**
@@ -79,7 +82,12 @@ The owner's order of 11 October 2026 for the kernel - 1, 2, 3, 4, 5, 9, 10, 13:
 - [ ] 5. The refusal of api_guard: wants a program the Sentinel does not know, made inside the
       system (Studio) and asked to switch the machine off. Not tried.
 - [ ] 9. Tuner and Puffer as suits of their own. Not begun.
-- [ ] 10. Names for the kernel's functions (91 of about 940). Not carried on.
+- [ ] 10. Names for the kernel's functions. **v3.0.50: 92 more** (about 186 named now), by the
+      texts each function prints - the start of the machine (video, memory, keyboard, mouse,
+      font, shield, crash screen), the old PyTon in the kernel, Sentinel, ACPI, the cores, PCI,
+      AHCI, NVMe, USB, the GPU, SUB-GPU, Photon. Same bytes. Left: about 500 functions that
+      print nothing - each must be read to be named (tools/kdis/renames.txt, a line a name).
+      Order by the owner (11 October 2026): 10, 13, 9, 3, 5.
 - [ ] 13. Drivers. **AHCI and NVMe are in the kernel already** (v2.x: SATA and NVMe disks, an
       installer onto them) - Claude said they were missing, wrongly. What the machine has is
       shown by `pci` (the controllers), `disk` (the boot disk), `install` alone (the SATA

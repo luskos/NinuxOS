@@ -3,6 +3,9 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.50** (11 October 2026) - names only; the kernel's bytes are the same
+  - 92 functions and data of the kernel named (tools/kdis/renames.txt), among them the disk
+    readers used by `parts` and `lolz`: ahci_command, ahci_io, usb_disk_io, ahci_ports.
 - **v3.0.49** (11 October 2026) - the kernel (New.kasm, suits/Tools.kasm); seen in QEMU
   - `lolz P`: `files` (list, cd, get - FAT32) reads partition P of a SATA disk instead of the
     USB stick; `parts` numbers the partitions; `lolz off` goes back. Reading only.
