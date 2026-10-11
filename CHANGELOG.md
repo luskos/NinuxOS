@@ -3,6 +3,11 @@
 Newest first. v2.9.60 and later are written by hand; everything from v2.9.50 down is the text the v2.9.59
 kernel carries in itself.
 
+- **v3.0.45** (11 October 2026) - papers only
+  - TODO.md: the system in unallocated space (what is possible on a disk of its own, beside
+    MBR, beside GPT; what must change in the kernel); winlolz and linlolz cut into parts
+    with an order; a desk typed by its name must run as a desk (the owner's Desk2 "did not
+    work" because it was typed `desk2`, not `desk desk2`).
 - **v3.0.44** (11 October 2026) - papers only
   - The fair trade: information for processor time, verified as a blockchain does it; why -
     everyone paid for what they give. `docs/OPISANIE.md` part 3a, TODO.md.

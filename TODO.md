@@ -1,6 +1,6 @@
 # NinuxOS - what is left to do
 
-State on 10 October 2026, project v3.0.44 (everything that is compiled has a source now; the build
+State on 10 October 2026, project v3.0.45 (everything that is compiled has a source now; the build
 writes the version, adds objects, signs).
 Versions: v3.x.xx - a small update raises xx, a big one x. How the work goes: DIRECTIVE.md.
 Order inside a part = importance.
@@ -57,6 +57,57 @@ From the owner's account of 11 October 2026, not in the list before:
       is truly scarce is making a thing first and keeping it at hand.
 - [ ] **Every architecture**: a version for whatever metal it is to run on; py2asm with a back
       end a machine. And more dialects (ruby2asm ...).
+
+## Asked on 11 October 2026, after the owner tried Desk2 on the test machine
+
+Desk2 works on the real machine when started as `desk desk2`. Typed alone (`desk2`) it runs
+outside the multiplexer and next to nothing works.
+- [ ] **A desk typed by its name must run as a desk.** An object whose META says `desk:yes`
+      is started the way `desk NAME` starts it, whatever was typed (shell_more, New.kasm).
+
+- [ ] **The system in unallocated space** - no partition, no volume, nothing another system
+      can list. Today the boot sector carries one partition of kind 0x7F over the whole disk
+      (v3.0.11, so that Windows would not take a stick for a diskette and write over it).
+      What is known:
+      - On a disk of its own: the partition line can go. Then Windows calls the disk "not
+        initialised" and offers to initialise it - one click writes a new table over sector
+        0. The line was the guard against that; without it the guard is the copy of the boot
+        sector and of the table (to be written).
+      - Beside another system on an **MBR** disk: the first partition begins at sector 2048,
+        so sectors 1-2047 (1 MB) are free - the kernel (480 sectors) fits there. The cabinet
+        does not (4.3 MB); it goes into the free space at the end of the disk, and the
+        kernel is told where by a number in its own sectors, not by a partition line. Sector
+        0 keeps the other system's table and gets our loader or a choice of the two.
+      - Beside another system on a **GPT** disk: sectors 1-33 and the last 33 belong to GPT,
+        the rest of the first megabyte is free the same way. But such machines start by
+        UEFI, and NinuxOS starts by BIOS only - an own UEFI loader is needed first (a file
+        on the EFI partition, which *is* a listed place), or the start stays on a stick and
+        only the cabinet lies on the disk.
+      - Unallocated is unprotected: any partitioning tool may give the space away. What
+        keeps the system is finding itself by its own marks (`NXEXT1`, `CABN`, `NXPOOL1`) and
+        its copies, not a line in someone's table.
+      - The work: `install` asks where (whole disk / free space at the end), finds the free
+        space by reading MBR or GPT, writes the kernel's place and the cabinet's place as
+        numbers; the kernel adds that number to every sector it reads. Every sector number
+        in the kernel today counts from the start of the disk - that is the part to change.
+
+- [ ] **winlolz and linlolz** - read the disks of Windows and Linux and copy files out of
+      them, to save what is on a machine that no longer starts. Not small. The parts:
+      1. *The disks.* What is read today is ATA and USB sticks. A dead laptop of these years
+         holds an **NVMe** disk, older ones AHCI - a driver for each comes first, or nothing
+         of this is of use. (To check on the test machine: does `disks` show its inner disk?)
+      2. *The partitions*: MBR and GPT read, listed with kind and size. Small.
+      3. *The file systems, reading only*: FAT32 and exFAT (small - sticks and cards);
+         NTFS (large: the MFT, attribute lists, runs, compressed and sparse files; BitLocker
+         cannot be read without its key); ext4 (middling: extents, directories as trees);
+         later btrfs, LUKS not.
+      4. *Where the copy goes*: a file becomes an object (DATA = the file, META = its name,
+         path, date) in a drawer of the cabinet or on a second stick; big files need the
+         cabinet to hold more than it does now.
+      5. *By the rules of the system*: a program has no way to sectors. The readers are a
+         kernel suit (`k_lolz`), and the program that shows folders and copies is an ordinary
+         one that asks the suit - Files with two more kinds of place.
+      Order: 2, FAT32/exFAT, the program, NVMe/AHCI, NTFS, ext4.
 
 ## THE FULL TEST of 11 October 2026 (v3.0.37 -> v3.0.38): what works, what does not, how to mend it
 
