@@ -64,7 +64,9 @@ all sorts of differential methods are used
 mainly 3d core engine as SUB-GPU 
 acceleration on a CPU.
 
-Following the paradigm of simplicity all needed for interfaces can be done in simple html + css. This give freedom and avoidance of complications.
+Following the paradigm of simplicity all needed for interfaces can be done in simple html + css. This give freedom and avoidance of complications. The web infrastructure can fit nice just the backend can be PyTon instead of accomodating one more language (JavaScript) could be any language as a whole considering the architecture end-to-end, or start-to-finish.
+
+There isn't file system per say. There is file cabinets instead, structured properly, database is considered instead of file system with overheads, HDD wont be exposed to outside objects than the OS for security, wont be reachable in software means by connection if not explicitly allowed.
 
 Usual networking is planned to be a Relay socket for Internet access or Meta structured space for Ninux Nodes to share, create and use with local or global Gateways type of Ready Player One. Virtual goods can be stored locally and have real word meaning and value.
 
@@ -105,4 +107,5 @@ by identification.
 
 Kernel core is responsible for building
 and admin access is defaulting, desk/meta mode doesnt have reach, elevation type protection. 
+
 
