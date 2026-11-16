@@ -64,5 +64,44 @@ all sorts of differential methods are used
 mainly 3d core engine as SUB-GPU 
 acceleration on a CPU.
 
-Following the paradigm of simplicity all needed for interfaces can be done in simple html + css. This give freedom and avoid complications.
+Following the paradigm of simplicity all needed for interfaces can be done in simple html + css. This give freedom and avoidance of complications.
+
+Usual networking is planned to be a Relay socket for Internet access or Meta structured space for Ninux Nodes to share, create and use with local or global Gateways type of Ready Player One. Virtual goods can be stored locally.
+
+Forwarding and Backwarding connection sockets for cloud computing and relieving device manufacturing to simple connected periferals for the cheap.
+
+System by design should allow selling/trading Meta properties 
+as Space or Computing power from sleeper nodes on idle for example.
+
+It is considered all functions of Functional Objects to have extensions in such a way that more players at a spot means less computing costs. Cheaper devices can run AAA Games for example.
+
+Symbiotic mobile device GPU sharing could allow SubGpu the power needed to compute extremes on the extra hardware socket runnin Mobile Ninux.
+
+Old devices software can be  refreshed with the new OS to limit 
+the carbon footprint and give life and
+purpose to discarded devices.
+
+Connectivity would be reliant on protocols
+instead running by brand.
+
+Everyone can make his own irc type of program for sharing pictures, text and media but interface can be just ANYTHING
+Ninux Skype type of interfaced object can
+work alright with Ninux Messenger type due
+to official or private protocols they can work just fine, as data would be objectified and delivered alright.
+
+Issues with desktops are no longer present
+as anyone can do their thing however they
+like.
+
+Browsing could be just as simple plug and play objects filled for any data needed
+acting as normal, server is plain Ninux
+with socketed page on it with proper tags
+
+Mail server is considered to be local
+
+Machines running on the network are considered part of blockchain networking
+by identification.
+
+Kernel core is responsible for building
+and admin access is defaulting, desk/meta mode doesnt have reach, elevation type protection. 
 
