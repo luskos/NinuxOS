@@ -63,3 +63,6 @@ GPU acceleration is problematic
 all sorts of differential methods are used
 mainly 3d core engine as SUB-GPU 
 acceleration on a CPU.
+
+Following the paradigm of simplicity all needed for interfaces can be done in simple html + css. This give freedom and avoid complications.
+
