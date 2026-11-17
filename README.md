@@ -30,7 +30,7 @@ multidependencies.
 Main object is considered .ASMO
 ASM is chosen for array of reasons.
 By nature hard to write and remember.
-This inherent hardware architecture is
+This inherent hardware architecture problem is
 overrun with the help of the Transpiller.
 
 Not either interpreter or compiler, though
