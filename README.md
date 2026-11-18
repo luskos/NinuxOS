@@ -49,7 +49,7 @@ All written in The Studio formally built
 in the Command Core,
 inacessable from the desktop
 environment for security reasons where
-literally the source resides.
+literally the kernel resides.
 
 The Core have it's own way of doing things,
 .KASM file format, KASMS acting as
